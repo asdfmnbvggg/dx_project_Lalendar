@@ -1,3 +1,0 @@
-# One URL per line
-# https://m.blog.naver.com/<blogId>/<logNo>
-# https://m.cafe.naver.com/<cafeId>/<articleNo>
