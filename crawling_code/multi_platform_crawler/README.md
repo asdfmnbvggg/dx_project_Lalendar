@@ -125,6 +125,29 @@ cargo run --release -- scroll --url "https://ohou.se/cards/feed" --max-posts 30 
 cargo run --release -- scroll --url "https://example.com/feed" --max-posts 50 --workers 3 --card-selector "div.post-card" --link-selector "a.post-link" --scroll-pause 2000 --out-dir ./out
 
 cargo run --release -- scroll --url "https://ohou.se/cards/feed" --max-posts 30 --workers 3 --cookie-file ./cookies.json --out-dir ./out
+
+# 단일 키워드 필터 (제목+본문+댓글에 "빨래"가 포함된 글만 저장)
+cargo run --release -- scroll --url "https://ohou.se/cards/feed" --max-posts 100 --keyword "빨래" --out-dir ./out
+
+# AND 키워드 필터 (두 키워드가 모두 포함된 글만 저장)
+cargo run --release -- scroll --url "https://ohou.se/cards/feed" --max-posts 100 --keyword "집안일" --keyword "빨래" --out-dir ./out
+
+# 키워드 조합별 저장: 집안일+빨래, 살림+빨래 결과를 각각 다른 폴더에 저장
+cargo run --release -- scroll --url "https://ohou.se/cards/feed" --max-posts 100 --keyword1 "집안일,살림" --keyword2 "빨래,빨래" --out-dir ./out
+```
+
+키워드 필터는 수집된 게시글의 제목, 본문, 댓글 내용을 합쳐 검사한다. `--keyword1`과 `--keyword2`는 쉼표로 구분한 값을 같은 순서끼리 묶는다.
+
+예를 들어 `--keyword1 "집안일,살림" --keyword2 "빨래,빨래"`는 아래 두 조합으로 저장된다.
+
+```
+out/
+  집안일_빨래/
+    results.csv
+    comments.csv
+  살림_빨래/
+    results.csv
+    comments.csv
 ```
 
 ### 주요 옵션
@@ -133,6 +156,9 @@ cargo run --release -- scroll --url "https://ohou.se/cards/feed" --max-posts 30 
 |------|--------|------|
 | `--max-posts` | 20 | 수집할 최대 게시글 수 |
 | `--workers` | 3 | 동시 탭(페이지) 수 |
+| `--keyword` | — | 필수 키워드 필터. 반복 지정하면 모든 키워드가 포함된 글만 저장 |
+| `--keyword1` | — | 조합 필터 1번 그룹. 쉼표로 여러 키워드 입력 |
+| `--keyword2` | — | 조합 필터 2번 그룹. `--keyword1`과 같은 개수로 입력 |
 | `--card-selector` | `article.css-71vdks` | 게시글 카드 CSS 셀렉터 |
 | `--link-selector` | `a` | 카드 내 링크 셀렉터 |
 | `--scroll-pause` | 1500 | 스크롤 후 대기 시간 (ms) |
