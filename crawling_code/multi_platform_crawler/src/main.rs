@@ -69,6 +69,18 @@ enum Commands {
         #[arg(long)]
         cookie_file: Option<String>,
 
+        /// 필수 키워드 필터 (여러 번 지정하면 모두 포함된 글만 저장)
+        #[arg(long = "keyword")]
+        keywords: Vec<String>,
+
+        /// 조합 필터 1번 그룹 (쉼표 구분, 예: "집안일,살림")
+        #[arg(long)]
+        keyword1: Option<String>,
+
+        /// 조합 필터 2번 그룹 (쉼표 구분, 예: "빨래,빨래")
+        #[arg(long)]
+        keyword2: Option<String>,
+
         /// 게시글 카드 CSS 셀렉터 (기본: ohouse 값)
         #[arg(long, default_value = "article.css-71vdks")]
         card_selector: String,
@@ -425,6 +437,104 @@ enum Commands {
     },
 }
 
+fn post_has_all_keywords(post: &crate::models::PostData, keywords: &[String]) -> bool {
+    if keywords.is_empty() {
+        return true;
+    }
+
+    let mut haystack = String::new();
+    haystack.push_str(&post.title);
+    haystack.push('\n');
+    haystack.push_str(&post.body);
+    for comment in &post.comments {
+        haystack.push('\n');
+        haystack.push_str(&comment.content);
+    }
+
+    let haystack = haystack.to_lowercase();
+    keywords
+        .iter()
+        .map(|keyword| keyword.trim().to_lowercase())
+        .filter(|keyword| !keyword.is_empty())
+        .all(|keyword| haystack.contains(keyword))
+}
+
+fn parse_keyword_group(value: &str) -> Vec<String> {
+    value
+        .split(',')
+        .map(str::trim)
+        .filter(|keyword| !keyword.is_empty())
+        .map(ToString::to_string)
+        .collect()
+}
+
+fn build_keyword_sets(
+    keywords: Vec<String>,
+    keyword1: Option<String>,
+    keyword2: Option<String>,
+) -> Result<Vec<Vec<String>>, CrawlError> {
+    match (keyword1, keyword2) {
+        (None, None) => {
+            if keywords.is_empty() {
+                Ok(Vec::new())
+            } else {
+                Ok(vec![keywords])
+            }
+        }
+        (Some(group1), Some(group2)) => {
+            let group1 = parse_keyword_group(&group1);
+            let group2 = parse_keyword_group(&group2);
+
+            if group1.is_empty() || group2.is_empty() {
+                return Err(CrawlError::Parse(
+                    "--keyword1/--keyword2에는 쉼표로 구분된 키워드가 필요합니다.".to_string(),
+                ));
+            }
+
+            if group1.len() != group2.len() {
+                return Err(CrawlError::Parse(format!(
+                    "--keyword1 개수({})와 --keyword2 개수({})가 다릅니다.",
+                    group1.len(),
+                    group2.len()
+                )));
+            }
+
+            Ok(group1
+                .into_iter()
+                .zip(group2)
+                .map(|(left, right)| {
+                    let mut set = keywords.clone();
+                    set.push(left);
+                    set.push(right);
+                    set
+                })
+                .collect())
+        }
+        _ => Err(CrawlError::Parse(
+            "--keyword1과 --keyword2는 함께 지정해야 합니다.".to_string(),
+        )),
+    }
+}
+
+fn keyword_set_dir_name(keywords: &[String]) -> String {
+    let joined = keywords.join("_");
+    let sanitized: String = joined
+        .chars()
+        .map(|ch| match ch {
+            '\\' | '/' | ':' | '*' | '?' | '"' | '<' | '>' | '|' => '_',
+            ch if ch.is_whitespace() => '_',
+            ch => ch,
+        })
+        .collect();
+
+    let sanitized = sanitized.trim_matches('_');
+    if sanitized.is_empty() {
+        "keywords".to_string()
+    } else {
+        sanitized.to_string()
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), CrawlError> {
     // Logging
@@ -482,13 +592,14 @@ async fn main() -> Result<(), CrawlError> {
         }
 
         Commands::Scroll {
-            url, max_posts, workers, out_dir, cookie_file,
+            url, max_posts, workers, out_dir, cookie_file, keywords, keyword1, keyword2,
             card_selector, link_selector, scroll_pause,
         } => {
             let url = Url::parse(&url)?;
             let out_dir_path = Path::new(&out_dir);
             ensure_out_dir(out_dir_path)
                 .map_err(|e| CrawlError::Parse(format!("출력 디렉토리 생성 실패: {e}")))?;
+            let keyword_sets = build_keyword_sets(keywords, keyword1, keyword2)?;
 
             let cookies: Arc<Vec<CookieEntry>> = Arc::new(match cookie_file {
                 Some(ref p) => {
@@ -507,7 +618,7 @@ async fn main() -> Result<(), CrawlError> {
                 ..ScrollConfig::ohouse()
             });
 
-            info!(%url, max_posts, workers, "스크롤 크롤 시작");
+            info!(%url, max_posts, workers, keyword_sets = keyword_sets.len(), "스크롤 크롤 시작");
             let results = crawl_plan_c_scroll(url, max_posts, workers, config, cookies).await;
 
             let mut posts = Vec::new();
@@ -522,11 +633,50 @@ async fn main() -> Result<(), CrawlError> {
                 }
             }
 
-            info!(ok = posts.len(), failed, "수집 완료");
-            write_posts_csv(out_dir_path, &posts)
-                .map_err(|e| CrawlError::Parse(format!("csv 저장 오류: {e}")))?;
-            write_comments_csv(out_dir_path, &posts)
-                .map_err(|e| CrawlError::Parse(format!("csv 저장 오류: {e}")))?;
+            if keyword_sets.is_empty() {
+                info!(ok = posts.len(), failed, "수집 완료");
+                write_posts_csv(out_dir_path, &posts)
+                    .map_err(|e| CrawlError::Parse(format!("csv 저장 오류: {e}")))?;
+                write_comments_csv(out_dir_path, &posts)
+                    .map_err(|e| CrawlError::Parse(format!("csv 저장 오류: {e}")))?;
+            } else if keyword_sets.len() == 1 {
+                let keywords = &keyword_sets[0];
+                let before = posts.len();
+                posts.retain(|post| post_has_all_keywords(post, keywords));
+                info!(
+                    before,
+                    after = posts.len(),
+                    keywords = ?keywords,
+                    "필수 키워드 필터 적용"
+                );
+                info!(ok = posts.len(), failed, "수집 완료");
+                write_posts_csv(out_dir_path, &posts)
+                    .map_err(|e| CrawlError::Parse(format!("csv 저장 오류: {e}")))?;
+                write_comments_csv(out_dir_path, &posts)
+                    .map_err(|e| CrawlError::Parse(format!("csv 저장 오류: {e}")))?;
+            } else {
+                for keywords in &keyword_sets {
+                    let filtered: Vec<_> = posts
+                        .iter()
+                        .filter(|post| post_has_all_keywords(post, keywords))
+                        .cloned()
+                        .collect();
+                    let keyword_dir = out_dir_path.join(keyword_set_dir_name(keywords));
+                    ensure_out_dir(&keyword_dir)
+                        .map_err(|e| CrawlError::Parse(format!("출력 디렉토리 생성 실패: {e}")))?;
+                    write_posts_csv(&keyword_dir, &filtered)
+                        .map_err(|e| CrawlError::Parse(format!("csv 저장 오류: {e}")))?;
+                    write_comments_csv(&keyword_dir, &filtered)
+                        .map_err(|e| CrawlError::Parse(format!("csv 저장 오류: {e}")))?;
+                    info!(
+                        rows = filtered.len(),
+                        keywords = ?keywords,
+                        out_dir = %keyword_dir.display(),
+                        "키워드 조합별 CSV 저장 완료"
+                    );
+                }
+                info!(ok = posts.len(), failed, combinations = keyword_sets.len(), "수집 완료");
+            }
             info!(out_dir, "CSV 저장 완료");
         }
 
