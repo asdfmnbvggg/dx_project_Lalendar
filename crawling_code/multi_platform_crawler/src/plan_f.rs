@@ -35,6 +35,7 @@ pub async fn run(
     max_posts: usize,
     workers: usize,
     out_dir: &str,
+    keyword_sets: Vec<Vec<String>>,
 ) -> Result<(), CrawlError> {
     info!("🚀 [Plan F] 미가입 네이버 카페 크롤링 시작");
     info!(" - 카페 URL : {}", cafe_url);
@@ -122,12 +123,71 @@ pub async fn run(
     info!("수집 완료: 성공 {} / 실패 {}", posts.len(), failed);
 
     let out_path = std::path::Path::new(out_dir);
-    write_posts_csv(out_path, &posts)
-        .map_err(|e| CrawlError::Parse(format!("posts.csv 저장 실패: {e}")))?;
-    write_comments_csv(out_path, &posts)
-        .map_err(|e| CrawlError::Parse(format!("comments.csv 저장 실패: {e}")))?;
+    write_posts_by_keyword_sets(out_path, &posts, &keyword_sets)?;
 
     info!("🎉 완료! → {}", out_dir);
+    Ok(())
+}
+
+fn post_has_all_keywords(post: &PostData, keywords: &[String]) -> bool {
+    let mut haystack = String::new();
+    haystack.push_str(&post.title);
+    haystack.push('\n');
+    haystack.push_str(&post.body);
+    for comment in &post.comments {
+        haystack.push('\n');
+        haystack.push_str(&comment.content);
+    }
+
+    let haystack = haystack.to_lowercase();
+    keywords
+        .iter()
+        .map(|keyword| keyword.trim().to_lowercase())
+        .filter(|keyword| !keyword.is_empty())
+        .all(|keyword| haystack.contains(keyword))
+}
+
+fn keyword_set_dir_name(keywords: &[String]) -> String {
+    let joined = keywords.join("_");
+    let sanitized: String = joined
+        .chars()
+        .map(|ch| match ch {
+            '\\' | '/' | ':' | '*' | '?' | '"' | '<' | '>' | '|' => '_',
+            ch if ch.is_whitespace() => '_',
+            ch => ch,
+        })
+        .collect();
+    sanitized.trim_matches('_').to_string()
+}
+
+fn write_posts_by_keyword_sets(
+    out_path: &std::path::Path,
+    posts: &[PostData],
+    keyword_sets: &[Vec<String>],
+) -> Result<(), CrawlError> {
+    if keyword_sets.is_empty() {
+        write_posts_csv(out_path, posts)
+            .map_err(|e| CrawlError::Parse(format!("posts.csv 저장 실패: {e}")))?;
+        write_comments_csv(out_path, posts)
+            .map_err(|e| CrawlError::Parse(format!("comments.csv 저장 실패: {e}")))?;
+        return Ok(());
+    }
+
+    for keywords in keyword_sets {
+        let filtered: Vec<_> = posts
+            .iter()
+            .filter(|post| post_has_all_keywords(post, keywords))
+            .cloned()
+            .collect();
+        let dir = out_path.join(keyword_set_dir_name(keywords));
+        std::fs::create_dir_all(&dir)
+            .map_err(|e| CrawlError::Parse(format!("출력 디렉토리 생성 실패: {e}")))?;
+        write_posts_csv(&dir, &filtered)
+            .map_err(|e| CrawlError::Parse(format!("posts.csv 저장 실패: {e}")))?;
+        write_comments_csv(&dir, &filtered)
+            .map_err(|e| CrawlError::Parse(format!("comments.csv 저장 실패: {e}")))?;
+    }
+
     Ok(())
 }
 

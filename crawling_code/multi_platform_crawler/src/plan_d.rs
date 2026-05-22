@@ -39,6 +39,7 @@ pub async fn run(
     max_posts: usize,
     workers: usize,
     out_dir: &str,
+    keyword_sets: Vec<Vec<String>>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("🚀 크롤링 시작!");
     println!(" - 타겟 URL: {}", url);
@@ -271,10 +272,7 @@ pub async fn run(
     }
 
     let out_path = std::path::Path::new(out_dir);
-    write_posts_csv(out_path, &all_posts)
-        .map_err(|e| format!("posts.csv 저장 실패: {e}"))?;
-    write_comments_csv(out_path, &all_posts)
-        .map_err(|e| format!("comments.csv 저장 실패: {e}"))?;
+    write_posts_by_keyword_sets(out_path, &all_posts, &keyword_sets)?;
 
     println!("\n🎉 크롤링 및 저장 완료!");
     println!(" - 저장 위치: {}/results.csv, {}/comments.csv", out_dir, out_dir);
@@ -285,6 +283,63 @@ pub async fn run(
 // ─────────────────────────────────────────────────────────────────
 // 유틸리티 함수
 // ─────────────────────────────────────────────────────────────────
+fn post_has_all_keywords(post: &PostData, keywords: &[String]) -> bool {
+    let mut haystack = String::new();
+    haystack.push_str(&post.title);
+    haystack.push('\n');
+    haystack.push_str(&post.body);
+    for comment in &post.comments {
+        haystack.push('\n');
+        haystack.push_str(&comment.content);
+    }
+
+    let haystack = haystack.to_lowercase();
+    keywords
+        .iter()
+        .map(|keyword| keyword.trim().to_lowercase())
+        .filter(|keyword| !keyword.is_empty())
+        .all(|keyword| haystack.contains(keyword))
+}
+
+fn keyword_set_dir_name(keywords: &[String]) -> String {
+    let joined = keywords.join("_");
+    let sanitized: String = joined
+        .chars()
+        .map(|ch| match ch {
+            '\\' | '/' | ':' | '*' | '?' | '"' | '<' | '>' | '|' => '_',
+            ch if ch.is_whitespace() => '_',
+            ch => ch,
+        })
+        .collect();
+    sanitized.trim_matches('_').to_string()
+}
+
+fn write_posts_by_keyword_sets(
+    out_path: &std::path::Path,
+    posts: &[PostData],
+    keyword_sets: &[Vec<String>],
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    if keyword_sets.is_empty() {
+        write_posts_csv(out_path, posts).map_err(|e| format!("posts.csv 저장 실패: {e}"))?;
+        write_comments_csv(out_path, posts).map_err(|e| format!("comments.csv 저장 실패: {e}"))?;
+        return Ok(());
+    }
+
+    for keywords in keyword_sets {
+        let filtered: Vec<_> = posts
+            .iter()
+            .filter(|post| post_has_all_keywords(post, keywords))
+            .cloned()
+            .collect();
+        let dir = out_path.join(keyword_set_dir_name(keywords));
+        std::fs::create_dir_all(&dir)?;
+        write_posts_csv(&dir, &filtered).map_err(|e| format!("posts.csv 저장 실패: {e}"))?;
+        write_comments_csv(&dir, &filtered).map_err(|e| format!("comments.csv 저장 실패: {e}"))?;
+    }
+
+    Ok(())
+}
+
 async fn launch_browser() -> Result<Browser, Box<dyn std::error::Error + Send + Sync>> {
     // 실행마다 고유한 디렉토리를 사용해 잠금 충돌 방지
     let unique_id = std::time::SystemTime::now()

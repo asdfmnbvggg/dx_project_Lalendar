@@ -135,6 +135,14 @@ enum Commands {
         /// 형식: [{"name": "NID_AUT", "value": "..."}, ...]
         #[arg(long)]
         cookie_file: Option<String>,
+
+        /// 조합 필터 1번 그룹 (쉼표 구분, 예: "집안일,살림")
+        #[arg(long)]
+        keyword1: Option<String>,
+
+        /// 조합 필터 2번 그룹 (쉼표 구분, 예: "빨래,빨래")
+        #[arg(long)]
+        keyword2: Option<String>,
     },
 
     /// DC인사이드 등 페이지네이션 게시판 크롤링 (CDP, ChromeDriver 불필요)
@@ -154,6 +162,14 @@ enum Commands {
         /// 결과 저장 디렉토리
         #[arg(long, default_value = "out")]
         out_dir: String,
+
+        /// 조합 필터 1번 그룹 (쉼표 구분, 예: "집안일,살림")
+        #[arg(long)]
+        keyword1: Option<String>,
+
+        /// 조합 필터 2번 그룹 (쉼표 구분, 예: "빨래,빨래")
+        #[arg(long)]
+        keyword2: Option<String>,
     },
 
     /// 스마트스토어 상품 리뷰 병렬 수집 (ChromeDriver 필요)
@@ -187,7 +203,15 @@ enum Commands {
     Threads {
         /// 검색 키워드
         #[arg(long)]
-        keyword: String,
+        keyword: Option<String>,
+
+        /// 조합 필터 1번 그룹 (쉼표 구분, 예: "집안일,살림")
+        #[arg(long)]
+        keyword1: Option<String>,
+
+        /// 조합 필터 2번 그룹 (쉼표 구분, 예: "빨래,빨래")
+        #[arg(long)]
+        keyword2: Option<String>,
 
         /// 수집할 최대 게시글 수
         #[arg(long, default_value_t = 30)]
@@ -218,7 +242,15 @@ enum Commands {
     BlogSearch {
         /// 검색 키워드
         #[arg(long)]
-        query: String,
+        query: Option<String>,
+
+        /// 조합 필터 1번 그룹 (쉼표 구분, 예: "집안일,살림")
+        #[arg(long)]
+        keyword1: Option<String>,
+
+        /// 조합 필터 2번 그룹 (쉼표 구분, 예: "빨래,빨래")
+        #[arg(long)]
+        keyword2: Option<String>,
 
         /// 검색 시작일 (YYYY-MM-DD)
         #[arg(long)]
@@ -278,6 +310,14 @@ enum Commands {
         /// 결과 저장 디렉토리
         #[arg(long, default_value = "out")]
         out_dir: String,
+
+        /// 조합 필터 1번 그룹 (쉼표 구분, 예: "집안일,살림")
+        #[arg(long)]
+        keyword1: Option<String>,
+
+        /// 조합 필터 2번 그룹 (쉼표 구분, 예: "빨래,빨래")
+        #[arg(long)]
+        keyword2: Option<String>,
     },
 
     /// Reddit 서브레딧 크롤링 (공개 JSON API, ChromeDriver 불필요)
@@ -309,6 +349,14 @@ enum Commands {
         /// 키워드 필터 (수집 후 제목+본문 필터링, 반복 사용 가능)
         #[arg(long)]
         keyword: Vec<String>,
+
+        /// 조합 필터 1번 그룹 (쉼표 구분, 예: "집안일,살림")
+        #[arg(long)]
+        keyword1: Option<String>,
+
+        /// 조합 필터 2번 그룹 (쉼표 구분, 예: "빨래,빨래")
+        #[arg(long)]
+        keyword2: Option<String>,
 
         /// 병렬 댓글 수집 워커 수
         #[arg(long, default_value_t = 5)]
@@ -434,6 +482,14 @@ enum Commands {
         /// Output directory (created if missing)
         #[arg(long, default_value = "out")]
         out_dir: String,
+
+        /// 조합 필터 1번 그룹 (쉼표 구분, 예: "집안일,살림")
+        #[arg(long)]
+        keyword1: Option<String>,
+
+        /// 조합 필터 2번 그룹 (쉼표 구분, 예: "빨래,빨래")
+        #[arg(long)]
+        keyword2: Option<String>,
     },
 }
 
@@ -535,6 +591,82 @@ fn keyword_set_dir_name(keywords: &[String]) -> String {
     }
 }
 
+fn build_search_keyword_sets(
+    single_query: Option<String>,
+    keyword1: Option<String>,
+    keyword2: Option<String>,
+    arg_name: &str,
+) -> Result<Vec<Vec<String>>, CrawlError> {
+    let base: Vec<String> = single_query
+        .into_iter()
+        .map(|query| query.trim().to_string())
+        .filter(|query| !query.is_empty())
+        .collect();
+    let sets = build_keyword_sets(base, keyword1, keyword2)?;
+
+    if sets.is_empty() {
+        Err(CrawlError::Parse(format!(
+            "{arg_name} 또는 --keyword1/--keyword2를 지정하세요."
+        )))
+    } else {
+        Ok(sets)
+    }
+}
+
+fn keyword_set_query(keywords: &[String]) -> String {
+    keywords.join(" ")
+}
+
+fn write_posts_with_keyword_sets(
+    out_dir_path: &Path,
+    posts: &[crate::models::PostData],
+    keyword_sets: &[Vec<String>],
+) -> Result<(), CrawlError> {
+    if keyword_sets.is_empty() {
+        write_posts_csv(out_dir_path, posts)
+            .map_err(|e| CrawlError::Parse(format!("csv 저장 오류: {e}")))?;
+        write_comments_csv(out_dir_path, posts)
+            .map_err(|e| CrawlError::Parse(format!("csv 저장 오류: {e}")))?;
+        return Ok(());
+    }
+
+    if keyword_sets.len() == 1 {
+        let filtered: Vec<_> = posts
+            .iter()
+            .filter(|post| post_has_all_keywords(post, &keyword_sets[0]))
+            .cloned()
+            .collect();
+        write_posts_csv(out_dir_path, &filtered)
+            .map_err(|e| CrawlError::Parse(format!("csv 저장 오류: {e}")))?;
+        write_comments_csv(out_dir_path, &filtered)
+            .map_err(|e| CrawlError::Parse(format!("csv 저장 오류: {e}")))?;
+        return Ok(());
+    }
+
+    for keywords in keyword_sets {
+        let filtered: Vec<_> = posts
+            .iter()
+            .filter(|post| post_has_all_keywords(post, keywords))
+            .cloned()
+            .collect();
+        let keyword_dir = out_dir_path.join(keyword_set_dir_name(keywords));
+        ensure_out_dir(&keyword_dir)
+            .map_err(|e| CrawlError::Parse(format!("출력 디렉토리 생성 실패: {e}")))?;
+        write_posts_csv(&keyword_dir, &filtered)
+            .map_err(|e| CrawlError::Parse(format!("csv 저장 오류: {e}")))?;
+        write_comments_csv(&keyword_dir, &filtered)
+            .map_err(|e| CrawlError::Parse(format!("csv 저장 오류: {e}")))?;
+        info!(
+            rows = filtered.len(),
+            keywords = ?keywords,
+            out_dir = %keyword_dir.display(),
+            "키워드 조합별 CSV 저장 완료"
+        );
+    }
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), CrawlError> {
     // Logging
@@ -551,11 +683,12 @@ async fn main() -> Result<(), CrawlError> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Cafe { url, max_posts, workers, webdriver, out_dir, cookie_file } => {
+        Commands::Cafe { url, max_posts, workers, webdriver, out_dir, cookie_file, keyword1, keyword2 } => {
             let url = Url::parse(&url)?;
             let out_dir_path = Path::new(&out_dir);
             ensure_out_dir(out_dir_path)
                 .map_err(|e| CrawlError::Parse(format!("출력 디렉토리 생성 실패: {e}")))?;
+            let keyword_sets = build_keyword_sets(Vec::new(), keyword1, keyword2)?;
 
             let cookies: Arc<Vec<CookieEntry>> = Arc::new(match cookie_file {
                 Some(ref p) => {
@@ -583,10 +716,7 @@ async fn main() -> Result<(), CrawlError> {
 
             info!(ok = posts.len(), failed, "수집 완료");
 
-            write_posts_csv(out_dir_path, &posts)
-                .map_err(|e| CrawlError::Parse(format!("csv 저장 오류: {e}")))?;
-            write_comments_csv(out_dir_path, &posts)
-                .map_err(|e| CrawlError::Parse(format!("csv 저장 오류: {e}")))?;
+            write_posts_with_keyword_sets(out_dir_path, &posts, &keyword_sets)?;
 
             info!(out_dir, "CSV 저장 완료");
         }
@@ -713,67 +843,118 @@ async fn main() -> Result<(), CrawlError> {
         }
 
         Commands::Threads {
-            keyword, max_posts, workers, webdriver, out_dir,
+            keyword, keyword1, keyword2, max_posts, workers, webdriver, out_dir,
             comment_scroll_rounds, comment_pause_secs,
         } => {
-            plan_i::run(plan_i::PlanIConfig {
-                keyword,
-                max_posts,
-                workers,
-                webdriver_url: webdriver,
-                out_dir,
-                comment_scroll_rounds,
-                comment_pause_secs,
-                ..plan_i::PlanIConfig::default()
-            })
-            .await
-            .map_err(|e| CrawlError::Parse(format!("threads 오류: {e}")))?;
+            let keyword_sets = build_search_keyword_sets(keyword, keyword1, keyword2, "--keyword")?;
+            for keywords in keyword_sets {
+                let keyword = keyword_set_query(&keywords);
+                let run_out_dir = if keywords.len() > 1 {
+                    std::path::Path::new(&out_dir)
+                        .join(keyword_set_dir_name(&keywords))
+                        .to_string_lossy()
+                        .to_string()
+                } else {
+                    out_dir.clone()
+                };
+                plan_i::run(plan_i::PlanIConfig {
+                    keyword,
+                    max_posts,
+                    workers,
+                    webdriver_url: webdriver.clone(),
+                    out_dir: run_out_dir,
+                    comment_scroll_rounds,
+                    comment_pause_secs,
+                    ..plan_i::PlanIConfig::default()
+                })
+                .await
+                .map_err(|e| CrawlError::Parse(format!("threads 오류: {e}")))?;
+            }
         }
 
         Commands::BlogSearch {
-            query, start_date, end_date, max_posts, workers,
+            query, keyword1, keyword2, start_date, end_date, max_posts, workers,
             webdriver, headless, out_dir,
             search_max_scrolls, detail_max_scrolls,
         } => {
-            plan_h::run(plan_h::PlanHConfig {
-                query,
-                start_date,
-                end_date,
-                max_posts,
-                workers,
-                webdriver_url: webdriver,
-                headless,
-                output_dir: std::path::PathBuf::from(out_dir),
-                search_max_scrolls,
-                detail_max_scrolls,
-                ..plan_h::PlanHConfig::default()
-            })
-            .await
-            .map_err(|e| CrawlError::Parse(format!("blog-search 오류: {e}")))?;
+            let keyword_sets = build_search_keyword_sets(query, keyword1, keyword2, "--query")?;
+            for keywords in keyword_sets {
+                let query = keyword_set_query(&keywords);
+                let output_dir = if keywords.len() > 1 {
+                    std::path::Path::new(&out_dir).join(keyword_set_dir_name(&keywords))
+                } else {
+                    std::path::PathBuf::from(&out_dir)
+                };
+                plan_h::run(plan_h::PlanHConfig {
+                    query,
+                    start_date: start_date.clone(),
+                    end_date: end_date.clone(),
+                    max_posts,
+                    workers,
+                    webdriver_url: webdriver.clone(),
+                    headless,
+                    output_dir,
+                    search_max_scrolls,
+                    detail_max_scrolls,
+                    ..plan_h::PlanHConfig::default()
+                })
+                .await
+                .map_err(|e| CrawlError::Parse(format!("blog-search 오류: {e}")))?;
+            }
         }
 
-        Commands::CafeOpen { url, max_posts, workers, webdriver, out_dir } => {
-            plan_f::run(&webdriver, &url, max_posts, workers, &out_dir)
+        Commands::CafeOpen { url, max_posts, workers, webdriver, out_dir, keyword1, keyword2 } => {
+            let keyword_sets = build_keyword_sets(Vec::new(), keyword1, keyword2)?;
+            plan_f::run(&webdriver, &url, max_posts, workers, &out_dir, keyword_sets)
                 .await
                 .map_err(|e| CrawlError::Parse(format!("cafe-open 오류: {e}")))?;
         }
 
-        Commands::Reddit { subreddit, sort, limit, max_pages, max_comments, search_query, keyword, workers, user_agent, page_delay_ms, out_dir } => {
-            plan_g::run(plan_g::RedditConfig {
-                subreddit,
-                sort,
-                limit,
-                max_pages,
-                max_comments,
-                keywords: keyword,
-                search_query,
-                workers,
-                user_agent,
-                page_delay_ms,
-                out_dir,
-            })
-            .await
-            .map_err(|e| CrawlError::Parse(format!("reddit 오류: {e}")))?;
+        Commands::Reddit { subreddit, sort, limit, max_pages, max_comments, search_query, keyword, keyword1, keyword2, workers, user_agent, page_delay_ms, out_dir } => {
+            let keyword_sets = build_keyword_sets(keyword, keyword1, keyword2)?;
+            if keyword_sets.is_empty() {
+                plan_g::run(plan_g::RedditConfig {
+                    subreddit,
+                    sort,
+                    limit,
+                    max_pages,
+                    max_comments,
+                    keywords: Vec::new(),
+                    search_query,
+                    workers,
+                    user_agent,
+                    page_delay_ms,
+                    out_dir,
+                })
+                .await
+                .map_err(|e| CrawlError::Parse(format!("reddit 오류: {e}")))?;
+            } else {
+                for keywords in keyword_sets {
+                    let run_out_dir = if keywords.len() > 1 {
+                        std::path::Path::new(&out_dir)
+                            .join(keyword_set_dir_name(&keywords))
+                            .to_string_lossy()
+                            .to_string()
+                    } else {
+                        out_dir.clone()
+                    };
+                    plan_g::run(plan_g::RedditConfig {
+                        subreddit: subreddit.clone(),
+                        sort: sort.clone(),
+                        limit,
+                        max_pages,
+                        max_comments,
+                        keywords: keywords.clone(),
+                        search_query: Some(keyword_set_query(&keywords)),
+                        workers,
+                        user_agent: user_agent.clone(),
+                        page_delay_ms,
+                        out_dir: run_out_dir,
+                    })
+                    .await
+                    .map_err(|e| CrawlError::Parse(format!("reddit 오류: {e}")))?;
+                }
+            }
         }
 
         Commands::Amazon { url, input, max_reviews, workers, webdriver, headless, cookie_file, no_read_more, out_dir } => {
@@ -840,8 +1021,9 @@ async fn main() -> Result<(), CrawlError> {
             .map_err(|e| CrawlError::Parse(format!("goodreads 오류: {e}")))?;
         }
 
-        Commands::Scrape { url, max_posts, workers, out_dir } => {
-            plan_d::run(&url, max_posts, workers, &out_dir)
+        Commands::Scrape { url, max_posts, workers, out_dir, keyword1, keyword2 } => {
+            let keyword_sets = build_keyword_sets(Vec::new(), keyword1, keyword2)?;
+            plan_d::run(&url, max_posts, workers, &out_dir, keyword_sets)
                 .await
                 .map_err(|e| CrawlError::Parse(format!("scrape 오류: {e}")))?;
         }
@@ -857,6 +1039,8 @@ async fn main() -> Result<(), CrawlError> {
             webdriver,
             plan_b_pages,
             out_dir,
+            keyword1,
+            keyword2,
         } => {
             let mut urls = Vec::new();
             if let Some(input_path) = input {
@@ -875,6 +1059,7 @@ async fn main() -> Result<(), CrawlError> {
             let out_dir_path = Path::new(&out_dir);
             ensure_out_dir(out_dir_path)
                 .map_err(|e| CrawlError::Parse(format!("failed to create out dir: {e}")))?;
+            let keyword_sets = build_keyword_sets(Vec::new(), keyword1, keyword2)?;
 
             info!(count = urls.len(), "starting crawl");
 
@@ -889,10 +1074,7 @@ async fn main() -> Result<(), CrawlError> {
             .await?;
 
             // CSV exports
-            write_posts_csv(out_dir_path, &posts)
-                .map_err(|e| CrawlError::Parse(format!("csv write error: {e}")))?;
-            write_comments_csv(out_dir_path, &posts)
-                .map_err(|e| CrawlError::Parse(format!("csv write error: {e}")))?;
+            write_posts_with_keyword_sets(out_dir_path, &posts, &keyword_sets)?;
 
             info!(posts = posts.len(), "done");
         }

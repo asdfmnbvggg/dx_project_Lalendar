@@ -62,11 +62,27 @@ cargo build --release
 ### 명령어
 
 ```
-cargo run --release -- crawl --input ./urls.txt --max-in-flight 200 --out-dir ./out
+cargo run --release -- crawl `
+  --input ./urls.txt `
+  --max-in-flight 200 `
+  --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" `
+  --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" `
+  --out-dir ./out
 
-cargo run --release -- crawl --url "https://m.blog.naver.com/foo/123" --out-dir ./out
+cargo run --release -- crawl `
+  --url "https://m.blog.naver.com/foo/123" `
+  --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" `
+  --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" `
+  --out-dir ./out
 
-cargo run --release -- crawl --input ./urls.txt --max-in-flight 200 --webdriver http://localhost:4444 --plan-b-pages 5 --out-dir ./out
+cargo run --release -- crawl `
+  --input ./urls.txt `
+  --max-in-flight 200 `
+  --webdriver http://localhost:4444 `
+  --plan-b-pages 5 `
+  --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" `
+  --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" `
+  --out-dir ./out
 ```
 
 ### urls.txt 형식
@@ -103,9 +119,24 @@ chromedriver.exe --port=4444
 ### 명령어
 
 ```
-cargo run --release -- cafe --url "https://cafe.naver.com/ArticleList.nhn?search.clubid=12345&search.boardtype=L" --max-posts 50 --workers 3 --webdriver http://localhost:4444 --out-dir ./out
+cargo run --release -- cafe `
+  --url "https://cafe.naver.com/ArticleList.nhn?search.clubid=12345&search.boardtype=L" `
+  --max-posts 50 `
+  --workers 3 `
+  --webdriver http://localhost:4444 `
+  --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" `
+  --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" `
+  --out-dir ./out
 
-cargo run --release -- cafe --url "https://cafe.naver.com/ArticleList.nhn?search.clubid=12345&search.boardtype=L" --max-posts 50 --workers 3 --webdriver http://localhost:4444 --cookie-file ./cookies.json --out-dir ./out
+cargo run --release -- cafe `
+  --url "https://cafe.naver.com/ArticleList.nhn?search.clubid=12345&search.boardtype=L" `
+  --max-posts 50 `
+  --workers 3 `
+  --webdriver http://localhost:4444 `
+  --cookie-file ./cookies.json `
+  --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" `
+  --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" `
+  --out-dir ./out
 ```
 
 ---
@@ -120,12 +151,37 @@ ChromeDriver 없이 CDP로 Chrome을 직접 제어한다. 스크롤로 게시글
 ### 명령어
 
 ```
-cargo run --release -- scroll --url "https://ohou.se/cards/feed" --max-posts 30 --workers 3 --out-dir ./out
+cargo run --release -- scroll `
+  --url "https://ohou.se/cards/feed" `
+  --max-posts 100 `
+  --workers 3 `
+  --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" `
+  --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" `
+  --out-dir ./out
 
-cargo run --release -- scroll --url "https://example.com/feed" --max-posts 50 --workers 3 --card-selector "div.post-card" --link-selector "a.post-link" --scroll-pause 2000 --out-dir ./out
+cargo run --release -- scroll `
+  --url "https://example.com/feed" `
+  --max-posts 100 `
+  --workers 3 `
+  --card-selector "div.post-card" `
+  --link-selector "a.post-link" `
+  --scroll-pause 2000 `
+  --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" `
+  --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" `
+  --out-dir ./out
 
-cargo run --release -- scroll --url "https://ohou.se/cards/feed" --max-posts 30 --workers 3 --cookie-file ./cookies.json --out-dir ./out
+cargo run --release -- scroll `
+  --url "https://ohou.se/cards/feed" `
+  --max-posts 100 `
+  --workers 3 `
+  --cookie-file ./cookies.json `
+  --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" `
+  --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" `
+  --out-dir ./out
 ```
+
+`--keyword1`과 `--keyword2`는 쉼표로 구분한 값을 같은 순서끼리 묶어서 필터링한다.
+예를 들어 첫 번째 값은 `빨래+쉰내`, 두 번째 값은 `비+빨래` 조합으로 저장된다.
 
 ### 주요 옵션
 
@@ -133,6 +189,9 @@ cargo run --release -- scroll --url "https://ohou.se/cards/feed" --max-posts 30 
 |------|--------|------|
 | `--max-posts` | 20 | 수집할 최대 게시글 수 |
 | `--workers` | 3 | 동시 탭(페이지) 수 |
+| `--keyword` | — | 필수 키워드 필터. 반복 지정하면 모든 키워드가 포함된 글만 저장 |
+| `--keyword1` | — | 조합 필터 1번 그룹. 쉼표로 여러 키워드 입력 |
+| `--keyword2` | — | 조합 필터 2번 그룹. `--keyword1`과 같은 개수로 입력 |
 | `--card-selector` | `article.css-71vdks` | 게시글 카드 CSS 셀렉터 |
 | `--link-selector` | `a` | 카드 내 링크 셀렉터 |
 | `--scroll-pause` | 1500 | 스크롤 후 대기 시간 (ms) |
@@ -149,7 +208,13 @@ ChromeDriver 없이 CDP로 Chrome을 직접 제어한다. `?page=N` 방식으로
 ### 명령어
 
 ```
-cargo run --release -- scrape --url "https://gall.dcinside.com/board/lists/?id=toeic" --max-posts 50 --workers 2 --out-dir ./out
+cargo run --release -- scrape `
+  --url "https://gall.dcinside.com/board/lists/?id=toeic" `
+  --max-posts 50 `
+  --workers 2 `
+  --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" `
+  --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" `
+  --out-dir ./out
 ```
 
 > DC인사이드는 IP 차단이 있으므로 `--workers`는 2~3을 권장한다.
@@ -160,6 +225,8 @@ cargo run --release -- scrape --url "https://gall.dcinside.com/board/lists/?id=t
 |------|--------|------|
 | `--max-posts` | 100 | 수집할 최대 게시글 수 |
 | `--workers` | 2 | 병렬 처리 워커 수 |
+| `--keyword1` | — | 조합 필터 1번 그룹. 쉼표로 여러 키워드 입력 |
+| `--keyword2` | — | 조합 필터 2번 그룹. `--keyword1`과 같은 개수로 입력 |
 
 ---
 
@@ -167,6 +234,8 @@ cargo run --release -- scrape --url "https://gall.dcinside.com/board/lists/?id=t
 
 WebDriver + thirtyfour로 스마트스토어 상품의 리뷰를 수집한다.
 여러 상품을 `workers`개의 Chrome 세션이 병렬로 처리한다.
+
+> 스마트스토어/Amazon/Goodreads는 검색어로 사이트를 순회하는 크롤러가 아니라 사용자가 지정한 상품·도서 URL의 리뷰를 수집하는 URL 기반 크롤러다. 위 키워드 조합 옵션은 게시글/검색 기반 플랜(A/B/C/D/F/G/H/I)에 적용한다.
 
 ### 사전 준비
 
@@ -244,6 +313,8 @@ cargo run --release -- cafe-open \
   --max-posts 50 \
   --workers 3 \
   --webdriver http://localhost:4444 \
+  --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" \
+  --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" \
   --out-dir ./out
 ```
 
@@ -256,6 +327,8 @@ cargo run --release -- cafe-open \
 | `--workers` | 3 | 병렬 Chrome 세션 수 |
 | `--webdriver` | — | ChromeDriver 엔드포인트 (필수) |
 | `--out-dir` | `out` | 결과 저장 디렉토리 |
+| `--keyword1` | — | 조합 필터 1번 그룹. 쉼표로 여러 키워드 입력 |
+| `--keyword2` | — | 조합 필터 2번 그룹. `--keyword1`과 같은 개수로 입력 |
 
 ### Plan B와의 차이
 
@@ -293,19 +366,19 @@ Reddit 공개 JSON API를 사용한다. Chrome, ChromeDriver, 계정 모두 불�
 
 ```
 # 전체 Reddit에서 키워드 검색 (--subreddit 생략)
-cargo run --release -- reddit --search-query "lg styler" --sort relevance --max-pages 10 --out-dir ./out
+cargo run --release -- reddit --sort relevance --max-pages 10 --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" --out-dir ./out
 
 # 서브레딧 내 키워드 검색
-cargo run --release -- reddit --subreddit homeautomation --search-query "lg styler" --sort relevance --max-pages 5 --out-dir ./out
+cargo run --release -- reddit --subreddit homeautomation --sort relevance --max-pages 5 --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" --out-dir ./out
 
 # 서브레딧 전체 피드 수집 (최신순)
-cargo run --release -- reddit --subreddit minimalism --sort new --max-pages 3 --out-dir ./out
+cargo run --release -- reddit --subreddit minimalism --sort new --max-pages 3 --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" --out-dir ./out
 
 # 검색 + 클라이언트 필터 조합
-cargo run --release -- reddit --search-query "Nike" --keyword "shoe" --keyword "review" --out-dir ./out
+cargo run --release -- reddit --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" --out-dir ./out
 
 # 인기순, 댓글 대량 수집
-cargo run --release -- reddit --subreddit malefashionadvice --sort hot --max-pages 5 --max-comments 500 --workers 5 --out-dir ./out
+cargo run --release -- reddit --subreddit malefashionadvice --sort hot --max-pages 5 --max-comments 500 --workers 5 --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" --out-dir ./out
 ```
 
 ### 검색 모드 비교
@@ -327,6 +400,8 @@ cargo run --release -- reddit --subreddit malefashionadvice --sort hot --max-pag
 | `--max-pages` | 3 | 최대 페이지 수 |
 | `--max-comments` | 200 | 게시글당 최대 댓글 수 |
 | `--keyword` | — | 클라이언트 필터 (반복 사용 가능, 없으면 전체) |
+| `--keyword1` | — | 조합 필터 1번 그룹. 쉼표로 여러 키워드 입력 |
+| `--keyword2` | — | 조합 필터 2번 그룹. `--keyword1`과 같은 개수로 입력 |
 | `--workers` | 5 | 댓글 병렬 수집 동시성 |
 | `--page-delay-ms` | 2000 | 페이지 요청 사이 딜레이 (ms) |
 | `--user-agent` | `rust:reddit-crawler:v1.0 (by /u/anonymous)` | HTTP User-Agent |
@@ -360,27 +435,29 @@ chromedriver.exe --port=9515
 ### 한 줄 실행
 
 ```
-cargo run --release -- blog-search --query "제주도 맛집" --start-date 2025-01-01 --end-date 2025-03-01 --webdriver http://localhost:9515 --out-dir ./out
+cargo run --release -- blog-search --start-date 2025-01-01 --end-date 2025-03-01 --webdriver http://localhost:9515 --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" --out-dir ./out
 ```
 
 ### 명령어
 
 ```
 # 기본 (헤드리스, 워커 3개, 최대 30개)
-cargo run --release -- blog-search --query "제주도 맛집" --start-date 2025-01-01 --end-date 2025-03-01 --webdriver http://localhost:9515 --out-dir ./out
+cargo run --release -- blog-search --start-date 2025-01-01 --end-date 2025-03-01 --webdriver http://localhost:9515 --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" --out-dir ./out
 
 # 대량 수집 (워커 5개, 최대 200개)
-cargo run --release -- blog-search --query "다이어트 식단" --start-date 2024-06-01 --end-date 2024-12-31 --max-posts 200 --workers 5 --webdriver http://localhost:9515 --out-dir ./out
+cargo run --release -- blog-search --start-date 2024-06-01 --end-date 2024-12-31 --max-posts 200 --workers 5 --webdriver http://localhost:9515 --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" --out-dir ./out
 
 # 브라우저 창 보이게 (디버그용)
-cargo run --release -- blog-search --query "러닝화 추천" --start-date 2025-01-01 --end-date 2025-03-01 --webdriver http://localhost:9515 --headless false --out-dir ./out
+cargo run --release -- blog-search --start-date 2025-01-01 --end-date 2025-03-01 --webdriver http://localhost:9515 --headless false --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" --out-dir ./out
 ```
 
 ### 주요 옵션
 
 | 옵션 | 기본값 | 설명 |
 |------|--------|------|
-| `--query` | — | 검색 키워드 (필수) |
+| `--query` | — | 검색 키워드 (`--keyword1/--keyword2` 사용 시 생략 가능) |
+| `--keyword1` | — | 조합 필터 1번 그룹. 쉼표로 여러 키워드 입력 |
+| `--keyword2` | — | 조합 필터 2번 그룹. `--keyword1`과 같은 개수로 입력 |
 | `--start-date` | — | 검색 시작일 `YYYY-MM-DD` (필수) |
 | `--end-date` | — | 검색 종료일 `YYYY-MM-DD` (필수) |
 | `--max-posts` | 30 | 수집할 최대 게시글 수 |
@@ -440,27 +517,29 @@ chromedriver.exe --port=9515
 ### 한 줄 실행
 
 ```
-cargo run --release -- threads --keyword "러닝화" --webdriver http://localhost:9515 --out-dir ./out
+cargo run --release -- threads --webdriver http://localhost:9515 --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" --out-dir ./out
 ```
 
 ### 명령어
 
 ```
 # 기본 (워커 3개, 최대 30개)
-cargo run --release -- threads --keyword "러닝화" --webdriver http://localhost:9515 --out-dir ./out
+cargo run --release -- threads --webdriver http://localhost:9515 --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" --out-dir ./out
 
 # 대량 수집 (워커 5개, 최대 100개)
-cargo run --release -- threads --keyword "다이어트" --max-posts 100 --workers 5 --webdriver http://localhost:9515 --out-dir ./out
+cargo run --release -- threads --max-posts 100 --workers 5 --webdriver http://localhost:9515 --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" --out-dir ./out
 
 # 댓글 스크롤 조정 (댓글 많은 게시글)
-cargo run --release -- threads --keyword "맛집" --comment-scroll-rounds 20 --comment-pause-secs 2 --webdriver http://localhost:9515 --out-dir ./out
+cargo run --release -- threads --comment-scroll-rounds 20 --comment-pause-secs 2 --webdriver http://localhost:9515 --keyword1 "빨래,비,습기,집안일,집안일,식세기,청소,집안일,집안일,집안일,집안일,집안일,살림,살림,살림,살림,살림,살림,에어컨,집안일,집안일,집안일,청소,빨래,초보,집안일,집안일,밀린,살림,살림,살림,살림,살림,밀린,전기세,워킹맘,집안일,집안일,집안일,정리정돈,대청소,청소,집안일,빨래,집안일,집안일,집안일,살림,살림,살림" --keyword2 "쉰내,빨래,건조,귀찮,초보,문제,방법,소질,못,쉽,반복,꿀팁,귀찮,초보,소질,못,반복,꿀팁,청소,쉽게,루틴,교체,루틴,루틴,주부,최소,불편,집안일,쉽게,루틴,교체,최소,불편,살림,전기세,워킹맘,육아,육아,퇴근,정리정돈,대청소,주기,주기,주기,시간,습관,오래,육아,퇴근,습관" --out-dir ./out
 ```
 
 ### 주요 옵션
 
 | 옵션 | 기본값 | 설명 |
 |------|--------|------|
-| `--keyword` | — | 검색 키워드 (필수) |
+| `--keyword` | — | 검색 키워드 (`--keyword1/--keyword2` 사용 시 생략 가능) |
+| `--keyword1` | — | 조합 필터 1번 그룹. 쉼표로 여러 키워드 입력 |
+| `--keyword2` | — | 조합 필터 2번 그룹. `--keyword1`과 같은 개수로 입력 |
 | `--max-posts` | 30 | 수집할 최대 게시글 수 |
 | `--workers` | 3 | 병렬 Chrome 세션 수 |
 | `--webdriver` | `http://localhost:9515` | ChromeDriver 엔드포인트 |
