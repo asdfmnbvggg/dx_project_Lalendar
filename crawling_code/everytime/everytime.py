@@ -21,6 +21,7 @@ EVERYTIME_ID = os.getenv("EVERYTIME_ID", "").strip()
 EVERYTIME_PASSWORD = os.getenv("EVERYTIME_PASSWORD", "").strip()
 BOARD_NUMBER = os.getenv("BOARD_NUMBER", "").strip()
 KEY_WORD = os.getenv("KEY_WORD", "").strip()
+KEY_WORDS = [keyword.strip() for keyword in KEY_WORD.split(",") if keyword.strip()]
 
 START_PAGE = int(os.getenv("START_PAGE", "1"))
 END_PAGE = int(os.getenv("END_PAGE", "10"))
@@ -60,11 +61,11 @@ def login(driver: webdriver.Chrome) -> None:
     input("로그인이 끝나면 이 터미널에서 Enter를 누르세요: ")
 
 
-def collect_post_links(driver: webdriver.Chrome, page: int) -> List[str]:
+def collect_post_links(driver: webdriver.Chrome, keyword: str, page: int) -> List[str]:
     if not BOARD_NUMBER:
         raise ValueError(".env 파일에 BOARD_NUMBER를 입력하세요.")
 
-    url = f"https://everytime.kr/{BOARD_NUMBER}/all/{KEY_WORD}/p/{page}"
+    url = f"https://everytime.kr/{BOARD_NUMBER}/all/{keyword}/p/{page}"
     driver.get(url)
     time.sleep(PAGE_DELAY)
 
@@ -96,43 +97,50 @@ def save_collected_texts(rows: List[Dict[str, object]], writer: csv.DictWriter) 
 
 
 def main() -> None:
+    if not KEY_WORDS:
+        raise ValueError(".env 파일에 KEY_WORD를 입력하세요. 여러 개는 쉼표로 구분합니다.")
+
     driver = create_driver()
 
     try:
         login(driver)
 
-        fieldnames = ["page", "post_index", "url", "text_index", "text"]
+        fieldnames = ["keyword", "page", "post_index", "url", "text_index", "text"]
 
         with RESULT_FILE.open("w", newline="", encoding="utf-8-sig") as file:
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
 
-            for page in range(START_PAGE, END_PAGE + 1):
-                print(f"\n===== Page {page} =====")
+            for keyword_index, keyword in enumerate(KEY_WORDS, start=1):
+                print(f"\n===== Keyword {keyword_index}/{len(KEY_WORDS)}: {keyword} =====")
 
-                links = collect_post_links(driver, page)
-                print(f"수집한 게시글 링크 수: {len(links)}")
+                for page in range(START_PAGE, END_PAGE + 1):
+                    print(f"\n===== Page {page} =====")
 
-                page_rows = []
-                for idx, link in enumerate(links, start=1):
-                    print(f"[{idx}/{len(links)}] {link}")
-                    try:
-                        texts = collect_texts_from_post(driver, link)
+                    links = collect_post_links(driver, keyword, page)
+                    print(f"수집한 게시글 링크 수: {len(links)}")
 
-                        for text_idx, text in enumerate(texts, start=1):
-                            page_rows.append(
-                                {
-                                    "page": page,
-                                    "post_index": idx,
-                                    "url": link,
-                                    "text_index": text_idx,
-                                    "text": text,
-                                }
-                            )
-                    except Exception as e:
-                        print(f"게시글 수집 실패: {link} / {e}")
+                    page_rows = []
+                    for idx, link in enumerate(links, start=1):
+                        print(f"[{idx}/{len(links)}] {link}")
+                        try:
+                            texts = collect_texts_from_post(driver, link)
 
-                save_collected_texts(page_rows, writer)
+                            for text_idx, text in enumerate(texts, start=1):
+                                page_rows.append(
+                                    {
+                                        "keyword": keyword,
+                                        "page": page,
+                                        "post_index": idx,
+                                        "url": link,
+                                        "text_index": text_idx,
+                                        "text": text,
+                                    }
+                                )
+                        except Exception as e:
+                            print(f"게시글 수집 실패: {link} / {e}")
+
+                    save_collected_texts(page_rows, writer)
 
         print("\n완료")
         print(f"- {RESULT_FILE}")
