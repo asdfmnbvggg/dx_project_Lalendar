@@ -1,29 +1,67 @@
-import { Check, Sparkles } from "lucide-react";
+import { Check, TrendingUp } from "lucide-react";
 import { presets } from "../data.js";
+
+const weekDays = [
+  { key: "2026-05-20", label: "수" },
+  { key: "2026-05-21", label: "목" },
+  { key: "2026-05-22", label: "금" },
+  { key: "2026-05-23", label: "토" },
+  { key: "2026-05-24", label: "일" },
+  { key: "2026-05-25", label: "월" },
+  { key: "2026-05-26", label: "오늘" },
+];
 
 export default function RewardPage({ tasks, completion, onAddPreset }) {
   const doneCount = tasks.filter((task) => task.done).length;
+  const pendingCount = tasks.length - doneCount;
+  const chartRows = weekDays.map((day) => {
+    const dayTasks = tasks.filter((task) => task.date === day.key);
+    const done = dayTasks.filter((task) => task.done).length;
+    const pending = dayTasks.length - done;
+    const total = Math.max(dayTasks.length, 1);
+    return {
+      ...day,
+      done,
+      pending,
+      total,
+      doneHeight: Math.max(8, Math.round((done / total) * 100)),
+      pendingHeight: Math.max(8, Math.round((pending / total) * 100)),
+    };
+  });
 
   return (
     <section className="page">
-      <div className="reward-hero">
-        <Sparkles size={34} />
-        <p>이번 주 리워드</p>
-        <h1>작은 루틴이 쌓였어요</h1>
-        <strong>Speedster</strong>
-        <span>오늘 {doneCount}개 작업 완료</span>
-      </div>
-
-      <section className="stats-card">
+      <section className="stats-card live-stats-card">
         <div>
-          <p>작업 완료율</p>
+          <p>실시간 기록</p>
           <h2>{completion}%</h2>
+          <span>완료 {doneCount}개 · 대기 {pendingCount}개</span>
         </div>
-        <div className="bar-chart">
-          {[38, 66, 94, 42, 78, 63, 88].map((height, index) => (
-            <i key={index} style={{ height: `${height}%` }} />
+        <div className="live-chart" aria-label="최근 7일 작업 완료 기록">
+          {chartRows.map((row) => (
+            <div className="live-chart-day" key={row.key}>
+              <div className="stacked-bar" title={`${row.label}: 완료 ${row.done}개, 대기 ${row.pending}개`}>
+                <i className="pending" style={{ height: `${row.pendingHeight}%` }} />
+                <i className="done" style={{ height: `${row.doneHeight}%` }} />
+              </div>
+              <strong>{row.done}/{row.total}</strong>
+              <span>{row.label}</span>
+            </div>
           ))}
         </div>
+      </section>
+
+      <section className="reward-summary-grid">
+        <article>
+          <TrendingUp size={20} />
+          <strong>{doneCount}개</strong>
+          <span>누적 완료</span>
+        </article>
+        <article>
+          <Check size={20} />
+          <strong>{chartRows.at(-1).done}개</strong>
+          <span>오늘 완료</span>
+        </article>
       </section>
 
       <section className="preset-card">

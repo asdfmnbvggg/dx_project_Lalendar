@@ -1,22 +1,10 @@
-import { ChevronRight, CloudSun, Cpu, MapPin, Plus, Sparkles, Wifi } from "lucide-react";
+import { ChevronRight, CloudSun, Cpu, MapPin, Plus, Wifi } from "lucide-react";
 import { appliances, communityTips, rooms, smartRecommendations } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
 
 export default function TodayPage({ todayTasks, completion, toggleTask, deleteTask, openComposer, onOpenPanel }) {
   return (
     <section className="page">
-      <div className="hero-panel">
-        <div>
-          <p>LG HUB · 가전 캘린더</p>
-          <h1>집안일과 가전을 한 번에</h1>
-          <span>날씨, 위치, 생활 데이터로 오늘 루틴을 자동 추천해요.</span>
-        </div>
-        <button className="hero-badge" onClick={() => onOpenPanel({ type: "summary" })}>
-          <Sparkles size={22} />
-          <strong>{completion}%</strong>
-        </button>
-      </div>
-
       <section className="hub-grid">
         <article className="weather-card">
           <div>

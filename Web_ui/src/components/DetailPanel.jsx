@@ -138,6 +138,29 @@ export default function DetailPanel({
           </section>
         )}
 
+        {panel.type === "member" && (
+          <section className="insight-card">
+            <Sparkles size={28} />
+            <h3>{panel.member.name}</h3>
+            <p>{panel.member.subtitle}</p>
+            <strong>담당 작업과 로테이션을 멤버 탭에서 바로 확인할 수 있어요.</strong>
+          </section>
+        )}
+
+        {panel.type === "rotation" && (
+          <section className="detail-list">
+            {["Charlotte", "Minsu.kim", "Theresa", "Anna"].map((name, index) => (
+              <article className="notice-row" key={name}>
+                <Cpu size={18} />
+                <div>
+                  <strong>{index + 1}. {name}</strong>
+                  <p>{index === 0 ? "오늘 담당" : `${index + 1}번째 순서`}</p>
+                </div>
+              </article>
+            ))}
+          </section>
+        )}
+
         {![
           "summary",
           "settings",
@@ -147,6 +170,8 @@ export default function DetailPanel({
           "appliances",
           "community",
           "tip",
+          "member",
+          "rotation",
         ].includes(panel.type) && (
           <section className="detail-list">
             {panelTasks.map((task) => (
@@ -200,6 +225,8 @@ function getPanelKicker(panel) {
     appliances: "가전 캘린더",
     community: "커뮤니티",
     tip: "생활 팁",
+    member: "멤버 상세",
+    rotation: "로테이션",
   };
   return labels[panel.type] || "상세";
 }
@@ -215,5 +242,7 @@ function getPanelTitle(panel) {
   if (panel.type === "community") return "우리 동네 집안일 팁";
   if (panel.type === "tip") return "커뮤니티 추천";
   if (panel.type === "appliances") return "LG ThinQ 연동 가전";
+  if (panel.type === "member") return panel.member.name;
+  if (panel.type === "rotation") return "담당 순서";
   return getPanelKicker(panel);
 }
