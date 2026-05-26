@@ -16,6 +16,41 @@ export const rooms = [
 
 export const presets = ["침대 시트 교체", "방향제 교체", "장식품 청소", "세탁실 정리", "싱크대 청소"];
 
+export const appliances = [
+  { id: "washer", name: "세탁기", state: "마지막 사용 4일 전", signal: "오늘 세탁 추천", accent: "mint" },
+  { id: "dryer", name: "건조기", state: "습도 낮음", signal: "건조 효율 좋음", accent: "coral" },
+  { id: "fridge", name: "냉장고", state: "문 열림 32회", signal: "유통기한 확인", accent: "blue" },
+  { id: "air", name: "공기청정기", state: "미세먼지 보통", signal: "환기 20분 후 가동", accent: "violet" },
+  { id: "robot", name: "로봇청소기", state: "거실 미청소", signal: "퇴근 전 예약", accent: "navy" },
+];
+
+export const smartRecommendations = [
+  {
+    title: "오늘은 빨래하기 좋은 날이에요",
+    reason: "강남구 기준 습도 42%, 강수 확률 10%",
+    action: "세탁 루틴 추가",
+    task: "세탁기 돌리기",
+  },
+  {
+    title: "미세먼지가 있어 환기는 짧게",
+    reason: "창문 열기 10분 뒤 공기청정기 자동 가동",
+    action: "환기 알림 만들기",
+    task: "짧은 환기 후 공기청정기",
+  },
+  {
+    title: "야근 일정에 맞춰 취침 루틴 조정",
+    reason: "도착 예상 22:40, 조명/에어컨 예약 권장",
+    action: "취침 루틴 예약",
+    task: "취침 전 조명 낮추기",
+  },
+];
+
+export const communityTips = [
+  { title: "선반 위 먼지는 4일 주기가 좋아요", source: "1인가구 루틴 인기 팁" },
+  { title: "냉장고 문을 자주 열면 장보기 전 정리부터", source: "LG HUB 커뮤니티" },
+  { title: "로봇청소기는 외출 30분 뒤 시작이 효율적", source: "사용자 자동화 사례" },
+];
+
 export const initialTasks = [
   { id: 1, date: "2026-05-02", title: "분리수거", place: "현관", tag: "house", owner: "all", done: true, repeat: "매주" },
   { id: 2, date: "2026-05-05", title: "냉장고 정리", place: "주방", tag: "house", owner: "minsu", done: true, repeat: "2주마다" },

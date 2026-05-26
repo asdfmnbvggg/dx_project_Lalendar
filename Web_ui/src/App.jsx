@@ -148,6 +148,9 @@ export default function App() {
         onClose={() => setPanel(null)}
         onToggle={toggleTask}
         onDelete={deleteTask}
+        onAddTask={(task) => addTask(task)}
+        selectedDate={selectedDate}
+        selectedMember={selectedMember}
         onOpenComposer={() => setComposerOpen(true)}
       />
     </main>

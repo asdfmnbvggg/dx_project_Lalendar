@@ -250,10 +250,166 @@ button {
 .rotation-card,
 .reward-hero,
 .stats-card,
-.preset-card {
+.preset-card,
+.weather-card,
+.thinq-card,
+.recommend-card,
+.appliance-card,
+.community-card {
   border-radius: 26px;
   background: #fff;
   box-shadow: var(--shadow);
+}
+
+.hub-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.weather-card,
+.thinq-card {
+  min-height: 152px;
+  padding: 20px;
+}
+
+.weather-card {
+  color: #fff;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(255, 255, 255, 0.24), transparent 32%),
+    linear-gradient(135deg, #ff8a7a, #e11d48);
+}
+
+.thinq-card {
+  background:
+    radial-gradient(circle at 100% 10%, rgba(20, 184, 166, 0.16), transparent 30%),
+    #ffffff;
+}
+
+.weather-card div,
+.thinq-card div {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 16px;
+  font-weight: 950;
+}
+
+.weather-card strong,
+.thinq-card strong,
+.recommend-card strong,
+.appliance-card strong,
+.community-card strong {
+  display: block;
+  font-size: 21px;
+}
+
+.weather-card p,
+.thinq-card p,
+.recommend-card p,
+.appliance-card p,
+.community-card p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-weight: 750;
+}
+
+.weather-card p {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.recommend-section,
+.appliance-section,
+.community-section {
+  max-width: 980px;
+  margin-top: 28px;
+}
+
+.recommend-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.recommend-card {
+  min-height: 178px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 12px;
+  padding: 18px;
+  text-align: left;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(251, 75, 111, 0.12), transparent 34%),
+    #fff;
+}
+
+.recommend-card svg {
+  color: #14b8a6;
+}
+
+.recommend-card span {
+  width: fit-content;
+  padding: 8px 11px;
+  border-radius: 999px;
+  color: var(--red);
+  background: #fff1f4;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.appliance-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.appliance-card {
+  min-height: 156px;
+  padding: 16px;
+  text-align: left;
+}
+
+.appliance-card span {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+  border-radius: 15px;
+  color: #fff;
+  font-weight: 950;
+}
+
+.appliance-card.mint span { background: #14b8a6; }
+.appliance-card.coral span { background: #fb7185; }
+.appliance-card.blue span { background: #3b82f6; }
+.appliance-card.violet span { background: #8b5cf6; }
+.appliance-card.navy span { background: #1f2937; }
+
+.appliance-card small {
+  display: block;
+  margin-top: 10px;
+  color: var(--red);
+  font-weight: 950;
+}
+
+.community-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.community-card {
+  min-height: 118px;
+  padding: 18px;
+  text-align: left;
+  background:
+    radial-gradient(circle at 100% 100%, rgba(20, 184, 166, 0.13), transparent 34%),
+    #fff;
 }
 
 .stack-card {
@@ -1051,6 +1207,34 @@ button {
   background: linear-gradient(135deg, #fff1f4, #fff);
 }
 
+.insight-card {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #fff1f4, #fff);
+}
+
+.insight-card svg {
+  color: var(--red);
+}
+
+.insight-card h3 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.insight-card p {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.insight-card strong {
+  color: #14b8a6;
+  font-size: 18px;
+}
+
 .detail-summary strong {
   display: block;
   font-size: 54px;
@@ -1102,6 +1286,10 @@ button {
 
   .room-list,
   .crew-grid,
+  .recommend-list,
+  .appliance-row,
+  .community-list,
+  .hub-grid,
   .stats-card {
     grid-template-columns: 1fr;
   }

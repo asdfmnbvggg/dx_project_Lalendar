@@ -1,7 +1,18 @@
-import { Check, ClipboardList, Settings, X } from "lucide-react";
-import { tagLabel } from "../data.js";
+import { Check, ClipboardList, Cpu, Refrigerator, Settings, Sparkles, X } from "lucide-react";
+import { appliances, communityTips, tagLabel } from "../data.js";
 
-export default function DetailPanel({ panel, tasks, completion, onClose, onToggle, onDelete, onOpenComposer }) {
+export default function DetailPanel({
+  panel,
+  tasks,
+  completion,
+  onClose,
+  onToggle,
+  onDelete,
+  onAddTask,
+  selectedDate,
+  selectedMember,
+  onOpenComposer,
+}) {
   if (!panel) return null;
 
   const doneTasks = tasks.filter((task) => task.done);
@@ -58,7 +69,85 @@ export default function DetailPanel({ panel, tasks, completion, onClose, onToggl
           </section>
         )}
 
-        {!["summary", "settings", "notifications"].includes(panel.type) && (
+        {panel.type === "recommendation" && (
+          <section className="insight-card">
+            <Sparkles size={28} />
+            <h3>{panel.recommendation.title}</h3>
+            <p>{panel.recommendation.reason}</p>
+            <button
+              className="composer-submit"
+              onClick={() =>
+                onAddTask({
+                  date: selectedDate,
+                  title: panel.recommendation.task,
+                  place: "LG HUB",
+                  tag: "house",
+                  owner: selectedMember === "all" ? "me" : selectedMember,
+                  done: false,
+                  repeat: "AI 추천",
+                })
+              }
+            >
+              {panel.recommendation.action}
+            </button>
+          </section>
+        )}
+
+        {panel.type === "appliance" && (
+          <section className="insight-card">
+            <Refrigerator size={28} />
+            <h3>{panel.appliance.name}</h3>
+            <p>{panel.appliance.state}</p>
+            <strong>{panel.appliance.signal}</strong>
+          </section>
+        )}
+
+        {panel.type === "appliances" && (
+          <section className="detail-list">
+            {appliances.map((item) => (
+              <article className="notice-row" key={item.id}>
+                <Cpu size={18} />
+                <div>
+                  <strong>{item.name}</strong>
+                  <p>{item.state} · {item.signal}</p>
+                </div>
+              </article>
+            ))}
+          </section>
+        )}
+
+        {panel.type === "community" && (
+          <section className="detail-list">
+            {communityTips.map((tip) => (
+              <article className="notice-row" key={tip.title}>
+                <ClipboardList size={18} />
+                <div>
+                  <strong>{tip.title}</strong>
+                  <p>{tip.source}</p>
+                </div>
+              </article>
+            ))}
+          </section>
+        )}
+
+        {panel.type === "tip" && (
+          <section className="insight-card">
+            <ClipboardList size={28} />
+            <h3>{panel.tip.title}</h3>
+            <p>{panel.tip.source}</p>
+          </section>
+        )}
+
+        {![
+          "summary",
+          "settings",
+          "notifications",
+          "recommendation",
+          "appliance",
+          "appliances",
+          "community",
+          "tip",
+        ].includes(panel.type) && (
           <section className="detail-list">
             {panelTasks.map((task) => (
               <article className="detail-task" key={task.id}>
@@ -92,6 +181,7 @@ function getPanelTasks(panel, tasks, doneTasks, pendingTasks) {
   if (panel.type === "room") return tasks.filter((task) => task.place === panel.room);
   if (panel.type === "task") return tasks.filter((task) => task.id === panel.task.id);
   if (panel.type === "pending") return pendingTasks;
+  if (panel.type === "appliances" || panel.type === "community") return [];
   return tasks;
 }
 
@@ -105,6 +195,11 @@ function getPanelKicker(panel) {
     notifications: "알림",
     settings: "설정",
     pending: "대기 작업",
+    recommendation: "AI 추천",
+    appliance: "가전 상태",
+    appliances: "가전 캘린더",
+    community: "커뮤니티",
+    tip: "생활 팁",
   };
   return labels[panel.type] || "상세";
 }
@@ -115,5 +210,10 @@ function getPanelTitle(panel) {
   if (panel.type === "notifications") return "청소 전 알려드려요";
   if (panel.type === "settings") return "앱 메뉴";
   if (panel.type === "pending") return "아직 남은 일";
+  if (panel.type === "recommendation") return "스마트 루틴";
+  if (panel.type === "appliance") return panel.appliance.name;
+  if (panel.type === "community") return "우리 동네 집안일 팁";
+  if (panel.type === "tip") return "커뮤니티 추천";
+  if (panel.type === "appliances") return "LG ThinQ 연동 가전";
   return getPanelKicker(panel);
 }
