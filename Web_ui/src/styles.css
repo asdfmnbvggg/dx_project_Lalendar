@@ -5,10 +5,12 @@
   --ink: #0b0b0d;
   --muted: #767982;
   --line: #eceef3;
-  --teal: #12bfa0;
-  --red: #ef334e;
-  --pink: #ff5aa6;
-  --purple: #7c3cff;
+  --teal: #e11d48;
+  --red: #e11d48;
+  --red-soft: #fff1f4;
+  --red-line: #ffd3dd;
+  --pink: #fb4b6f;
+  --purple: #be123c;
   --dark: #222226;
   --gray: #d7dbe0;
   --shadow: 0 18px 45px rgba(25, 30, 45, 0.08);
@@ -30,7 +32,9 @@ body,
 body {
   margin: 0;
   color: var(--ink);
-  background: var(--bg);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(225, 29, 72, 0.12), transparent 30%),
+    linear-gradient(180deg, #fff8fa 0%, var(--bg) 48%, #fff 100%);
 }
 
 button,
@@ -57,7 +61,7 @@ button {
   width: min(1180px, 100%);
   min-height: calc(100vh - 48px);
   padding: 26px 26px 104px;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 34px;
   background: var(--surface);
   box-shadow: var(--shadow);
@@ -83,7 +87,7 @@ button {
   place-items: center;
   border-radius: 14px;
   color: #fff;
-  background: var(--ink);
+  background: linear-gradient(135deg, var(--red), var(--purple));
   font-size: 22px;
   font-weight: 950;
 }
@@ -105,7 +109,8 @@ button {
   display: grid;
   place-items: center;
   border-radius: 16px;
-  background: #f4f5f7;
+  background: var(--red-soft);
+  color: var(--red);
 }
 
 .page {
@@ -378,7 +383,7 @@ button {
 
 .profile-strip button.active {
   color: #fff;
-  background: var(--ink);
+  background: linear-gradient(135deg, var(--red), var(--purple));
 }
 
 .profile-strip span {
@@ -468,7 +473,7 @@ button {
 
 .date-cell.selected strong {
   color: #fff;
-  background: #000;
+  background: var(--red);
 }
 
 .date-cell strong {
@@ -503,8 +508,8 @@ button {
 .house { background: var(--purple); }
 .plan { background: var(--pink); }
 .routine { background: #333; }
-.share { background: var(--teal); }
-.reward { background: var(--red); }
+.share { background: var(--purple); }
+.reward { background: #f97316; }
 
 .search-field {
   width: min(260px, 42vw);
@@ -592,8 +597,8 @@ button {
   color: #fff;
   text-align: center;
   background:
-    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.24), transparent 24%),
-    linear-gradient(150deg, #9b7be8, #8f65d7);
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.22), transparent 24%),
+    linear-gradient(150deg, var(--red), #9f1239);
 }
 
 .reward-hero h1 {
@@ -646,7 +651,7 @@ button {
 .bar-chart i {
   flex: 1;
   border-radius: 999px 999px 8px 8px;
-  background: var(--teal);
+  background: linear-gradient(180deg, var(--pink), var(--red));
 }
 
 .preset-row {
@@ -709,7 +714,7 @@ button {
 
 .tabbar button.active {
   color: #fff;
-  background: var(--ink);
+  background: linear-gradient(135deg, var(--red), var(--purple));
 }
 
 @keyframes pageIn {
@@ -730,6 +735,9 @@ button {
 
   .app-frame {
     min-height: 100vh;
+    min-height: 100svh;
+    height: auto;
+    overflow-y: auto;
     border-radius: 0;
     box-shadow: none;
   }
@@ -746,8 +754,17 @@ button {
 }
 
 @media (max-width: 560px) {
+  .app-shell {
+    display: block;
+    min-height: 100svh;
+  }
+
   .app-frame {
-    padding: 18px 14px 104px;
+    padding: 18px 14px 132px;
+  }
+
+  .page {
+    padding-bottom: 24px;
   }
 
   .hero-title p {
@@ -803,8 +820,40 @@ button {
     width: 100%;
   }
 
+  .task-sheet {
+    display: block;
+    max-height: none;
+    margin-bottom: 18px;
+    scroll-margin-bottom: 120px;
+  }
+
+  .calendar-page .task-sheet.compact {
+    min-height: 220px;
+  }
+
+  .task-item {
+    min-height: 68px;
+  }
+
   .tabbar {
+    position: fixed;
+    z-index: 100;
     left: 14px;
     right: 14px;
+    bottom: max(12px, env(safe-area-inset-bottom));
   }
+}
+
+#vercel-toolbar,
+#vercel-live-feedback,
+[data-vercel-toolbar],
+[data-vercel-live-feedback],
+iframe[src*="vercel.live"],
+iframe[src*="vercel-toolbar"],
+button[aria-label*="Vercel"],
+button[title*="Vercel"] {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
 }

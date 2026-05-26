@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   BarChart3,
@@ -79,6 +79,26 @@ function App() {
   const [selectedDate, setSelectedDate] = useState("2026-05-26");
   const [selectedMember, setSelectedMember] = useState("all");
   const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    const selectors = [
+      "#vercel-toolbar",
+      "#vercel-live-feedback",
+      "[data-vercel-toolbar]",
+      "[data-vercel-live-feedback]",
+      'iframe[src*="vercel.live"]',
+      'iframe[src*="vercel-toolbar"]',
+    ];
+
+    const removeToolbar = () => {
+      document.querySelectorAll(selectors.join(",")).forEach((node) => node.remove());
+    };
+
+    removeToolbar();
+    const observer = new MutationObserver(removeToolbar);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
 
   const scopedTasks = tasks.filter((task) => selectedMember === "all" || task.owner === selectedMember);
   const todayTasks = scopedTasks.filter((task) => task.date === "2026-05-26");
