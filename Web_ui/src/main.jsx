@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  BarChart3,
   Bell,
   CalendarDays,
   Check,
@@ -14,8 +13,10 @@ import {
   Plus,
   Search,
   Sparkles,
+  Trash2,
   Trophy,
   UsersRound,
+  X,
 } from "lucide-react";
 import "./styles.css";
 
@@ -27,10 +28,10 @@ const members = [
 ];
 
 const rooms = [
-  { name: "거실", icon: "🛋", state: "작업 없음" },
-  { name: "주방", icon: "🍽", state: "모두 양호" },
-  { name: "욕실", icon: "🛁", state: "오늘 3개" },
-  { name: "침실", icon: "🛏", state: "2개 대기" },
+  { name: "거실", icon: "L", state: "작업 없음" },
+  { name: "주방", icon: "K", state: "모두 양호" },
+  { name: "욕실", icon: "B", state: "오늘 3개" },
+  { name: "침실", icon: "R", state: "2개 대기" },
 ];
 
 const presets = ["침대 시트 교체", "방향제 교체", "장식품 청소", "세탁실 정리", "싱크대 청소"];
@@ -79,6 +80,7 @@ function App() {
   const [selectedDate, setSelectedDate] = useState("2026-05-26");
   const [selectedMember, setSelectedMember] = useState("all");
   const [query, setQuery] = useState("");
+  const [isComposerOpen, setComposerOpen] = useState(false);
 
   useEffect(() => {
     const selectors = [
@@ -89,11 +91,7 @@ function App() {
       'iframe[src*="vercel.live"]',
       'iframe[src*="vercel-toolbar"]',
     ];
-
-    const removeToolbar = () => {
-      document.querySelectorAll(selectors.join(",")).forEach((node) => node.remove());
-    };
-
+    const removeToolbar = () => document.querySelectorAll(selectors.join(",")).forEach((node) => node.remove());
     removeToolbar();
     const observer = new MutationObserver(removeToolbar);
     observer.observe(document.body, { childList: true, subtree: true });
@@ -106,7 +104,7 @@ function App() {
     .filter((task) => task.date === selectedDate)
     .filter((task) => `${task.title} ${task.place} ${tagLabel[task.tag]}`.includes(query));
   const completed = scopedTasks.filter((task) => task.done).length;
-  const completion = Math.round((completed / scopedTasks.length) * 100);
+  const completion = Math.round((completed / Math.max(scopedTasks.length, 1)) * 100);
   const month = useMemo(() => Array.from({ length: 31 }, (_, index) => dateKey(index + 1)), []);
   const tasksByDate = useMemo(() => {
     return scopedTasks.reduce((map, task) => {
@@ -119,20 +117,12 @@ function App() {
     setTasks((current) => current.map((task) => (task.id === id ? { ...task, done: !task.done } : task)));
   }
 
-  function addTask() {
-    setTasks((current) => [
-      {
-        id: Date.now(),
-        date: selectedDate,
-        title: "새 작업",
-        place: "우리 집",
-        tag: "house",
-        owner: selectedMember === "all" ? "me" : selectedMember,
-        done: false,
-        repeat: "오늘",
-      },
-      ...current,
-    ]);
+  function deleteTask(id) {
+    setTasks((current) => current.filter((task) => task.id !== id));
+  }
+
+  function addTask(task) {
+    setTasks((current) => [{ id: Date.now(), ...task }, ...current]);
   }
 
   const pageProps = {
@@ -150,7 +140,8 @@ function App() {
     tasksByDate,
     completion,
     toggleTask,
-    addTask,
+    deleteTask,
+    openComposer: () => setComposerOpen(true),
   };
 
   return (
@@ -161,12 +152,17 @@ function App() {
             <span>L</span>
             <div>
               <strong>Lalendar</strong>
-              <small>집안일을 한눈에</small>
+              <small>housework calendar</small>
             </div>
           </div>
-          <button className="icon-button" aria-label="메뉴">
-            <Menu size={22} />
-          </button>
+          <div className="top-actions">
+            <button className="icon-button" aria-label="알림">
+              <Bell size={20} />
+            </button>
+            <button className="icon-button" aria-label="메뉴">
+              <Menu size={22} />
+            </button>
+          </div>
         </header>
 
         {activeTab === "today" && <TodayPage {...pageProps} />}
@@ -176,28 +172,42 @@ function App() {
 
         <nav className="tabbar" aria-label="하단 탭">
           {navItems.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              className={activeTab === id ? "active" : ""}
-              onClick={() => setActiveTab(id)}
-            >
+            <button key={id} className={activeTab === id ? "active" : ""} onClick={() => setActiveTab(id)}>
               <Icon size={22} />
               <span>{label}</span>
             </button>
           ))}
         </nav>
       </section>
+
+      {isComposerOpen && (
+        <TaskComposer
+          selectedDate={selectedDate}
+          selectedMember={selectedMember}
+          onClose={() => setComposerOpen(false)}
+          onAdd={(task) => {
+            addTask(task);
+            setComposerOpen(false);
+          }}
+        />
+      )}
     </main>
   );
 }
 
-function TodayPage({ todayTasks, completion, toggleTask }) {
+function TodayPage({ todayTasks, completion, toggleTask, deleteTask, openComposer }) {
   return (
     <section className="page">
-      <div className="hero-title">
-        <p>오늘의 할 일</p>
-        <h1>청소를 한눈에</h1>
-        <span>계획. 공유. 간편하게.</span>
+      <div className="hero-panel">
+        <div>
+          <p>오늘의 할 일 앱</p>
+          <h1>청소를 한눈에</h1>
+          <span>계획. 공유. 간편하게.</span>
+        </div>
+        <div className="hero-badge">
+          <Sparkles size={22} />
+          <strong>{completion}%</strong>
+        </div>
       </div>
 
       <section className="quick-card stack-card">
@@ -209,7 +219,7 @@ function TodayPage({ todayTasks, completion, toggleTask }) {
       <section className="room-section">
         <div className="section-head">
           <h2>방</h2>
-          <button>
+          <button onClick={openComposer}>
             <Plus size={18} />
             추가
           </button>
@@ -228,14 +238,14 @@ function TodayPage({ todayTasks, completion, toggleTask }) {
       <section className="task-sheet">
         <div className="sheet-head">
           <h2>오늘 집안일 {todayTasks.length}개</h2>
-          <button>
+          <button onClick={openComposer}>
             <Plus size={18} />
           </button>
         </div>
         {todayTasks.map((task) => (
-          <TaskItem key={task.id} task={task} onToggle={toggleTask} />
+          <TaskItem key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} />
         ))}
-        <button className="wide-create">
+        <button className="wide-create" onClick={openComposer}>
           <Plus size={20} />
           새 작업 만들기
         </button>
@@ -255,7 +265,8 @@ function CalendarPage({
   query,
   setQuery,
   toggleTask,
-  addTask,
+  deleteTask,
+  openComposer,
 }) {
   return (
     <section className="page calendar-page">
@@ -283,7 +294,7 @@ function CalendarPage({
       <section className="calendar-board">
         <div className="calendar-header">
           <h2>2026. 05</h2>
-          <button onClick={addTask}>
+          <button onClick={openComposer}>
             <Plus size={18} />
           </button>
         </div>
@@ -328,7 +339,7 @@ function CalendarPage({
           </label>
         </div>
         {selectedTasks.map((task) => (
-          <TaskItem key={task.id} task={task} onToggle={toggleTask} />
+          <TaskItem key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} />
         ))}
         {selectedTasks.length === 0 && <EmptyState text="선택한 날짜에 작업이 없습니다." />}
       </section>
@@ -336,13 +347,15 @@ function CalendarPage({
   );
 }
 
-function CrewPage({ scopedTasks, selectedMember, setSelectedMember, toggleTask }) {
+function CrewPage({ scopedTasks, selectedMember, setSelectedMember, toggleTask, deleteTask }) {
   return (
     <section className="page">
-      <div className="hero-title">
-        <p>함께 나눠요</p>
-        <h1>가족에게 집안일 분담</h1>
-        <span>담당자와 로테이션을 바로 확인하세요.</span>
+      <div className="hero-panel slim">
+        <div>
+          <p>함께 나눠요</p>
+          <h1>가족에게 집안일 분담</h1>
+          <span>담당자와 로테이션을 바로 확인하세요.</span>
+        </div>
       </div>
 
       <div className="crew-grid">
@@ -359,22 +372,12 @@ function CrewPage({ scopedTasks, selectedMember, setSelectedMember, toggleTask }
                 <ChevronRight size={18} />
               </button>
               {memberTasks.slice(0, 2).map((task) => (
-                <TaskItem key={task.id} task={task} onToggle={toggleTask} />
+                <TaskItem key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} />
               ))}
             </article>
           );
         })}
       </div>
-
-      <section className="rotation-card">
-        <h2>로테이션</h2>
-        <p>나, Anna 외 3명 로테이션</p>
-        <div className="avatar-stack">
-          <span>TW</span>
-          <span>A</span>
-          <span>+1</span>
-        </div>
-      </section>
     </section>
   );
 }
@@ -417,6 +420,78 @@ function RewardPage({ tasks, completion }) {
   );
 }
 
+function TaskComposer({ selectedDate, selectedMember, onAdd, onClose }) {
+  const [title, setTitle] = useState("");
+  const [place, setPlace] = useState("주방");
+  const [date, setDate] = useState(selectedDate);
+  const [repeat, setRepeat] = useState("오늘");
+
+  function submit(event) {
+    event.preventDefault();
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) return;
+    onAdd({
+      date,
+      title: trimmedTitle,
+      place,
+      tag: "house",
+      owner: selectedMember === "all" ? "me" : selectedMember,
+      done: false,
+      repeat,
+    });
+  }
+
+  return (
+    <div className="composer-backdrop" role="presentation">
+      <form className="composer" onSubmit={submit}>
+        <div className="composer-head">
+          <div>
+            <p>새 작업</p>
+            <h2>할 일 추가</h2>
+          </div>
+          <button type="button" onClick={onClose} aria-label="닫기">
+            <X size={20} />
+          </button>
+        </div>
+        <label>
+          작업 이름
+          <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="예: 싱크대 청소" autoFocus />
+        </label>
+        <div className="composer-grid">
+          <label>
+            위치
+            <select value={place} onChange={(event) => setPlace(event.target.value)}>
+              <option>주방</option>
+              <option>거실</option>
+              <option>욕실</option>
+              <option>침실</option>
+              <option>세탁실</option>
+            </select>
+          </label>
+          <label>
+            날짜
+            <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+          </label>
+        </div>
+        <label>
+          반복
+          <select value={repeat} onChange={(event) => setRepeat(event.target.value)}>
+            <option>오늘</option>
+            <option>매일</option>
+            <option>매주</option>
+            <option>2주마다</option>
+            <option>월말</option>
+          </select>
+        </label>
+        <button className="composer-submit" type="submit">
+          <Plus size={19} />
+          추가하기
+        </button>
+      </form>
+    </div>
+  );
+}
+
 function RowButton({ title, value, chart }) {
   return (
     <button className="row-button">
@@ -437,7 +512,7 @@ function RowButton({ title, value, chart }) {
   );
 }
 
-function TaskItem({ task, onToggle }) {
+function TaskItem({ task, onToggle, onDelete }) {
   return (
     <article className={`task-item ${task.done ? "done" : ""}`}>
       <button className="check-button" onClick={() => onToggle(task.id)} aria-label="완료 전환">
@@ -445,11 +520,18 @@ function TaskItem({ task, onToggle }) {
       </button>
       <div>
         <strong>{task.title}</strong>
-        <p>{task.place} · {task.repeat}</p>
+        <p>
+          {task.place} · {task.repeat}
+        </p>
       </div>
-      <button className="more-button" aria-label="더 보기">
-        <MoreHorizontal size={18} />
-      </button>
+      <div className="task-actions">
+        <button className="delete-button" onClick={() => onDelete(task.id)} aria-label="작업 삭제">
+          <Trash2 size={17} />
+        </button>
+        <button className="more-button" aria-label="더 보기">
+          <MoreHorizontal size={18} />
+        </button>
+      </div>
     </article>
   );
 }

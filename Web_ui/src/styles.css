@@ -14,6 +14,7 @@
   --dark: #222226;
   --gray: #d7dbe0;
   --shadow: 0 18px 45px rgba(25, 30, 45, 0.08);
+  --pink-shadow: 0 24px 70px rgba(225, 29, 72, 0.2);
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", "Noto Sans KR", sans-serif;
@@ -33,8 +34,9 @@ body {
   margin: 0;
   color: var(--ink);
   background:
-    radial-gradient(circle at 12% 0%, rgba(225, 29, 72, 0.12), transparent 30%),
-    linear-gradient(180deg, #fff8fa 0%, var(--bg) 48%, #fff 100%);
+    radial-gradient(circle at 12% 0%, rgba(244, 63, 94, 0.28), transparent 30%),
+    radial-gradient(circle at 88% 4%, rgba(251, 113, 133, 0.18), transparent 30%),
+    linear-gradient(180deg, #fff1f5 0%, #fff7f9 46%, #fff 100%);
 }
 
 button,
@@ -63,8 +65,10 @@ button {
   padding: 26px 26px 104px;
   overflow: visible;
   border-radius: 34px;
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  background:
+    radial-gradient(circle at 90% 0%, rgba(255, 182, 193, 0.28), transparent 26%),
+    linear-gradient(180deg, #ffffff 0%, #fff8fa 100%);
+  box-shadow: var(--pink-shadow);
 }
 
 .topbar {
@@ -113,9 +117,102 @@ button {
   color: var(--red);
 }
 
+.top-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .page {
   padding-top: 28px;
   animation: pageIn 180ms ease both;
+}
+
+.hero-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  align-items: center;
+  min-height: 250px;
+  margin-bottom: 22px;
+  padding: clamp(24px, 5vw, 54px);
+  overflow: hidden;
+  border-radius: 34px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 86% 20%, rgba(255, 255, 255, 0.24), transparent 20%),
+    linear-gradient(135deg, #ff7aa2 0%, #f43f73 42%, #d4144b 100%);
+  box-shadow: var(--pink-shadow);
+}
+
+.hero-panel::before {
+  content: "Lalendar";
+  position: absolute;
+  left: 28px;
+  top: -22px;
+  color: rgba(255, 255, 255, 0.11);
+  font-size: clamp(76px, 14vw, 180px);
+  font-weight: 950;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.hero-panel::after {
+  content: "";
+  position: absolute;
+  right: -72px;
+  bottom: -112px;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.hero-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-panel p {
+  margin: 0 0 12px;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 17px;
+  font-weight: 950;
+}
+
+.hero-panel h1 {
+  max-width: 620px;
+  margin: 0;
+  font-size: clamp(44px, 7vw, 88px);
+  line-height: 0.92;
+}
+
+.hero-panel span {
+  display: block;
+  margin-top: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 20px;
+  font-weight: 850;
+}
+
+.hero-panel.slim {
+  min-height: 220px;
+}
+
+.hero-badge {
+  width: 142px;
+  height: 142px;
+  display: grid;
+  place-items: center;
+  border-radius: 42px;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(16px);
+}
+
+.hero-badge strong {
+  margin-top: -22px;
+  font-size: 42px;
 }
 
 .hero-title {
@@ -162,7 +259,8 @@ button {
 .stack-card {
   max-width: 720px;
   padding: 12px;
-  background: #f4f4f8;
+  background: #ffe5ed;
+  box-shadow: inset 0 0 0 1px #ffd1df;
 }
 
 .row-button {
@@ -175,6 +273,7 @@ button {
   padding: 0 18px;
   border-radius: 18px;
   background: #fff;
+  box-shadow: 0 10px 22px rgba(225, 29, 72, 0.08);
 }
 
 .row-button + .row-button {
@@ -256,7 +355,10 @@ button {
   min-height: 112px;
   padding: 16px;
   border-radius: 22px;
-  background: #fff;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(251, 75, 111, 0.1), transparent 36%),
+    #fff;
+  border: 1px solid rgba(255, 255, 255, 0.82);
   box-shadow: var(--shadow);
 }
 
@@ -266,7 +368,8 @@ button {
   display: grid;
   place-items: center;
   border-radius: 14px;
-  background: #f3f4f6;
+  color: #fff;
+  background: linear-gradient(135deg, var(--pink), var(--red));
   font-size: 23px;
 }
 
@@ -341,6 +444,22 @@ button {
   place-items: center;
   border-radius: 50%;
   color: var(--muted);
+}
+
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.delete-button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #d4144b;
+  background: #fff1f4;
 }
 
 .wide-create {
@@ -717,6 +836,95 @@ button {
   background: linear-gradient(135deg, var(--red), var(--purple));
 }
 
+.composer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: end center;
+  padding: 20px;
+  background: rgba(15, 10, 12, 0.34);
+  backdrop-filter: blur(10px);
+}
+
+.composer {
+  width: min(520px, 100%);
+  padding: 20px;
+  border-radius: 30px;
+  background: #fff;
+  box-shadow: 0 30px 90px rgba(109, 12, 42, 0.26);
+}
+
+.composer-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.composer-head p {
+  margin: 0 0 5px;
+  color: var(--red);
+  font-weight: 950;
+}
+
+.composer-head h2 {
+  margin: 0;
+  font-size: 30px;
+}
+
+.composer-head button {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff1f4;
+  color: var(--red);
+}
+
+.composer label {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  color: #5f5258;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.composer input,
+.composer select {
+  width: 100%;
+  height: 48px;
+  border: 1px solid #f5c7d4;
+  border-radius: 16px;
+  outline: 0;
+  padding: 0 13px;
+  background: #fff8fa;
+  color: var(--ink);
+}
+
+.composer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.composer-submit {
+  width: 100%;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  border-radius: 18px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--pink), var(--red));
+  font-weight: 950;
+  box-shadow: 0 16px 30px rgba(225, 29, 72, 0.22);
+}
+
 @keyframes pageIn {
   from {
     opacity: 0;
@@ -761,6 +969,27 @@ button {
 
   .app-frame {
     padding: 18px 14px 132px;
+  }
+
+  .hero-panel {
+    grid-template-columns: 1fr;
+    min-height: 220px;
+    padding: 28px 22px;
+    border-radius: 28px;
+  }
+
+  .hero-panel h1 {
+    font-size: 42px;
+  }
+
+  .hero-badge {
+    width: 96px;
+    height: 96px;
+    border-radius: 30px;
+  }
+
+  .hero-badge strong {
+    font-size: 28px;
   }
 
   .page {
@@ -841,6 +1070,19 @@ button {
     left: 14px;
     right: 14px;
     bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .composer-backdrop {
+    align-items: end;
+    padding: 12px;
+  }
+
+  .composer {
+    border-radius: 26px;
+  }
+
+  .composer-grid {
+    grid-template-columns: 1fr;
   }
 }
 
