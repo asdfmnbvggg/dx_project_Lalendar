@@ -4,12 +4,13 @@ import {
   Bell,
   CalendarDays,
   Check,
-  ChevronDown,
-  Clock3,
+  ChevronLeft,
+  ChevronRight,
   Flame,
   Gift,
   Home,
   Menu,
+  MoreHorizontal,
   Plus,
   Search,
   Settings2,
@@ -21,346 +22,313 @@ import {
 import "./styles.css";
 
 const members = [
-  { id: "me", name: "Charlotte", short: "C", color: "hot" },
-  { id: "minsu", name: "Minsu.kim", short: "M", color: "berry" },
-  { id: "theresa", name: "Theresa", short: "T", color: "plum" },
-  { id: "home", name: "우리 집", short: "집", color: "dark" },
+  { id: "all", name: "전체", short: "All" },
+  { id: "me", name: "Charlotte", short: "C" },
+  { id: "minsu", name: "Minsu", short: "M" },
+  { id: "theresa", name: "Theresa", short: "T" },
 ];
 
-const seedTasks = [
-  { id: 1, date: "2026-05-02", title: "분리수거", room: "현관", category: "집안일", assignee: "home", done: true, repeat: "매주", points: 12 },
-  { id: 2, date: "2026-05-05", title: "냉장고 정리", room: "주방", category: "집안일", assignee: "minsu", done: true, repeat: "2주마다", points: 18 },
-  { id: 3, date: "2026-05-08", title: "여행 계획", room: "공유", category: "개인", assignee: "me", done: false, repeat: "없음", points: 8 },
-  { id: 4, date: "2026-05-10", title: "욕실 청소", room: "욕실", category: "집안일", assignee: "theresa", done: true, repeat: "매주", points: 15 },
-  { id: 5, date: "2026-05-13", title: "침구 교체", room: "침실", category: "집안일", assignee: "me", done: true, repeat: "2주마다", points: 14 },
-  { id: 6, date: "2026-05-16", title: "장보기", room: "주방", category: "공유", assignee: "minsu", done: false, repeat: "매주", points: 10 },
-  { id: 7, date: "2026-05-18", title: "싱크대 청소", room: "주방", category: "집안일", assignee: "me", done: true, repeat: "매주", points: 13 },
-  { id: 8, date: "2026-05-21", title: "거실 바닥 닦기", room: "거실", category: "집안일", assignee: "home", done: false, repeat: "매주", points: 11 },
-  { id: 9, date: "2026-05-22", title: "필라테스", room: "운동", category: "루틴", assignee: "me", done: true, repeat: "월수금", points: 9 },
-  { id: 10, date: "2026-05-24", title: "책상 정리", room: "작업방", category: "개인", assignee: "theresa", done: false, repeat: "없음", points: 7 },
-  { id: 11, date: "2026-05-26", title: "오늘 집안일 확인", room: "전체", category: "공유", assignee: "home", done: true, repeat: "매일", points: 5 },
-  { id: 12, date: "2026-05-26", title: "싱크대 청소", room: "주방", category: "집안일", assignee: "me", done: true, repeat: "매주", points: 13 },
-  { id: 13, date: "2026-05-26", title: "거울 얼룩 닦기", room: "욕실", category: "집안일", assignee: "minsu", done: false, repeat: "매주", points: 9 },
-  { id: 14, date: "2026-05-26", title: "빨래 개기", room: "세탁실", category: "집안일", assignee: "theresa", done: false, repeat: "3일마다", points: 10 },
-  { id: 15, date: "2026-05-28", title: "보상 스탬프 받기", room: "보상", category: "보상", assignee: "me", done: false, repeat: "주간", points: 20 },
-  { id: 16, date: "2026-05-30", title: "대청소", room: "전체", category: "집안일", assignee: "home", done: false, repeat: "월말", points: 30 },
+const initialTasks = [
+  { id: 1, date: "2026-05-02", title: "분리수거", place: "현관", tag: "house", owner: "all", done: true, point: 8 },
+  { id: 2, date: "2026-05-05", title: "냉장고 정리", place: "주방", tag: "house", owner: "minsu", done: true, point: 16 },
+  { id: 3, date: "2026-05-08", title: "여행 계획", place: "공유", tag: "plan", owner: "me", done: false, point: 10 },
+  { id: 4, date: "2026-05-10", title: "욕실 청소", place: "욕실", tag: "house", owner: "theresa", done: true, point: 14 },
+  { id: 5, date: "2026-05-13", title: "침구 교체", place: "침실", tag: "house", owner: "me", done: true, point: 13 },
+  { id: 6, date: "2026-05-16", title: "장보기", place: "주방", tag: "share", owner: "minsu", done: false, point: 9 },
+  { id: 7, date: "2026-05-18", title: "싱크대 청소", place: "주방", tag: "house", owner: "me", done: true, point: 12 },
+  { id: 8, date: "2026-05-21", title: "거실 바닥 닦기", place: "거실", tag: "house", owner: "all", done: false, point: 11 },
+  { id: 9, date: "2026-05-22", title: "필라테스", place: "운동", tag: "routine", owner: "me", done: true, point: 8 },
+  { id: 10, date: "2026-05-24", title: "책상 정리", place: "작업방", tag: "plan", owner: "theresa", done: false, point: 7 },
+  { id: 11, date: "2026-05-26", title: "오늘 집안일 확인", place: "전체", tag: "share", owner: "all", done: true, point: 5 },
+  { id: 12, date: "2026-05-26", title: "싱크대 청소", place: "주방", tag: "house", owner: "me", done: true, point: 12 },
+  { id: 13, date: "2026-05-26", title: "거울 얼룩 닦기", place: "욕실", tag: "house", owner: "minsu", done: false, point: 9 },
+  { id: 14, date: "2026-05-26", title: "빨래 개기", place: "세탁실", tag: "house", owner: "theresa", done: false, point: 10 },
+  { id: 15, date: "2026-05-28", title: "보상 스탬프 받기", place: "보상", tag: "reward", owner: "me", done: false, point: 20 },
+  { id: 16, date: "2026-05-30", title: "월말 대청소", place: "전체", tag: "house", owner: "all", done: false, point: 30 },
 ];
 
 const navItems = [
-  { id: "home", label: "홈", icon: Home },
+  { id: "today", label: "오늘", icon: Home },
   { id: "calendar", label: "캘린더", icon: CalendarDays },
-  { id: "alert", label: "알림", icon: Bell },
-  { id: "reward", label: "보상", icon: Gift },
-  { id: "profile", label: "내 정보", icon: UserRound },
+  { id: "crew", label: "멤버", icon: UsersRound },
+  { id: "reward", label: "보상", icon: Trophy },
 ];
 
-const categoryTone = {
-  집안일: "rose",
-  개인: "violet",
-  공유: "dark",
-  루틴: "orange",
-  보상: "gold",
+const tagLabel = {
+  house: "집안일",
+  plan: "계획",
+  routine: "루틴",
+  share: "공유",
+  reward: "보상",
 };
 
-function toKey(day) {
+function dateKey(day) {
   return `2026-05-${String(day).padStart(2, "0")}`;
 }
 
-function buildMonthDays() {
-  const days = [];
-  for (let day = 1; day <= 31; day += 1) {
-    days.push({ day, key: toKey(day), muted: false });
-  }
-  return days;
-}
-
 function App() {
-  const [tasks, setTasks] = useState(seedTasks);
+  const [tasks, setTasks] = useState(initialTasks);
   const [selectedDate, setSelectedDate] = useState("2026-05-26");
-  const [selectedMember, setSelectedMember] = useState("home");
-  const [activeTab, setActiveTab] = useState("calendar");
+  const [selectedMember, setSelectedMember] = useState("all");
+  const [activeNav, setActiveNav] = useState("calendar");
   const [query, setQuery] = useState("");
 
-  const monthDays = useMemo(buildMonthDays, []);
-  const tasksByDate = useMemo(() => {
-    return tasks.reduce((acc, task) => {
-      acc[task.date] = [...(acc[task.date] || []), task];
-      return acc;
-    }, {});
-  }, [tasks]);
-
-  const scopedTasks = useMemo(() => {
-    return tasks.filter((task) => selectedMember === "home" || task.assignee === selectedMember);
-  }, [tasks, selectedMember]);
-
-  const selectedTasks = scopedTasks
+  const month = useMemo(() => Array.from({ length: 31 }, (_, index) => dateKey(index + 1)), []);
+  const visibleTasks = tasks.filter((task) => selectedMember === "all" || task.owner === selectedMember);
+  const selectedTasks = visibleTasks
     .filter((task) => task.date === selectedDate)
-    .filter((task) => task.title.includes(query) || task.room.includes(query) || task.category.includes(query));
-
-  const completed = scopedTasks.filter((task) => task.done).length;
-  const completion = Math.round((completed / scopedTasks.length) * 100);
+    .filter((task) => `${task.title} ${task.place} ${tagLabel[task.tag]}`.includes(query));
+  const completedCount = visibleTasks.filter((task) => task.done).length;
+  const completion = Math.round((completedCount / visibleTasks.length) * 100);
+  const pointSum = tasks.filter((task) => task.done).reduce((sum, task) => sum + task.point, 0);
   const selectedDay = Number(selectedDate.slice(-2));
-  const totalPoints = tasks.filter((task) => task.done).reduce((sum, task) => sum + task.points, 0);
+
+  const taskMap = useMemo(() => {
+    return visibleTasks.reduce((map, task) => {
+      map[task.date] = [...(map[task.date] || []), task];
+      return map;
+    }, {});
+  }, [visibleTasks]);
 
   function toggleTask(id) {
-    setTasks((current) =>
-      current.map((task) => (task.id === id ? { ...task, done: !task.done } : task)),
-    );
+    setTasks((current) => current.map((task) => (task.id === id ? { ...task, done: !task.done } : task)));
   }
 
-  function addQuickTask() {
-    const nextTask = {
-      id: Date.now(),
-      date: selectedDate,
-      title: "새 집안일",
-      room: "우리 집",
-      category: "집안일",
-      assignee: selectedMember === "home" ? "me" : selectedMember,
-      done: false,
-      repeat: "오늘",
-      points: 6,
-    };
-    setTasks((current) => [nextTask, ...current]);
+  function addTask() {
+    const owner = selectedMember === "all" ? "me" : selectedMember;
+    setTasks((current) => [
+      {
+        id: Date.now(),
+        date: selectedDate,
+        title: "새 작업",
+        place: "우리 집",
+        tag: "house",
+        owner,
+        done: false,
+        point: 6,
+      },
+      ...current,
+    ]);
+  }
+
+  function changeNav(id) {
+    setActiveNav(id);
+    if (id === "today") {
+      setSelectedDate("2026-05-26");
+    }
   }
 
   return (
-    <main className="shell">
-      <section className="phone" aria-label="Lalendar 앱">
-        <div className="dynamic-island" />
-        <div className="app">
-          <header className="topbar">
-            <div>
-              <p className="kicker">LALENDAR</p>
-              <h1>우리 집 캘린더</h1>
-            </div>
-            <div className="top-actions">
-              <button className="glass-button" aria-label="검색">
-                <Search size={19} />
-              </button>
-              <button className="glass-button" aria-label="메뉴">
-                <Menu size={20} />
-              </button>
-            </div>
-          </header>
-
-          <section className="hero-panel">
-            <div>
-              <span className="live-badge">
-                <Flame size={14} />
-                {completion}% 완료
-              </span>
-              <h2>오늘은 {selectedDay}일, 같이 끝내면 더 빨라요.</h2>
-            </div>
-            <div className="score-orbit">
-              <Sparkles size={20} />
-              <strong>{totalPoints}</strong>
-              <span>pt</span>
-            </div>
-          </section>
-
-          <nav className="member-strip" aria-label="멤버 필터">
-            {members.map((member) => (
-              <button
-                key={member.id}
-                className={`member-chip ${selectedMember === member.id ? "active" : ""}`}
-                onClick={() => setSelectedMember(member.id)}
-              >
-                <span className={`member-avatar ${member.color}`}>{member.short}</span>
-                {member.name}
-              </button>
-            ))}
-          </nav>
-
-          {activeTab === "calendar" && (
-            <>
-              <section className="calendar-panel">
-                <div className="section-head">
-                  <div>
-                    <span>월간 일정</span>
-                    <h3>
-                      2026. 05 <ChevronDown size={18} />
-                    </h3>
-                  </div>
-                  <button className="primary-icon" onClick={addQuickTask} aria-label="새 작업 추가">
-                    <Plus size={22} />
-                  </button>
-                </div>
-
-                <div className="weekdays" aria-hidden="true">
-                  {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
-                    <span key={day}>{day}</span>
-                  ))}
-                </div>
-
-                <div className="calendar-grid">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <div className="empty-day" key={`empty-${index}`} />
-                  ))}
-                  {monthDays.map(({ day, key }) => {
-                    const dayTasks = tasksByDate[key] || [];
-                    const visibleTasks = dayTasks.filter(
-                      (task) => selectedMember === "home" || task.assignee === selectedMember,
-                    );
-                    return (
-                      <button
-                        key={key}
-                        className={`day-cell ${selectedDate === key ? "selected" : ""} ${key === "2026-05-26" ? "today" : ""}`}
-                        onClick={() => setSelectedDate(key)}
-                      >
-                        <span>{day}</span>
-                        <div className="day-dots">
-                          {visibleTasks.slice(0, 3).map((task) => (
-                            <i className={categoryTone[task.category]} key={task.id} />
-                          ))}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-
-              <section className="task-panel">
-                <div className="section-head compact">
-                  <div>
-                    <span>{selectedDay}일 할 일</span>
-                    <h3>{selectedTasks.length}개 작업</h3>
-                  </div>
-                  <button className="filter-button" aria-label="필터">
-                    <Settings2 size={17} />
-                    정렬
-                  </button>
-                </div>
-
-                <label className="search-box">
-                  <Search size={17} />
-                  <input
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="작업, 방, 카테고리 검색"
-                  />
-                </label>
-
-                <div className="task-list">
-                  {selectedTasks.map((task) => (
-                    <TaskCard key={task.id} task={task} onToggle={toggleTask} />
-                  ))}
-                  {selectedTasks.length === 0 && (
-                    <div className="empty-state">
-                      <Sparkles size={24} />
-                      <strong>이 날은 비어 있어요</strong>
-                      <span>새 작업을 추가해서 루틴을 만들어보세요.</span>
-                    </div>
-                  )}
-                </div>
-              </section>
-            </>
-          )}
-
-          {activeTab !== "calendar" && (
-            <FeatureView tab={activeTab} completion={completion} totalPoints={totalPoints} />
-          )}
+    <main className="workspace">
+      <aside className="sidebar">
+        <div className="brand">
+          <span className="brand-mark">L</span>
+          <div>
+            <strong>Lalendar</strong>
+            <small>shared routine calendar</small>
+          </div>
         </div>
 
-        <nav className="bottom-nav" aria-label="하단 탭">
+        <nav className="side-nav" aria-label="앱 메뉴">
           {navItems.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
-              className={`nav-button ${activeTab === id ? "active" : ""}`}
-              onClick={() => setActiveTab(id)}
-              aria-label={label}
+              className={activeNav === id ? "active" : ""}
+              onClick={() => changeNav(id)}
             >
-              <Icon size={22} />
-              <span>{label}</span>
+              <Icon size={19} />
+              {label}
             </button>
           ))}
         </nav>
+
+        <section className="mini-card">
+          <span className="mini-kicker">이번 주</span>
+          <strong>{completion}%</strong>
+          <p>완료율</p>
+          <div className="progress-track">
+            <i style={{ width: `${completion}%` }} />
+          </div>
+        </section>
+      </aside>
+
+      <section className="main-view">
+        <header className="app-header">
+          <div>
+            <span className="eyebrow">2026 May</span>
+            <h1>캘린더에서 오늘 할 일을 바로 관리하세요</h1>
+          </div>
+          <div className="header-actions">
+            <label className="search-field">
+              <Search size={17} />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="작업 검색"
+              />
+            </label>
+            <button className="icon-button" aria-label="알림">
+              <Bell size={19} />
+            </button>
+            <button className="icon-button mobile-menu" aria-label="메뉴">
+              <Menu size={20} />
+            </button>
+          </div>
+        </header>
+
+        <section className="summary-grid">
+          <SummaryCard icon={Flame} label="오늘 작업" value={`${selectedTasks.length}개`} caption={`${selectedDay}일 기준`} />
+          <SummaryCard icon={Check} label="완료" value={`${selectedTasks.filter((task) => task.done).length}개`} caption="체크한 작업" />
+          <SummaryCard icon={Gift} label="포인트" value={pointSum} caption="누적 보상" />
+        </section>
+
+        <section className="member-row" aria-label="멤버 필터">
+          {members.map((member) => (
+            <button
+              key={member.id}
+              className={selectedMember === member.id ? "active" : ""}
+              onClick={() => setSelectedMember(member.id)}
+            >
+              <span>{member.short}</span>
+              {member.name}
+            </button>
+          ))}
+        </section>
+
+        <section className="content-grid">
+          <section className="calendar-card">
+            <div className="card-head">
+              <div>
+                <span>월간 캘린더</span>
+                <h2>2026. 05</h2>
+              </div>
+              <div className="month-actions">
+                <button aria-label="이전 달">
+                  <ChevronLeft size={18} />
+                </button>
+                <button aria-label="다음 달">
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div className="weekdays">
+              {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
+                <span key={day}>{day}</span>
+              ))}
+            </div>
+
+            <div className="month-grid">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <span className="blank-day" key={index} />
+              ))}
+              {month.map((key) => {
+                const dayTasks = taskMap[key] || [];
+                const done = dayTasks.filter((task) => task.done).length;
+                const day = Number(key.slice(-2));
+                return (
+                  <button
+                    key={key}
+                    className={`date-cell ${selectedDate === key ? "selected" : ""} ${key === "2026-05-26" ? "today" : ""}`}
+                    onClick={() => setSelectedDate(key)}
+                  >
+                    <span className="date-number">{day}</span>
+                    <div className="date-events">
+                      {dayTasks.slice(0, 2).map((task) => (
+                        <i className={task.tag} key={task.id}>
+                          {task.title}
+                        </i>
+                      ))}
+                    </div>
+                    {dayTasks.length > 0 && (
+                      <small>
+                        {done}/{dayTasks.length}
+                      </small>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <aside className="agenda-card">
+            <div className="card-head">
+              <div>
+                <span>{selectedDay}일 일정</span>
+                <h2>{selectedTasks.length}개 작업</h2>
+              </div>
+              <button className="add-button" onClick={addTask}>
+                <Plus size={19} />
+                추가
+              </button>
+            </div>
+
+            <div className="agenda-list">
+              {selectedTasks.map((task) => (
+                <TaskItem key={task.id} task={task} onToggle={toggleTask} />
+              ))}
+              {selectedTasks.length === 0 && (
+                <div className="empty-state">
+                  <Sparkles size={24} />
+                  <strong>이 날은 비어 있어요</strong>
+                  <p>오른쪽 위 추가 버튼으로 작업을 만들 수 있어요.</p>
+                </div>
+              )}
+            </div>
+          </aside>
+        </section>
       </section>
+
+      <nav className="mobile-tabbar" aria-label="모바일 하단 메뉴">
+        {navItems.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            className={activeNav === id ? "active" : ""}
+            onClick={() => changeNav(id)}
+          >
+            <Icon size={21} />
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
     </main>
   );
 }
 
-function TaskCard({ task, onToggle }) {
-  const assignee = members.find((member) => member.id === task.assignee) || members[0];
-
+function SummaryCard({ icon: Icon, label, value, caption }) {
   return (
-    <article className={`task-card ${task.done ? "done" : ""}`}>
-      <button className="task-check" onClick={() => onToggle(task.id)} aria-label={`${task.title} 완료 전환`}>
-        {task.done && <Check size={17} />}
-      </button>
-      <div className="task-body">
-        <div className="task-title-row">
-          <h4>{task.title}</h4>
-          <span className={`category ${categoryTone[task.category]}`}>{task.category}</span>
-        </div>
-        <p>
-          {task.room} · {task.repeat}
-        </p>
-      </div>
-      <div className="task-meta">
-        <span className={`mini-avatar ${assignee.color}`}>{assignee.short}</span>
-        <b>+{task.points}</b>
+    <article className="summary-card">
+      <span>
+        <Icon size={18} />
+      </span>
+      <div>
+        <p>{label}</p>
+        <strong>{value}</strong>
+        <small>{caption}</small>
       </div>
     </article>
   );
 }
 
-function FeatureView({ tab, completion, totalPoints }) {
-  const copy = {
-    home: {
-      icon: Home,
-      title: "오늘의 흐름",
-      text: "캘린더에서 오늘 작업을 고르고, 진행률과 포인트를 바로 확인하세요.",
-      stat: `${completion}%`,
-      label: "완료율",
-    },
-    alert: {
-      icon: Bell,
-      title: "딱 맞는 알림",
-      text: "청소 전, 마감 전, 가족 미완료 작업을 상황별로 알려주는 알림 화면입니다.",
-      stat: "3",
-      label: "예정 알림",
-    },
-    reward: {
-      icon: Trophy,
-      title: "꾸준함 보상",
-      text: "완료한 작업은 포인트로 쌓이고 주간 보상 카드로 이어집니다.",
-      stat: totalPoints,
-      label: "누적 포인트",
-    },
-    profile: {
-      icon: UsersRound,
-      title: "함께 쓰는 집",
-      text: "가족, 룸메이트, 반려 루틴까지 멤버별 책임과 기여도를 나눠서 봅니다.",
-      stat: "4",
-      label: "멤버",
-    },
-  }[tab];
-
-  const Icon = copy.icon;
+function TaskItem({ task, onToggle }) {
+  const owner = members.find((member) => member.id === task.owner) || members[0];
 
   return (
-    <section className="feature-view">
-      <div className="feature-icon">
-        <Icon size={30} />
-      </div>
-      <h2>{copy.title}</h2>
-      <p>{copy.text}</p>
-      <div className="feature-card">
-        <span>{copy.label}</span>
-        <strong>{copy.stat}</strong>
-        <div className="feature-bars">
-          <i />
-          <i />
-          <i />
-          <i />
-          <i />
-        </div>
-      </div>
-      <button className="wide-action">
-        <Clock3 size={18} />
-        오늘 캘린더로 돌아가기
+    <article className={`task-item ${task.done ? "done" : ""}`}>
+      <button className="check-button" onClick={() => onToggle(task.id)} aria-label="완료 전환">
+        {task.done && <Check size={16} />}
       </button>
-    </section>
+      <div className="task-copy">
+        <div>
+          <h3>{task.title}</h3>
+          <span className={`tag ${task.tag}`}>{tagLabel[task.tag]}</span>
+        </div>
+        <p>{task.place} · 담당 {owner.name}</p>
+      </div>
+      <button className="more-button" aria-label="더 보기">
+        <MoreHorizontal size={18} />
+      </button>
+    </article>
   );
 }
 
