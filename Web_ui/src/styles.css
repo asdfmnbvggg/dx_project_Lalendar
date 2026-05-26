@@ -34,9 +34,9 @@ body {
   margin: 0;
   color: var(--ink);
   background:
-    radial-gradient(circle at 12% 0%, rgba(244, 63, 94, 0.28), transparent 30%),
+    radial-gradient(circle at 12% 0%, rgba(255, 193, 7, 0.22), transparent 28%),
     radial-gradient(circle at 88% 4%, rgba(251, 113, 133, 0.18), transparent 30%),
-    linear-gradient(180deg, #fff1f5 0%, #fff7f9 46%, #fff 100%);
+    linear-gradient(180deg, #fff6e9 0%, #fff3f7 44%, #fff 100%);
 }
 
 button,
@@ -66,8 +66,9 @@ button {
   overflow: visible;
   border-radius: 34px;
   background:
-    radial-gradient(circle at 90% 0%, rgba(255, 182, 193, 0.28), transparent 26%),
-    linear-gradient(180deg, #ffffff 0%, #fff8fa 100%);
+    radial-gradient(circle at 88% 0%, rgba(255, 214, 102, 0.24), transparent 28%),
+    radial-gradient(circle at 0% 8%, rgba(255, 122, 162, 0.14), transparent 28%),
+    linear-gradient(180deg, #ffffff 0%, #fffaf3 100%);
   box-shadow: var(--pink-shadow);
 }
 
@@ -138,19 +139,20 @@ button {
   padding: clamp(24px, 5vw, 54px);
   overflow: hidden;
   border-radius: 34px;
-  color: #fff;
+  color: #37131d;
   background:
-    radial-gradient(circle at 86% 20%, rgba(255, 255, 255, 0.24), transparent 20%),
-    linear-gradient(135deg, #ff7aa2 0%, #f43f73 42%, #d4144b 100%);
-  box-shadow: var(--pink-shadow);
+    radial-gradient(circle at 88% 20%, rgba(255, 255, 255, 0.54), transparent 22%),
+    radial-gradient(circle at 100% 100%, rgba(255, 202, 40, 0.42), transparent 34%),
+    linear-gradient(135deg, #ff7aa2 0%, #ff9a76 48%, #ffd36a 100%);
+  box-shadow: 0 24px 70px rgba(240, 94, 76, 0.18);
 }
 
 .hero-panel::before {
-  content: "Lalendar";
+  content: "routine";
   position: absolute;
   left: 28px;
   top: -22px;
-  color: rgba(255, 255, 255, 0.11);
+  color: rgba(255, 255, 255, 0.2);
   font-size: clamp(76px, 14vw, 180px);
   font-weight: 950;
   line-height: 1;
@@ -165,7 +167,7 @@ button {
   width: 280px;
   height: 280px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .hero-panel > * {
@@ -175,7 +177,7 @@ button {
 
 .hero-panel p {
   margin: 0 0 12px;
-  color: rgba(255, 255, 255, 0.86);
+  color: rgba(87, 29, 41, 0.76);
   font-size: 17px;
   font-weight: 950;
 }
@@ -183,14 +185,15 @@ button {
 .hero-panel h1 {
   max-width: 620px;
   margin: 0;
-  font-size: clamp(44px, 7vw, 88px);
-  line-height: 0.92;
+  font-size: clamp(36px, 5.5vw, 68px);
+  line-height: 1.02;
+  letter-spacing: 0;
 }
 
 .hero-panel span {
   display: block;
   margin-top: 16px;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(87, 29, 41, 0.72);
   font-size: 20px;
   font-weight: 850;
 }
@@ -205,14 +208,21 @@ button {
   display: grid;
   place-items: center;
   border-radius: 42px;
-  background: rgba(255, 255, 255, 0.18);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.32);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42);
   backdrop-filter: blur(16px);
 }
 
 .hero-badge strong {
   margin-top: -22px;
   font-size: 42px;
+}
+
+.crew-hero {
+  background:
+    radial-gradient(circle at 88% 18%, rgba(255, 255, 255, 0.48), transparent 24%),
+    radial-gradient(circle at 100% 100%, rgba(255, 214, 102, 0.48), transparent 34%),
+    linear-gradient(135deg, #ff8fb6 0%, #ff7a8a 42%, #ffc857 100%);
 }
 
 .hero-title {
@@ -275,7 +285,7 @@ button {
 }
 
 .weather-card {
-  color: #fff;
+  color: #3c1420;
   background:
     radial-gradient(circle at 90% 0%, rgba(255, 255, 255, 0.24), transparent 32%),
     linear-gradient(135deg, #ff8a7a, #e11d48);
@@ -877,13 +887,16 @@ button {
   color: #fff;
   text-align: center;
   background:
-    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.22), transparent 24%),
-    linear-gradient(150deg, var(--red), #9f1239);
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.5), transparent 25%),
+    radial-gradient(circle at 100% 100%, rgba(255, 214, 102, 0.46), transparent 35%),
+    linear-gradient(140deg, #ff7aa2 0%, #ff906f 46%, #ffd36a 100%);
 }
 
 .reward-hero h1 {
   margin: 0;
-  font-size: clamp(42px, 6vw, 70px);
+  max-width: 720px;
+  font-size: clamp(34px, 5vw, 62px);
+  line-height: 1.04;
 }
 
 .reward-hero p,
@@ -891,7 +904,7 @@ button {
   margin: 0;
   font-size: 18px;
   font-weight: 800;
-  opacity: 0.9;
+  color: rgba(60, 20, 32, 0.72);
 }
 
 .reward-hero strong {

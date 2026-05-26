@@ -5,11 +5,11 @@ import TaskItem from "../components/TaskItem.jsx";
 export default function CrewPage({ scopedTasks, selectedMember, setSelectedMember, toggleTask, deleteTask, onOpenPanel }) {
   return (
     <section className="page">
-      <div className="hero-panel slim">
+      <div className="hero-panel slim crew-hero">
         <div>
-          <p>함께 나눠요</p>
-          <h1>가족에게 집안일 분담</h1>
-          <span>담당자와 로테이션을 바로 확인하세요.</span>
+          <p>함께 쓰는 루틴</p>
+          <h1>오늘의 담당을 가볍게 나눠요</h1>
+          <span>로테이션과 담당자를 한눈에 확인하세요.</span>
         </div>
       </div>
 

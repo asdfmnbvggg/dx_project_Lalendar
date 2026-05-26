@@ -3,12 +3,13 @@ import { presets } from "../data.js";
 
 export default function RewardPage({ tasks, completion, onAddPreset }) {
   const doneCount = tasks.filter((task) => task.done).length;
+
   return (
     <section className="page">
       <div className="reward-hero">
         <Sparkles size={34} />
-        <h1>보상 받기</h1>
-        <p>꾸준한 청소에 보상</p>
+        <p>이번 주 리워드</p>
+        <h1>작은 루틴이 쌓였어요</h1>
         <strong>Speedster</strong>
         <span>오늘 {doneCount}개 작업 완료</span>
       </div>
