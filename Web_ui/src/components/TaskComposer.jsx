@@ -1,11 +1,13 @@
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
+import { members } from "../data.js";
 
 export default function TaskComposer({ selectedDate, selectedMember, onAdd, onClose }) {
   const [title, setTitle] = useState("");
   const [place, setPlace] = useState("주방");
   const [date, setDate] = useState(selectedDate);
   const [repeat, setRepeat] = useState("오늘");
+  const [owner, setOwner] = useState(selectedMember === "all" ? "me" : selectedMember);
 
   function submit(event) {
     event.preventDefault();
@@ -16,9 +18,10 @@ export default function TaskComposer({ selectedDate, selectedMember, onAdd, onCl
       title: trimmedTitle,
       place,
       tag: "house",
-      owner: selectedMember === "all" ? "me" : selectedMember,
+      owner,
       done: false,
       repeat,
+      source: "manual",
     });
   }
 
@@ -34,11 +37,23 @@ export default function TaskComposer({ selectedDate, selectedMember, onAdd, onCl
             <X size={20} />
           </button>
         </div>
+
         <label>
           작업 이름
           <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="예: 싱크대 청소" autoFocus />
         </label>
+
         <div className="composer-grid">
+          <label>
+            담당자
+            <select value={owner} onChange={(event) => setOwner(event.target.value)}>
+              {members.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <label>
             위치
             <select value={place} onChange={(event) => setPlace(event.target.value)}>
@@ -49,21 +64,25 @@ export default function TaskComposer({ selectedDate, selectedMember, onAdd, onCl
               <option>세탁실</option>
             </select>
           </label>
+        </div>
+
+        <div className="composer-grid">
           <label>
             날짜
             <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
           </label>
+          <label>
+            반복
+            <select value={repeat} onChange={(event) => setRepeat(event.target.value)}>
+              <option>오늘</option>
+              <option>매일</option>
+              <option>매주</option>
+              <option>2주마다</option>
+              <option>월말</option>
+            </select>
+          </label>
         </div>
-        <label>
-          반복
-          <select value={repeat} onChange={(event) => setRepeat(event.target.value)}>
-            <option>오늘</option>
-            <option>매일</option>
-            <option>매주</option>
-            <option>2주마다</option>
-            <option>월말</option>
-          </select>
-        </label>
+
         <button className="composer-submit" type="submit">
           <Plus size={19} />
           추가하기

@@ -8,10 +8,13 @@ export default function CrewPage({
   setSelectedMember,
   toggleTask,
   deleteTask,
+  changeTaskOwner,
   onOpenPanel,
 }) {
   const selected = members.find((member) => member.id === selectedMember && member.id !== "all") || members[1];
-  const selectedTasks = scopedTasks.filter((task) => task.owner === selected.id);
+  const selectedTasks = scopedTasks
+    .filter((task) => task.owner === selected.id)
+    .sort((a, b) => Number(a.done) - Number(b.done) || b.id - a.id);
   const doneCount = selectedTasks.filter((task) => task.done).length;
   const completion = Math.round((doneCount / Math.max(selectedTasks.length, 1)) * 100);
 
@@ -77,6 +80,7 @@ export default function CrewPage({
             task={task}
             onToggle={toggleTask}
             onDelete={deleteTask}
+            onOwnerChange={changeTaskOwner}
             onOpen={(openedTask) => onOpenPanel({ type: "task", task: openedTask })}
           />
         ))}

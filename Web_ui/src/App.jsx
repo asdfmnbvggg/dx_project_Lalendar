@@ -10,7 +10,7 @@ import DetailPanel from "./components/DetailPanel.jsx";
 
 export default function App() {
   const [tasks, setTasks] = useState(initialTasks);
-  const [activeTab, setActiveTab] = useState("today");
+  const [activeTab, setActiveTab] = useState("calendar");
   const [selectedDate, setSelectedDate] = useState("2026-05-26");
   const [selectedMember, setSelectedMember] = useState("all");
   const [query, setQuery] = useState("");
@@ -34,16 +34,18 @@ export default function App() {
   }, []);
 
   const scopedTasks = tasks.filter((task) => selectedMember === "all" || task.owner === selectedMember);
-  const todayTasks = scopedTasks.filter((task) => task.date === "2026-05-26");
-  const selectedTasks = scopedTasks
-    .filter((task) => task.date === selectedDate)
-    .filter((task) => `${task.title} ${task.place} ${tagLabel[task.tag]}`.includes(query));
+  const todayTasks = sortTasks(scopedTasks.filter((task) => task.date === "2026-05-26"));
+  const selectedTasks = sortTasks(
+    scopedTasks
+      .filter((task) => task.date === selectedDate)
+      .filter((task) => `${task.title} ${task.place} ${tagLabel[task.tag]}`.includes(query)),
+  );
   const completed = scopedTasks.filter((task) => task.done).length;
   const completion = Math.round((completed / Math.max(scopedTasks.length, 1)) * 100);
   const month = useMemo(() => Array.from({ length: 31 }, (_, index) => dateKey(index + 1)), []);
   const tasksByDate = useMemo(() => {
     return scopedTasks.reduce((map, task) => {
-      map[task.date] = [...(map[task.date] || []), task];
+      map[task.date] = sortTasks([...(map[task.date] || []), task]);
       return map;
     }, {});
   }, [scopedTasks]);
@@ -56,8 +58,12 @@ export default function App() {
     setTasks((current) => current.filter((task) => task.id !== id));
   }
 
+  function changeTaskOwner(id, owner) {
+    setTasks((current) => current.map((task) => (task.id === id ? { ...task, owner } : task)));
+  }
+
   function addTask(task) {
-    setTasks((current) => [{ id: Date.now(), ...task }, ...current]);
+    setTasks((current) => [{ id: Date.now(), source: "manual", ...task }, ...current]);
   }
 
   function addPreset(title) {
@@ -69,6 +75,7 @@ export default function App() {
       owner: selectedMember === "all" ? "me" : selectedMember,
       done: false,
       repeat: "프리셋",
+      source: "auto",
     });
     setActiveTab("calendar");
   }
@@ -89,6 +96,7 @@ export default function App() {
     completion,
     toggleTask,
     deleteTask,
+    changeTaskOwner,
     openComposer: () => setComposerOpen(true),
     onOpenPanel: setPanel,
   };
@@ -148,6 +156,7 @@ export default function App() {
         onClose={() => setPanel(null)}
         onToggle={toggleTask}
         onDelete={deleteTask}
+        onOwnerChange={changeTaskOwner}
         onAddTask={(task) => addTask(task)}
         selectedDate={selectedDate}
         selectedMember={selectedMember}
@@ -155,4 +164,13 @@ export default function App() {
       />
     </main>
   );
+}
+
+function sortTasks(tasks) {
+  return [...tasks].sort(taskSorter);
+}
+
+function taskSorter(a, b) {
+  if (a.done !== b.done) return Number(a.done) - Number(b.done);
+  return b.id - a.id;
 }

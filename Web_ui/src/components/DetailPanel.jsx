@@ -1,5 +1,5 @@
 import { Check, ClipboardList, Cpu, Refrigerator, Settings, Sparkles, X } from "lucide-react";
-import { appliances, communityTips, tagLabel } from "../data.js";
+import { appliances, communityTips, members, tagLabel } from "../data.js";
 
 export default function DetailPanel({
   panel,
@@ -8,6 +8,7 @@ export default function DetailPanel({
   onClose,
   onToggle,
   onDelete,
+  onOwnerChange,
   onAddTask,
   selectedDate,
   selectedMember,
@@ -17,7 +18,7 @@ export default function DetailPanel({
 
   const doneTasks = tasks.filter((task) => task.done);
   const pendingTasks = tasks.filter((task) => !task.done);
-  const panelTasks = getPanelTasks(panel, tasks, doneTasks, pendingTasks);
+  const panelTasks = getPanelTasks(panel, tasks, doneTasks, pendingTasks).sort(taskSorter);
 
   return (
     <div className="detail-backdrop" role="presentation">
@@ -62,7 +63,13 @@ export default function DetailPanel({
                 <ClipboardList size={18} />
                 <div>
                   <strong>{task.title}</strong>
-                  <p>{task.date} · {task.place}</p>
+                  <p>
+                    {task.date} · {task.place}
+                    <span className="owner-badge">{getOwnerName(task.owner)}</span>
+                    <span className={`source-badge ${task.source === "auto" ? "auto" : "manual"}`}>
+                      {task.source === "auto" ? "자동추가" : "수동"}
+                    </span>
+                  </p>
                 </div>
               </article>
             ))}
@@ -85,6 +92,7 @@ export default function DetailPanel({
                   owner: selectedMember === "all" ? "me" : selectedMember,
                   done: false,
                   repeat: "AI 추천",
+                  source: "auto",
                 })
               }
             >
@@ -181,8 +189,26 @@ export default function DetailPanel({
                 </button>
                 <div>
                   <strong>{task.title}</strong>
-                  <p>{task.place} · {task.repeat} · {tagLabel[task.tag]}</p>
+                  <p>
+                    {task.place} · {task.repeat} · {tagLabel[task.tag]}
+                    <span className="owner-badge">{getOwnerName(task.owner)}</span>
+                    <span className={`source-badge ${task.source === "auto" ? "auto" : "manual"}`}>
+                      {task.source === "auto" ? "자동추가" : "수동"}
+                    </span>
+                  </p>
                 </div>
+                <select
+                  className="owner-select detail-owner-select"
+                  value={task.owner}
+                  aria-label={`${task.title} 담당자 변경`}
+                  onChange={(event) => onOwnerChange?.(task.id, event.target.value)}
+                >
+                  {members.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name}
+                    </option>
+                  ))}
+                </select>
                 <button className="detail-delete" onClick={() => onDelete(task.id)}>
                   삭제
                 </button>
@@ -208,6 +234,15 @@ function getPanelTasks(panel, tasks, doneTasks, pendingTasks) {
   if (panel.type === "pending") return pendingTasks;
   if (panel.type === "appliances" || panel.type === "community") return [];
   return tasks;
+}
+
+function taskSorter(a, b) {
+  if (a.done !== b.done) return Number(a.done) - Number(b.done);
+  return b.id - a.id;
+}
+
+function getOwnerName(ownerId) {
+  return members.find((member) => member.id === ownerId)?.name || "미정";
 }
 
 function getPanelKicker(panel) {

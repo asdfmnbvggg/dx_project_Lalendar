@@ -14,9 +14,13 @@ export default function CalendarPage({
   setQuery,
   toggleTask,
   deleteTask,
+  changeTaskOwner,
   openComposer,
   onOpenPanel,
 }) {
+  const selectedMemberName = members.find((member) => member.id === selectedMember)?.name || "우리 집";
+  const selectedDay = Number(selectedDate.slice(-2));
+
   return (
     <section className="page calendar-page">
       <div className="profile-strip">
@@ -29,17 +33,17 @@ export default function CalendarPage({
       </div>
 
       <section className="calendar-profile">
-        <div className="profile-avatar">C</div>
+        <div className="profile-avatar">{selectedMember === "all" ? "집" : selectedMemberName[0]}</div>
         <div>
-          <h1>Charlotte</h1>
-          <p>each task shapes who we become.</p>
+          <h1>{selectedMemberName}</h1>
+          <p>가전 루틴과 집안일을 한눈에 관리해요.</p>
         </div>
       </section>
 
       <section className="calendar-board">
         <div className="calendar-header">
           <h2>2026. 05</h2>
-          <button onClick={openComposer}>
+          <button onClick={openComposer} aria-label="할 일 추가">
             <Plus size={18} />
           </button>
         </div>
@@ -73,19 +77,26 @@ export default function CalendarPage({
 
       <section className="task-sheet compact">
         <div className="sheet-head">
-          <h2>{Number(selectedDate.slice(-2))}일 작업</h2>
+          <h2>{selectedDay}일 작업</h2>
           <label className="search-field">
             <Search size={16} />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="검색" />
           </label>
         </div>
         {selectedTasks.map((task) => (
-          <TaskItem key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} onOpen={(openedTask) => onOpenPanel({ type: "task", task: openedTask })} />
+          <TaskItem
+            key={task.id}
+            task={task}
+            onToggle={toggleTask}
+            onDelete={deleteTask}
+            onOwnerChange={changeTaskOwner}
+            onOpen={(openedTask) => onOpenPanel({ type: "task", task: openedTask })}
+          />
         ))}
         {selectedTasks.length === 0 && (
           <div className="empty-state">
             <ClipboardList size={24} />
-            <p>선택한 날짜에 작업이 없습니다.</p>
+            <p>선택한 날짜에 작업이 없어요.</p>
           </div>
         )}
       </section>
