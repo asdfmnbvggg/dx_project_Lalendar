@@ -170,6 +170,9 @@ button {
 }
 
 .page {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
   padding-top: 18px;
   animation: soft-enter 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
@@ -418,9 +421,11 @@ button {
 .today-page {
   display: grid;
   gap: 18px;
+  justify-items: center;
 }
 
 .today-overview {
+  width: 100%;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
@@ -471,7 +476,8 @@ button {
 
 .today-task-sheet,
 .today-shortcuts {
-  max-width: 760px;
+  width: min(760px, 100%);
+  max-width: none;
   margin-top: 0;
 }
 
@@ -695,13 +701,14 @@ button {
 }
 
 .task-sheet {
-  max-width: 760px;
-  margin-top: 28px;
+  width: min(760px, 100%);
+  max-width: none;
+  margin: 28px auto 0;
   padding: 20px;
 }
 
 .task-sheet.compact {
-  max-width: none;
+  width: 100%;
   margin-top: 20px;
 }
 
@@ -972,12 +979,15 @@ button {
 
 .blank-day,
 .date-cell {
-  min-height: clamp(82px, 9vw, 124px);
+  min-height: clamp(118px, 12vw, 154px);
 }
 
 .date-cell {
   min-width: 0;
-  padding: 8px 6px;
+  display: grid;
+  grid-template-rows: auto minmax(54px, 1fr) auto;
+  align-items: start;
+  padding: 8px 6px 7px;
   border-radius: 14px;
   text-align: center;
   transition: background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
@@ -1004,7 +1014,51 @@ button {
   font-size: 18px;
 }
 
-.date-cell div {
+.day-weather {
+  min-height: 54px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 2px;
+}
+
+.day-weather.empty {
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.day-weather em {
+  font-size: 14px;
+  font-style: normal;
+}
+
+.weather-icon {
+  height: 26px;
+  display: grid;
+  place-items: center;
+  font-size: 25px;
+  line-height: 1;
+}
+
+.weather-temps {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  line-height: 1.05;
+}
+
+.weather-temps b {
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.weather-temps small {
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.date-tasks {
   display: grid;
   justify-items: center;
   gap: 4px;
@@ -1481,7 +1535,7 @@ button {
   inset: 0;
   z-index: 200;
   display: grid;
-  place-items: end center;
+  place-items: center;
   padding: 20px;
   background: rgba(15, 10, 12, 0.34);
   backdrop-filter: blur(10px);
@@ -1571,7 +1625,7 @@ button {
   inset: 0;
   z-index: 190;
   display: grid;
-  place-items: center end;
+  place-items: center;
   padding: 20px;
   background: rgba(15, 10, 12, 0.28);
   backdrop-filter: blur(10px);
@@ -1859,11 +1913,12 @@ button {
 
   .blank-day,
   .date-cell {
-    min-height: 66px;
+    min-height: 104px;
   }
 
   .date-cell {
-    padding: 4px 2px;
+    grid-template-rows: auto minmax(44px, 1fr) auto;
+    padding: 4px 2px 6px;
   }
 
   .date-cell strong {
@@ -1871,6 +1926,27 @@ button {
     height: 26px;
     margin-bottom: 4px;
     font-size: 14px;
+  }
+
+  .day-weather {
+    min-height: 44px;
+  }
+
+  .weather-icon {
+    height: 20px;
+    font-size: 20px;
+  }
+
+  .weather-temps b {
+    font-size: 14px;
+  }
+
+  .weather-temps small {
+    font-size: 12px;
+  }
+
+  .day-weather em {
+    font-size: 12px;
   }
 
   .date-cell i {
@@ -1953,12 +2029,10 @@ button {
   }
 
   .composer-backdrop {
-    align-items: end;
     padding: 12px;
   }
 
   .detail-backdrop {
-    align-items: end;
     padding: 12px;
   }
 

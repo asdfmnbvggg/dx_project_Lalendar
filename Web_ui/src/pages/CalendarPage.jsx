@@ -1,6 +1,13 @@
 import { ClipboardList, Plus, Search } from "lucide-react";
-import { members } from "../data.js";
+import { members, weatherByDate } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
+
+const weatherIcon = {
+  sunny: "☀️",
+  "sun-rain": "🌦️",
+  rain: "🌧️",
+  sunset: "🌅",
+};
 
 export default function CalendarPage({
   month,
@@ -59,10 +66,30 @@ export default function CalendarPage({
           {month.map((key) => {
             const tasks = tasksByDate[key] || [];
             const day = Number(key.slice(-2));
+            const weather = weatherByDate[key];
             return (
               <button key={key} className={`date-cell ${selectedDate === key ? "selected" : ""}`} onClick={() => setSelectedDate(key)}>
                 <strong>{day}</strong>
-                <div>
+                {weather && (
+                  <span className={`day-weather ${weather.status === "none" ? "empty" : ""}`}>
+                    {weather.status === "none" ? (
+                      <em>없음</em>
+                    ) : (
+                      <>
+                        {weather.condition && (
+                          <span className="weather-icon" role="img" aria-label={weather.label}>
+                            {weatherIcon[weather.condition]}
+                          </span>
+                        )}
+                        <span className="weather-temps">
+                          <b>{weather.high}°</b>
+                          <small>{weather.low}°</small>
+                        </span>
+                      </>
+                    )}
+                  </span>
+                )}
+                <div className="date-tasks">
                   {tasks.slice(0, 3).map((task) => (
                     <i className={task.tag} key={task.id}>
                       {task.title}
