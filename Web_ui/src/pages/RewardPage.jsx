@@ -11,7 +11,7 @@ const weekDays = [
   { key: "2026-05-26", label: "오늘" },
 ];
 
-export default function RewardPage({ tasks, completion, onAddPreset }) {
+export default function RewardPage({ tasks, completion, rewardPoints, onAddPreset }) {
   const doneCount = tasks.filter((task) => task.done).length;
   const pendingCount = tasks.length - doneCount;
   const chartRows = weekDays.map((day) => {
@@ -33,9 +33,9 @@ export default function RewardPage({ tasks, completion, onAddPreset }) {
     <section className="page">
       <section className="stats-card live-stats-card">
         <div>
-          <p>실시간 기록</p>
+          <p>자동 보상 기록</p>
           <h2>{completion}%</h2>
-          <span>완료 {doneCount}개 · 대기 {pendingCount}개</span>
+          <span>완료 {doneCount}개 · 대기 {pendingCount}개 · {rewardPoints}P 적립</span>
         </div>
         <div className="live-chart" aria-label="최근 7일 작업 완료 기록">
           {chartRows.map((row) => (
@@ -54,13 +54,13 @@ export default function RewardPage({ tasks, completion, onAddPreset }) {
       <section className="reward-summary-grid">
         <article>
           <TrendingUp size={20} />
-          <strong>{doneCount}개</strong>
-          <span>누적 완료</span>
+          <strong>{rewardPoints}P</strong>
+          <span>자동 적립 포인트</span>
         </article>
         <article>
           <Check size={20} />
-          <strong>{chartRows.at(-1).done}개</strong>
-          <span>오늘 완료</span>
+          <strong>+10P</strong>
+          <span>작업 1개 완료 보상</span>
         </article>
       </section>
 

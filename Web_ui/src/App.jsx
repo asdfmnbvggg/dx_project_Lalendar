@@ -12,6 +12,7 @@ export default function App() {
   const [tasks, setTasks] = useState(initialTasks);
   const [activeTab, setActiveTab] = useState("calendar");
   const [selectedDate, setSelectedDate] = useState("2026-05-26");
+  const [visibleMonth, setVisibleMonth] = useState({ year: 2026, month: 5 });
   const [selectedMember, setSelectedMember] = useState("all");
   const [query, setQuery] = useState("");
   const [isComposerOpen, setComposerOpen] = useState(false);
@@ -42,13 +43,29 @@ export default function App() {
   );
   const completed = scopedTasks.filter((task) => task.done).length;
   const completion = Math.round((completed / Math.max(scopedTasks.length, 1)) * 100);
-  const month = useMemo(() => Array.from({ length: 31 }, (_, index) => dateKey(index + 1)), []);
+  const rewardPoints = completed * 10;
+  const month = useMemo(() => {
+    const totalDays = new Date(visibleMonth.year, visibleMonth.month, 0).getDate();
+    return Array.from({ length: totalDays }, (_, index) => dateKey(visibleMonth.year, visibleMonth.month, index + 1));
+  }, [visibleMonth]);
+  const monthLeadingBlanks = useMemo(() => new Date(visibleMonth.year, visibleMonth.month - 1, 1).getDay(), [visibleMonth]);
+  const monthLabel = `${visibleMonth.year}. ${String(visibleMonth.month).padStart(2, "0")}`;
   const tasksByDate = useMemo(() => {
     return scopedTasks.reduce((map, task) => {
       map[task.date] = sortTasks([...(map[task.date] || []), task]);
       return map;
     }, {});
   }, [scopedTasks]);
+
+  function changeVisibleMonth(offset) {
+    setVisibleMonth((current) => {
+      const next = new Date(current.year, current.month - 1 + offset, 1);
+      const year = next.getFullYear();
+      const month = next.getMonth() + 1;
+      setSelectedDate(dateKey(year, month, 1));
+      return { year, month };
+    });
+  }
 
   function toggleTask(id) {
     setTasks((current) => current.map((task) => (task.id === id ? { ...task, done: !task.done } : task)));
@@ -92,8 +109,13 @@ export default function App() {
     query,
     setQuery,
     month,
+    monthLabel,
+    monthLeadingBlanks,
+    onPrevMonth: () => changeVisibleMonth(-1),
+    onNextMonth: () => changeVisibleMonth(1),
     tasksByDate,
     completion,
+    rewardPoints,
     toggleTask,
     deleteTask,
     changeTaskOwner,

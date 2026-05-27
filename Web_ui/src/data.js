@@ -66,7 +66,6 @@ export const initialTasks = [
   { id: 12, date: "2026-05-26", title: "싱크대 청소", place: "주방", tag: "house", owner: "me", done: true, repeat: "매주", source: "manual" },
   { id: 13, date: "2026-05-26", title: "거울 얼룩 닦기", place: "욕실", tag: "house", owner: "minsu", done: false, repeat: "매주", source: "auto" },
   { id: 14, date: "2026-05-26", title: "빨래 개기", place: "세탁실", tag: "house", owner: "theresa", done: false, repeat: "3일마다", source: "manual" },
-  { id: 15, date: "2026-05-28", title: "보상 스탬프 받기", place: "보상", tag: "reward", owner: "me", done: false, repeat: "주간", source: "auto" },
   { id: 16, date: "2026-05-30", title: "월말 대청소", place: "전체", tag: "house", owner: "all", done: false, repeat: "월말", source: "auto" },
 ];
 
@@ -96,12 +95,42 @@ export const weatherByDate = {
   "2026-05-23": { high: 25, low: 16 },
   "2026-05-24": { high: 29, low: 15 },
   "2026-05-25": { high: 30, low: 18 },
-  "2026-05-26": { status: "none" },
+  "2026-05-26": { high: 27, low: 21 },
   "2026-05-27": { high: 26, low: 20, condition: "rain", label: "비" },
   "2026-05-28": { high: 28, low: 15, condition: "sun-rain", label: "맑고 비" },
   "2026-05-29": { high: 29, low: 14, condition: "sunny", label: "맑음" },
   "2026-05-30": { high: 29, low: 15, condition: "sunny", label: "맑음" },
   "2026-05-31": { high: 30, low: 16, condition: "sunset", label: "맑음" },
+  "2026-06-01": { high: 31, low: 16, condition: "sun-rain", label: "맑고 비" },
+  "2026-06-02": { high: 31, low: 18, condition: "sunny", label: "맑음" },
+  "2026-06-03": { high: 33, low: 19, condition: "sun-rain", label: "맑고 비" },
+  "2026-06-04": { high: 30, low: 18, condition: "sun-rain", label: "맑고 비" },
+  "2026-06-05": { high: 27, low: 17, condition: "sunny", label: "맑음" },
+  "2026-06-06": { high: 28, low: 17, condition: "sunny", label: "맑음" },
+  "2026-06-07": { high: 27, low: 17, condition: "sunny", label: "맑음" },
+  "2026-06-08": { high: 28, low: 17, condition: "sunny", label: "맑음" },
+  "2026-06-09": { high: 25, low: 16, condition: "sunny", label: "맑음" },
+  "2026-06-10": { high: 28, low: 19, condition: "partly", label: "구름 조금" },
+  "2026-06-11": { high: 28, low: 18, condition: "partly", label: "구름 조금" },
+  "2026-06-12": { high: 28, low: 19, condition: "sunny", label: "맑음" },
+  "2026-06-13": { high: 28, low: 19, condition: "sun-rain", label: "맑고 비" },
+  "2026-06-14": { high: 28, low: 20, condition: "storm", label: "뇌우" },
+  "2026-06-15": { high: 25, low: 19, condition: "partly", label: "구름 조금" },
+  "2026-06-16": { high: 26, low: 19, condition: "sun-rain", label: "맑고 비" },
+  "2026-06-17": { high: 25, low: 18, condition: "sunny", label: "맑음" },
+  "2026-06-18": { high: 26, low: 17, condition: "partly", label: "구름 조금" },
+  "2026-06-19": { high: 27, low: 20, condition: "sun-rain", label: "맑고 비" },
+  "2026-06-20": { high: 28, low: 20, condition: "partly", label: "구름 조금" },
+  "2026-06-21": { high: 29, low: 20, condition: "cloudy", label: "흐림" },
+  "2026-06-22": { high: 26, low: 20, condition: "storm", label: "뇌우" },
+  "2026-06-23": { high: 26, low: 21, condition: "partly", label: "구름 조금" },
+  "2026-06-24": { high: 27, low: 20, condition: "partly", label: "구름 조금" },
+  "2026-06-25": { high: 26, low: 21, condition: "cloudy", label: "흐림" },
+  "2026-06-26": { high: 27, low: 21, condition: "cloudy", label: "흐림" },
+  "2026-06-27": { high: 27, low: 20, condition: "partly", label: "구름 조금" },
+  "2026-06-28": { high: 26, low: 19, condition: "cloudy", label: "흐림" },
+  "2026-06-29": { high: 26, low: 19, condition: "partly", label: "구름 조금" },
+  "2026-06-30": { high: 26, low: 19, condition: "rain", label: "비" },
 };
 
 export const navItems = [
@@ -119,6 +148,6 @@ export const tagLabel = {
   reward: "보상",
 };
 
-export function dateKey(day) {
-  return `2026-05-${String(day).padStart(2, "0")}`;
+export function dateKey(year, month, day) {
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }

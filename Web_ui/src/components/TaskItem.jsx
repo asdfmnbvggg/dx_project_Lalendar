@@ -18,6 +18,7 @@ export default function TaskItem({ task, onToggle, onDelete, onOpen, onOwnerChan
           <span className={`source-badge ${task.source === "auto" ? "auto" : "manual"}`}>
             {task.source === "auto" ? "자동추가" : "수동"}
           </span>
+          {task.done && <span className="point-badge">+10P</span>}
         </p>
       </button>
 

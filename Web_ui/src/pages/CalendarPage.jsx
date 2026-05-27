@@ -1,4 +1,4 @@
-import { ClipboardList, Plus, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, ClipboardList, Plus, Search } from "lucide-react";
 import { members, weatherByDate } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
 
@@ -7,10 +7,17 @@ const weatherIcon = {
   "sun-rain": "🌦️",
   rain: "🌧️",
   sunset: "🌅",
+  partly: "🌤️",
+  cloudy: "☁️",
+  storm: "⛈️",
 };
 
 export default function CalendarPage({
   month,
+  monthLabel,
+  monthLeadingBlanks,
+  onPrevMonth,
+  onNextMonth,
   tasksByDate,
   selectedDate,
   setSelectedDate,
@@ -49,8 +56,16 @@ export default function CalendarPage({
 
       <section className="calendar-board">
         <div className="calendar-header">
-          <h2>2026. 05</h2>
-          <button onClick={openComposer} aria-label="할 일 추가">
+          <div className="month-switcher">
+            <button onClick={onPrevMonth} aria-label="이전 달">
+              <ChevronLeft size={18} />
+            </button>
+            <h2>{monthLabel}</h2>
+            <button onClick={onNextMonth} aria-label="다음 달">
+              <ChevronRight size={18} />
+            </button>
+          </div>
+          <button className="calendar-add-button" onClick={openComposer} aria-label="할 일 추가">
             <Plus size={18} />
           </button>
         </div>
@@ -60,7 +75,7 @@ export default function CalendarPage({
           ))}
         </div>
         <div className="month-grid">
-          {Array.from({ length: 5 }).map((_, index) => (
+          {Array.from({ length: monthLeadingBlanks }).map((_, index) => (
             <span className="blank-day" key={index} />
           ))}
           {month.map((key) => {

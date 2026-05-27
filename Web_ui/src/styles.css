@@ -818,6 +818,20 @@ button {
   white-space: nowrap;
 }
 
+.point-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #047857;
+  background: #dcfce7;
+  font-size: 11px;
+  font-weight: 950;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .task-copy-button {
   min-width: 0;
   text-align: left;
@@ -1155,6 +1169,28 @@ button {
   color: #fff;
   background: linear-gradient(135deg, var(--pink), #ffc857);
   font-weight: 950;
+}
+
+.month-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.month-switcher button,
+.calendar-add-button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff1f4;
+  color: var(--red);
+}
+
+.month-switcher h2 {
+  min-width: 108px;
+  text-align: center;
 }
 
 .crew-switcher strong {
