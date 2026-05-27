@@ -10,7 +10,7 @@ const todayModes = [
   { id: "community", label: "팁" },
 ];
 
-export default function TodayPage({ todayTasks, completion, toggleTask, deleteTask, changeTaskOwner, openComposer, onOpenPanel }) {
+export default function TodayPage({ todayTasks, completion, toggleTask, deleteTask, changeTaskOwner, postponeTask, openComposer, onOpenPanel }) {
   const [mode, setMode] = useState("tasks");
 
   return (
@@ -58,6 +58,7 @@ export default function TodayPage({ todayTasks, completion, toggleTask, deleteTa
                 onToggle={toggleTask}
                 onDelete={deleteTask}
                 onOwnerChange={changeTaskOwner}
+                onPostpone={postponeTask}
                 onOpen={(openedTask) => onOpenPanel({ type: "task", task: openedTask })}
               />
             ))}

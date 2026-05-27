@@ -9,6 +9,7 @@ export default function DetailPanel({
   onToggle,
   onDelete,
   onOwnerChange,
+  onPostpone,
   onAddTask,
   selectedDate,
   selectedMember,
@@ -211,6 +212,9 @@ export default function DetailPanel({
                 </select>
                 <button className="detail-delete" onClick={() => onDelete(task.id)}>
                   삭제
+                </button>
+                <button className="detail-postpone" onClick={() => onPostpone?.(task.id)}>
+                  미루기
                 </button>
               </article>
             ))}

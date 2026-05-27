@@ -9,6 +9,7 @@ export default function CrewPage({
   toggleTask,
   deleteTask,
   changeTaskOwner,
+  postponeTask,
   onOpenPanel,
 }) {
   const selected = members.find((member) => member.id === selectedMember && member.id !== "all") || members[1];
@@ -81,6 +82,7 @@ export default function CrewPage({
             onToggle={toggleTask}
             onDelete={deleteTask}
             onOwnerChange={changeTaskOwner}
+            onPostpone={postponeTask}
             onOpen={(openedTask) => onOpenPanel({ type: "task", task: openedTask })}
           />
         ))}

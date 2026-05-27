@@ -865,14 +865,23 @@ button {
   outline: 0;
 }
 
-.delete-button {
+.delete-button,
+.postpone-button {
   width: 34px;
   height: 34px;
   display: grid;
   place-items: center;
   border-radius: 50%;
+}
+
+.delete-button {
   color: #d4144b;
   background: #fff1f4;
+}
+
+.postpone-button {
+  color: #0f766e;
+  background: #e6fffb;
 }
 
 .wide-create {
@@ -1725,7 +1734,7 @@ button {
 }
 
 .detail-task {
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
 }
 
 .setting-row {
@@ -1788,6 +1797,76 @@ button {
   color: var(--red);
   background: #fff1f4;
   font-weight: 900;
+}
+
+.detail-postpone {
+  padding: 8px 10px;
+  border-radius: 999px;
+  color: #0f766e;
+  background: #e6fffb;
+  font-weight: 900;
+}
+
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 10, 12, 0.34);
+  backdrop-filter: blur(10px);
+}
+
+.confirm-dialog {
+  width: min(430px, 100%);
+  padding: 22px;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 30px 90px rgba(109, 12, 42, 0.26);
+  animation: soft-enter 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.confirm-dialog p {
+  margin: 0 0 6px;
+  color: var(--red);
+  font-weight: 950;
+}
+
+.confirm-dialog h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.confirm-dialog span {
+  display: block;
+  margin-top: 10px;
+  color: var(--muted);
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.confirm-actions button {
+  height: 46px;
+  border-radius: 16px;
+  font-weight: 950;
+}
+
+.confirm-actions button:first-child {
+  color: #5f5258;
+  background: #f4f5f7;
+}
+
+.confirm-actions button:last-child {
+  color: #fff;
+  background: linear-gradient(135deg, var(--pink), var(--red));
 }
 
 .detail-summary {
@@ -2041,7 +2120,8 @@ button {
   }
 
   .detail-owner-select,
-  .detail-delete {
+  .detail-delete,
+  .detail-postpone {
     grid-column: 2;
     width: fit-content;
   }

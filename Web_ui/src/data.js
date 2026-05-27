@@ -51,7 +51,7 @@ export const communityTips = [
   { title: "로봇청소기는 외출 30분 전에 시작하면 효율적이에요", source: "사용자 자동화 사례" },
 ];
 
-export const initialTasks = [
+const baseTasks = [
   { id: 1, date: "2026-05-02", title: "분리수거", place: "현관", tag: "house", owner: "all", done: true, repeat: "매주", source: "manual" },
   { id: 2, date: "2026-05-05", title: "냉장고 정리", place: "주방", tag: "house", owner: "minsu", done: true, repeat: "2주마다", source: "auto" },
   { id: 3, date: "2026-05-08", title: "여행 계획", place: "공유", tag: "plan", owner: "me", done: false, repeat: "없음", source: "manual" },
@@ -133,6 +133,8 @@ export const weatherByDate = {
   "2026-06-30": { high: 26, low: 19, condition: "rain", label: "비" },
 };
 
+export const initialTasks = [...baseTasks, ...buildWeatherRoutineTasks()];
+
 export const navItems = [
   { id: "today", label: "오늘", icon: Home },
   { id: "calendar", label: "캘린더", icon: CalendarDays },
@@ -150,4 +152,99 @@ export const tagLabel = {
 
 export function dateKey(year, month, day) {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function buildWeatherRoutineTasks() {
+  const weatherDates = Object.keys(weatherByDate).sort();
+  const generated = [];
+  const used = new Set(baseTasks.map((task) => `${task.date}:${task.title}`));
+  let id = 1000;
+
+  weatherDates.forEach((date) => {
+    const weather = weatherByDate[date];
+    const rainy = isRainyWeather(weather);
+    if (rainy) {
+      addGenerated(generated, used, {
+        id: id++,
+        date,
+        title: "제습기 켜기",
+        place: "거실",
+        tag: "house",
+        owner: "all",
+        done: false,
+        repeat: "비 오는 날",
+        source: "auto",
+      });
+    }
+
+    if (isHumidWeather(weather)) {
+      addGenerated(generated, used, {
+        id: id++,
+        date,
+        title: "건조기 사용",
+        place: "세탁실",
+        tag: "house",
+        owner: "all",
+        done: false,
+        repeat: "습한 날",
+        source: "auto",
+      });
+      if (!rainy) {
+        addGenerated(generated, used, {
+          id: id++,
+          date,
+          title: "제습기 사용",
+          place: "거실",
+          tag: "house",
+          owner: "all",
+          done: false,
+          repeat: "습한 날",
+          source: "auto",
+        });
+      }
+    }
+  });
+
+  for (let index = 0; index < weatherDates.length; index += 3) {
+    const targetDate = weatherDates[index];
+    const scheduleDate = isRainyDate(targetDate) ? previousDateKey(targetDate) : targetDate;
+    addGenerated(generated, used, {
+      id: id++,
+      date: scheduleDate,
+      title: "세탁기 돌리기",
+      place: "세탁실",
+      tag: "house",
+      owner: "all",
+      done: false,
+      repeat: isRainyDate(targetDate) ? "비 예보로 전날" : "3일마다",
+      source: "auto",
+    });
+  }
+
+  return generated;
+}
+
+function addGenerated(tasks, used, task) {
+  const key = `${task.date}:${task.title}`;
+  if (used.has(key)) return;
+  used.add(key);
+  tasks.push(task);
+}
+
+export function isRainyDate(date) {
+  return isRainyWeather(weatherByDate[date]);
+}
+
+function isRainyWeather(weather) {
+  return ["rain", "sun-rain", "storm"].includes(weather?.condition);
+}
+
+function isHumidWeather(weather) {
+  return ["rain", "sun-rain", "storm", "cloudy"].includes(weather?.condition);
+}
+
+function previousDateKey(date) {
+  const current = new Date(`${date}T00:00:00`);
+  current.setDate(current.getDate() - 1);
+  return dateKey(current.getFullYear(), current.getMonth() + 1, current.getDate());
 }

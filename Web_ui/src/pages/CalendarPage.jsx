@@ -29,6 +29,7 @@ export default function CalendarPage({
   toggleTask,
   deleteTask,
   changeTaskOwner,
+  postponeTask,
   openComposer,
   onOpenPanel,
 }) {
@@ -132,6 +133,7 @@ export default function CalendarPage({
             onToggle={toggleTask}
             onDelete={deleteTask}
             onOwnerChange={changeTaskOwner}
+            onPostpone={postponeTask}
             onOpen={(openedTask) => onOpenPanel({ type: "task", task: openedTask })}
           />
         ))}

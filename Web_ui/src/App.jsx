@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bell, Menu } from "lucide-react";
-import { dateKey, initialTasks, navItems, tagLabel } from "./data.js";
+import { dateKey, initialTasks, isRainyDate, navItems, tagLabel } from "./data.js";
 import TodayPage from "./pages/TodayPage.jsx";
 import CalendarPage from "./pages/CalendarPage.jsx";
 import CrewPage from "./pages/CrewPage.jsx";
@@ -16,6 +16,7 @@ export default function App() {
   const [selectedMember, setSelectedMember] = useState("all");
   const [query, setQuery] = useState("");
   const [isComposerOpen, setComposerOpen] = useState(false);
+  const [pendingPostpone, setPendingPostpone] = useState(null);
   const [panel, setPanel] = useState(null);
 
   useEffect(() => {
@@ -79,6 +80,24 @@ export default function App() {
     setTasks((current) => current.map((task) => (task.id === id ? { ...task, owner } : task)));
   }
 
+  function postponeTask(id) {
+    const task = tasks.find((item) => item.id === id);
+    if (!task) return;
+
+    const nextDate = addDays(task.date, 1);
+    if (isLaundryTask(task) && isRainyDate(nextDate)) {
+      setPendingPostpone({ task, nextDate });
+      return;
+    }
+
+    moveTaskDate(id, nextDate);
+  }
+
+  function moveTaskDate(id, date) {
+    setTasks((current) => current.map((task) => (task.id === id ? { ...task, date, repeat: `${task.repeat} · 미룸` } : task)));
+    setSelectedDate(date);
+  }
+
   function addTask(task) {
     setTasks((current) => [{ id: Date.now(), source: "manual", ...task }, ...current]);
   }
@@ -119,6 +138,7 @@ export default function App() {
     toggleTask,
     deleteTask,
     changeTaskOwner,
+    postponeTask,
     openComposer: () => setComposerOpen(true),
     onOpenPanel: setPanel,
   };
@@ -179,11 +199,38 @@ export default function App() {
         onToggle={toggleTask}
         onDelete={deleteTask}
         onOwnerChange={changeTaskOwner}
+        onPostpone={postponeTask}
         onAddTask={(task) => addTask(task)}
         selectedDate={selectedDate}
         selectedMember={selectedMember}
         onOpenComposer={() => setComposerOpen(true)}
       />
+
+      {pendingPostpone && (
+        <div className="confirm-backdrop" role="presentation">
+          <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="postpone-title">
+            <p>비 예보 확인</p>
+            <h2 id="postpone-title">정말 다음날로 미룰까요?</h2>
+            <span>
+              {pendingPostpone.task.title}을 {pendingPostpone.nextDate}로 미루면 비 오는 날과 겹쳐요.
+            </span>
+            <div className="confirm-actions">
+              <button type="button" onClick={() => setPendingPostpone(null)}>
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  moveTaskDate(pendingPostpone.task.id, pendingPostpone.nextDate);
+                  setPendingPostpone(null);
+                }}
+              >
+                그래도 미루기
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
@@ -195,4 +242,14 @@ function sortTasks(tasks) {
 function taskSorter(a, b) {
   if (a.done !== b.done) return Number(a.done) - Number(b.done);
   return b.id - a.id;
+}
+
+function addDays(date, amount) {
+  const next = new Date(`${date}T00:00:00`);
+  next.setDate(next.getDate() + amount);
+  return dateKey(next.getFullYear(), next.getMonth() + 1, next.getDate());
+}
+
+function isLaundryTask(task) {
+  return /세탁|빨래/.test(task.title);
 }
