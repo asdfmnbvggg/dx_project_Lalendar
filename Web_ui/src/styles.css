@@ -1100,7 +1100,6 @@ button {
   font-size: 13px;
   font-weight: 950;
   white-space: nowrap;
-  box-shadow: 0 10px 22px rgba(225, 29, 72, 0.08);
 }
 
 .calendar-zoom-button:disabled {

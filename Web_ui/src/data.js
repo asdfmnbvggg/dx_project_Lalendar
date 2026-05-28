@@ -111,14 +111,14 @@ export const automationAlerts = [
 ];
 
 const baseTasks = [
-  { id: 1, date: "2026-05-02", title: "분리수거", place: "현관", tag: "house", owner: "all", done: true, repeat: "매주", source: "manual" },
+  { id: 1, date: "2026-05-02", title: "분리수거", place: "현관", tag: "house", owner: "me", done: true, repeat: "매주", source: "manual" },
   { id: 2, date: "2026-05-05", title: "냉장고 정리", place: "주방", tag: "house", owner: "minsu", done: true, repeat: "2주마다", source: "auto" },
   { id: 3, date: "2026-05-08", title: "여행 계획", place: "공유", tag: "plan", owner: "me", done: false, repeat: "없음", source: "manual" },
   { id: 4, date: "2026-05-10", title: "욕실 청소", place: "욕실", tag: "house", owner: "theresa", done: true, repeat: "매주", source: "manual" },
   { id: 5, date: "2026-05-13", title: "침구 교체", place: "침실", tag: "house", owner: "me", done: true, repeat: "2주마다", source: "auto" },
   { id: 6, date: "2026-05-16", title: "장보기", place: "주방", tag: "share", owner: "minsu", done: false, repeat: "매주", source: "manual" },
   { id: 7, date: "2026-05-18", title: "싱크대 청소", place: "주방", tag: "house", owner: "me", done: true, repeat: "매주", source: "manual" },
-  { id: 8, date: "2026-05-21", title: "거실 바닥 닦기", place: "거실", tag: "house", owner: "all", done: false, repeat: "매주", source: "auto" },
+  { id: 8, date: "2026-05-21", title: "거실 바닥 닦기", place: "거실", tag: "house", owner: "minsu", done: false, repeat: "매주", source: "auto" },
   { id: 9, date: "2026-05-22", title: "필라테스", place: "운동", tag: "routine", owner: "me", done: true, repeat: "월수금", source: "manual" },
   { id: 10, date: "2026-05-24", title: "책상 정리", place: "작업방", tag: "plan", owner: "theresa", done: false, repeat: "없음", source: "manual" },
   { id: 11, date: "2026-05-26", title: "오늘 집안일 확인", place: "전체", tag: "share", owner: "all", done: true, repeat: "매일", source: "auto" },
@@ -126,6 +126,15 @@ const baseTasks = [
   { id: 13, date: "2026-05-26", title: "거울 얼룩 닦기", place: "욕실", tag: "house", owner: "minsu", done: false, repeat: "매주", source: "auto" },
   { id: 14, date: "2026-05-26", title: "빨래 개기", place: "세탁실", tag: "house", owner: "theresa", done: false, repeat: "3일마다", source: "manual" },
   { id: 16, date: "2026-05-30", title: "월말 대청소", place: "전체", tag: "house", owner: "all", done: false, repeat: "월말", source: "auto" },
+  { id: 17, date: "2026-05-03", title: "신발장 정리", place: "현관", tag: "house", owner: "theresa", done: false, repeat: "월 1회", source: "auto" },
+  { id: 18, date: "2026-05-06", title: "가스레인지 닦기", place: "주방", tag: "house", owner: "minsu", done: false, repeat: "매주", source: "auto" },
+  { id: 19, date: "2026-05-09", title: "수건 삶기", place: "세탁실", tag: "house", owner: "me", done: false, repeat: "2주마다", source: "auto" },
+  { id: 20, date: "2026-05-12", title: "공기청정기 필터 확인", place: "거실", tag: "house", owner: "theresa", done: false, repeat: "2주마다", source: "auto" },
+  { id: 21, date: "2026-05-15", title: "전자레인지 청소", place: "주방", tag: "house", owner: "minsu", done: false, repeat: "매주", source: "auto" },
+  { id: 22, date: "2026-05-19", title: "베개 커버 세탁", place: "침실", tag: "house", owner: "me", done: false, repeat: "매주", source: "auto" },
+  { id: 23, date: "2026-05-23", title: "욕실 배수구 청소", place: "욕실", tag: "house", owner: "theresa", done: false, repeat: "매주", source: "auto" },
+  { id: 24, date: "2026-05-27", title: "냉장고 선반 닦기", place: "주방", tag: "house", owner: "minsu", done: false, repeat: "2주마다", source: "auto" },
+  { id: 25, date: "2026-05-30", title: "창틀 먼지 닦기", place: "거실", tag: "house", owner: "me", done: false, repeat: "월말", source: "auto" },
 ];
 
 export const weatherByDate = {
@@ -157,7 +166,7 @@ export const weatherByDate = {
   "2026-05-26": { high: 27, low: 21 },
   "2026-05-27": { high: 26, low: 20, condition: "rain", label: "비" },
   "2026-05-28": { high: 28, low: 15, condition: "sun-rain", label: "맑고 비" },
-  "2026-05-29": { high: 29, low: 14, condition: "sunny", label: "맑음" },
+  "2026-05-29": { high: 29, low: 14, condition: "rain", label: "비" },
   "2026-05-30": { high: 29, low: 15, condition: "sunny", label: "맑음" },
   "2026-05-31": { high: 30, low: 16, condition: "sunset", label: "맑음" },
   "2026-06-01": { high: 31, low: 16, condition: "sun-rain", label: "맑고 비" },
@@ -229,7 +238,7 @@ function buildWeatherRoutineTasks() {
         title: "제습기 켜기",
         place: "거실",
         tag: "house",
-        owner: "all",
+        owner: ownerForDate(date, "dehumidifier"),
         done: false,
         repeat: "비 오는 날",
         source: "auto",
@@ -243,7 +252,7 @@ function buildWeatherRoutineTasks() {
         title: "건조기 사용",
         place: "세탁실",
         tag: "house",
-        owner: "all",
+        owner: ownerForDate(date, "dryer"),
         done: false,
         repeat: "습한 날",
         source: "auto",
@@ -255,7 +264,7 @@ function buildWeatherRoutineTasks() {
           title: "제습기 사용",
           place: "거실",
           tag: "house",
-          owner: "all",
+          owner: ownerForDate(date, "humidity"),
           done: false,
           repeat: "습한 날",
           source: "auto",
@@ -264,18 +273,18 @@ function buildWeatherRoutineTasks() {
     }
   });
 
-  for (let index = 0; index < weatherDates.length; index += 3) {
+  for (let index = 1; index < weatherDates.length; index += 3) {
     const targetDate = weatherDates[index];
-    const scheduleDate = isRainyDate(targetDate) ? previousDateKey(targetDate) : targetDate;
+    const scheduleDate = chooseLaundryDate(targetDate);
     addGenerated(generated, used, {
       id: id++,
       date: scheduleDate,
       title: "세탁기 돌리기",
       place: "세탁실",
       tag: "house",
-      owner: "all",
+      owner: ownerForDate(scheduleDate, "washer"),
       done: false,
-      repeat: isRainyDate(targetDate) ? "비 예보로 전날" : "3일마다",
+      repeat: scheduleDate === targetDate ? "3일마다" : "비 예보로 조정",
       source: "auto",
     });
   }
@@ -302,8 +311,24 @@ function isHumidWeather(weather) {
   return ["rain", "sun-rain", "storm", "cloudy"].includes(weather?.condition);
 }
 
-function previousDateKey(date) {
+function chooseLaundryDate(date) {
+  if (!isRainyDate(date)) return date;
+
+  const previous = addDaysKey(date, -1);
+  const next = addDaysKey(date, 1);
+  if (!isRainyDate(previous)) return previous;
+  if (!isRainyDate(next)) return next;
+  return date;
+}
+
+function ownerForDate(date, salt) {
+  const owners = ["me", "minsu", "theresa"];
+  const seed = [...`${date}-${salt}`].reduce((sum, letter) => sum + letter.charCodeAt(0), 0);
+  return owners[seed % owners.length];
+}
+
+function addDaysKey(date, amount) {
   const current = new Date(`${date}T00:00:00`);
-  current.setDate(current.getDate() - 1);
+  current.setDate(current.getDate() + amount);
   return dateKey(current.getFullYear(), current.getMonth() + 1, current.getDate());
 }
