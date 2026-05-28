@@ -1,17 +1,15 @@
 import { useState } from "react";
-import { ChevronRight, CloudSun, Cpu, MapPin, Plus, Wifi } from "lucide-react";
+import { CloudSun, Cpu, MapPin, Plus, Wifi } from "lucide-react";
 import { applianceLogs, appliances, communityTips, personalScheduleRules, rooms, smartRecommendations, weatherIndicators } from "../data.js";
-import TaskItem from "../components/TaskItem.jsx";
 
 const todayModes = [
-  { id: "tasks", label: "오늘" },
   { id: "smart", label: "AI 루틴" },
   { id: "appliances", label: "가전" },
   { id: "community", label: "팁" },
 ];
 
-export default function TodayPage({ todayTasks, completion, toggleTask, deleteTask, changeTaskOwner, postponeTask, openComposer, onOpenPanel }) {
-  const [mode, setMode] = useState("tasks");
+export default function TodayPage({ openComposer, onOpenPanel }) {
+  const [mode, setMode] = useState("smart");
 
   return (
     <section className="page today-page">
@@ -43,40 +41,6 @@ export default function TodayPage({ todayTasks, completion, toggleTask, deleteTa
           </button>
         ))}
       </nav>
-
-      {mode === "tasks" && (
-        <>
-          <section className="task-sheet today-task-sheet">
-            <div className="sheet-head">
-              <h2>오늘 집안일 {todayTasks.length}개</h2>
-              <button onClick={openComposer} aria-label="작업 추가">
-                <Plus size={18} />
-              </button>
-            </div>
-            {todayTasks.map((task) => (
-              <TaskItem
-                key={task.id}
-                task={task}
-                onToggle={toggleTask}
-                onDelete={deleteTask}
-                onOwnerChange={changeTaskOwner}
-                onPostpone={postponeTask}
-                onOpen={(openedTask) => onOpenPanel({ type: "task", task: openedTask })}
-              />
-            ))}
-            <button className="wide-create" onClick={openComposer}>
-              <Plus size={20} />
-              새 작업 만들기
-            </button>
-          </section>
-
-          <section className="today-shortcuts">
-            <RowButton title="모든 작업" value="126" onClick={() => onOpenPanel({ type: "allTasks" })} />
-            <RowButton title="기록" onClick={() => onOpenPanel({ type: "history" })} />
-            <RowButton title="요약" value={`완료율 ${completion}%`} chart onClick={() => onOpenPanel({ type: "summary" })} />
-          </section>
-        </>
-      )}
 
       {mode === "smart" && (
         <section className="recommend-section">
@@ -177,25 +141,5 @@ export default function TodayPage({ todayTasks, completion, toggleTask, deleteTa
         </section>
       )}
     </section>
-  );
-}
-
-function RowButton({ title, value, chart, onClick }) {
-  return (
-    <button className="row-button" onClick={onClick}>
-      <strong>{title}</strong>
-      {chart ? (
-        <span className="mini-bars">
-          <i />
-          <i />
-          <i />
-          <i />
-          <i />
-        </span>
-      ) : (
-        <span>{value}</span>
-      )}
-      <ChevronRight size={18} />
-    </button>
   );
 }

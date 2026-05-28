@@ -5,6 +5,7 @@ import TaskItem from "../components/TaskItem.jsx";
 
 export default function CrewPage({
   scopedTasks,
+  selectedDate,
   selectedMember,
   memberColors,
   changeMemberColor,
@@ -13,21 +14,23 @@ export default function CrewPage({
   deleteTask,
   changeTaskOwner,
   postponeTask,
+  openComposer,
   onOpenPanel,
 }) {
   const [isMemberDetailOpen, setMemberDetailOpen] = useState(false);
   const selected = members.find((member) => member.id === selectedMember && member.id !== "all") || members[1];
   const selectedTasks = scopedTasks
-    .filter((task) => task.owner === selected.id)
+    .filter((task) => task.owner === selected.id && task.date === selectedDate)
     .sort((a, b) => Number(a.done) - Number(b.done) || b.id - a.id);
   const doneCount = selectedTasks.filter((task) => task.done).length;
   const completion = Math.round((doneCount / Math.max(selectedTasks.length, 1)) * 100);
+  const selectedDateLabel = `${Number(selectedDate.slice(5, 7))}월 ${Number(selectedDate.slice(8, 10))}일`;
 
   return (
     <section className="page crew-page">
       <section className="crew-switcher">
         {members.slice(1).map((member) => {
-          const count = scopedTasks.filter((task) => task.owner === member.id).length;
+          const count = scopedTasks.filter((task) => task.owner === member.id && task.date === selectedDate).length;
           return (
             <button
               key={member.id}
@@ -38,7 +41,7 @@ export default function CrewPage({
               <span style={{ background: memberColors[member.id] }}>{member.short}</span>
               <div>
                 <strong>{member.name}</strong>
-                <small>{count}개 담당</small>
+                <small>{selectedDateLabel} · {count}개</small>
               </div>
             </button>
           );
@@ -101,8 +104,8 @@ export default function CrewPage({
 
       <section className="task-sheet crew-task-sheet">
         <div className="sheet-head">
-          <h2>{selected.name}의 작업</h2>
-          <button onClick={() => onOpenPanel({ type: "member", member: selected })}>상세</button>
+          <h2>{selected.name}의 {selectedDateLabel} 할 일 {selectedTasks.length}개</h2>
+          <button onClick={openComposer} aria-label="작업 추가">추가</button>
         </div>
         {selectedTasks.map((task) => (
           <TaskItem
@@ -115,7 +118,7 @@ export default function CrewPage({
             onOpen={(openedTask) => onOpenPanel({ type: "task", task: openedTask })}
           />
         ))}
-        {selectedTasks.length === 0 && <p className="panel-empty">아직 담당 작업이 없습니다.</p>}
+        {selectedTasks.length === 0 && <p className="panel-empty">이 날짜에 담당 할 일이 없습니다.</p>}
       </section>
     </section>
   );
