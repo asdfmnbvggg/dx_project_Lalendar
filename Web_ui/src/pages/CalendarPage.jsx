@@ -23,6 +23,7 @@ export default function CalendarPage({
   selectedDate,
   setSelectedDate,
   selectedMember,
+  memberColors,
   setSelectedMember,
   selectedTasks,
   query,
@@ -44,14 +45,16 @@ export default function CalendarPage({
       <div className="profile-strip">
         {members.map((member) => (
           <button key={member.id} className={selectedMember === member.id ? "active" : ""} onClick={() => setSelectedMember(member.id)}>
-            <span>{member.short}</span>
+            <span style={{ background: memberColors[member.id] || member.color }}>{member.short}</span>
             {member.name}
           </button>
         ))}
       </div>
 
       <section className="calendar-profile">
-        <div className="profile-avatar">{selectedMember === "all" ? "집" : selectedMemberName[0]}</div>
+        <div className="profile-avatar" style={{ background: memberColors[selectedMember] || memberColors.all }}>
+          {selectedMember === "all" ? "집" : selectedMemberName[0]}
+        </div>
         <div>
           <h1>{selectedMemberName}</h1>
           <p>가전 루틴과 집안일을 한눈에 관리해요.</p>
@@ -121,7 +124,7 @@ export default function CalendarPage({
                 )}
                 <div className="date-tasks">
                   {tasks.slice(0, taskLimit).map((task) => (
-                    <i className={task.tag} key={task.id}>
+                    <i className={task.tag} key={task.id} style={{ background: memberColors[task.owner] || memberColors.all }}>
                       <span>{task.title}</span>
                       {calendarSize === "large" && (
                         <small>

@@ -901,8 +901,7 @@ button {
   outline: 0;
 }
 
-.delete-button,
-.postpone-button {
+.delete-button {
   width: 34px;
   height: 34px;
   display: grid;
@@ -916,8 +915,13 @@ button {
 }
 
 .postpone-button {
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 999px;
   color: #0f766e;
   background: #e6fffb;
+  font-size: 12px;
+  font-weight: 950;
 }
 
 .wide-create {
@@ -1286,7 +1290,7 @@ button {
 
 .crew-switcher button.active {
   border-color: rgba(255, 122, 132, 0.44);
-  background: linear-gradient(135deg, #fff1f4, #fff7df);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--member-color, var(--red)) 13%, #fff), #fff7df);
 }
 
 .crew-switcher span,
@@ -1344,6 +1348,70 @@ button {
     radial-gradient(circle at 100% 0%, rgba(255, 214, 102, 0.35), transparent 34%),
     linear-gradient(135deg, #fff, #fff1f4);
   box-shadow: var(--shadow);
+}
+
+.member-color-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  padding: 22px;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.member-color-card h2,
+.member-color-card p {
+  margin: 0;
+}
+
+.member-color-card p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.member-color-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.member-color-list label {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 10px;
+  border-radius: 18px;
+  background: #fff8fa;
+}
+
+.member-color-list span {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.member-color-list strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-color-list input {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  padding: 0;
+  background: transparent;
 }
 
 .member-orb {
@@ -2019,6 +2087,26 @@ button {
   background: linear-gradient(135deg, var(--pink), var(--red));
 }
 
+.postpone-date-field {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  color: #5f5258;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.postpone-date-field input {
+  width: 100%;
+  height: 46px;
+  border: 1px solid #f5c7d4;
+  border-radius: 16px;
+  outline: 0;
+  padding: 0 13px;
+  background: #fff8fa;
+  color: var(--ink);
+}
+
 .detail-summary {
   padding: 18px;
   border-radius: 24px;
@@ -2189,9 +2277,24 @@ button {
     min-height: 104px;
   }
 
+  .calendar-compact .blank-day,
+  .calendar-compact .date-cell {
+    min-height: 82px;
+  }
+
+  .calendar-large .blank-day,
+  .calendar-large .date-cell {
+    min-height: 172px;
+  }
+
   .date-cell {
     grid-template-rows: auto minmax(44px, 1fr) auto;
     padding: 4px 2px 6px;
+  }
+
+  .calendar-large .date-cell {
+    grid-template-rows: auto minmax(50px, auto) 1fr;
+    padding: 5px 4px 7px;
   }
 
   .date-cell strong {
@@ -2222,7 +2325,7 @@ button {
     font-size: 12px;
   }
 
-  .date-cell i {
+  .calendar-compact .date-cell i {
     width: 7px;
     height: 7px;
     padding: 0;
@@ -2230,8 +2333,17 @@ button {
     color: transparent;
   }
 
+  .date-cell i {
+    width: min(64px, 100%);
+    height: auto;
+    padding: 3px 5px;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 10px;
+  }
+
   .calendar-large .date-cell i {
-    width: min(72px, 100%);
+    width: min(86px, 100%);
     height: auto;
     padding: 4px 6px;
     border-radius: 6px;
@@ -2239,7 +2351,16 @@ button {
   }
 
   .calendar-large .date-cell i small {
-    display: none;
+    display: block;
+    font-size: 9px;
+  }
+
+  .member-color-card {
+    grid-template-columns: 1fr;
+  }
+
+  .member-color-list {
+    grid-template-columns: 1fr;
   }
 
   .sheet-head {

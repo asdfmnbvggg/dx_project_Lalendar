@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bell, Menu } from "lucide-react";
-import { automationAlerts, dateKey, initialTasks, isRainyDate, navItems, tagLabel } from "./data.js";
+import { automationAlerts, dateKey, initialTasks, isRainyDate, members, navItems, tagLabel } from "./data.js";
 import TodayPage from "./pages/TodayPage.jsx";
 import CalendarPage from "./pages/CalendarPage.jsx";
 import CrewPage from "./pages/CrewPage.jsx";
@@ -10,6 +10,7 @@ import DetailPanel from "./components/DetailPanel.jsx";
 
 export default function App() {
   const [tasks, setTasks] = useState(initialTasks);
+  const [memberColors, setMemberColors] = useState(() => Object.fromEntries(members.map((member) => [member.id, member.color])));
   const [activeTab, setActiveTab] = useState("calendar");
   const [selectedDate, setSelectedDate] = useState("2026-05-26");
   const [visibleMonth, setVisibleMonth] = useState({ year: 2026, month: 5 });
@@ -17,6 +18,7 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [isComposerOpen, setComposerOpen] = useState(false);
   const [pendingPostpone, setPendingPostpone] = useState(null);
+  const [postponePicker, setPostponePicker] = useState(null);
   const [automationPrompt, setAutomationPrompt] = useState(null);
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
   const [panel, setPanel] = useState(null);
@@ -96,17 +98,23 @@ export default function App() {
     setTasks((current) => current.map((task) => (task.id === id ? { ...task, owner } : task)));
   }
 
+  function changeMemberColor(memberId, color) {
+    setMemberColors((current) => ({ ...current, [memberId]: color }));
+  }
+
   function postponeTask(id) {
     const task = tasks.find((item) => item.id === id);
     if (!task) return;
+    setPostponePicker({ task, date: addDays(task.date, 1) });
+  }
 
-    const nextDate = addDays(task.date, 1);
-    if (isLaundryTask(task) && isRainyDate(nextDate)) {
-      setPendingPostpone({ task, nextDate });
+  function requestMoveTask(task, date) {
+    if (isLaundryTask(task) && isRainyDate(date)) {
+      setPendingPostpone({ task, nextDate: date });
       return;
     }
 
-    moveTaskDate(id, nextDate);
+    moveTaskDate(task.id, date);
   }
 
   function moveTaskDate(id, date) {
@@ -207,6 +215,8 @@ export default function App() {
     selectedTasks,
     selectedDate,
     selectedMember,
+    memberColors,
+    changeMemberColor,
     setSelectedDate,
     setSelectedMember,
     query,
@@ -333,6 +343,38 @@ export default function App() {
                 }}
               >
                 그래도 미루기
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {postponePicker && (
+        <div className="confirm-backdrop" role="presentation">
+          <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="postpone-picker-title">
+            <p>일정 미루기</p>
+            <h2 id="postpone-picker-title">언제로 미룰까요?</h2>
+            <span>{postponePicker.task.title}의 새 날짜를 선택해주세요.</span>
+            <label className="postpone-date-field">
+              날짜
+              <input
+                type="date"
+                value={postponePicker.date}
+                onChange={(event) => setPostponePicker((current) => ({ ...current, date: event.target.value }))}
+              />
+            </label>
+            <div className="confirm-actions">
+              <button type="button" onClick={() => setPostponePicker(null)}>
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  requestMoveTask(postponePicker.task, postponePicker.date);
+                  setPostponePicker(null);
+                }}
+              >
+                미루기
               </button>
             </div>
           </section>

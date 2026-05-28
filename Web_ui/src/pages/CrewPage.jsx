@@ -5,6 +5,8 @@ import TaskItem from "../components/TaskItem.jsx";
 export default function CrewPage({
   scopedTasks,
   selectedMember,
+  memberColors,
+  changeMemberColor,
   setSelectedMember,
   toggleTask,
   deleteTask,
@@ -29,8 +31,9 @@ export default function CrewPage({
               key={member.id}
               className={selected.id === member.id ? "active" : ""}
               onClick={() => setSelectedMember(member.id)}
+              style={{ "--member-color": memberColors[member.id] }}
             >
-              <span>{member.short}</span>
+              <span style={{ background: memberColors[member.id] }}>{member.short}</span>
               <div>
                 <strong>{member.name}</strong>
                 <small>{count}개 담당</small>
@@ -40,8 +43,8 @@ export default function CrewPage({
         })}
       </section>
 
-      <section className="member-focus">
-        <div className="member-orb">{selected.short}</div>
+      <section className="member-focus" style={{ "--member-color": memberColors[selected.id] }}>
+        <div className="member-orb" style={{ background: memberColors[selected.id] }}>{selected.short}</div>
         <div>
           <p>오늘의 담당자</p>
           <h1>{selected.name}</h1>
@@ -50,6 +53,27 @@ export default function CrewPage({
         <button onClick={() => onOpenPanel({ type: "member", member: selected })} aria-label={`${selected.name} 상세 보기`}>
           <ChevronRight size={22} />
         </button>
+      </section>
+
+      <section className="member-color-card">
+        <div>
+          <h2>멤버 색상</h2>
+          <p>캘린더 할 일 표시 색으로 사용돼요.</p>
+        </div>
+        <div className="member-color-list">
+          {members.slice(1).map((member) => (
+            <label key={member.id}>
+              <span style={{ background: memberColors[member.id] }}>{member.short}</span>
+              <strong>{member.name}</strong>
+              <input
+                type="color"
+                value={memberColors[member.id]}
+                aria-label={`${member.name} 색상 선택`}
+                onChange={(event) => changeMemberColor(member.id, event.target.value)}
+              />
+            </label>
+          ))}
+        </div>
       </section>
 
       <section className="crew-stat-grid">

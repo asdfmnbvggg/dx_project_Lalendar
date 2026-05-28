@@ -1,4 +1,4 @@
-import { CalendarPlus, Check, MoreHorizontal, Trash2 } from "lucide-react";
+import { Check, MoreHorizontal, Trash2 } from "lucide-react";
 import { members } from "../data.js";
 
 export default function TaskItem({ task, onToggle, onDelete, onOpen, onOwnerChange, onPostpone }) {
@@ -38,8 +38,8 @@ export default function TaskItem({ task, onToggle, onDelete, onOpen, onOwnerChan
         <button className="delete-button" onClick={() => onDelete(task.id)} aria-label="작업 삭제">
           <Trash2 size={17} />
         </button>
-        <button className="postpone-button" onClick={() => onPostpone?.(task.id)} aria-label="내일로 미루기">
-          <CalendarPlus size={17} />
+        <button className="postpone-button" onClick={() => onPostpone?.(task.id)}>
+          미루기
         </button>
         <button className="more-button" onClick={() => onOpen(task)} aria-label="더 보기">
           <MoreHorizontal size={18} />
