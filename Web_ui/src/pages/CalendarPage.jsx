@@ -1,4 +1,5 @@
-import { ChevronLeft, ChevronRight, ClipboardList, Plus, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Search } from "lucide-react";
+import { useState } from "react";
 import { members, weatherByDate } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
 
@@ -33,8 +34,10 @@ export default function CalendarPage({
   openComposer,
   onOpenPanel,
 }) {
+  const [calendarSize, setCalendarSize] = useState("medium");
   const selectedMemberName = members.find((member) => member.id === selectedMember)?.name || "우리 집";
   const selectedDay = Number(selectedDate.slice(-2));
+  const taskLimit = calendarSize === "compact" ? 2 : calendarSize === "large" ? 5 : 3;
 
   return (
     <section className="page calendar-page">
@@ -70,12 +73,23 @@ export default function CalendarPage({
             <Plus size={18} />
           </button>
         </div>
+        <div className="calendar-view-controls" aria-label="캘린더 크기 조절">
+          <button className={calendarSize === "compact" ? "active" : ""} onClick={() => setCalendarSize("compact")} aria-label="캘린더 작게 보기">
+            <Minus size={16} />
+          </button>
+          <button className={calendarSize === "medium" ? "active" : ""} onClick={() => setCalendarSize("medium")}>
+            중간
+          </button>
+          <button className={calendarSize === "large" ? "active" : ""} onClick={() => setCalendarSize("large")} aria-label="캘린더 크게 보기">
+            <Plus size={16} />
+          </button>
+        </div>
         <div className="weekdays">
           {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
             <span key={day}>{day}</span>
           ))}
         </div>
-        <div className="month-grid">
+        <div className={`month-grid calendar-${calendarSize}`}>
           {Array.from({ length: monthLeadingBlanks }).map((_, index) => (
             <span className="blank-day" key={index} />
           ))}
@@ -106,11 +120,17 @@ export default function CalendarPage({
                   </span>
                 )}
                 <div className="date-tasks">
-                  {tasks.slice(0, 3).map((task) => (
+                  {tasks.slice(0, taskLimit).map((task) => (
                     <i className={task.tag} key={task.id}>
-                      {task.title}
+                      <span>{task.title}</span>
+                      {calendarSize === "large" && (
+                        <small>
+                          {task.place} · {task.repeat}
+                        </small>
+                      )}
                     </i>
                   ))}
+                  {tasks.length > taskLimit && <em className="more-tasks">+{tasks.length - taskLimit}개</em>}
                 </div>
               </button>
             );
