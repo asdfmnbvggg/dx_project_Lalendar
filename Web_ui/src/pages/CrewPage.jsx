@@ -1,4 +1,5 @@
-import { ChevronRight, RotateCw, Sparkles, UserPlus } from "lucide-react";
+import { ChevronRight, RotateCw, Sparkles } from "lucide-react";
+import { useState } from "react";
 import { members } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
 
@@ -14,6 +15,7 @@ export default function CrewPage({
   postponeTask,
   onOpenPanel,
 }) {
+  const [isMemberDetailOpen, setMemberDetailOpen] = useState(false);
   const selected = members.find((member) => member.id === selectedMember && member.id !== "all") || members[1];
   const selectedTasks = scopedTasks
     .filter((task) => task.owner === selected.id)
@@ -50,49 +52,52 @@ export default function CrewPage({
           <h1>{selected.name}</h1>
           <span>{selected.subtitle}</span>
         </div>
-        <button onClick={() => onOpenPanel({ type: "member", member: selected })} aria-label={`${selected.name} 상세 보기`}>
+        <button
+          className={isMemberDetailOpen ? "active" : ""}
+          onClick={() => setMemberDetailOpen((current) => !current)}
+          aria-label={`${selected.name} 상세 펼치기`}
+        >
           <ChevronRight size={22} />
         </button>
       </section>
 
-      <section className="member-color-card">
-        <div>
-          <h2>멤버 색상</h2>
-          <p>캘린더 할 일 표시 색으로 사용돼요.</p>
-        </div>
-        <div className="member-color-list">
-          {members.slice(1).map((member) => (
-            <label key={member.id}>
-              <span style={{ background: memberColors[member.id] }}>{member.short}</span>
-              <strong>{member.name}</strong>
-              <input
-                type="color"
-                value={memberColors[member.id]}
-                aria-label={`${member.name} 색상 선택`}
-                onChange={(event) => changeMemberColor(member.id, event.target.value)}
-              />
-            </label>
-          ))}
-        </div>
-      </section>
+      {isMemberDetailOpen && (
+        <section className="member-detail-stack">
+          <section className="member-color-card">
+            <div>
+              <h2>멤버 색상</h2>
+              <p>캘린더 할 일 표시 색으로 사용돼요.</p>
+            </div>
+            <div className="member-color-list">
+              {members.slice(1).map((member) => (
+                <label key={member.id}>
+                  <span style={{ background: memberColors[member.id] }}>{member.short}</span>
+                  <strong>{member.name}</strong>
+                  <input
+                    type="color"
+                    value={memberColors[member.id]}
+                    aria-label={`${member.name} 색상 선택`}
+                    onChange={(event) => changeMemberColor(member.id, event.target.value)}
+                  />
+                </label>
+              ))}
+            </div>
+          </section>
 
-      <section className="crew-stat-grid">
-        <article>
-          <Sparkles size={20} />
-          <strong>{completion}%</strong>
-          <span>완료율</span>
-        </article>
-        <article>
-          <RotateCw size={20} />
-          <strong>{selectedTasks.length}개</strong>
-          <span>담당 작업</span>
-        </article>
-        <button onClick={() => onOpenPanel({ type: "rotation", member: selected })}>
-          <UserPlus size={20} />
-          <strong>로테이션</strong>
-          <span>순서 보기</span>
-        </button>
-      </section>
+          <section className="crew-stat-grid">
+            <article>
+              <Sparkles size={20} />
+              <strong>{completion}%</strong>
+              <span>완료율</span>
+            </article>
+            <article>
+              <RotateCw size={20} />
+              <strong>{selectedTasks.length}개</strong>
+              <span>담당 작업</span>
+            </article>
+          </section>
+        </section>
+      )}
 
       <section className="task-sheet crew-task-sheet">
         <div className="sheet-head">

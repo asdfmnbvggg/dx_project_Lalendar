@@ -77,14 +77,16 @@ export default function CalendarPage({
           </button>
         </div>
         <div className="calendar-view-controls" aria-label="캘린더 크기 조절">
-          <button className={calendarSize === "compact" ? "active" : ""} onClick={() => setCalendarSize("compact")} aria-label="캘린더 작게 보기">
+          <button className={calendarSize === "compact" ? "active" : ""} onClick={() => setCalendarSize("compact")}>
             <Minus size={16} />
+            축소
           </button>
           <button className={calendarSize === "medium" ? "active" : ""} onClick={() => setCalendarSize("medium")}>
             중간
           </button>
-          <button className={calendarSize === "large" ? "active" : ""} onClick={() => setCalendarSize("large")} aria-label="캘린더 크게 보기">
+          <button className={calendarSize === "large" ? "active" : ""} onClick={() => setCalendarSize("large")}>
             <Plus size={16} />
+            확대
           </button>
         </div>
         <div className="weekdays">
