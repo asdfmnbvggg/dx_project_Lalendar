@@ -1085,7 +1085,7 @@ button {
 
 .calendar-large .blank-day,
 .calendar-large .date-cell {
-  min-height: clamp(168px, 17vw, 220px);
+  min-height: clamp(210px, 22vw, 280px);
 }
 
 .calendar-large .date-cell strong {
@@ -1224,6 +1224,15 @@ button {
   font-size: 13px;
   line-height: 1.18;
   text-align: left;
+  white-space: normal;
+}
+
+.calendar-large .date-cell i span,
+.calendar-large .date-cell i small {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  word-break: keep-all;
 }
 
 .calendar-large .date-cell i small {
@@ -2330,7 +2339,7 @@ button {
 
   .calendar-large .blank-day,
   .calendar-large .date-cell {
-    min-height: 172px;
+    min-height: 220px;
   }
 
   .date-cell {
@@ -2408,17 +2417,19 @@ button {
   }
 
   .calendar-large .date-cell i {
-    width: min(86px, 100%);
+    width: min(92px, 100%);
     height: auto;
     padding: 5px 6px;
     border-radius: 6px;
     color: #fff;
     font-size: 11px;
+    white-space: normal;
   }
 
   .calendar-large .date-cell i small {
     display: block;
     font-size: 10px;
+    white-space: normal;
   }
 
   .member-color-card {
