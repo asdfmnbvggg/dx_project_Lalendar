@@ -414,14 +414,15 @@ button {
 .recommend-section,
 .appliance-section,
 .community-section {
-  max-width: 980px;
+  width: 100%;
+  max-width: none;
   margin-top: 28px;
 }
 
 .today-page {
   display: grid;
   gap: 18px;
-  justify-items: center;
+  justify-items: stretch;
 }
 
 .today-overview {
@@ -437,7 +438,8 @@ button {
   z-index: 5;
   display: flex;
   gap: 8px;
-  width: fit-content;
+  width: min(420px, 100%);
+  justify-self: center;
   max-width: 100%;
   padding: 6px;
   overflow-x: auto;
@@ -454,7 +456,7 @@ button {
 }
 
 .today-tabs button {
-  flex: 0 0 auto;
+  flex: 1 0 auto;
   height: 38px;
   padding: 0 16px;
   border-radius: 999px;
@@ -488,14 +490,14 @@ button {
 
 .recommend-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 12px;
   margin-top: 14px;
 }
 
 .metric-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 10px;
   margin-top: 12px;
 }
@@ -530,7 +532,7 @@ button {
 }
 
 .recommend-card {
-  min-height: 168px;
+  min-height: 178px;
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: 12px;
