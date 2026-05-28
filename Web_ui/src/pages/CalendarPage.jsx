@@ -90,10 +90,20 @@ export default function CalendarPage({
               <ChevronRight size={18} />
             </button>
           </div>
-          <button className="calendar-add-button" onClick={openComposer}>
-            <Plus size={18} />
-            할일 추가
-          </button>
+          <div className="calendar-header-actions">
+            <button className="calendar-zoom-button" onClick={() => changeScale(-1)} disabled={calendarScale === 0}>
+              <Minus size={15} />
+              축소
+            </button>
+            <button className="calendar-zoom-button" onClick={() => changeScale(1)} disabled={calendarScale === 4}>
+              <Plus size={15} />
+              확대
+            </button>
+            <button className="calendar-add-button" onClick={openComposer}>
+              <Plus size={18} />
+              할일 추가
+            </button>
+          </div>
         </div>
         <div className="calendar-toolbar">
           <div className="calendar-mode-controls" aria-label="캘린더 보기 방식">
@@ -106,15 +116,6 @@ export default function CalendarPage({
                 {label}
               </button>
             ))}
-          </div>
-          <div className="calendar-view-controls" aria-label="캘린더 크기 조절">
-            <button onClick={() => changeScale(-1)} disabled={calendarScale === 0} aria-label="캘린더 축소">
-              <Minus size={16} />
-            </button>
-            <span>{calendarScale + 1}단계</span>
-            <button onClick={() => changeScale(1)} disabled={calendarScale === 4} aria-label="캘린더 확대">
-              <Plus size={16} />
-            </button>
           </div>
         </div>
         <div className={`weekdays ${calendarView === "day" ? "day-weekday" : ""}`}>

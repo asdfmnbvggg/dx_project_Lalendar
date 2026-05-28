@@ -1042,16 +1042,15 @@ button {
 
 .calendar-toolbar {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-columns: 1fr;
   gap: 10px;
   margin: 12px 0 4px;
 }
 
-.calendar-mode-controls,
-.calendar-view-controls {
+.calendar-mode-controls {
   width: 100%;
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
   gap: 6px;
   padding: 5px;
@@ -1059,8 +1058,7 @@ button {
   background: #fff1f4;
 }
 
-.calendar-mode-controls button,
-.calendar-view-controls button {
+.calendar-mode-controls button {
   min-width: 0;
   height: 38px;
   display: inline-flex;
@@ -1075,23 +1073,38 @@ button {
   font-weight: 950;
 }
 
-.calendar-view-controls span {
-  text-align: center;
-  color: #875061;
-  font-size: 12px;
-  font-weight: 950;
-}
-
-.calendar-view-controls button:disabled {
-  opacity: 0.38;
-  cursor: not-allowed;
-}
-
-.calendar-mode-controls button.active,
-.calendar-view-controls button.active {
+.calendar-mode-controls button.active {
   color: #fff;
   background: linear-gradient(135deg, var(--pink), var(--red));
   box-shadow: 0 10px 20px rgba(225, 29, 72, 0.16);
+}
+
+.calendar-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.calendar-zoom-button {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  border-radius: 50%;
+  color: var(--red);
+  background: #fff1f4;
+  font-size: 11px;
+  font-weight: 950;
+  box-shadow: 0 10px 22px rgba(225, 29, 72, 0.08);
+}
+
+.calendar-zoom-button:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
 }
 
 .calendar-week-view {
@@ -2630,9 +2643,17 @@ button {
     gap: 8px;
   }
 
-  .calendar-view-controls,
   .calendar-mode-controls {
     margin-left: 0;
+  }
+
+  .calendar-header-actions {
+    justify-content: flex-start;
+  }
+
+  .calendar-zoom-button {
+    width: 50px;
+    height: 50px;
   }
 
   .blank-day,
