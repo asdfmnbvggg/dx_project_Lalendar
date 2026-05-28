@@ -493,6 +493,42 @@ button {
   margin-top: 14px;
 }
 
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.metric-card {
+  min-height: 104px;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  padding: 16px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.metric-card strong {
+  font-size: 16px;
+}
+
+.metric-card span,
+.metric-card small {
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.metric-card small {
+  color: var(--red);
+}
+
+.appliance-log-grid {
+  margin-top: 14px;
+}
+
 .recommend-card {
   min-height: 168px;
   display: grid;
@@ -1745,6 +1781,35 @@ button {
 
 .notice-row {
   grid-template-columns: auto 1fr;
+}
+
+.notice-row.actionable {
+  align-items: start;
+}
+
+.notice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.notice-actions button {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.notice-actions button:first-child {
+  color: #0f766e;
+  background: #e6fffb;
+}
+
+.notice-actions button:last-child {
+  color: #fff;
+  background: linear-gradient(135deg, var(--pink), var(--red));
 }
 
 .detail-task > button:first-child {

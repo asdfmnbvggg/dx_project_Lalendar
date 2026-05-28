@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronRight, CloudSun, Cpu, MapPin, Plus, Wifi } from "lucide-react";
-import { appliances, communityTips, rooms, smartRecommendations } from "../data.js";
+import { applianceLogs, appliances, communityTips, personalScheduleRules, rooms, smartRecommendations, weatherIndicators } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
 
 const todayModes = [
@@ -21,8 +21,10 @@ export default function TodayPage({ todayTasks, completion, toggleTask, deleteTa
             <MapPin size={18} />
             서울 강남구
           </div>
-          <strong>빨래하기 좋은 날</strong>
-          <p>습도 42% · 강수 10% · 미세먼지 보통</p>
+          <strong>실내 목표 {weatherIndicators.indoorTarget}</strong>
+          <p>
+            기온 {weatherIndicators.temperature} · 일교차 {weatherIndicators.dailyRange} · 습도 {weatherIndicators.humidity} · {weatherIndicators.rain}
+          </p>
         </article>
         <article className="thinq-card">
           <div>
@@ -97,6 +99,15 @@ export default function TodayPage({ todayTasks, completion, toggleTask, deleteTa
               </button>
             ))}
           </div>
+          <div className="metric-grid">
+            {personalScheduleRules.map((item) => (
+              <article className="metric-card" key={item.id}>
+                <strong>{item.label}</strong>
+                <span>{item.repeat}</span>
+                <small>{item.returnHome}</small>
+              </article>
+            ))}
+          </div>
         </section>
       )}
 
@@ -115,6 +126,15 @@ export default function TodayPage({ todayTasks, completion, toggleTask, deleteTa
                   <p>{item.state}</p>
                   <small>{item.signal}</small>
                 </button>
+              ))}
+            </div>
+            <div className="metric-grid appliance-log-grid">
+              {applianceLogs.map((item) => (
+                <article className="metric-card" key={item.id}>
+                  <strong>{item.label}</strong>
+                  <span>일간 {item.dailyRuntime}</span>
+                  <small>주간 {item.weeklyRuns}회</small>
+                </article>
               ))}
             </div>
           </section>

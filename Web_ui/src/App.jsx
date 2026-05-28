@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bell, Menu } from "lucide-react";
-import { dateKey, initialTasks, isRainyDate, navItems, tagLabel } from "./data.js";
+import { automationAlerts, dateKey, initialTasks, isRainyDate, navItems, tagLabel } from "./data.js";
 import TodayPage from "./pages/TodayPage.jsx";
 import CalendarPage from "./pages/CalendarPage.jsx";
 import CrewPage from "./pages/CrewPage.jsx";
@@ -17,6 +17,8 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [isComposerOpen, setComposerOpen] = useState(false);
   const [pendingPostpone, setPendingPostpone] = useState(null);
+  const [automationPrompt, setAutomationPrompt] = useState(null);
+  const [dismissedAlerts, setDismissedAlerts] = useState([]);
   const [panel, setPanel] = useState(null);
 
   useEffect(() => {
@@ -57,6 +59,20 @@ export default function App() {
       return map;
     }, {});
   }, [scopedTasks]);
+  const notificationItems = useMemo(() => {
+    const automationItems = automationAlerts
+      .filter((alert) => !dismissedAlerts.includes(alert.id))
+      .map((alert) => ({ ...alert, type: "automation" }));
+    const taskItems = pendingTasksForNotification(scopedTasks).map((task) => ({
+      id: `task-${task.id}`,
+      type: "task",
+      task,
+      title: task.title,
+      detail: `${task.date} · ${task.place} · ${task.repeat}`,
+      date: task.date,
+    }));
+    return [...automationItems, ...taskItems].slice(0, 8);
+  }, [dismissedAlerts, scopedTasks]);
 
   function changeVisibleMonth(offset) {
     setVisibleMonth((current) => {
@@ -99,7 +115,75 @@ export default function App() {
   }
 
   function addTask(task) {
-    setTasks((current) => [{ id: Date.now(), source: "manual", ...task }, ...current]);
+    const nextTask = { id: Date.now(), source: "manual", ...task };
+    setTasks((current) => [nextTask, ...current]);
+    if (shouldSuggestAutomation(nextTask)) {
+      setAutomationPrompt(nextTask);
+    }
+  }
+
+  function executeNotification(item) {
+    if (item.type === "task") {
+      if (!item.task.done) toggleTask(item.task.id);
+      return;
+    }
+
+    addAutomationTask(item, item.date);
+    setDismissedAlerts((current) => [...current, item.id]);
+  }
+
+  function postponeNotification(item) {
+    if (item.type === "task") {
+      onPostponeTaskFromNotification(item.task.id);
+      return;
+    }
+
+    addAutomationTask(item, addDays(item.date, 1));
+    setDismissedAlerts((current) => [...current, item.id]);
+  }
+
+  function onPostponeTaskFromNotification(id) {
+    postponeTask(id);
+  }
+
+  function addAutomationTask(item, date) {
+    setTasks((current) => [
+      {
+        id: Date.now(),
+        date,
+        title: item.taskTitle,
+        place: item.place,
+        tag: "house",
+        owner: selectedMember === "all" ? "all" : selectedMember,
+        done: false,
+        repeat: "자동화",
+        source: "auto",
+      },
+      ...current,
+    ]);
+    setSelectedDate(date);
+  }
+
+  function applyScheduleAutomation(task) {
+    const owner = selectedMember === "all" ? "all" : selectedMember;
+    const generated = [
+      "귀가 전 세탁 완료 예약",
+      "제습기 미리 켜기",
+      "에어컨 예냉",
+      "공기청정기 미리 켜기",
+    ].map((title, index) => ({
+      id: Date.now() + index + 1,
+      date: task.date,
+      title,
+      place: index === 0 ? "세탁실" : "LG ThinQ",
+      tag: "house",
+      owner,
+      done: false,
+      repeat: "일정 연동",
+      source: "auto",
+    }));
+    setTasks((current) => [...generated, ...current]);
+    setAutomationPrompt(null);
   }
 
   function addPreset(title) {
@@ -194,17 +278,40 @@ export default function App() {
       <DetailPanel
         panel={panel}
         tasks={tasks}
+        notifications={notificationItems}
         completion={completion}
         onClose={() => setPanel(null)}
         onToggle={toggleTask}
         onDelete={deleteTask}
         onOwnerChange={changeTaskOwner}
         onPostpone={postponeTask}
+        onExecuteNotification={executeNotification}
+        onPostponeNotification={postponeNotification}
         onAddTask={(task) => addTask(task)}
         selectedDate={selectedDate}
         selectedMember={selectedMember}
         onOpenComposer={() => setComposerOpen(true)}
       />
+
+      {automationPrompt && (
+        <div className="confirm-backdrop" role="presentation">
+          <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="automation-title">
+            <p>일정 연동 알림</p>
+            <h2 id="automation-title">가전 작동 시간을 바꿀까요?</h2>
+            <span>
+              {automationPrompt.title} 일정에 맞춰 세탁 종료, 제습기, 에어컨, 공기청정기 작동 시간을 다시 잡을 수 있어요.
+            </span>
+            <div className="confirm-actions">
+              <button type="button" onClick={() => setAutomationPrompt(null)}>
+                나중에
+              </button>
+              <button type="button" onClick={() => applyScheduleAutomation(automationPrompt)}>
+                실행하기
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       {pendingPostpone && (
         <div className="confirm-backdrop" role="presentation">
@@ -252,4 +359,15 @@ function addDays(date, amount) {
 
 function isLaundryTask(task) {
   return /세탁|빨래/.test(task.title);
+}
+
+function shouldSuggestAutomation(task) {
+  return task.source !== "auto" && /(회식|약속|여행|출근|수업|퇴근|귀가)/.test(`${task.title} ${task.place} ${task.repeat}`);
+}
+
+function pendingTasksForNotification(tasks) {
+  return tasks
+    .filter((task) => !task.done)
+    .sort(taskSorter)
+    .slice(0, 4);
 }

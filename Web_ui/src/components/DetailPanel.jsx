@@ -4,12 +4,15 @@ import { appliances, communityTips, members, tagLabel } from "../data.js";
 export default function DetailPanel({
   panel,
   tasks,
+  notifications,
   completion,
   onClose,
   onToggle,
   onDelete,
   onOwnerChange,
   onPostpone,
+  onExecuteNotification,
+  onPostponeNotification,
   onAddTask,
   selectedDate,
   selectedMember,
@@ -59,21 +62,24 @@ export default function DetailPanel({
 
         {panel.type === "notifications" && (
           <section className="detail-list">
-            {pendingTasks.slice(0, 4).map((task) => (
-              <article className="notice-row" key={task.id}>
+            {notifications.map((item) => (
+              <article className="notice-row actionable" key={item.id}>
                 <ClipboardList size={18} />
                 <div>
-                  <strong>{task.title}</strong>
-                  <p>
-                    {task.date} · {task.place}
-                    <span className="owner-badge">{getOwnerName(task.owner)}</span>
-                    <span className={`source-badge ${task.source === "auto" ? "auto" : "manual"}`}>
-                      {task.source === "auto" ? "자동추가" : "수동"}
-                    </span>
-                  </p>
+                  <strong>{item.title}</strong>
+                  <p>{item.detail}</p>
+                  <div className="notice-actions">
+                    <button type="button" onClick={() => onPostponeNotification(item)}>
+                      미루기
+                    </button>
+                    <button type="button" onClick={() => onExecuteNotification(item)}>
+                      실행하기
+                    </button>
+                  </div>
                 </div>
               </article>
             ))}
+            {notifications.length === 0 && <p className="panel-empty">표시할 알림이 없습니다.</p>}
           </section>
         )}
 

@@ -24,6 +24,29 @@ export const appliances = [
   { id: "robot", name: "로봇청소기", state: "거실 미청소", signal: "퇴근 전 예약", accent: "navy" },
 ];
 
+export const weatherIndicators = {
+  date: "2026-05-28",
+  temperature: "28° / 15°",
+  dailyRange: "13°",
+  humidity: "68%",
+  rain: "오후 비 예보",
+  indoorTarget: "22-24° · 습도 45-55%",
+};
+
+export const personalScheduleRules = [
+  { id: "commute", label: "출근", repeat: "평일 09:00", returnHome: "19:30" },
+  { id: "class", label: "수업", repeat: "화/목 18:00", returnHome: "21:20" },
+  { id: "dinner", label: "회식/약속", repeat: "추가 일정", returnHome: "일정 종료 30분 전 재계산" },
+];
+
+export const applianceLogs = [
+  { id: "washer", label: "세탁기", dailyRuntime: "1시간 20분", weeklyRuns: 3 },
+  { id: "dryer", label: "건조기", dailyRuntime: "45분", weeklyRuns: 2 },
+  { id: "dehumidifier", label: "제습기", dailyRuntime: "2시간", weeklyRuns: 5 },
+  { id: "aircon", label: "에어컨", dailyRuntime: "1시간", weeklyRuns: 4 },
+  { id: "purifier", label: "공기청정기", dailyRuntime: "8시간", weeklyRuns: 7 },
+];
+
 export const smartRecommendations = [
   {
     title: "오늘은 빨래하기 좋은 날이에요",
@@ -43,12 +66,48 @@ export const smartRecommendations = [
     action: "취침 루틴 예약",
     task: "취침 전 조명 낮추기",
   },
+  {
+    title: "귀가 시간에 맞춰 집안 환경 준비",
+    reason: "퇴근 후 19:30 도착 기준, 세탁 종료와 공기질 관리 예약",
+    action: "귀가 자동화 추가",
+    task: "귀가 전 세탁 완료 예약",
+  },
 ];
 
 export const communityTips = [
   { title: "선반 먼지는 4일 주기가 좋아요", source: "1인가구 루틴 인기 글" },
   { title: "냉장고 문을 자주 열면 장보기 전 정리부터", source: "LG HUB 커뮤니티" },
   { title: "로봇청소기는 외출 30분 전에 시작하면 효율적이에요", source: "사용자 자동화 사례" },
+  { title: "이불 빨래는 1개월에 1번 권장돼요", source: "AI 가전 꿀팁" },
+  { title: "베개 커버는 1주일에 1번 세탁하면 좋아요", source: "AI 가전 꿀팁" },
+  { title: "에어컨 청소 후 문을 열고 2시간 송풍하세요", source: "AI 가전 꿀팁" },
+];
+
+export const automationAlerts = [
+  {
+    id: "rain-laundry",
+    title: "비 예보로 빨래 일정을 당겼어요",
+    detail: "2주 예보 기준 비 오는 날을 피해서 세탁기 돌리기를 전날로 조정합니다.",
+    date: "2026-05-28",
+    taskTitle: "세탁기 돌리기",
+    place: "세탁실",
+  },
+  {
+    id: "home-climate",
+    title: "귀가 전 최적 환경을 준비할까요?",
+    detail: "19:30 도착 예상에 맞춰 제습기, 에어컨, 공기청정기를 미리 켭니다.",
+    date: "2026-05-28",
+    taskTitle: "귀가 전 실내 환경 자동화",
+    place: "LG ThinQ",
+  },
+  {
+    id: "aircon-fan",
+    title: "에어컨 청소 후 2시간 송풍할까요?",
+    detail: "청소 뒤 문을 열고 송풍하면 내부 습기와 냄새를 줄일 수 있어요.",
+    date: "2026-05-28",
+    taskTitle: "에어컨 2시간 송풍",
+    place: "거실",
+  },
 ];
 
 const baseTasks = [
