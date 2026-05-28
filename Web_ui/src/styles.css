@@ -1051,7 +1051,7 @@ button {
 .calendar-view-controls {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
   align-items: center;
   gap: 6px;
   padding: 5px;
@@ -1073,6 +1073,18 @@ button {
   color: #875061;
   font-size: 12px;
   font-weight: 950;
+}
+
+.calendar-view-controls span {
+  text-align: center;
+  color: #875061;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.calendar-view-controls button:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
 }
 
 .calendar-mode-controls button.active,
@@ -1326,6 +1338,217 @@ button {
   font-size: 12px;
 }
 
+.calendar-scale-0 {
+  --cell-min: clamp(76px, 8vw, 96px);
+  --date-size: 13px;
+  --date-circle: 24px;
+  --weather-icon-size: 0px;
+  --weather-temp-size: 11px;
+  --weather-low-size: 10px;
+  --weather-min: 28px;
+  --task-font: 0px;
+  --task-padding-y: 0;
+  --task-padding-x: 0;
+  --task-radius: 50%;
+  --task-width: 7px;
+  --task-height: 7px;
+  --task-color: transparent;
+  --detail-display: none;
+}
+
+.calendar-scale-1 {
+  --cell-min: clamp(96px, 10vw, 126px);
+  --date-size: 15px;
+  --date-circle: 27px;
+  --weather-icon-size: 18px;
+  --weather-temp-size: 13px;
+  --weather-low-size: 12px;
+  --weather-min: 40px;
+  --task-font: 10px;
+  --task-padding-y: 3px;
+  --task-padding-x: 5px;
+  --task-radius: 6px;
+  --task-width: min(72px, 100%);
+  --task-height: auto;
+  --task-color: #fff;
+  --detail-display: none;
+}
+
+.calendar-scale-2 {
+  --cell-min: clamp(118px, 12vw, 154px);
+  --date-size: 18px;
+  --date-circle: 30px;
+  --weather-icon-size: 25px;
+  --weather-temp-size: 18px;
+  --weather-low-size: 16px;
+  --weather-min: 54px;
+  --task-font: 11px;
+  --task-padding-y: 4px;
+  --task-padding-x: 7px;
+  --task-radius: 6px;
+  --task-width: 100%;
+  --task-height: auto;
+  --task-color: #fff;
+  --detail-display: none;
+}
+
+.calendar-scale-3 {
+  --cell-min: clamp(180px, 18vw, 240px);
+  --date-size: 21px;
+  --date-circle: 36px;
+  --weather-icon-size: 31px;
+  --weather-temp-size: 21px;
+  --weather-low-size: 17px;
+  --weather-min: 68px;
+  --task-font: 13px;
+  --task-padding-y: 7px;
+  --task-padding-x: 9px;
+  --task-radius: 8px;
+  --task-width: min(118px, 100%);
+  --task-height: auto;
+  --task-color: #fff;
+  --detail-display: block;
+}
+
+.calendar-scale-4 {
+  --cell-min: clamp(230px, 24vw, 320px);
+  --date-size: 24px;
+  --date-circle: 42px;
+  --weather-icon-size: 38px;
+  --weather-temp-size: 24px;
+  --weather-low-size: 20px;
+  --weather-min: 82px;
+  --task-font: 15px;
+  --task-padding-y: 9px;
+  --task-padding-x: 11px;
+  --task-radius: 9px;
+  --task-width: min(148px, 100%);
+  --task-height: auto;
+  --task-color: #fff;
+  --detail-display: block;
+}
+
+.calendar-scale-0 .blank-day,
+.calendar-scale-0 .date-cell,
+.calendar-scale-1 .blank-day,
+.calendar-scale-1 .date-cell,
+.calendar-scale-2 .blank-day,
+.calendar-scale-2 .date-cell,
+.calendar-scale-3 .blank-day,
+.calendar-scale-3 .date-cell,
+.calendar-scale-4 .blank-day,
+.calendar-scale-4 .date-cell {
+  min-height: var(--cell-min);
+}
+
+.calendar-scale-0 .date-cell strong,
+.calendar-scale-1 .date-cell strong,
+.calendar-scale-2 .date-cell strong,
+.calendar-scale-3 .date-cell strong,
+.calendar-scale-4 .date-cell strong {
+  width: var(--date-circle);
+  height: var(--date-circle);
+  font-size: var(--date-size);
+}
+
+.calendar-scale-0 .day-weather,
+.calendar-scale-1 .day-weather,
+.calendar-scale-2 .day-weather,
+.calendar-scale-3 .day-weather,
+.calendar-scale-4 .day-weather {
+  min-height: var(--weather-min);
+}
+
+.calendar-scale-0 .weather-icon {
+  display: none;
+}
+
+.calendar-scale-1 .weather-icon,
+.calendar-scale-2 .weather-icon,
+.calendar-scale-3 .weather-icon,
+.calendar-scale-4 .weather-icon {
+  height: calc(var(--weather-icon-size) + 2px);
+  font-size: var(--weather-icon-size);
+}
+
+.calendar-scale-0 .weather-temps {
+  grid-template-columns: auto auto;
+  gap: 4px;
+}
+
+.calendar-scale-0 .weather-temps b,
+.calendar-scale-1 .weather-temps b,
+.calendar-scale-2 .weather-temps b,
+.calendar-scale-3 .weather-temps b,
+.calendar-scale-4 .weather-temps b {
+  font-size: var(--weather-temp-size);
+}
+
+.calendar-scale-0 .weather-temps small,
+.calendar-scale-1 .weather-temps small,
+.calendar-scale-2 .weather-temps small,
+.calendar-scale-3 .weather-temps small,
+.calendar-scale-4 .weather-temps small {
+  font-size: var(--weather-low-size);
+}
+
+.calendar-scale-0 .date-cell i,
+.calendar-scale-1 .date-cell i,
+.calendar-scale-2 .date-cell i,
+.calendar-scale-3 .date-cell i,
+.calendar-scale-4 .date-cell i {
+  width: var(--task-width);
+  height: var(--task-height);
+  padding: var(--task-padding-y) var(--task-padding-x);
+  border-radius: var(--task-radius);
+  color: var(--task-color);
+  font-size: var(--task-font);
+  line-height: 1.2;
+  white-space: normal;
+}
+
+.calendar-scale-0 .date-cell i span,
+.calendar-scale-0 .date-cell i small {
+  display: none;
+}
+
+.calendar-scale-1 .date-cell i small,
+.calendar-scale-2 .date-cell i small {
+  display: none;
+}
+
+.calendar-scale-3 .date-cell i span,
+.calendar-scale-3 .date-cell i small,
+.calendar-scale-4 .date-cell i span,
+.calendar-scale-4 .date-cell i small {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+.calendar-scale-3 .date-cell i small,
+.calendar-scale-4 .date-cell i small {
+  display: var(--detail-display);
+  font-size: calc(var(--task-font) - 2px);
+}
+
+.calendar-day-view.calendar-scale-0 .date-cell,
+.calendar-day-view.calendar-scale-1 .date-cell,
+.calendar-day-view.calendar-scale-2 .date-cell,
+.calendar-day-view.calendar-scale-3 .date-cell,
+.calendar-day-view.calendar-scale-4 .date-cell {
+  min-height: max(360px, var(--cell-min));
+}
+
+.calendar-day-view.calendar-scale-0 .date-cell i,
+.calendar-day-view.calendar-scale-1 .date-cell i,
+.calendar-day-view.calendar-scale-2 .date-cell i,
+.calendar-day-view.calendar-scale-3 .date-cell i,
+.calendar-day-view.calendar-scale-4 .date-cell i {
+  width: min(520px, 100%);
+}
+
 .more-tasks {
   color: var(--muted);
   font-size: 11px;
@@ -1418,8 +1641,7 @@ button {
   gap: 8px;
 }
 
-.month-switcher button,
-.calendar-add-button {
+.month-switcher button {
   width: 36px;
   height: 36px;
   display: grid;
@@ -1427,6 +1649,21 @@ button {
   border-radius: 50%;
   background: #fff1f4;
   color: var(--red);
+}
+
+.calendar-add-button {
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px;
+  border-radius: 999px;
+  color: var(--red);
+  background: #fff1f4;
+  font-size: 13px;
+  font-weight: 950;
+  white-space: nowrap;
 }
 
 .month-switcher h2 {
@@ -2511,6 +2748,66 @@ button {
   .calendar-day-view .date-cell i {
     width: 100%;
     font-size: 14px;
+  }
+
+  .calendar-scale-0 {
+    --cell-min: 76px;
+    --date-size: 12px;
+    --date-circle: 22px;
+    --weather-temp-size: 10px;
+    --weather-low-size: 10px;
+    --weather-min: 28px;
+    --task-font: 0px;
+    --task-width: 7px;
+    --task-height: 7px;
+  }
+
+  .calendar-scale-1 {
+    --cell-min: 94px;
+    --date-size: 13px;
+    --date-circle: 24px;
+    --weather-icon-size: 15px;
+    --weather-temp-size: 12px;
+    --weather-low-size: 11px;
+    --weather-min: 34px;
+    --task-font: 9px;
+    --task-width: min(58px, 100%);
+  }
+
+  .calendar-scale-2 {
+    --cell-min: 112px;
+    --date-size: 14px;
+    --date-circle: 26px;
+    --weather-icon-size: 20px;
+    --weather-temp-size: 14px;
+    --weather-low-size: 12px;
+    --weather-min: 44px;
+    --task-font: 10px;
+    --task-width: min(66px, 100%);
+  }
+
+  .calendar-scale-3 {
+    --cell-min: 174px;
+    --date-size: 18px;
+    --date-circle: 32px;
+    --weather-icon-size: 27px;
+    --weather-temp-size: 17px;
+    --weather-low-size: 14px;
+    --weather-min: 58px;
+    --task-font: 11px;
+    --task-width: min(92px, 100%);
+  }
+
+  .calendar-scale-4 {
+    --cell-min: 230px;
+    --date-size: 21px;
+    --date-circle: 38px;
+    --weather-icon-size: 34px;
+    --weather-temp-size: 21px;
+    --weather-low-size: 17px;
+    --weather-min: 72px;
+    --task-font: 13px;
+    --task-width: min(112px, 100%);
   }
 
   .member-color-card {

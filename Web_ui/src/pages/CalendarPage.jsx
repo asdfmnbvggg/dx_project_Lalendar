@@ -36,13 +36,14 @@ export default function CalendarPage({
   onOpenPanel,
 }) {
   const [calendarView, setCalendarView] = useState("month");
-  const [calendarSize, setCalendarSize] = useState("medium");
+  const [calendarScale, setCalendarScale] = useState(2);
   const selectedMemberName = members.find((member) => member.id === selectedMember)?.name || "우리 집";
   const selectedDay = Number(selectedDate.slice(-2));
   const displayDates = getDisplayDates(calendarView, selectedDate, month);
   const displayLabel = getDisplayLabel(calendarView, selectedDate, monthLabel);
   const leadingBlanks = calendarView === "month" ? monthLeadingBlanks : 0;
-  const taskLimit = calendarView === "day" ? 99 : calendarSize === "compact" ? 2 : calendarSize === "large" ? 5 : 3;
+  const isExpanded = calendarScale >= 3;
+  const taskLimit = calendarView === "day" ? 99 : calendarScale <= 1 ? 2 : calendarScale >= 4 ? 5 : 3;
 
   function moveCalendar(offset) {
     if (calendarView === "month") {
@@ -51,6 +52,10 @@ export default function CalendarPage({
     }
 
     setSelectedDate(addDays(selectedDate, calendarView === "week" ? offset * 7 : offset));
+  }
+
+  function changeScale(offset) {
+    setCalendarScale((current) => Math.min(4, Math.max(0, current + offset)));
   }
 
   return (
@@ -85,8 +90,9 @@ export default function CalendarPage({
               <ChevronRight size={18} />
             </button>
           </div>
-          <button className="calendar-add-button" onClick={openComposer} aria-label="할 일 추가">
+          <button className="calendar-add-button" onClick={openComposer}>
             <Plus size={18} />
+            할일 추가
           </button>
         </div>
         <div className="calendar-toolbar">
@@ -102,16 +108,12 @@ export default function CalendarPage({
             ))}
           </div>
           <div className="calendar-view-controls" aria-label="캘린더 크기 조절">
-            <button className={calendarSize === "compact" ? "active" : ""} onClick={() => setCalendarSize("compact")}>
+            <button onClick={() => changeScale(-1)} disabled={calendarScale === 0} aria-label="캘린더 축소">
               <Minus size={16} />
-              축소
             </button>
-            <button className={calendarSize === "medium" ? "active" : ""} onClick={() => setCalendarSize("medium")}>
-              중간
-            </button>
-            <button className={calendarSize === "large" ? "active" : ""} onClick={() => setCalendarSize("large")}>
+            <span>{calendarScale + 1}단계</span>
+            <button onClick={() => changeScale(1)} disabled={calendarScale === 4} aria-label="캘린더 확대">
               <Plus size={16} />
-              확대
             </button>
           </div>
         </div>
@@ -120,7 +122,7 @@ export default function CalendarPage({
             <span key={day}>{day}</span>
           ))}
         </div>
-        <div className={`month-grid calendar-${calendarSize} calendar-${calendarView}-view`}>
+        <div className={`month-grid calendar-scale-${calendarScale} calendar-${calendarView}-view`}>
           {Array.from({ length: leadingBlanks }).map((_, index) => (
             <span className="blank-day" key={index} />
           ))}
@@ -154,7 +156,7 @@ export default function CalendarPage({
                   {tasks.slice(0, taskLimit).map((task) => (
                     <i className={task.tag} key={task.id} style={{ background: memberColors[task.owner] || memberColors.all }}>
                       <span>{task.title}</span>
-                      {calendarSize === "large" && (
+                      {isExpanded && (
                         <small>
                           {task.place} · {task.repeat}
                         </small>

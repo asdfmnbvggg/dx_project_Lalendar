@@ -2,9 +2,9 @@ import { CalendarDays, Home, Trophy, UsersRound } from "lucide-react";
 
 export const members = [
   { id: "all", name: "우리 집", short: "집", subtitle: "공유 작업 전체", color: "#d4144b" },
-  { id: "me", name: "Charlotte", short: "C", subtitle: "이번 주 18개 완료", color: "#fb4b6f" },
-  { id: "minsu", name: "Minsu.kim", short: "M", subtitle: "주방 담당", color: "#14b8a6" },
-  { id: "theresa", name: "Theresa", short: "T", subtitle: "욕실 로테이션", color: "#8b5cf6" },
+  { id: "me", name: "최재혁", short: "최", subtitle: "이번 주 18개 완료", color: "#fb4b6f" },
+  { id: "minsu", name: "김다빈", short: "김", subtitle: "주방 담당", color: "#14b8a6" },
+  { id: "theresa", name: "김수현", short: "김", subtitle: "욕실 담당", color: "#8b5cf6" },
 ];
 
 export const rooms = [
