@@ -1040,18 +1040,26 @@ button {
   gap: 8px;
 }
 
+.calendar-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 10px;
+  margin: 12px 0 4px;
+}
+
+.calendar-mode-controls,
 .calendar-view-controls {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
   gap: 6px;
-  margin: 12px 0 4px;
   padding: 5px;
   border-radius: 999px;
   background: #fff1f4;
 }
 
+.calendar-mode-controls button,
 .calendar-view-controls button {
   min-width: 0;
   height: 38px;
@@ -1067,10 +1075,58 @@ button {
   font-weight: 950;
 }
 
+.calendar-mode-controls button.active,
 .calendar-view-controls button.active {
   color: #fff;
   background: linear-gradient(135deg, var(--pink), var(--red));
   box-shadow: 0 10px 20px rgba(225, 29, 72, 0.16);
+}
+
+.calendar-week-view {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.calendar-day-view {
+  grid-template-columns: 1fr;
+}
+
+.calendar-day-view .date-cell {
+  min-height: 360px;
+  grid-template-rows: auto minmax(76px, auto) 1fr;
+  padding: 18px;
+  text-align: left;
+}
+
+.calendar-day-view .date-cell strong {
+  margin: 0 0 12px;
+}
+
+.calendar-day-view .day-weather,
+.calendar-day-view .date-tasks {
+  justify-items: start;
+}
+
+.calendar-day-view .date-tasks {
+  width: 100%;
+  gap: 8px;
+}
+
+.calendar-day-view .date-cell i {
+  width: min(420px, 100%);
+  padding: 10px 12px;
+  font-size: 15px;
+  white-space: normal;
+}
+
+.calendar-day-view .date-cell i span,
+.calendar-day-view .date-cell i small {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.day-weekday {
+  display: none;
 }
 
 .blank-day,
@@ -1121,6 +1177,15 @@ button {
 .date-cell:hover {
   background: #f8f8fa;
   transform: translateY(-2px);
+}
+
+.date-cell.selected {
+  background: #f1f2f5;
+  box-shadow: inset 0 0 0 1px #e3e5ea;
+}
+
+.date-cell.selected:hover {
+  background: #eceef3;
 }
 
 .date-cell.selected strong {
@@ -2323,7 +2388,13 @@ button {
     align-items: flex-start;
   }
 
-  .calendar-view-controls {
+  .calendar-toolbar {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .calendar-view-controls,
+  .calendar-mode-controls {
     margin-left: 0;
   }
 
@@ -2430,6 +2501,16 @@ button {
     display: block;
     font-size: 10px;
     white-space: normal;
+  }
+
+  .calendar-day-view .date-cell {
+    min-height: 360px;
+    padding: 14px;
+  }
+
+  .calendar-day-view .date-cell i {
+    width: 100%;
+    font-size: 14px;
   }
 
   .member-color-card {

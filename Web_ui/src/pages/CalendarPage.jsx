@@ -35,10 +35,23 @@ export default function CalendarPage({
   openComposer,
   onOpenPanel,
 }) {
+  const [calendarView, setCalendarView] = useState("month");
   const [calendarSize, setCalendarSize] = useState("medium");
   const selectedMemberName = members.find((member) => member.id === selectedMember)?.name || "우리 집";
   const selectedDay = Number(selectedDate.slice(-2));
-  const taskLimit = calendarSize === "compact" ? 2 : calendarSize === "large" ? 5 : 3;
+  const displayDates = getDisplayDates(calendarView, selectedDate, month);
+  const displayLabel = getDisplayLabel(calendarView, selectedDate, monthLabel);
+  const leadingBlanks = calendarView === "month" ? monthLeadingBlanks : 0;
+  const taskLimit = calendarView === "day" ? 99 : calendarSize === "compact" ? 2 : calendarSize === "large" ? 5 : 3;
+
+  function moveCalendar(offset) {
+    if (calendarView === "month") {
+      offset < 0 ? onPrevMonth() : onNextMonth();
+      return;
+    }
+
+    setSelectedDate(addDays(selectedDate, calendarView === "week" ? offset * 7 : offset));
+  }
 
   return (
     <section className="page calendar-page">
@@ -64,11 +77,11 @@ export default function CalendarPage({
       <section className="calendar-board">
         <div className="calendar-header">
           <div className="month-switcher">
-            <button onClick={onPrevMonth} aria-label="이전 달">
+            <button onClick={() => moveCalendar(-1)} aria-label="이전 기간">
               <ChevronLeft size={18} />
             </button>
-            <h2>{monthLabel}</h2>
-            <button onClick={onNextMonth} aria-label="다음 달">
+            <h2>{displayLabel}</h2>
+            <button onClick={() => moveCalendar(1)} aria-label="다음 기간">
               <ChevronRight size={18} />
             </button>
           </div>
@@ -76,29 +89,42 @@ export default function CalendarPage({
             <Plus size={18} />
           </button>
         </div>
-        <div className="calendar-view-controls" aria-label="캘린더 크기 조절">
-          <button className={calendarSize === "compact" ? "active" : ""} onClick={() => setCalendarSize("compact")}>
-            <Minus size={16} />
-            축소
-          </button>
-          <button className={calendarSize === "medium" ? "active" : ""} onClick={() => setCalendarSize("medium")}>
-            중간
-          </button>
-          <button className={calendarSize === "large" ? "active" : ""} onClick={() => setCalendarSize("large")}>
-            <Plus size={16} />
-            확대
-          </button>
+        <div className="calendar-toolbar">
+          <div className="calendar-mode-controls" aria-label="캘린더 보기 방식">
+            {[
+              ["month", "월간"],
+              ["week", "주간"],
+              ["day", "일간"],
+            ].map(([view, label]) => (
+              <button key={view} className={calendarView === view ? "active" : ""} onClick={() => setCalendarView(view)}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="calendar-view-controls" aria-label="캘린더 크기 조절">
+            <button className={calendarSize === "compact" ? "active" : ""} onClick={() => setCalendarSize("compact")}>
+              <Minus size={16} />
+              축소
+            </button>
+            <button className={calendarSize === "medium" ? "active" : ""} onClick={() => setCalendarSize("medium")}>
+              중간
+            </button>
+            <button className={calendarSize === "large" ? "active" : ""} onClick={() => setCalendarSize("large")}>
+              <Plus size={16} />
+              확대
+            </button>
+          </div>
         </div>
-        <div className="weekdays">
+        <div className={`weekdays ${calendarView === "day" ? "day-weekday" : ""}`}>
           {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
             <span key={day}>{day}</span>
           ))}
         </div>
-        <div className={`month-grid calendar-${calendarSize}`}>
-          {Array.from({ length: monthLeadingBlanks }).map((_, index) => (
+        <div className={`month-grid calendar-${calendarSize} calendar-${calendarView}-view`}>
+          {Array.from({ length: leadingBlanks }).map((_, index) => (
             <span className="blank-day" key={index} />
           ))}
-          {month.map((key) => {
+          {displayDates.map((key) => {
             const tasks = tasksByDate[key] || [];
             const day = Number(key.slice(-2));
             const weather = weatherByDate[key];
@@ -171,4 +197,38 @@ export default function CalendarPage({
       </section>
     </section>
   );
+}
+
+function getDisplayDates(view, selectedDate, month) {
+  if (view === "month") return month;
+  if (view === "day") return [selectedDate];
+
+  const selected = new Date(`${selectedDate}T00:00:00`);
+  const sunday = new Date(selected);
+  sunday.setDate(selected.getDate() - selected.getDay());
+  return Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(sunday);
+    day.setDate(sunday.getDate() + index);
+    return toDateKey(day);
+  });
+}
+
+function getDisplayLabel(view, selectedDate, monthLabel) {
+  if (view === "month") return monthLabel;
+  if (view === "day") return selectedDate.replaceAll("-", ". ");
+
+  const dates = getDisplayDates("week", selectedDate, []);
+  const start = dates[0].slice(5).replace("-", ".");
+  const end = dates[6].slice(5).replace("-", ".");
+  return `${selectedDate.slice(0, 4)}. ${start} - ${end}`;
+}
+
+function addDays(date, amount) {
+  const next = new Date(`${date}T00:00:00`);
+  next.setDate(next.getDate() + amount);
+  return toDateKey(next);
+}
+
+function toDateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
