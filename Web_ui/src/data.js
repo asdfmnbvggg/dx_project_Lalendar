@@ -1,4 +1,4 @@
-import { CalendarDays, Home, Trophy, UsersRound } from "lucide-react";
+import { CalendarDays, UsersRound } from "lucide-react";
 
 export const members = [
   { id: "all", name: "우리 집", short: "집", subtitle: "공유 작업 전체", color: "#d4144b" },
@@ -204,10 +204,8 @@ export const weatherByDate = {
 export const initialTasks = [...baseTasks, ...buildWeatherRoutineTasks()];
 
 export const navItems = [
-  { id: "today", label: "오늘", icon: Home },
   { id: "calendar", label: "캘린더", icon: CalendarDays },
   { id: "crew", label: "멤버", icon: UsersRound },
-  { id: "reward", label: "보상", icon: Trophy },
 ];
 
 export const tagLabel = {

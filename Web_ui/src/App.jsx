@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bell, Menu } from "lucide-react";
 import { automationAlerts, dateKey, initialTasks, isRainyDate, members, navItems, tagLabel } from "./data.js";
-import TodayPage from "./pages/TodayPage.jsx";
 import CalendarPage from "./pages/CalendarPage.jsx";
 import CrewPage from "./pages/CrewPage.jsx";
-import RewardPage from "./pages/RewardPage.jsx";
 import TaskComposer from "./components/TaskComposer.jsx";
 import DetailPanel from "./components/DetailPanel.jsx";
 
@@ -40,7 +38,6 @@ export default function App() {
   }, []);
 
   const scopedTasks = tasks.filter((task) => selectedMember === "all" || task.owner === selectedMember);
-  const todayTasks = sortTasks(scopedTasks.filter((task) => task.date === "2026-05-26"));
   const selectedTasks = sortTasks(
     scopedTasks
       .filter((task) => task.date === selectedDate)
@@ -48,7 +45,6 @@ export default function App() {
   );
   const completed = scopedTasks.filter((task) => task.done).length;
   const completion = Math.round((completed / Math.max(scopedTasks.length, 1)) * 100);
-  const rewardPoints = completed * 10;
   const month = useMemo(() => {
     const totalDays = new Date(visibleMonth.year, visibleMonth.month, 0).getDate();
     return Array.from({ length: totalDays }, (_, index) => dateKey(visibleMonth.year, visibleMonth.month, index + 1));
@@ -194,24 +190,9 @@ export default function App() {
     setAutomationPrompt(null);
   }
 
-  function addPreset(title) {
-    addTask({
-      date: selectedDate,
-      title,
-      place: "우리 집",
-      tag: "house",
-      owner: selectedMember === "all" ? "me" : selectedMember,
-      done: false,
-      repeat: "프리셋",
-      source: "auto",
-    });
-    setActiveTab("calendar");
-  }
-
   const pageProps = {
     tasks,
     scopedTasks,
-    todayTasks,
     selectedTasks,
     selectedDate,
     selectedMember,
@@ -228,7 +209,6 @@ export default function App() {
     onNextMonth: () => changeVisibleMonth(1),
     tasksByDate,
     completion,
-    rewardPoints,
     toggleTask,
     deleteTask,
     changeTaskOwner,
@@ -258,10 +238,8 @@ export default function App() {
           </div>
         </header>
 
-        {activeTab === "today" && <TodayPage {...pageProps} />}
         {activeTab === "calendar" && <CalendarPage {...pageProps} />}
         {activeTab === "crew" && <CrewPage {...pageProps} />}
-        {activeTab === "reward" && <RewardPage {...pageProps} onAddPreset={addPreset} />}
 
         <nav className="tabbar" aria-label="하단 탭">
           {navItems.map(({ id, label, icon: Icon }) => (
