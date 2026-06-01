@@ -10,8 +10,11 @@ export default function App() {
   const [tasks, setTasks] = useState(initialTasks);
   const [memberColors, setMemberColors] = useState(() => Object.fromEntries(members.map((member) => [member.id, member.color])));
   const [activeTab, setActiveTab] = useState("calendar");
-  const [selectedDate, setSelectedDate] = useState("2026-05-26");
-  const [visibleMonth, setVisibleMonth] = useState({ year: 2026, month: 5 });
+  const [selectedDate, setSelectedDate] = useState(getTodayKey);
+  const [visibleMonth, setVisibleMonth] = useState(() => {
+    const today = new Date();
+    return { year: today.getFullYear(), month: today.getMonth() + 1 };
+  });
   const [selectedMember, setSelectedMember] = useState("all");
   const [query, setQuery] = useState("");
   const [isComposerOpen, setComposerOpen] = useState(false);
@@ -375,6 +378,11 @@ function addDays(date, amount) {
   const next = new Date(`${date}T00:00:00`);
   next.setDate(next.getDate() + amount);
   return dateKey(next.getFullYear(), next.getMonth() + 1, next.getDate());
+}
+
+function getTodayKey() {
+  const today = new Date();
+  return dateKey(today.getFullYear(), today.getMonth() + 1, today.getDate());
 }
 
 function isLaundryTask(task) {
