@@ -1275,6 +1275,11 @@ button {
   font-weight: 750;
 }
 
+.weather-pop {
+  font-size: 11px !important;
+  color: #2563eb !important;
+}
+
 .date-tasks {
   display: grid;
   justify-items: center;

@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Search } from "lucide-react";
 import { useState } from "react";
-import { members, weatherByDate } from "../data.js";
+import { members } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
 
 const weatherIcon = {
@@ -17,6 +17,7 @@ export default function CalendarPage({
   month,
   monthLabel,
   monthLeadingBlanks,
+  weatherByDate,
   onPrevMonth,
   onNextMonth,
   tasksByDate,
@@ -146,8 +147,9 @@ export default function CalendarPage({
                           </span>
                         )}
                         <span className="weather-temps">
-                          <b>{weather.high}°</b>
-                          <small>{weather.low}°</small>
+                          <b>{formatTemp(weather.high)}</b>
+                          <small>{formatTemp(weather.low)}</small>
+                          {Number.isFinite(weather.pop) && <small className="weather-pop">강수 {weather.pop}%</small>}
                         </span>
                       </>
                     )}
@@ -234,4 +236,8 @@ function addDays(date, amount) {
 
 function toDateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function formatTemp(value) {
+  return Number.isFinite(value) ? `${value}°` : "-";
 }

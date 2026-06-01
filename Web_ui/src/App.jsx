@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bell, Menu } from "lucide-react";
-import { automationAlerts, dateKey, initialTasks, isRainyDate, members, navItems, tagLabel } from "./data.js";
+import { automationAlerts, dateKey, initialTasks, isRainyDate, members, navItems, tagLabel, weatherByDate } from "./data.js";
 import CalendarPage from "./pages/CalendarPage.jsx";
 import CrewPage from "./pages/CrewPage.jsx";
 import TaskComposer from "./components/TaskComposer.jsx";
 import DetailPanel from "./components/DetailPanel.jsx";
+import { fetchCalendarWeather } from "./services/weatherService.js";
 
 export default function App() {
   const [tasks, setTasks] = useState(initialTasks);
@@ -23,6 +24,7 @@ export default function App() {
   const [automationPrompt, setAutomationPrompt] = useState(null);
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
   const [panel, setPanel] = useState(null);
+  const [calendarWeatherByDate, setCalendarWeatherByDate] = useState(weatherByDate);
 
   useEffect(() => {
     const selectors = [
@@ -38,6 +40,24 @@ export default function App() {
     const observer = new MutationObserver(removeToolbar);
     observer.observe(document.body, { childList: true, subtree: true });
     return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    fetchCalendarWeather()
+      .then((forecastByDate) => {
+        if (isActive && Object.keys(forecastByDate).length) {
+          setCalendarWeatherByDate((current) => ({ ...current, ...forecastByDate }));
+        }
+      })
+      .catch((error) => {
+        console.warn(error);
+      });
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const scopedTasks = tasks.filter((task) => selectedMember === "all" || task.owner === selectedMember);
@@ -208,6 +228,7 @@ export default function App() {
     month,
     monthLabel,
     monthLeadingBlanks,
+    weatherByDate: calendarWeatherByDate,
     onPrevMonth: () => changeVisibleMonth(-1),
     onNextMonth: () => changeVisibleMonth(1),
     tasksByDate,
