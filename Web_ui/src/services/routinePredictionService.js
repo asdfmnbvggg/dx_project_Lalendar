@@ -22,7 +22,7 @@ export function recordThinQUsageLog(entry) {
   try {
     localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(next));
   } catch {
-    // Ignore storage errors so API results still render.
+    // Storage can be unavailable; API results should still render.
   }
 
   return next;
@@ -30,7 +30,7 @@ export function recordThinQUsageLog(entry) {
 
 export function buildRoutineRecommendations({ devices = [], deviceStates = {}, deviceAux = {}, weatherByDate = {}, selectedDate }) {
   const logs = readThinQUsageLogs();
-  const dates = Object.keys(weatherByDate).length ? Object.keys(weatherByDate) : [selectedDate];
+  const dates = Object.keys(weatherByDate).length ? Object.keys(weatherByDate) : [selectedDate].filter(Boolean);
   const recommendations = [];
 
   dates.forEach((date) => {
@@ -44,19 +44,63 @@ export function buildRoutineRecommendations({ devices = [], deviceStates = {}, d
       const type = normalizeApplianceType(device);
 
       if (deviceLogs.length >= 2) {
-        recommendations.push(createRoutineRecommendation(date, type, `${device.name || device.alias || "가전"} 루틴 추천`, `${deviceLogs.length}회 반복 사용 기록이 감지되었습니다.`, "최근 같은 요일 사용 패턴을 기반으로 추천합니다.", 78, "THINQ_LOG", hasWeatherData(weather)));
+        recommendations.push(
+          createRoutineRecommendation(
+            date,
+            type,
+            `${device.name || device.alias || "가전"} 루틴 추천`,
+            `${deviceLogs.length}회 반복 사용 기록이 감지되었습니다.`,
+            "최근 같은 요일 사용 패턴을 기반으로 추천합니다.",
+            78,
+            "THINQ_LOG",
+            hasWeatherData(weather),
+          ),
+        );
       }
 
       if (state && hasCompletionSignal(state)) {
-        recommendations.push(createRoutineRecommendation(date, "DRYER", "완료 후 정리 루틴 추천", "세탁/건조 완료 신호가 감지되어 후속 정리 일정을 추천합니다.", "ThinQ 상태에 완료 신호가 포함되어 있습니다.", 72, "THINQ_STATE", hasWeatherData(weather)));
+        recommendations.push(
+          createRoutineRecommendation(
+            date,
+            "DRYER",
+            "완료 후 정리 루틴 추천",
+            "세탁/건조 완료 신호가 감지되어 후속 정리 일정을 추천합니다.",
+            "ThinQ 상태에 완료 신호가 포함되어 있습니다.",
+            72,
+            "THINQ_STATE",
+            hasWeatherData(weather),
+          ),
+        );
       }
 
       if (aux?.energy && aux.energy.status !== "not_ready") {
-        recommendations.push(createRoutineRecommendation(date, type, `${device.name || "가전"} 전력 사용 루틴`, "전력량 조회 결과를 기반으로 반복 사용 시간대를 추천합니다.", "전력량 데이터가 수집되었습니다.", 68, "THINQ_ENERGY", hasWeatherData(weather)));
+        recommendations.push(
+          createRoutineRecommendation(
+            date,
+            type,
+            `${device.name || "가전"} 전력 사용 루틴`,
+            "전력량 조회 결과를 기반으로 반복 사용 시간대를 추천합니다.",
+            "전력량 데이터가 수집되었습니다.",
+            68,
+            "THINQ_ENERGY",
+            hasWeatherData(weather),
+          ),
+        );
       }
 
-      if (weather?.hasWeatherData && type === "DRYER" && (weather.pop >= 60 || weather.icon === "rain")) {
-        recommendations.push(createRoutineRecommendation(date, "DRYER", "날씨 반영 건조 루틴", "비 예보와 ThinQ 기기 정보를 함께 반영해 건조기 사용을 추천합니다.", "강수 예보가 있어 자연건조 대신 건조기 루틴을 우선 추천합니다.", 82, "WEATHER_COMBINED", true));
+      if (weather?.hasWeatherData && type === "DRYER" && (weather.pop >= 60 || weather.icon === "rain" || weather.icon === "snow")) {
+        recommendations.push(
+          createRoutineRecommendation(
+            date,
+            "DRYER",
+            "날씨 반영 건조 루틴",
+            "비 예보와 ThinQ 기기 정보를 함께 반영해 건조기 사용을 추천합니다.",
+            "강수 예보가 있어 자연건조 대신 건조기 루틴을 우선 추천합니다.",
+            82,
+            "WEATHER_COMBINED",
+            true,
+          ),
+        );
       }
     });
   });
@@ -73,7 +117,7 @@ function createRoutineRecommendation(date, applianceType, title, description, re
     applianceType,
     title,
     description,
-    reason: weatherCombined ? reason : `${reason}${source === "THINQ_LOG" ? "" : " 날씨 정보 없음."}`,
+    reason: weatherCombined ? reason : `${reason} 날씨 정보 없음.`,
     confidence,
     source,
     automationType: "ROUTINE_PREDICTION",

@@ -5,12 +5,11 @@ import TaskItem from "../components/TaskItem.jsx";
 
 const weatherIcon = {
   sunny: "☀️",
-  "sun-rain": "🌦️",
-  rain: "🌧️",
-  sunset: "🌅",
-  partly: "🌤️",
+  partly_cloudy: "🌤️",
   cloudy: "☁️",
-  storm: "⛈️",
+  rain: "🌧️",
+  snow: "❄️",
+  unknown: "•",
 };
 
 const applianceTypeLabel = {
@@ -21,6 +20,7 @@ const applianceTypeLabel = {
   AIR_CONDITIONER: "에어컨",
   AIR_PURIFIER: "공기청정기",
   ROBOT_CLEANER: "로봇청소기",
+  ETC: "가전",
 };
 
 export default function CalendarPage({
@@ -28,6 +28,7 @@ export default function CalendarPage({
   monthLabel,
   monthLeadingBlanks,
   weatherByDate,
+  routineRecommendations = [],
   onPrevMonth,
   onNextMonth,
   tasksByDate,
@@ -57,7 +58,7 @@ export default function CalendarPage({
   const isExpanded = calendarScale >= 3;
   const taskLimit = calendarView === "day" ? 99 : calendarScale <= 1 ? 2 : calendarScale >= 4 ? 5 : 3;
   const selectedWeather = weatherByDate[selectedDate];
-  const selectedRecommendations = selectedWeather?.applianceRecommendations || [];
+  const selectedRecommendations = getRecommendationsForDate(selectedDate, weatherByDate, routineRecommendations);
 
   function moveCalendar(offset) {
     if (calendarView === "month") {
@@ -115,6 +116,7 @@ export default function CalendarPage({
             </button>
           </div>
         </div>
+
         <div className="calendar-toolbar">
           <div className="calendar-mode-controls" aria-label="캘린더 보기 방식">
             {[
@@ -128,11 +130,13 @@ export default function CalendarPage({
             ))}
           </div>
         </div>
+
         <div className={`weekdays ${calendarView === "day" ? "day-weekday" : ""}`}>
           {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
             <span key={day}>{day}</span>
           ))}
         </div>
+
         <div className={`month-grid calendar-scale-${calendarScale} calendar-${calendarView}-view`}>
           {Array.from({ length: leadingBlanks }).map((_, index) => (
             <span className="blank-day" key={index} />
@@ -141,33 +145,32 @@ export default function CalendarPage({
             const tasks = tasksByDate[key] || [];
             const day = Number(key.slice(-2));
             const weather = weatherByDate[key];
+            const recommendations = getRecommendationsForDate(key, weatherByDate, routineRecommendations);
+            const hasWeatherData = Boolean(weather?.hasWeatherData);
+
             return (
               <button key={key} className={`date-cell ${selectedDate === key ? "selected" : ""}`} onClick={() => setSelectedDate(key)}>
                 <strong>{day}</strong>
-                {weather && (
-                  <span className={`day-weather ${weather.status === "none" ? "empty" : ""}`}>
-                    {weather.status === "none" ? (
-                      <em>없음</em>
-                    ) : (
-                      <>
-                        {weather.condition && (
-                          <span className="weather-icon" role="img" aria-label={weather.label}>
-                            {weatherIcon[weather.condition]}
-                          </span>
-                        )}
-                        <span className="weather-temps">
-                          <b>{formatTemp(weather.high)}</b>
-                          <small>{formatTemp(weather.low)}</small>
-                          {Number.isFinite(weather.pop) && <small className="weather-pop">강수 {weather.pop}%</small>}
-                        </span>
-                      </>
-                    )}
-                  </span>
-                )}
-                <div className="date-tasks">
-                  {weather?.applianceRecommendations?.length > 0 && (
-                    <em className="weather-recommendation-chip">추천 {weather.applianceRecommendations[0].title}</em>
+                <span className={`day-weather ${hasWeatherData ? "" : "empty"}`}>
+                  {!hasWeatherData ? (
+                    <em>날씨 정보 없음</em>
+                  ) : (
+                    <>
+                      <span className="weather-icon" role="img" aria-label={weather.sky || weather.pty || "날씨"}>
+                        {weatherIcon[weather.icon] || weatherIcon.unknown}
+                      </span>
+                      <span className="weather-temps">
+                        <b>{formatTemp(weather.maxTemp)}</b>
+                        <small>{formatTemp(weather.minTemp)}</small>
+                        {Number.isFinite(weather.pop) && <small className="weather-pop">강수 {weather.pop}%</small>}
+                        <small>{formatWeatherState(weather)}</small>
+                      </span>
+                    </>
                   )}
+                </span>
+
+                <div className="date-tasks">
+                  {recommendations.length > 0 && <em className="weather-recommendation-chip">추천 {recommendations[0].title}</em>}
                   {tasks.slice(0, taskLimit).map((task) => (
                     <i className={task.tag} key={task.id} style={{ background: memberColors[task.owner] || memberColors.all }}>
                       <span>{task.title}</span>
@@ -194,6 +197,25 @@ export default function CalendarPage({
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="검색" />
           </label>
         </div>
+
+        {selectedWeather?.hasWeatherData ? (
+          <div className="selected-weather-summary">
+            <span className="weather-icon" role="img" aria-label={selectedWeather.sky || "날씨"}>
+              {weatherIcon[selectedWeather.icon] || weatherIcon.unknown}
+            </span>
+            <strong>{formatWeatherState(selectedWeather)}</strong>
+            <small>
+              최고 {formatTemp(selectedWeather.maxTemp)} / 최저 {formatTemp(selectedWeather.minTemp)}
+              {Number.isFinite(selectedWeather.pop) ? ` · 강수 ${selectedWeather.pop}%` : ""}
+            </small>
+          </div>
+        ) : (
+          <div className="selected-weather-summary empty">
+            <strong>날씨 정보 없음</strong>
+            <small>기상청 API 응답이 없거나 해당 날짜 예보가 없습니다.</small>
+          </div>
+        )}
+
         {selectedTasks.map((task) => (
           <TaskItem
             key={task.id}
@@ -205,10 +227,11 @@ export default function CalendarPage({
             onOpen={(openedTask) => onOpenPanel({ type: "task", task: openedTask })}
           />
         ))}
+
         {selectedRecommendations.length > 0 && (
-          <section className="weather-recommendation-panel" aria-label="날씨 기반 추천 일정">
+          <section className="weather-recommendation-panel" aria-label="추천 일정">
             <div className="weather-recommendation-head">
-              <h3>날씨 기반 추천</h3>
+              <h3>추천 일정</h3>
               <span>{selectedRecommendations.length}개</span>
             </div>
             <div className="weather-recommendation-list">
@@ -219,7 +242,9 @@ export default function CalendarPage({
                     <strong>{recommendation.title}</strong>
                     <p>{recommendation.reason}</p>
                     <small>
-                      {recommendation.recommendedStartTime}-{recommendation.recommendedEndTime} · {recommendation.automationType}
+                      {recommendation.recommendedStartTime || recommendation.startTime}-{recommendation.recommendedEndTime || recommendation.endTime} ·{" "}
+                      {formatRecommendationSource(recommendation)}
+                      {Number.isFinite(recommendation.confidence) ? ` · 신뢰도 ${recommendation.confidence}%` : ""}
                     </small>
                   </div>
                   <button type="button" onClick={() => onAddWeatherRecommendation(selectedDate, recommendation)}>
@@ -230,6 +255,7 @@ export default function CalendarPage({
             </div>
           </section>
         )}
+
         {selectedTasks.length === 0 && (
           <div className="empty-state">
             <ClipboardList size={24} />
@@ -239,6 +265,31 @@ export default function CalendarPage({
       </section>
     </section>
   );
+}
+
+function getRecommendationsForDate(date, weatherByDate, routineRecommendations) {
+  const routineItems = routineRecommendations.filter((item) => item.date === date);
+  if (routineItems.length > 0) return routineItems;
+  return weatherByDate[date]?.applianceRecommendations || [];
+}
+
+function formatWeatherState(weather) {
+  if (!weather?.hasWeatherData) return "정보 없음";
+  const sky = weather.sky && weather.sky !== "정보 없음" ? weather.sky : "";
+  const pty = weather.pty && weather.pty !== "없음" && weather.pty !== "정보 없음" ? weather.pty : "";
+  return [sky, pty].filter(Boolean).join(" · ") || "정보 없음";
+}
+
+function formatRecommendationSource(recommendation) {
+  const labels = {
+    WEATHER_COMBINED: "날씨+ThinQ",
+    THINQ_LOG: "ThinQ 기록",
+    THINQ_STATE: "ThinQ 상태",
+    THINQ_ENERGY: "전력량",
+    WEATHER_BASED: "날씨",
+  };
+
+  return labels[recommendation.source] || recommendation.automationType || "추천";
 }
 
 function getDisplayDates(view, selectedDate, month) {

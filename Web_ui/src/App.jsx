@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bell, Cpu, Menu } from "lucide-react";
-import { automationAlerts, dateKey, initialTasks, isRainyDate, members, navItems, tagLabel, weatherByDate } from "./data.js";
+import { automationAlerts, dateKey, initialTasks, isRainyDate, members, navItems, tagLabel } from "./data.js";
 import CalendarPage from "./pages/CalendarPage.jsx";
 import CrewPage from "./pages/CrewPage.jsx";
 import TaskComposer from "./components/TaskComposer.jsx";
 import DetailPanel from "./components/DetailPanel.jsx";
 import { fetchCalendarWeather } from "./services/weatherService.js";
-import { addApplianceRecommendations } from "./services/weatherRecommendationService.js";
+import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendationService.js";
+import { buildRoutineRecommendations, recordThinQUsageLog } from "./services/routinePredictionService.js";
 import {
   controlThinQDevice,
   fetchThinQDeviceEnergy,
@@ -33,7 +34,7 @@ export default function App() {
   const [automationPrompt, setAutomationPrompt] = useState(null);
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
   const [panel, setPanel] = useState(null);
-  const [calendarWeatherByDate, setCalendarWeatherByDate] = useState(() => addApplianceRecommendations(weatherByDate));
+  const [calendarWeatherByDate, setCalendarWeatherByDate] = useState({});
   const [thinQDevices, setThinQDevices] = useState([]);
   const [thinQDeviceStates, setThinQDeviceStates] = useState({});
   const [thinQDeviceAux, setThinQDeviceAux] = useState({});
@@ -62,12 +63,15 @@ export default function App() {
 
     fetchCalendarWeather()
       .then((forecastByDate) => {
-        if (isActive && Object.keys(forecastByDate).length) {
-          setCalendarWeatherByDate((current) => ({ ...current, ...forecastByDate }));
+        if (isActive) {
+          setCalendarWeatherByDate(buildWeatherRecommendationsByDate(forecastByDate));
         }
       })
       .catch((error) => {
         console.warn(error);
+        if (isActive) {
+          setCalendarWeatherByDate({});
+        }
       });
 
     return () => {
@@ -115,6 +119,17 @@ export default function App() {
     }));
     return [...automationItems, ...taskItems].slice(0, 8);
   }, [dismissedAlerts, scopedTasks]);
+  const routineRecommendations = useMemo(
+    () =>
+      buildRoutineRecommendations({
+        devices: thinQDevices,
+        deviceStates: thinQDeviceStates,
+        deviceAux: thinQDeviceAux,
+        weatherByDate: calendarWeatherByDate,
+        selectedDate,
+      }),
+    [thinQDevices, thinQDeviceStates, thinQDeviceAux, calendarWeatherByDate, selectedDate],
+  );
 
   function changeVisibleMonth(offset) {
     setVisibleMonth((current) => {
@@ -171,6 +186,9 @@ export default function App() {
   }
 
   function addWeatherRecommendationTask(date, recommendation) {
+    const startTime = recommendation.recommendedStartTime || recommendation.startTime || "19:00";
+    const endTime = recommendation.recommendedEndTime || recommendation.endTime || "20:00";
+
     addTask({
       date,
       title: recommendation.title,
@@ -178,10 +196,12 @@ export default function App() {
       tag: "routine",
       owner: selectedMember === "all" ? "me" : selectedMember,
       done: false,
-      repeat: `${recommendation.recommendedStartTime}-${recommendation.recommendedEndTime}`,
+      repeat: `${startTime}-${endTime}`,
       source: "auto",
       description: recommendation.description,
       automationType: recommendation.automationType,
+      recommendationSource: recommendation.source,
+      confidence: recommendation.confidence,
     });
     setSelectedDate(date);
   }
@@ -206,6 +226,12 @@ export default function App() {
     try {
       const state = await fetchThinQDeviceState(deviceId);
       setThinQDeviceStates((current) => ({ ...current, [deviceId]: state }));
+      recordThinQUsageLog({
+        deviceId,
+        applianceType: thinQDevices.find((device) => device.id === deviceId)?.type,
+        eventType: "STATE",
+        stateSummary: state,
+      });
     } catch (error) {
       setThinQError(error instanceof Error ? error.message : "ThinQ 기기 상태를 불러오지 못했습니다.");
     }
@@ -217,6 +243,7 @@ export default function App() {
     try {
       const result = await subscribeThinQDeviceEvent(deviceId);
       setThinQDeviceAux((current) => ({ ...current, [deviceId]: { ...current[deviceId], eventSubscription: result } }));
+      recordThinQUsageLog({ deviceId, eventType: "EVENT_SUBSCRIBE", result });
     } catch (error) {
       setThinQError(error instanceof Error ? error.message : "ThinQ 이벤트 구독에 실패했습니다.");
     }
@@ -228,6 +255,7 @@ export default function App() {
     try {
       const result = await subscribeThinQDevicePush(deviceId);
       setThinQDeviceAux((current) => ({ ...current, [deviceId]: { ...current[deviceId], pushSubscription: result } }));
+      recordThinQUsageLog({ deviceId, eventType: "PUSH_SUBSCRIBE", result });
     } catch (error) {
       setThinQError(error instanceof Error ? error.message : "ThinQ 푸시 구독에 실패했습니다.");
     }
@@ -239,6 +267,12 @@ export default function App() {
     try {
       const result = await fetchThinQDeviceEnergy(deviceId);
       setThinQDeviceAux((current) => ({ ...current, [deviceId]: { ...current[deviceId], energy: result } }));
+      recordThinQUsageLog({
+        deviceId,
+        applianceType: thinQDevices.find((device) => device.id === deviceId)?.type,
+        eventType: "ENERGY",
+        energySummary: result,
+      });
     } catch (error) {
       setThinQError(error instanceof Error ? error.message : "ThinQ 전력량 조회에 실패했습니다.");
     }
@@ -257,6 +291,12 @@ export default function App() {
 
     try {
       await controlThinQDevice(pendingThinQControl.device.id, pendingThinQControl.payload);
+      recordThinQUsageLog({
+        deviceId: pendingThinQControl.device.id,
+        applianceType: pendingThinQControl.device.type,
+        eventType: "CONTROL",
+        payload: pendingThinQControl.payload,
+      });
       await loadThinQDeviceState(pendingThinQControl.device.id);
     } catch (error) {
       setThinQError(error instanceof Error ? error.message : "ThinQ 제어 요청에 실패했습니다.");
@@ -345,6 +385,7 @@ export default function App() {
     monthLabel,
     monthLeadingBlanks,
     weatherByDate: calendarWeatherByDate,
+    routineRecommendations,
     onPrevMonth: () => changeVisibleMonth(-1),
     onNextMonth: () => changeVisibleMonth(1),
     tasksByDate,
