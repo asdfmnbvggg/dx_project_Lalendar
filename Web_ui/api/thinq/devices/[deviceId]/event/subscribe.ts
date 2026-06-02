@@ -1,5 +1,5 @@
-import { controlThinQDevice } from "../../../../server/thinqIntegrationService";
-import { handleThinQError } from "../../../../server/thinqApiError";
+import { subscribeThinQDeviceEvent } from "../../../../../server/thinqIntegrationService";
+import { handleThinQError } from "../../../../../server/thinqApiError";
 
 export default async function handler(request: any, response: any) {
   if (request.method !== "POST") {
@@ -10,7 +10,7 @@ export default async function handler(request: any, response: any) {
   const deviceId = request.query.deviceId;
 
   try {
-    response.status(200).json(await controlThinQDevice(String(deviceId), request.body));
+    response.status(200).json(await subscribeThinQDeviceEvent(String(deviceId), request.body));
   } catch (error) {
     handleThinQError(error, response);
   }

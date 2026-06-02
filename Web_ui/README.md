@@ -21,8 +21,9 @@ THINQ_PAT=
 THINQ_CLIENT_ID=
 THINQ_COUNTRY=KR
 THINQ_API_BASE_URL=https://api-kic.lgthinq.com
-THINQ_API_KEY=
 ```
+
+`THINQ_API_KEY` is not used. ThinQ requests use `THINQ_PAT` as the Bearer token only.
 
 Do not commit real keys or tokens to git. After adding or changing values in Vercel Dashboard -> Settings -> Environment Variables, redeploy the Vercel project so the serverless functions receive the new values.
 
@@ -38,4 +39,7 @@ ThinQ internal API routes:
 GET /api/thinq/devices
 GET /api/thinq/devices/{deviceId}/state
 POST /api/thinq/devices/{deviceId}/control
+POST /api/thinq/devices/{deviceId}/event/subscribe
+POST /api/thinq/devices/{deviceId}/push/subscribe
+GET /api/thinq/devices/{deviceId}/energy
 ```

@@ -7,7 +7,14 @@ import TaskComposer from "./components/TaskComposer.jsx";
 import DetailPanel from "./components/DetailPanel.jsx";
 import { fetchCalendarWeather } from "./services/weatherService.js";
 import { addApplianceRecommendations } from "./services/weatherRecommendationService.js";
-import { controlThinQDevice, fetchThinQDeviceState, fetchThinQDevices } from "./services/thinqIntegrationService.js";
+import {
+  controlThinQDevice,
+  fetchThinQDeviceEnergy,
+  fetchThinQDeviceState,
+  fetchThinQDevices,
+  subscribeThinQDeviceEvent,
+  subscribeThinQDevicePush,
+} from "./services/thinqIntegrationService.js";
 
 export default function App() {
   const [tasks, setTasks] = useState(initialTasks);
@@ -29,6 +36,7 @@ export default function App() {
   const [calendarWeatherByDate, setCalendarWeatherByDate] = useState(() => addApplianceRecommendations(weatherByDate));
   const [thinQDevices, setThinQDevices] = useState([]);
   const [thinQDeviceStates, setThinQDeviceStates] = useState({});
+  const [thinQDeviceAux, setThinQDeviceAux] = useState({});
   const [thinQError, setThinQError] = useState("");
   const [isThinQLoading, setThinQLoading] = useState(false);
   const [pendingThinQControl, setPendingThinQControl] = useState(null);
@@ -200,6 +208,39 @@ export default function App() {
       setThinQDeviceStates((current) => ({ ...current, [deviceId]: state }));
     } catch (error) {
       setThinQError(error instanceof Error ? error.message : "ThinQ 기기 상태를 불러오지 못했습니다.");
+    }
+  }
+
+  async function subscribeThinQEvent(deviceId) {
+    setThinQError("");
+
+    try {
+      const result = await subscribeThinQDeviceEvent(deviceId);
+      setThinQDeviceAux((current) => ({ ...current, [deviceId]: { ...current[deviceId], eventSubscription: result } }));
+    } catch (error) {
+      setThinQError(error instanceof Error ? error.message : "ThinQ 이벤트 구독에 실패했습니다.");
+    }
+  }
+
+  async function subscribeThinQPush(deviceId) {
+    setThinQError("");
+
+    try {
+      const result = await subscribeThinQDevicePush(deviceId);
+      setThinQDeviceAux((current) => ({ ...current, [deviceId]: { ...current[deviceId], pushSubscription: result } }));
+    } catch (error) {
+      setThinQError(error instanceof Error ? error.message : "ThinQ 푸시 구독에 실패했습니다.");
+    }
+  }
+
+  async function loadThinQDeviceEnergy(deviceId) {
+    setThinQError("");
+
+    try {
+      const result = await fetchThinQDeviceEnergy(deviceId);
+      setThinQDeviceAux((current) => ({ ...current, [deviceId]: { ...current[deviceId], energy: result } }));
+    } catch (error) {
+      setThinQError(error instanceof Error ? error.message : "ThinQ 전력량 조회에 실패했습니다.");
     }
   }
 
@@ -384,11 +425,15 @@ export default function App() {
         onOpenComposer={() => setComposerOpen(true)}
         thinQDevices={thinQDevices}
         thinQDeviceStates={thinQDeviceStates}
+        thinQDeviceAux={thinQDeviceAux}
         thinQError={thinQError}
         isThinQLoading={isThinQLoading}
         onRefreshThinQDevices={loadThinQDevices}
         onLoadThinQDeviceState={loadThinQDeviceState}
         onRequestThinQControl={requestThinQControl}
+        onSubscribeThinQEvent={subscribeThinQEvent}
+        onSubscribeThinQPush={subscribeThinQPush}
+        onLoadThinQDeviceEnergy={loadThinQDeviceEnergy}
       />
 
       {automationPrompt && (

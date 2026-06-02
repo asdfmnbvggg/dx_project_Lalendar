@@ -19,11 +19,15 @@ export default function DetailPanel({
   onOpenComposer,
   thinQDevices = [],
   thinQDeviceStates = {},
+  thinQDeviceAux = {},
   thinQError = "",
   isThinQLoading = false,
   onRefreshThinQDevices,
   onLoadThinQDeviceState,
   onRequestThinQControl,
+  onSubscribeThinQEvent,
+  onSubscribeThinQPush,
+  onLoadThinQDeviceEnergy,
 }) {
   if (!panel) return null;
 
@@ -131,7 +135,9 @@ export default function DetailPanel({
                 <Cpu size={18} />
                 <div>
                   <strong>{item.name}</strong>
-                  <p>{item.state} · {item.signal}</p>
+                  <p>
+                    {item.state} · {item.signal}
+                  </p>
                 </div>
               </article>
             ))}
@@ -151,17 +157,31 @@ export default function DetailPanel({
               <article className="notice-row thinq-device-row" key={device.id}>
                 <Cpu size={18} />
                 <div>
-                  <strong>{device.name || device.id}</strong>
-                  <p>{device.type || "ThinQ"} · {device.id}</p>
+                  <strong>{device.name || device.alias || device.modelName || device.id}</strong>
+                  <p>
+                    {device.type || device.deviceType || "ThinQ"} · {device.id}
+                  </p>
                   {thinQDeviceStates[device.id] && (
                     <pre className="thinq-state-preview">{JSON.stringify(thinQDeviceStates[device.id], null, 2)}</pre>
                   )}
-                  <div className="notice-actions">
+                  {thinQDeviceAux[device.id] && (
+                    <pre className="thinq-state-preview">{JSON.stringify(thinQDeviceAux[device.id], null, 2)}</pre>
+                  )}
+                  <div className="notice-actions thinq-actions">
                     <button type="button" onClick={() => onLoadThinQDeviceState?.(device.id)}>
                       상태 조회
                     </button>
                     <button type="button" onClick={() => onRequestThinQControl?.(device)}>
                       제어 요청
+                    </button>
+                    <button type="button" onClick={() => onSubscribeThinQEvent?.(device.id)}>
+                      이벤트 구독
+                    </button>
+                    <button type="button" onClick={() => onSubscribeThinQPush?.(device.id)}>
+                      푸시 구독
+                    </button>
+                    <button type="button" onClick={() => onLoadThinQDeviceEnergy?.(device.id)}>
+                      전력량
                     </button>
                   </div>
                 </div>
@@ -208,7 +228,9 @@ export default function DetailPanel({
               <article className="notice-row" key={name}>
                 <Cpu size={18} />
                 <div>
-                  <strong>{index + 1}. {name}</strong>
+                  <strong>
+                    {index + 1}. {name}
+                  </strong>
                   <p>{index === 0 ? "오늘 담당" : `${index + 1}번째 순서`}</p>
                 </div>
               </article>
@@ -216,19 +238,7 @@ export default function DetailPanel({
           </section>
         )}
 
-        {![
-          "summary",
-          "settings",
-          "notifications",
-          "recommendation",
-          "appliance",
-          "appliances",
-          "thinq",
-          "community",
-          "tip",
-          "member",
-          "rotation",
-        ].includes(panel.type) && (
+        {!["summary", "settings", "notifications", "recommendation", "appliance", "appliances", "thinq", "community", "tip", "member", "rotation"].includes(panel.type) && (
           <section className="detail-list">
             {panelTasks.map((task) => (
               <article className="detail-task" key={task.id}>
@@ -240,9 +250,7 @@ export default function DetailPanel({
                   <p>
                     {task.place} · {task.repeat} · {tagLabel[task.tag]}
                     <span className="owner-badge">{getOwnerName(task.owner)}</span>
-                    <span className={`source-badge ${task.source === "auto" ? "auto" : "manual"}`}>
-                      {task.source === "auto" ? "자동추가" : "수동"}
-                    </span>
+                    <span className={`source-badge ${task.source === "auto" ? "auto" : "manual"}`}>{task.source === "auto" ? "자동추가" : "수동"}</span>
                   </p>
                 </div>
                 <select
@@ -309,6 +317,7 @@ function getPanelKicker(panel) {
     recommendation: "AI 추천",
     appliance: "가전 상태",
     appliances: "가전 캘린더",
+    thinq: "LG ThinQ",
     community: "커뮤니티",
     tip: "생활 팁",
     member: "멤버 상세",
@@ -318,7 +327,6 @@ function getPanelKicker(panel) {
 }
 
 function getPanelTitle(panel) {
-  if (panel.type === "thinq") return "LG ThinQ 기기";
   if (panel.type === "room") return panel.room;
   if (panel.type === "task") return panel.task.title;
   if (panel.type === "notifications") return "청소 전 알려드려요";
@@ -329,6 +337,7 @@ function getPanelTitle(panel) {
   if (panel.type === "community") return "우리 동네 집안일 팁";
   if (panel.type === "tip") return "커뮤니티 추천";
   if (panel.type === "appliances") return "LG ThinQ 연동 가전";
+  if (panel.type === "thinq") return "LG ThinQ 기기";
   if (panel.type === "member") return panel.member.name;
   if (panel.type === "rotation") return "담당 순서";
   return getPanelKicker(panel);
