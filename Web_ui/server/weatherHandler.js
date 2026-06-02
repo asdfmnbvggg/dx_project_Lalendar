@@ -1,9 +1,9 @@
-const VILAGE_FCST_URL = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst";
+const VILAGE_FCST_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst";
 const BASE_TIMES = ["0200", "0500", "0800", "1100", "1400", "1700", "2000", "2300"];
 const NO_INFO = "정보 없음";
 
 export default async function weatherHandler(request, response) {
-  const weatherApiKey = process.env.WEATHER_API_KEY;
+  const weatherApiKey = normalizeSecret(process.env.WEATHER_API_KEY);
 
   if (!weatherApiKey) {
     response.status(500).send("WEATHER_API_KEY is not configured");
@@ -29,6 +29,10 @@ export default async function weatherHandler(request, response) {
 
     if (!Array.isArray(items)) {
       const header = payload?.response?.header;
+      console.error("Weather API returned an invalid body", {
+        resultCode: header?.resultCode,
+        resultMsg: header?.resultMsg,
+      });
       response.status(502).json({
         message: header?.resultMsg || "Invalid weather API response",
         resultCode: header?.resultCode,
@@ -39,33 +43,49 @@ export default async function weatherHandler(request, response) {
     response.setHeader("Cache-Control", "s-maxage=7200, stale-while-revalidate=900");
     response.status(200).json(summarizeForecastItems(items));
   } catch (error) {
-    response.status(500).json({ message: error instanceof Error ? error.message : "Weather API request failed" });
+    console.error("Weather API function failed", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+    response.status(502).json({ message: error instanceof Error ? error.message : "Weather API request failed" });
   }
 }
 
 async function fetchWeatherPayload(url, weatherApiKey) {
   const urls = buildWeatherRequestUrls(url, weatherApiKey);
   let lastPayload = null;
+  let lastText = "";
   let lastStatus = 500;
 
   for (const requestUrl of urls) {
     const weatherResponse = await fetch(requestUrl);
     lastStatus = weatherResponse.status;
+    lastText = await weatherResponse.text();
 
     if (!weatherResponse.ok) {
+      console.error("Weather API HTTP failure", {
+        status: weatherResponse.status,
+        reason: weatherResponse.statusText,
+        body: lastText.slice(0, 300),
+      });
       continue;
     }
 
-    const payload = await weatherResponse.json();
+    const payload = parseWeatherPayload(lastText);
     lastPayload = payload;
 
     if (payload?.response?.header?.resultCode === "00") {
       return payload;
     }
+
+    console.error("Weather API business failure", {
+      resultCode: payload?.response?.header?.resultCode,
+      resultMsg: payload?.response?.header?.resultMsg,
+      body: lastText.slice(0, 300),
+    });
   }
 
   if (lastPayload) return lastPayload;
-  throw new Error(`Weather API request failed: ${lastStatus}`);
+  throw new Error(`Weather API request failed: ${lastStatus}${lastText ? ` ${lastText.slice(0, 120)}` : ""}`);
 }
 
 function buildWeatherRequestUrls(url, weatherApiKey) {
@@ -73,6 +93,20 @@ function buildWeatherRequestUrls(url, weatherApiKey) {
   const encodedKeyUrl = new URL(url.toString());
   encodedKeyUrl.searchParams.set("serviceKey", weatherApiKey);
   return [...new Set([rawKeyUrl, encodedKeyUrl.toString()])];
+}
+
+function parseWeatherPayload(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Weather API returned non-JSON response: ${text.slice(0, 160)}`);
+  }
+}
+
+function normalizeSecret(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^["']|["']$/g, "");
 }
 
 function summarizeForecastItems(items) {
