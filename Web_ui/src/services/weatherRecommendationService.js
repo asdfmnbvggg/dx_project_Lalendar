@@ -11,12 +11,28 @@ export function buildWeatherRecommendationsByDate(weatherByDate) {
 }
 
 export function buildWeatherRecommendations(date, weather) {
-  if (!weather?.hasWeatherData) return [];
+  if (!weather?.hasWeatherData) {
+    return [
+      createRecommendation(
+        date,
+        "ETC",
+        "날씨 정보 없음",
+        "날씨 데이터가 없어 자동 추천을 만들 수 없습니다.",
+        "09:00",
+        "09:30",
+        0,
+        "날씨 정보 없음",
+        false,
+      ),
+    ];
+  }
 
   const recommendations = [];
   const pop = Number.isFinite(weather.pop) ? weather.pop : 0;
   const maxTemp = Number.isFinite(weather.maxTemp) ? weather.maxTemp : weather.high;
-  const isRainy = ["rain", "snow"].includes(weather.icon) || pop >= 60 || ["비", "비/눈", "눈", "소나기"].includes(weather.pty);
+  const weatherText = `${weather.sky || ""} ${weather.pty || ""}`;
+  const isMidTerm = weather.source === "MID_TERM";
+  const isRainy = ["rain", "snow"].includes(weather.icon) || pop >= 60 || ["비", "비/눈", "눈", "소나기"].includes(weather.pty) || /비|눈|소나기/.test(weatherText);
   const isClearDryingDay = ["sunny", "partly_cloudy"].includes(weather.icon) && pop <= 30;
 
   if (isRainy) {
@@ -48,7 +64,7 @@ export function buildWeatherRecommendations(date, weather) {
     );
   }
 
-  if (Number(weather.humidity) >= 70) {
+  if (!isMidTerm && Number(weather.humidity) >= 70) {
     recommendations.push(
       createRecommendation(
         date,
@@ -75,6 +91,22 @@ export function buildWeatherRecommendations(date, weather) {
         "11:00",
         70,
         "맑고 강수확률이 낮습니다.",
+        true,
+      ),
+    );
+  }
+
+  if (isMidTerm && isRainy) {
+    recommendations.push(
+      createRecommendation(
+        date,
+        "NATURAL_DRY",
+        "실내건조 준비 추천",
+        "중기예보상 비나 눈 가능성이 있어 실내건조 준비를 추천합니다.",
+        "08:30",
+        "09:00",
+        58,
+        `중기예보 강수확률 ${pop}% 및 날씨 문구를 기준으로 판단했습니다.`,
         true,
       ),
     );

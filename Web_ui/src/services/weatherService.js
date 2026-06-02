@@ -1,8 +1,8 @@
-const WEATHER_CACHE_PREFIX = "lalendar-weather";
+const WEATHER_CACHE_PREFIX = "lalendar-weather-v2";
 
 export async function fetchCalendarWeather({
-  nx = Number(import.meta.env.VITE_WEATHER_NX || 60),
-  ny = Number(import.meta.env.VITE_WEATHER_NY || 127),
+  nx = Number(import.meta.env.VITE_WEATHER_NX || 59),
+  ny = Number(import.meta.env.VITE_WEATHER_NY || 126),
 } = {}) {
   const cacheKey = `${WEATHER_CACHE_PREFIX}:${nx}:${ny}`;
   const cached = readCache(cacheKey);

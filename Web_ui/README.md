@@ -5,12 +5,12 @@
 The frontend only reads public coordinate values:
 
 ```env
-VITE_WEATHER_NX=60
-VITE_WEATHER_NY=127
+VITE_WEATHER_NX=59
+VITE_WEATHER_NY=126
 ```
 
 API keys and tokens never use the `VITE_` prefix. They are read only inside Vercel Serverless Functions through `process.env`.
-Weather data is loaded through the Vercel Serverless Function at `/api/weather`.
+Weather data is loaded through the Vercel Serverless Function at `/api/weather`. The weather function uses short-term `getVilageFcst` for today through 3 days later, and mid-term `getMidLandFcst` plus `getMidTa` for 4 through 10 days later.
 ThinQ data is loaded through internal Vercel Serverless Functions under `/api/thinq`.
 
 For local development, run the app through Vercel so `/api/*` serverless functions are available:
@@ -19,13 +19,17 @@ For local development, run the app through Vercel so `/api/*` serverless functio
 npm run dev:vercel
 ```
 
-Running only `npm run dev` starts the Vite frontend server, but it does not serve `/api/weather` or `/api/thinq/*`.
+Running only `npm run dev` starts the Vite frontend server. It serves `/api/weather` through a local development middleware, but it does not serve `/api/thinq/*`.
 For local serverless testing, make sure the server-only variables are also available locally, for example by running `vercel env pull .env.local` or by adding them to a gitignored local env file without the `VITE_` prefix.
 
-Register the same server-only values in Vercel Dashboard -> Settings -> Environment Variables:
+Register these values in Vercel Dashboard -> Settings -> Environment Variables:
 
 ```env
 WEATHER_API_KEY=
+VITE_WEATHER_NX=59
+VITE_WEATHER_NY=126
+MID_LAND_REG_ID=11B00000
+MID_TEMP_REG_ID=11B10101
 THINQ_PAT=
 THINQ_CLIENT_ID=
 THINQ_COUNTRY=KR
