@@ -13,6 +13,16 @@ const weatherIcon = {
   storm: "⛈️",
 };
 
+const applianceTypeLabel = {
+  WASHER: "세탁기",
+  DRYER: "건조기",
+  NATURAL_DRY: "자연건조",
+  DEHUMIDIFIER: "제습기",
+  AIR_CONDITIONER: "에어컨",
+  AIR_PURIFIER: "공기청정기",
+  ROBOT_CLEANER: "로봇청소기",
+};
+
 export default function CalendarPage({
   month,
   monthLabel,
@@ -33,6 +43,7 @@ export default function CalendarPage({
   deleteTask,
   changeTaskOwner,
   postponeTask,
+  onAddWeatherRecommendation,
   openComposer,
   onOpenPanel,
 }) {
@@ -45,6 +56,8 @@ export default function CalendarPage({
   const leadingBlanks = calendarView === "month" ? monthLeadingBlanks : 0;
   const isExpanded = calendarScale >= 3;
   const taskLimit = calendarView === "day" ? 99 : calendarScale <= 1 ? 2 : calendarScale >= 4 ? 5 : 3;
+  const selectedWeather = weatherByDate[selectedDate];
+  const selectedRecommendations = selectedWeather?.applianceRecommendations || [];
 
   function moveCalendar(offset) {
     if (calendarView === "month") {
@@ -156,6 +169,9 @@ export default function CalendarPage({
                   </span>
                 )}
                 <div className="date-tasks">
+                  {weather?.applianceRecommendations?.length > 0 && (
+                    <em className="weather-recommendation-chip">추천 {weather.applianceRecommendations[0].title}</em>
+                  )}
                   {tasks.slice(0, taskLimit).map((task) => (
                     <i className={task.tag} key={task.id} style={{ background: memberColors[task.owner] || memberColors.all }}>
                       <span>{task.title}</span>
@@ -193,6 +209,31 @@ export default function CalendarPage({
             onOpen={(openedTask) => onOpenPanel({ type: "task", task: openedTask })}
           />
         ))}
+        {selectedRecommendations.length > 0 && (
+          <section className="weather-recommendation-panel" aria-label="날씨 기반 추천 일정">
+            <div className="weather-recommendation-head">
+              <h3>날씨 기반 추천</h3>
+              <span>{selectedRecommendations.length}개</span>
+            </div>
+            <div className="weather-recommendation-list">
+              {selectedRecommendations.map((recommendation) => (
+                <article key={recommendation.id} className="weather-recommendation-card">
+                  <div>
+                    <span>{applianceTypeLabel[recommendation.applianceType] || "가전"}</span>
+                    <strong>{recommendation.title}</strong>
+                    <p>{recommendation.reason}</p>
+                    <small>
+                      {recommendation.recommendedStartTime}-{recommendation.recommendedEndTime} · {recommendation.automationType}
+                    </small>
+                  </div>
+                  <button type="button" onClick={() => onAddWeatherRecommendation(selectedDate, recommendation)}>
+                    일정 추가
+                  </button>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
         {selectedTasks.length === 0 && (
           <div className="empty-state">
             <ClipboardList size={24} />

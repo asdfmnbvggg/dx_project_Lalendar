@@ -17,6 +17,13 @@ export default function DetailPanel({
   selectedDate,
   selectedMember,
   onOpenComposer,
+  thinQDevices = [],
+  thinQDeviceStates = {},
+  thinQError = "",
+  isThinQLoading = false,
+  onRefreshThinQDevices,
+  onLoadThinQDeviceState,
+  onRequestThinQControl,
 }) {
   if (!panel) return null;
 
@@ -131,6 +138,39 @@ export default function DetailPanel({
           </section>
         )}
 
+        {panel.type === "thinq" && (
+          <section className="detail-list">
+            <div className="thinq-panel-head">
+              <p>{isThinQLoading ? "ThinQ 기기를 불러오는 중입니다." : "등록된 ThinQ 기기를 내부 API로 조회합니다."}</p>
+              <button type="button" onClick={onRefreshThinQDevices}>
+                새로고침
+              </button>
+            </div>
+            {thinQError && <p className="panel-error">{thinQError}</p>}
+            {thinQDevices.map((device) => (
+              <article className="notice-row thinq-device-row" key={device.id}>
+                <Cpu size={18} />
+                <div>
+                  <strong>{device.name || device.id}</strong>
+                  <p>{device.type || "ThinQ"} · {device.id}</p>
+                  {thinQDeviceStates[device.id] && (
+                    <pre className="thinq-state-preview">{JSON.stringify(thinQDeviceStates[device.id], null, 2)}</pre>
+                  )}
+                  <div className="notice-actions">
+                    <button type="button" onClick={() => onLoadThinQDeviceState?.(device.id)}>
+                      상태 조회
+                    </button>
+                    <button type="button" onClick={() => onRequestThinQControl?.(device)}>
+                      제어 요청
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+            {!isThinQLoading && thinQDevices.length === 0 && <p className="panel-empty">표시할 ThinQ 기기가 없습니다.</p>}
+          </section>
+        )}
+
         {panel.type === "community" && (
           <section className="detail-list">
             {communityTips.map((tip) => (
@@ -183,6 +223,7 @@ export default function DetailPanel({
           "recommendation",
           "appliance",
           "appliances",
+          "thinq",
           "community",
           "tip",
           "member",
@@ -242,7 +283,7 @@ function getPanelTasks(panel, tasks, doneTasks, pendingTasks) {
   if (panel.type === "room") return tasks.filter((task) => task.place === panel.room);
   if (panel.type === "task") return tasks.filter((task) => task.id === panel.task.id);
   if (panel.type === "pending") return pendingTasks;
-  if (panel.type === "appliances" || panel.type === "community") return [];
+  if (panel.type === "appliances" || panel.type === "thinq" || panel.type === "community") return [];
   return tasks;
 }
 
@@ -277,6 +318,7 @@ function getPanelKicker(panel) {
 }
 
 function getPanelTitle(panel) {
+  if (panel.type === "thinq") return "LG ThinQ 기기";
   if (panel.type === "room") return panel.room;
   if (panel.type === "task") return panel.task.title;
   if (panel.type === "notifications") return "청소 전 알려드려요";

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bell, Menu } from "lucide-react";
+import { Bell, Cpu, Menu } from "lucide-react";
 import { automationAlerts, dateKey, initialTasks, isRainyDate, members, navItems, tagLabel, weatherByDate } from "./data.js";
 import CalendarPage from "./pages/CalendarPage.jsx";
 import CrewPage from "./pages/CrewPage.jsx";
 import TaskComposer from "./components/TaskComposer.jsx";
 import DetailPanel from "./components/DetailPanel.jsx";
 import { fetchCalendarWeather } from "./services/weatherService.js";
+import { addApplianceRecommendations } from "./services/weatherRecommendationService.js";
+import { controlThinQDevice, fetchThinQDeviceState, fetchThinQDevices } from "./services/thinqIntegrationService.js";
 
 export default function App() {
   const [tasks, setTasks] = useState(initialTasks);
@@ -24,7 +26,12 @@ export default function App() {
   const [automationPrompt, setAutomationPrompt] = useState(null);
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
   const [panel, setPanel] = useState(null);
-  const [calendarWeatherByDate, setCalendarWeatherByDate] = useState(weatherByDate);
+  const [calendarWeatherByDate, setCalendarWeatherByDate] = useState(() => addApplianceRecommendations(weatherByDate));
+  const [thinQDevices, setThinQDevices] = useState([]);
+  const [thinQDeviceStates, setThinQDeviceStates] = useState({});
+  const [thinQError, setThinQError] = useState("");
+  const [isThinQLoading, setThinQLoading] = useState(false);
+  const [pendingThinQControl, setPendingThinQControl] = useState(null);
 
   useEffect(() => {
     const selectors = [
@@ -59,6 +66,12 @@ export default function App() {
       isActive = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (panel?.type === "thinq") {
+      loadThinQDevices();
+    }
+  }, [panel?.type]);
 
   const scopedTasks = tasks.filter((task) => selectedMember === "all" || task.owner === selectedMember);
   const selectedTasks = sortTasks(
@@ -146,6 +159,68 @@ export default function App() {
     setTasks((current) => [nextTask, ...current]);
     if (shouldSuggestAutomation(nextTask)) {
       setAutomationPrompt(nextTask);
+    }
+  }
+
+  function addWeatherRecommendationTask(date, recommendation) {
+    addTask({
+      date,
+      title: recommendation.title,
+      place: appliancePlaceLabel[recommendation.applianceType] || "우리 집",
+      tag: "routine",
+      owner: selectedMember === "all" ? "me" : selectedMember,
+      done: false,
+      repeat: `${recommendation.recommendedStartTime}-${recommendation.recommendedEndTime}`,
+      source: "auto",
+      description: recommendation.description,
+      automationType: recommendation.automationType,
+    });
+    setSelectedDate(date);
+  }
+
+  async function loadThinQDevices() {
+    setThinQLoading(true);
+    setThinQError("");
+
+    try {
+      const result = await fetchThinQDevices();
+      setThinQDevices(normalizeThinQDevices(result));
+    } catch (error) {
+      setThinQError(error instanceof Error ? error.message : "ThinQ 기기 목록을 불러오지 못했습니다.");
+    } finally {
+      setThinQLoading(false);
+    }
+  }
+
+  async function loadThinQDeviceState(deviceId) {
+    setThinQError("");
+
+    try {
+      const state = await fetchThinQDeviceState(deviceId);
+      setThinQDeviceStates((current) => ({ ...current, [deviceId]: state }));
+    } catch (error) {
+      setThinQError(error instanceof Error ? error.message : "ThinQ 기기 상태를 불러오지 못했습니다.");
+    }
+  }
+
+  function requestThinQControl(device) {
+    setPendingThinQControl({
+      device,
+      payload: { operation: "POWER_ON" },
+    });
+  }
+
+  async function executeThinQControl() {
+    if (!pendingThinQControl) return;
+    setThinQError("");
+
+    try {
+      await controlThinQDevice(pendingThinQControl.device.id, pendingThinQControl.payload);
+      await loadThinQDeviceState(pendingThinQControl.device.id);
+    } catch (error) {
+      setThinQError(error instanceof Error ? error.message : "ThinQ 제어 요청에 실패했습니다.");
+    } finally {
+      setPendingThinQControl(null);
     }
   }
 
@@ -237,6 +312,7 @@ export default function App() {
     deleteTask,
     changeTaskOwner,
     postponeTask,
+    onAddWeatherRecommendation: addWeatherRecommendationTask,
     openComposer: () => setComposerOpen(true),
     onOpenPanel: setPanel,
   };
@@ -258,6 +334,9 @@ export default function App() {
             </button>
             <button className="icon-button" aria-label="메뉴" onClick={() => setPanel({ type: "settings" })}>
               <Menu size={22} />
+            </button>
+            <button className="icon-button" aria-label="LG ThinQ" onClick={() => setPanel({ type: "thinq" })}>
+              <Cpu size={20} />
             </button>
           </div>
         </header>
@@ -303,6 +382,13 @@ export default function App() {
         selectedDate={selectedDate}
         selectedMember={selectedMember}
         onOpenComposer={() => setComposerOpen(true)}
+        thinQDevices={thinQDevices}
+        thinQDeviceStates={thinQDeviceStates}
+        thinQError={thinQError}
+        isThinQLoading={isThinQLoading}
+        onRefreshThinQDevices={loadThinQDevices}
+        onLoadThinQDeviceState={loadThinQDeviceState}
+        onRequestThinQControl={requestThinQControl}
       />
 
       {automationPrompt && (
@@ -382,6 +468,24 @@ export default function App() {
           </section>
         </div>
       )}
+
+      {pendingThinQControl && (
+        <div className="confirm-backdrop" role="presentation">
+          <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="thinq-control-title">
+            <p>LG ThinQ 제어 확인</p>
+            <h2 id="thinq-control-title">{pendingThinQControl.device.name || pendingThinQControl.device.id} 제어를 실행할까요?</h2>
+            <span>실제 가전 제어 요청은 확인 후에만 전송됩니다.</span>
+            <div className="confirm-actions">
+              <button type="button" onClick={() => setPendingThinQControl(null)}>
+                취소
+              </button>
+              <button type="button" onClick={executeThinQControl}>
+                실행하기
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
@@ -406,8 +510,30 @@ function getTodayKey() {
   return dateKey(today.getFullYear(), today.getMonth() + 1, today.getDate());
 }
 
+const appliancePlaceLabel = {
+  WASHER: "세탁실",
+  DRYER: "세탁실",
+  NATURAL_DRY: "세탁실",
+  DEHUMIDIFIER: "거실",
+  AIR_CONDITIONER: "거실",
+  AIR_PURIFIER: "거실",
+  ROBOT_CLEANER: "현관",
+};
+
 function isLaundryTask(task) {
   return /세탁|빨래/.test(task.title);
+}
+
+function normalizeThinQDevices(result) {
+  const devices = result?.devices || result?.items || result?.response?.devices || result?.result?.devices || result;
+  if (!Array.isArray(devices)) return [];
+
+  return devices.map((device) => ({
+    ...device,
+    id: device.deviceId || device.id || device.device_id,
+    name: device.alias || device.name || device.deviceName || device.modelName || device.deviceId || device.id,
+    type: device.deviceType || device.type || device.category || "ThinQ",
+  }));
 }
 
 function shouldSuggestAutomation(task) {
