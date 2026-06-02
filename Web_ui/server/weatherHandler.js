@@ -8,41 +8,47 @@ export default async function weatherHandler(request, response) {
   const weatherApiKey = normalizeSecret(process.env.WEATHER_API_KEY);
 
   if (!weatherApiKey) {
-    response.status(500).send("WEATHER_API_KEY is not configured");
+    response.status(500).json({ message: "WEATHER_API_KEY is not configured" });
     return;
   }
 
   const nx = String(request.query?.nx || "59");
   const ny = String(request.query?.ny || "126");
+  const hasMidTermRegIds = Boolean(normalizeSecret(process.env.MID_LAND_REG_ID) && normalizeSecret(process.env.MID_TEMP_REG_ID));
 
-  const [shortTerm, midTerm] = await Promise.all([
-    fetchShortTermForecast({ weatherApiKey, nx, ny }).catch((error) => {
-      console.error("Short-term weather API failed", { message: getErrorMessage(error) });
-      return [];
-    }),
-    fetchMidTermForecast({ weatherApiKey }).catch((error) => {
-      console.error("Mid-term weather API failed", { message: getErrorMessage(error) });
-      return [];
-    }),
+  if (!hasMidTermRegIds) {
+    console.error("Mid-term forecast skipped: MID_LAND_REG_ID or MID_TEMP_REG_ID is not configured");
+  }
+
+  const [shortResult, midLandResult, midTempResult] = await Promise.allSettled([
+    fetchShortTermWeather({ weatherApiKey, nx, ny }),
+    hasMidTermRegIds ? fetchMidLandForecast(weatherApiKey) : Promise.resolve(null),
+    hasMidTermRegIds ? fetchMidTemperature(weatherApiKey) : Promise.resolve(null),
   ]);
 
+  const shortData = shortResult.status === "fulfilled" ? shortResult.value : [];
+  const midData = buildMidTermData(midLandResult, midTempResult);
+  const data = mergeForecasts(shortData, midData);
+  const debug = {
+    shortTerm: {
+      success: shortResult.status === "fulfilled",
+      error: shortResult.status === "rejected" ? getErrorMessage(shortResult.reason) : null,
+      itemCount: shortData.length,
+    },
+    midLand: createMidDebug(midLandResult, hasMidTermRegIds),
+    midTemp: createMidDebug(midTempResult, hasMidTermRegIds),
+  };
+
   response.setHeader("Cache-Control", "s-maxage=7200, stale-while-revalidate=900");
-  response.status(200).json(mergeForecasts(shortTerm, midTerm));
+  response.status(200).json({ data, debug });
 }
 
-async function fetchShortTermForecast({ weatherApiKey, nx, ny }) {
+async function fetchShortTermWeather({ weatherApiKey, nx, ny }) {
   const { baseDate, baseTime } = getLatestBaseDateTime();
-  const url = new URL(VILAGE_FCST_URL);
-
-  url.searchParams.set("pageNo", "1");
-  url.searchParams.set("numOfRows", "1000");
-  url.searchParams.set("dataType", "JSON");
-  url.searchParams.set("base_date", baseDate);
-  url.searchParams.set("base_time", baseTime);
-  url.searchParams.set("nx", nx);
-  url.searchParams.set("ny", ny);
-
-  const payload = await fetchWeatherPayload(url, weatherApiKey, "short-term");
+  const url =
+    `${VILAGE_FCST_URL}?pageNo=1&numOfRows=1000&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${encodeURIComponent(nx)}&ny=${encodeURIComponent(ny)}` +
+    `&serviceKey=${weatherApiKey}`;
+  const payload = await fetchWeatherPayload(url, "short-term");
   const items = payload?.response?.body?.items?.item;
 
   if (!Array.isArray(items)) {
@@ -54,85 +60,102 @@ async function fetchShortTermForecast({ weatherApiKey, nx, ny }) {
   return summarizeShortTermForecastItems(items).filter((item) => allowedDates.has(item.date));
 }
 
-async function fetchMidTermForecast({ weatherApiKey }) {
-  const landRegId = normalizeSecret(process.env.MID_LAND_REG_ID);
-  const tempRegId = normalizeSecret(process.env.MID_TEMP_REG_ID);
-
-  if (!landRegId || !tempRegId) {
-    console.error("MID_TERM_REG_ID is not configured");
-    return [];
-  }
-
+async function fetchMidLandForecast(weatherApiKey) {
+  const regId = normalizeSecret(process.env.MID_LAND_REG_ID);
   const tmFc = getLatestMidTermTmFc();
-  const [landPayload, tempPayload] = await Promise.all([
-    fetchMidTermPayload(MID_LAND_FCST_URL, weatherApiKey, landRegId, tmFc, "mid-land"),
-    fetchMidTermPayload(MID_TEMP_FCST_URL, weatherApiKey, tempRegId, tmFc, "mid-temp"),
-  ]);
-  const landItem = landPayload?.response?.body?.items?.item?.[0];
-  const tempItem = tempPayload?.response?.body?.items?.item?.[0];
+  const url =
+    `${MID_LAND_FCST_URL}?pageNo=1&numOfRows=10&dataType=JSON&regId=${encodeURIComponent(regId)}&tmFc=${tmFc}` +
+    `&serviceKey=${weatherApiKey}`;
+  const payload = await fetchWeatherPayload(url, "mid-land");
+  return payload?.response?.body?.items?.item?.[0] || null;
+}
 
-  if (!landItem && !tempItem) {
-    throw new Error("Invalid mid-term weather API response");
+async function fetchMidTemperature(weatherApiKey) {
+  const regId = normalizeSecret(process.env.MID_TEMP_REG_ID);
+  const tmFc = getLatestMidTermTmFc();
+  const url =
+    `${MID_TEMP_FCST_URL}?pageNo=1&numOfRows=10&dataType=JSON&regId=${encodeURIComponent(regId)}&tmFc=${tmFc}` +
+    `&serviceKey=${weatherApiKey}`;
+  const payload = await fetchWeatherPayload(url, "mid-temp");
+  return payload?.response?.body?.items?.item?.[0] || null;
+}
+
+async function fetchWeatherPayload(url, label) {
+  const response = await fetch(url);
+  const text = await response.text();
+
+  if (!response.ok) {
+    console.error("Weather API HTTP failure", {
+      label,
+      status: response.status,
+      reason: response.statusText,
+      body: text.slice(0, 300),
+    });
+    throw new Error(`Weather API request failed: ${response.status}`);
   }
 
-  return summarizeMidTermForecastItems(landItem || {}, tempItem || {});
-}
+  const payload = parseWeatherPayload(text);
+  const resultCode = payload?.response?.header?.resultCode;
 
-async function fetchMidTermPayload(endpoint, weatherApiKey, regId, tmFc, label) {
-  const url = new URL(endpoint);
-  url.searchParams.set("pageNo", "1");
-  url.searchParams.set("numOfRows", "10");
-  url.searchParams.set("dataType", "JSON");
-  url.searchParams.set("regId", regId);
-  url.searchParams.set("tmFc", tmFc);
-  return fetchWeatherPayload(url, weatherApiKey, label);
-}
-
-async function fetchWeatherPayload(url, weatherApiKey, label) {
-  const urls = buildWeatherRequestUrls(url, weatherApiKey);
-  let lastPayload = null;
-  let lastText = "";
-  let lastStatus = 500;
-
-  for (const requestUrl of urls) {
-    const weatherResponse = await fetch(requestUrl);
-    lastStatus = weatherResponse.status;
-    lastText = await weatherResponse.text();
-
-    if (!weatherResponse.ok) {
-      console.error("Weather API HTTP failure", {
-        label,
-        status: weatherResponse.status,
-        reason: weatherResponse.statusText,
-        body: lastText.slice(0, 300),
-      });
-      continue;
-    }
-
-    const payload = parseWeatherPayload(lastText);
-    lastPayload = payload;
-
-    if (payload?.response?.header?.resultCode === "00") {
-      return payload;
-    }
-
+  if (resultCode && resultCode !== "00") {
     console.error("Weather API business failure", {
       label,
-      resultCode: payload?.response?.header?.resultCode,
+      resultCode,
       resultMsg: payload?.response?.header?.resultMsg,
-      body: lastText.slice(0, 300),
+      body: text.slice(0, 300),
     });
+    throw new Error(payload?.response?.header?.resultMsg || `Weather API resultCode ${resultCode}`);
   }
 
-  if (lastPayload) return lastPayload;
-  throw new Error(`Weather API request failed: ${lastStatus}${lastText ? ` ${lastText.slice(0, 120)}` : ""}`);
+  return payload;
 }
 
-function buildWeatherRequestUrls(url, weatherApiKey) {
-  const rawKeyUrl = `${url.toString()}&serviceKey=${weatherApiKey}`;
-  const encodedKeyUrl = new URL(url.toString());
-  encodedKeyUrl.searchParams.set("serviceKey", weatherApiKey);
-  return [...new Set([rawKeyUrl, encodedKeyUrl.toString()])];
+function buildMidTermData(midLandResult, midTempResult) {
+  const land = midLandResult.status === "fulfilled" ? midLandResult.value : null;
+  const temp = midTempResult.status === "fulfilled" ? midTempResult.value : null;
+
+  if (!land && !temp) return [];
+
+  const today = getKstDateStart();
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const dayOffset = index + 4;
+    const date = toDateKey(addDays(today, dayOffset));
+    const amWeather = land?.[`wf${dayOffset}Am`] ?? land?.[`wf${dayOffset}`];
+    const pmWeather = land?.[`wf${dayOffset}Pm`] ?? land?.[`wf${dayOffset}`];
+    const weatherText = pickMidTermWeatherText(amWeather, pmWeather);
+    const pop = max([toNumber(land?.[`rnSt${dayOffset}Am`]), toNumber(land?.[`rnSt${dayOffset}Pm`]), toNumber(land?.[`rnSt${dayOffset}`])]);
+    const weather = {
+      date,
+      minTemp: toNumber(temp?.[`taMin${dayOffset}`]),
+      maxTemp: toNumber(temp?.[`taMax${dayOffset}`]),
+      pop,
+      humidity: null,
+      sky: toMidSkyLabel(weatherText),
+      pty: toMidPtyLabel(weatherText),
+      icon: toMidIcon(weatherText),
+      source: "MID_TERM",
+    };
+
+    return {
+      ...weather,
+      hasWeatherData: hasRequiredWeatherData(weather),
+    };
+  });
+}
+
+function createMidDebug(result, hasMidTermRegIds) {
+  if (!hasMidTermRegIds) {
+    return {
+      success: false,
+      error: "MID_LAND_REG_ID or MID_TEMP_REG_ID is not configured",
+    };
+  }
+
+  return {
+    success: result.status === "fulfilled",
+    error: result.status === "rejected" ? getErrorMessage(result.reason) : null,
+  };
 }
 
 function parseWeatherPayload(text) {
@@ -182,35 +205,6 @@ function summarizeShortTermForecastItems(items) {
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
-function summarizeMidTermForecastItems(land, temp) {
-  const today = getKstDateStart();
-
-  return Array.from({ length: 7 }, (_, index) => {
-    const dayOffset = index + 4;
-    const date = toDateKey(addDays(today, dayOffset));
-    const amWeather = land[`wf${dayOffset}Am`] ?? land[`wf${dayOffset}`];
-    const pmWeather = land[`wf${dayOffset}Pm`] ?? land[`wf${dayOffset}`];
-    const weatherText = pickMidTermWeatherText(amWeather, pmWeather);
-    const pop = max([toNumber(land[`rnSt${dayOffset}Am`]), toNumber(land[`rnSt${dayOffset}Pm`]), toNumber(land[`rnSt${dayOffset}`])]);
-    const weather = {
-      date,
-      minTemp: toNumber(temp[`taMin${dayOffset}`]),
-      maxTemp: toNumber(temp[`taMax${dayOffset}`]),
-      pop,
-      humidity: null,
-      sky: toMidSkyLabel(weatherText),
-      pty: toMidPtyLabel(weatherText),
-      icon: toMidIcon(weatherText),
-      source: "MID_TERM",
-    };
-
-    return {
-      ...weather,
-      hasWeatherData: hasRequiredWeatherData(weather),
-    };
-  });
-}
-
 function collectForecastValue(day, item) {
   const value = item.fcstValue;
 
@@ -243,9 +237,11 @@ function collectForecastValue(day, item) {
 
 function mergeForecasts(shortTerm, midTerm) {
   const map = new Map();
-  shortTerm.forEach((item) => map.set(item.date, item));
+  shortTerm.forEach((item) => {
+    if (isDateKey(item.date)) map.set(item.date, item);
+  });
   midTerm.forEach((item) => {
-    if (!map.has(item.date)) map.set(item.date, item);
+    if (isDateKey(item.date) && !map.has(item.date)) map.set(item.date, item);
   });
   return [...map.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
@@ -287,10 +283,11 @@ function toMidSkyLabel(text) {
 }
 
 function toMidPtyLabel(text) {
-  if (!text) return NO_INFO;
+  if (!text || text === NO_INFO) return NO_INFO;
   if (/비.*눈|눈.*비/.test(text)) return "비/눈";
   if (/눈/.test(text)) return "눈";
-  if (/비|소나기/.test(text)) return "비";
+  if (/소나기/.test(text)) return "소나기";
+  if (/비/.test(text)) return "비";
   return "없음";
 }
 
@@ -343,7 +340,7 @@ function formatFcstDate(value) {
 
 function getLatestBaseDateTime(now = new Date()) {
   const available = toKstDate(now);
-  available.setMinutes(available.getMinutes() - 10);
+  available.setUTCMinutes(available.getUTCMinutes() - 20);
   const currentHHMM = `${String(available.getUTCHours()).padStart(2, "0")}${String(available.getUTCMinutes()).padStart(2, "0")}`;
   const baseTime = [...BASE_TIMES].reverse().find((time) => time <= currentHHMM);
 
@@ -393,6 +390,10 @@ function toDateKey(date) {
 
 function toCompactDateFromUtc(date) {
   return `${date.getUTCFullYear()}${String(date.getUTCMonth() + 1).padStart(2, "0")}${String(date.getUTCDate()).padStart(2, "0")}`;
+}
+
+function isDateKey(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value || "");
 }
 
 function getErrorMessage(error) {

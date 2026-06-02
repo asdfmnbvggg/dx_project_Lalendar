@@ -8,23 +8,38 @@ export async function fetchCalendarWeather({
   const cached = readCache(cacheKey);
   if (cached) return cached;
 
-  const response = await fetch(`/api/weather?nx=${encodeURIComponent(nx)}&ny=${encodeURIComponent(ny)}`);
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Weather API request failed: ${response.status}`);
+  let response;
+  try {
+    response = await fetch(`/api/weather?nx=${encodeURIComponent(nx)}&ny=${encodeURIComponent(ny)}`);
+  } catch (error) {
+    console.warn("Weather API request failed", error);
+    return {};
   }
 
-  const weatherByDate = toWeatherMap(await response.json());
+  if (!response.ok) {
+    const message = await response.text();
+    console.warn(message || `Weather API request failed: ${response.status}`);
+    return {};
+  }
+
+  const payload = await response.json();
+  if (payload?.debug) {
+    console.info("Weather API debug", payload.debug);
+  }
+
+  const weatherByDate = toWeatherMap(payload);
   writeCache(cacheKey, weatherByDate);
   return weatherByDate;
 }
 
 function toWeatherMap(payload) {
-  if (Array.isArray(payload)) {
-    return Object.fromEntries(payload.map((item) => [item.date, item]));
+  const items = Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : [];
+
+  if (items.length) {
+    return Object.fromEntries(items.filter((item) => /^\d{4}-\d{2}-\d{2}$/.test(item?.date || "")).map((item) => [item.date, item]));
   }
 
-  return payload || {};
+  return {};
 }
 
 function readCache(key) {
