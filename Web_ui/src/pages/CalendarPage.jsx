@@ -50,7 +50,6 @@ export default function CalendarPage({
 }) {
   const [calendarView, setCalendarView] = useState("month");
   const [calendarScale, setCalendarScale] = useState(2);
-  const selectedMemberName = members.find((member) => member.id === selectedMember)?.name || "우리 집";
   const selectedDay = Number(selectedDate.slice(-2));
   const displayDates = getDisplayDates(calendarView, selectedDate, month);
   const displayLabel = getDisplayLabel(calendarView, selectedDate, monthLabel);
@@ -83,12 +82,6 @@ export default function CalendarPage({
           </button>
         ))}
       </div>
-
-      <section className="calendar-profile">
-        <div className="profile-avatar" style={{ background: memberColors[selectedMember] || memberColors.all }}>
-          {selectedMember === "all" ? "집" : selectedMemberName[0]}
-        </div>
-      </section>
 
       <section className="calendar-board">
         <div className="calendar-header">
