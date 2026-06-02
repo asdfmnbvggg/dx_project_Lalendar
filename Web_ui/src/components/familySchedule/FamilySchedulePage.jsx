@@ -7,20 +7,35 @@ import TemplateSelector from "./TemplateSelector.jsx";
 import WeeklyTimetable from "./WeeklyTimetable.jsx";
 import { buildTemplateSchedules, CATEGORY_COLORS } from "./scheduleConstants.js";
 
-export default function FamilySchedulePage({ tasks = [], selectedDate }) {
+export default function FamilySchedulePage({ tasks = [], selectedDate, members = [], selectedMember = "all" }) {
   const [schedules, setSchedules] = useState([]);
-  const [filter, setFilter] = useState("전체");
+  const [filter, setFilter] = useState(selectedMember || "all");
   const [showWeekend, setShowWeekend] = useState(false);
   const [modalState, setModalState] = useState(null);
   const [isTemplateOpen, setTemplateOpen] = useState(false);
 
   useEffect(() => {
-    setSchedules(loadSchedules());
-  }, []);
+    setFilter(selectedMember || "all");
+  }, [selectedMember]);
+
+  const filterMembers = useMemo(() => members.length > 0 ? members : [{ id: "all", name: "전체" }], [members]);
+  const schedulableMembers = filterMembers.filter((member) => member.id !== "all");
+  const defaultMemberId = selectedMember !== "all" ? selectedMember : schedulableMembers[0]?.id || "all";
+  const memberNameById = useMemo(() => Object.fromEntries(filterMembers.map((member) => [member.id, member.name])), [filterMembers]);
+
+  useEffect(() => {
+    const validMemberIds = new Set(filterMembers.map((member) => member.id));
+    const loaded = loadSchedules();
+    const normalized = loaded.map((schedule) => (validMemberIds.has(schedule.member) ? schedule : { ...schedule, member: defaultMemberId }));
+    setSchedules(normalized);
+    if (normalized.some((schedule, index) => schedule.member !== loaded[index]?.member)) {
+      saveSchedules(normalized);
+    }
+  }, [defaultMemberId, filterMembers]);
 
   const taskSchedules = useMemo(() => buildTaskSchedules(tasks, selectedDate), [tasks, selectedDate]);
   const visibleSchedules = useMemo(() => {
-    return [...schedules, ...taskSchedules].filter((schedule) => filter === "전체" || schedule.member === filter);
+    return [...schedules, ...taskSchedules].filter((schedule) => filter === "all" || schedule.member === filter);
   }, [filter, schedules, taskSchedules]);
 
   function persist(nextSchedules) {
@@ -33,7 +48,7 @@ export default function FamilySchedulePage({ tasks = [], selectedDate }) {
       schedule: {
         id: createScheduleId(),
         title: "",
-        member: filter === "전체" ? "아이" : filter,
+        member: filter === "all" ? defaultMemberId : filter,
         day: "월",
         startTime: "09:00",
         endTime: "10:00",
@@ -80,7 +95,7 @@ export default function FamilySchedulePage({ tasks = [], selectedDate }) {
   }
 
   function applyTemplate(template, mode) {
-    const generated = buildTemplateSchedules(template);
+    const generated = buildTemplateSchedules(template, defaultMemberId);
     persist(mode === "replace" ? generated : [...generated, ...schedules]);
     setTemplateOpen(false);
   }
@@ -107,11 +122,12 @@ export default function FamilySchedulePage({ tasks = [], selectedDate }) {
         </div>
       </div>
 
-      <MemberFilter value={filter} onChange={setFilter} />
+      <MemberFilter value={filter} onChange={setFilter} members={filterMembers} />
 
       <WeeklyTimetable
         schedules={visibleSchedules}
         showWeekend={showWeekend}
+        getMemberName={(memberId) => memberNameById[memberId] || memberId}
         onEmptyClick={(day, startTime) => openNewSchedule({ day, startTime, endTime: addOneHour(startTime) })}
         onScheduleClick={handleScheduleClick}
       />
@@ -120,6 +136,7 @@ export default function FamilySchedulePage({ tasks = [], selectedDate }) {
         <ScheduleModal
           mode={modalState.mode}
           initialSchedule={modalState.schedule}
+          members={filterMembers}
           onClose={() => setModalState(null)}
           onSave={saveSchedule}
           onDelete={() => deleteSchedule(modalState.schedule)}
@@ -177,10 +194,7 @@ function rotatingTaskSlot(task, index) {
 }
 
 function memberFromOwner(owner) {
-  if (owner === "minsu") return "아이";
-  if (owner === "theresa") return "아빠";
-  if (owner === "all") return "가족";
-  return "엄마";
+  return owner || "all";
 }
 
 function dayFromDate(date) {

@@ -1,6 +1,5 @@
 export const DAYS = ["월", "화", "수", "목", "금", "토", "일"];
 export const WEEKDAY_DAYS = DAYS.slice(0, 5);
-export const MEMBER_FILTERS = ["전체", "아이", "엄마", "아빠", "가족"];
 export const START_HOUR = 7;
 export const END_HOUR = 22;
 export const HOUR_HEIGHT = 64;
@@ -25,7 +24,7 @@ export const CATEGORY_LABELS = {
 
 export const EMPTY_SCHEDULE = {
   title: "",
-  member: "아이",
+  member: "all",
   day: "월",
   startTime: "09:00",
   endTime: "10:00",
@@ -93,18 +92,18 @@ export const TEMPLATE_GROUPS = [
     title: "회사 근무 시간",
     description: "월-금 09:00-18:00, 점심 12:00-13:00",
     schedules: WEEKDAY_DAYS.flatMap((day) => [
-      [day, "09:00", "12:00", "근무", "회사", "work", "엄마"],
-      [day, "12:00", "13:00", "점심시간", "회사", "work", "엄마"],
-      [day, "13:00", "18:00", "근무", "회사", "work", "엄마"],
+      [day, "09:00", "12:00", "근무", "회사", "work"],
+      [day, "12:00", "13:00", "점심시간", "회사", "work"],
+      [day, "13:00", "18:00", "근무", "회사", "work"],
     ]),
   },
 ];
 
-export function buildTemplateSchedules(template) {
+export function buildTemplateSchedules(template, defaultMemberId = "all") {
   return template.schedules.map(([day, startTime, endTime, title, location, category, member]) => ({
     id: `template-${template.id}-${day}-${startTime}-${title}-${Math.random().toString(36).slice(2, 8)}`,
     title,
-    member: member || "아이",
+    member: member || defaultMemberId,
     day,
     startTime,
     endTime,

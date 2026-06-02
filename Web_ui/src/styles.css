@@ -3056,9 +3056,10 @@ button[title*="Vercel"] {
 .family-schedule-panel {
   width: 100%;
   margin-top: 24px;
-  padding: 20px;
+  padding: 18px;
   border-radius: 26px;
-  background: #fff;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fff8fa 100%);
   box-shadow: var(--shadow);
 }
 
@@ -3115,15 +3116,16 @@ button[title*="Vercel"] {
   width: 100%;
   margin-top: 14px;
   overflow-x: auto;
-  border: 1px solid #e5e7eb;
-  border-radius: 18px;
-  background: #f7f8fb;
+  border: 1px solid #eceef3;
+  border-radius: 20px;
+  background: #f8fafc;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
 }
 
 .weekly-timetable {
-  min-width: 860px;
+  min-width: 920px;
   display: grid;
-  grid-template-columns: 88px repeat(var(--day-count), minmax(122px, 1fr));
+  grid-template-columns: 82px repeat(var(--day-count), minmax(132px, 1fr));
   align-items: start;
 }
 
@@ -3135,8 +3137,8 @@ button[title*="Vercel"] {
   min-height: 42px;
   display: grid;
   place-items: center;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
+  border-bottom: 1px solid #e8ebf0;
+  background: #fbfcfe;
   color: #111827;
   font-size: 13px;
   font-weight: 950;
@@ -3152,8 +3154,8 @@ button[title*="Vercel"] {
   left: 0;
   z-index: 2;
   display: grid;
-  background: #f9fafb;
-  border-right: 1px solid #e5e7eb;
+  background: #fbfcfe;
+  border-right: 1px solid #e8ebf0;
 }
 
 .time-axis span {
@@ -3161,7 +3163,7 @@ button[title*="Vercel"] {
   align-items: flex-start;
   justify-content: flex-end;
   padding: 6px 10px 0 0;
-  border-bottom: 1px solid #eceef3;
+  border-bottom: 1px solid #edf0f4;
   color: #6b7280;
   font-size: 12px;
   font-weight: 850;
@@ -3170,9 +3172,11 @@ button[title*="Vercel"] {
 .day-column {
   position: relative;
   min-width: 0;
-  border-right: 1px solid #e5e7eb;
+  display: block;
+  border-right: 1px solid #edf0f4;
   background: #fff;
   text-align: left;
+  cursor: pointer;
 }
 
 .day-column:hover {
@@ -3184,7 +3188,7 @@ button[title*="Vercel"] {
   left: 0;
   right: 0;
   height: 1px;
-  background: #eceef3;
+  background: #edf0f4;
   pointer-events: none;
 }
 
@@ -3194,15 +3198,17 @@ button[title*="Vercel"] {
   min-width: 0;
   display: grid;
   align-content: start;
-  gap: 1px;
+  gap: 2px;
   overflow: hidden;
-  padding: 7px 8px;
-  border-left: 4px solid var(--schedule-color);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--schedule-color) 13%, #fff);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+  padding: 7px 9px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-left: 5px solid var(--schedule-color);
+  border-radius: 8px;
+  background: var(--schedule-bg);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
   color: #111827;
   text-align: left;
+  cursor: pointer;
 }
 
 .schedule-block:hover {
@@ -3218,20 +3224,24 @@ button[title*="Vercel"] {
 }
 
 .schedule-block strong {
+  color: #0f172a;
   font-size: 13px;
   font-weight: 950;
+  line-height: 1.15;
 }
 
 .schedule-block span,
 .schedule-block small {
-  color: #4b5563;
+  color: #475569;
   font-size: 11px;
   font-weight: 850;
+  line-height: 1.15;
 }
 
 .schedule-block.task-derived {
-  border-style: dashed;
-  opacity: 0.92;
+  background: #f8fafc;
+  border-left-style: dashed;
+  opacity: 1;
 }
 
 .schedule-modal {

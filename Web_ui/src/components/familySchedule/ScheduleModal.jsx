@@ -2,7 +2,7 @@ import { Plus, Save, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CATEGORY_COLORS, CATEGORY_LABELS, DAYS, EMPTY_SCHEDULE } from "./scheduleConstants.js";
 
-export default function ScheduleModal({ mode, initialSchedule, onClose, onSave, onDelete }) {
+export default function ScheduleModal({ mode, initialSchedule, members, onClose, onSave, onDelete }) {
   const [form, setForm] = useState(() => ({ ...EMPTY_SCHEDULE, ...initialSchedule }));
   const [keepAdding, setKeepAdding] = useState(false);
   const [error, setError] = useState("");
@@ -51,13 +51,13 @@ export default function ScheduleModal({ mode, initialSchedule, onClose, onSave, 
         <div className="composer-grid">
           <label>
             대상자
-            <input value={form.member} onChange={(event) => updateField("member", event.target.value)} list="schedule-members" />
-            <datalist id="schedule-members">
-              <option value="아이" />
-              <option value="엄마" />
-              <option value="아빠" />
-              <option value="가족" />
-            </datalist>
+            <select value={form.member} onChange={(event) => updateField("member", event.target.value)}>
+              {members.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.name}
+                </option>
+              ))}
+            </select>
           </label>
           <label>
             일정명

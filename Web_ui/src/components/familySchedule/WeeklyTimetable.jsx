@@ -3,7 +3,7 @@ import { DAYS, END_HOUR, HOUR_HEIGHT, START_HOUR } from "./scheduleConstants.js"
 
 const TOTAL_HEIGHT = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
 
-export default function WeeklyTimetable({ schedules, showWeekend, onEmptyClick, onScheduleClick }) {
+export default function WeeklyTimetable({ schedules, showWeekend, getMemberName, onEmptyClick, onScheduleClick }) {
   const days = showWeekend ? DAYS : DAYS.slice(0, 5);
   const schedulesByDay = groupSchedulesByDay(schedules, days);
   const hours = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, index) => START_HOUR + index);
@@ -27,21 +27,25 @@ export default function WeeklyTimetable({ schedules, showWeekend, onEmptyClick, 
         </div>
 
         {days.map((day) => (
-          <button
+          <div
             key={day}
-            type="button"
             className="day-column"
             style={{ height: TOTAL_HEIGHT }}
             onClick={(event) => onEmptyClick(day, timeFromOffset(event.nativeEvent.offsetY))}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") onEmptyClick(day, "09:00");
+            }}
+            role="button"
+            tabIndex={0}
             aria-label={`${day}요일 시간표`}
           >
             {hours.slice(0, -1).map((hour) => (
               <span key={hour} className="hour-line" style={{ top: `${(hour - START_HOUR) * HOUR_HEIGHT}px` }} />
             ))}
             {layoutSchedules(schedulesByDay[day] || []).map(({ schedule, layout }) => (
-              <ScheduleBlock key={schedule.id} schedule={schedule} layout={layout} onClick={onScheduleClick} />
+              <ScheduleBlock key={schedule.id} schedule={schedule} layout={layout} memberName={getMemberName(schedule.member)} onClick={onScheduleClick} />
             ))}
-          </button>
+          </div>
         ))}
       </div>
     </div>

@@ -100,7 +100,7 @@ export default function CrewPage({
         ))}
         {selectedTasks.length === 0 && <p className="panel-empty">이 날짜에 담당 할 일이 없습니다.</p>}
       </section>
-      <FamilySchedulePage tasks={tasks} selectedDate={selectedDate} />
+      <FamilySchedulePage tasks={tasks} selectedDate={selectedDate} members={members} selectedMember={selectedMember} />
     </section>
   );
 }
