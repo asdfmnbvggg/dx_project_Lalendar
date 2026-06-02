@@ -2202,6 +2202,36 @@ button {
   cursor: pointer;
 }
 
+.selected-weather-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  align-items: center;
+  margin: 8px 0 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(67, 83, 99, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.selected-weather-summary .weather-icon {
+  grid-row: span 2;
+}
+
+.selected-weather-summary strong {
+  font-size: 0.95rem;
+  color: #22313f;
+}
+
+.selected-weather-summary small {
+  color: #6a7785;
+}
+
+.selected-weather-summary.empty {
+  grid-template-columns: 1fr;
+  border-style: dashed;
+}
+
 .thinq-panel-head {
   display: flex;
   align-items: center;
