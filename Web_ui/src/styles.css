@@ -3904,16 +3904,16 @@ button[title*="Vercel"] {
   .calendar-scale-2,
   .calendar-scale-3,
   .calendar-scale-4 {
-    --cell-min: 58px;
+    --cell-min: 88px;
     --date-size: 11px;
     --date-circle: 20px;
     --weather-icon-size: 14px;
     --weather-temp-size: 10px;
     --weather-low-size: 9px;
     --weather-min: 24px;
-    --task-font: 0px;
-    --task-width: 6px;
-    --task-height: 6px;
+    --task-font: 8px;
+    --task-width: min(50px, 100%);
+    --task-height: auto;
   }
 
   .calendar-scale-0 .blank-day,
@@ -3930,7 +3930,7 @@ button[title*="Vercel"] {
   }
 
   .date-cell {
-    padding: 3px 1px 4px !important;
+    padding: 3px 2px 5px !important;
     border-radius: 9px !important;
     grid-template-rows: auto minmax(20px, auto) auto !important;
   }
@@ -3968,17 +3968,34 @@ button[title*="Vercel"] {
   .date-cell i {
     width: var(--task-width) !important;
     height: var(--task-height) !important;
-    padding: 0 !important;
-    border-radius: 50% !important;
-    color: transparent !important;
-    font-size: 0 !important;
+    padding: 2px 4px !important;
+    border-radius: 5px !important;
+    color: #fff !important;
+    font-size: var(--task-font) !important;
+    line-height: 1.15 !important;
+    text-align: center;
   }
 
   .date-cell i span,
+  .weather-recommendation-chip {
+    display: block !important;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .date-cell i small,
-  .weather-recommendation-chip,
   .more-tasks {
     display: none !important;
+  }
+
+  .weather-recommendation-chip {
+    width: min(50px, 100%);
+    padding: 2px 4px;
+    border-radius: 5px;
+    font-size: 8px;
+    line-height: 1.15;
   }
 
   .family-schedule-panel {
