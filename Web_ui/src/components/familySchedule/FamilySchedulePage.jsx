@@ -7,7 +7,7 @@ import TemplateSelector from "./TemplateSelector.jsx";
 import WeeklyTimetable from "./WeeklyTimetable.jsx";
 import { buildTemplateSchedules, CATEGORY_COLORS, DAYS } from "./scheduleConstants.js";
 
-export default function FamilySchedulePage({ tasks = [], selectedDate, members = [], selectedMember = "all" }) {
+export default function FamilySchedulePage({ tasks = [], selectedDate, members = [], selectedMember = "all", onSelectedMemberChange }) {
   const [schedules, setSchedules] = useState([]);
   const [filter, setFilter] = useState(selectedMember || "all");
   const [showWeekend, setShowWeekend] = useState(false);
@@ -18,6 +18,10 @@ export default function FamilySchedulePage({ tasks = [], selectedDate, members =
   useEffect(() => {
     setViewDate(selectedDate);
   }, [selectedDate]);
+
+  useEffect(() => {
+    setFilter(selectedMember);
+  }, [selectedMember]);
 
   const filterMembers = useMemo(() => (members.length > 0 ? members : [{ id: "all", name: "전체" }]), [members]);
   const schedulableMembers = filterMembers.filter((member) => member.id !== "all");
@@ -44,6 +48,11 @@ export default function FamilySchedulePage({ tasks = [], selectedDate, members =
 
   function persist(nextSchedules) {
     setSchedules(saveSchedules(nextSchedules));
+  }
+
+  function changeFilter(memberId) {
+    setFilter(memberId);
+    onSelectedMemberChange?.(memberId);
   }
 
   function openNewSchedule(defaults = {}) {
@@ -150,7 +159,7 @@ export default function FamilySchedulePage({ tasks = [], selectedDate, members =
         </div>
       </div>
 
-      <MemberFilter value={filter} onChange={setFilter} members={filterMembers} />
+      <MemberFilter value={filter} onChange={changeFilter} members={filterMembers} />
 
       <WeeklyTimetable
         schedules={visibleSchedules}

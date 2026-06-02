@@ -3520,6 +3520,39 @@ button[title*="Vercel"] {
   transform: translateY(-1px);
 }
 
+.schedule-block.short,
+.schedule-block.compact {
+  gap: 0;
+  padding: 5px 7px;
+}
+
+.schedule-block.short span,
+.schedule-block.short small,
+.schedule-block.short em,
+.schedule-block.compact span,
+.schedule-block.compact small,
+.schedule-block.compact em {
+  display: none;
+}
+
+.schedule-block.compact {
+  padding-right: 4px;
+  padding-left: 5px;
+  border-left-width: 4px;
+}
+
+.schedule-block.compact strong {
+  font-size: 11px;
+}
+
+.schedule-block.compact:not(.short) strong {
+  writing-mode: horizontal-tb;
+}
+
+.schedule-block.compact.short strong {
+  color: transparent;
+}
+
 .schedule-block strong,
 .schedule-block span,
 .schedule-block small {

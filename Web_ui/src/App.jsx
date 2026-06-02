@@ -20,7 +20,10 @@ import {
 export default function App() {
   const [tasks, setTasks] = useState(initialTasks);
   const [memberColors, setMemberColors] = useState(() => Object.fromEntries(members.map((member) => [member.id, member.color])));
-  const [activeTab, setActiveTab] = useState("calendar");
+  const [activeTab, setActiveTab] = useState(() => {
+    const savedTab = window.localStorage.getItem("lalendar-active-tab");
+    return navItems.some((item) => item.id === savedTab) ? savedTab : "calendar";
+  });
   const [selectedDate, setSelectedDate] = useState(getTodayKey);
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const today = new Date();
@@ -42,6 +45,10 @@ export default function App() {
   const [thinQError, setThinQError] = useState("");
   const [isThinQLoading, setThinQLoading] = useState(false);
   const [pendingThinQControl, setPendingThinQControl] = useState(null);
+
+  useEffect(() => {
+    window.localStorage.setItem("lalendar-active-tab", activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     const selectors = [

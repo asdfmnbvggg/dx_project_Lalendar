@@ -83,15 +83,22 @@ function layoutSchedules(schedules) {
     });
     const width = 100 / Math.max(columns.length, 1);
 
-    return assignments.map(({ schedule, columnIndex }) => ({
-      schedule,
-      layout: {
-        top: minutesToPixels(toMinutes(schedule.startTime) - START_HOUR * 60),
-        height: Math.max(26, minutesToPixels(toMinutes(schedule.endTime) - toMinutes(schedule.startTime)) - 4),
-        left: columnIndex * width,
-        width: width - 2,
-      },
-    }));
+    return assignments.map(({ schedule, columnIndex }) => {
+      const height = Math.max(26, minutesToPixels(toMinutes(schedule.endTime) - toMinutes(schedule.startTime)) - 4);
+      const blockWidth = Math.max(0, width - 2);
+
+      return {
+        schedule,
+        layout: {
+          top: minutesToPixels(toMinutes(schedule.startTime) - START_HOUR * 60),
+          height,
+          left: columnIndex * width,
+          width: blockWidth,
+          compact: blockWidth < 48,
+          short: height < 42,
+        },
+      };
+    });
   });
 }
 

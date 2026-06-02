@@ -1,8 +1,17 @@
 export default function ScheduleBlock({ schedule, layout, memberName, onClick }) {
+  const blockClassName = [
+    "schedule-block",
+    schedule.source === "task" ? "task-derived" : "",
+    layout.compact ? "compact" : "",
+    layout.short ? "short" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <button
       type="button"
-      className={`schedule-block ${schedule.source === "task" ? "task-derived" : ""}`}
+      className={blockClassName}
       style={{
         "--schedule-color": schedule.color,
         "--schedule-bg": hexToRgba(schedule.color, 0.13),
