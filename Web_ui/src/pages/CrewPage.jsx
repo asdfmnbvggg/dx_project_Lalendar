@@ -8,7 +8,6 @@ export default function CrewPage({
   selectedDate,
   selectedMember,
   memberColors,
-  changeMemberColor,
   setSelectedMember,
   toggleTask,
   deleteTask,
@@ -66,26 +65,6 @@ export default function CrewPage({
 
       {isMemberDetailOpen && (
         <section className="member-detail-stack">
-          <section className="member-color-card">
-            <div>
-              <h2>멤버 색상</h2>
-            </div>
-            <div className="member-color-list">
-              {members.slice(1).map((member) => (
-                <label key={member.id}>
-                  <span style={{ background: memberColors[member.id] }}>{member.short}</span>
-                  <strong>{member.name}</strong>
-                  <input
-                    type="color"
-                    value={memberColors[member.id]}
-                    aria-label={`${member.name} 색상 선택`}
-                    onChange={(event) => changeMemberColor(member.id, event.target.value)}
-                  />
-                </label>
-              ))}
-            </div>
-          </section>
-
           <section className="crew-stat-grid">
             <article>
               <Sparkles size={20} />
