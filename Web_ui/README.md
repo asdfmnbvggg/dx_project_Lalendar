@@ -30,10 +30,11 @@ THINQ_PAT=
 THINQ_CLIENT_ID=
 THINQ_COUNTRY=KR
 THINQ_API_BASE_URL=https://api-kic.lgthinq.com
-THINQ_API_KEY=
+THINQ_FIXED_API_KEY=
 ```
 
-ThinQ secrets, including `THINQ_PAT` and `THINQ_API_KEY`, must stay server-only and must not use the `VITE_` prefix.
+ThinQ에서 사용자가 직접 발급받는 값은 `THINQ_PAT`뿐입니다. `THINQ_FIXED_API_KEY`는 개인 발급 API key가 아니라 LG ThinQ OpenAPI 문서에 공개된 고정 `x-api-key` 헤더값입니다.
+ThinQ server-only values, including `THINQ_PAT` and `THINQ_FIXED_API_KEY`, must stay server-only and must not use the `VITE_` prefix.
 
 Do not commit real keys or tokens to git. After adding or changing values in Vercel Dashboard -> Settings -> Environment Variables, redeploy the Vercel project so the serverless functions receive the new values.
 

@@ -21,6 +21,11 @@ export function handleThinQError(error: unknown, response: any) {
     return;
   }
 
+  if (error instanceof Error && error.message === "THINQ_FIXED_API_KEY is not configured") {
+    response.status(500).send("THINQ_FIXED_API_KEY is not configured");
+    return;
+  }
+
   if (error instanceof ThinQRequestError || isThinQErrorLike(error)) {
     const status = typeof error.status === "number" ? error.status : 500;
     const message = typeof error.message === "string" ? error.message : "ThinQ API request failed";

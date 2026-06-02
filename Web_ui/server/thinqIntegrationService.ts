@@ -1,6 +1,8 @@
+import { randomUUID } from "node:crypto";
+
 const DEFAULT_COUNTRY = "KR";
 const DEFAULT_API_BASE_URL = "https://api-kic.lgthinq.com";
-const AUTH_FAILURE_MESSAGE = "ThinQ API authentication failed. This API may require x-api-key in addition to PAT.";
+const AUTH_FAILURE_MESSAGE = "ThinQ API authentication failed. Check THINQ_PAT and THINQ_FIXED_API_KEY.";
 
 export async function getThinQDevices() {
   const result = await requestThinQ("/devices");
@@ -80,6 +82,7 @@ export function createThinQHeaders() {
   const pat = process.env.THINQ_PAT;
   const clientId = process.env.THINQ_CLIENT_ID;
   const country = process.env.THINQ_COUNTRY || DEFAULT_COUNTRY;
+  const fixedApiKey = process.env.THINQ_FIXED_API_KEY;
 
   if (!pat) {
     throw new Error("THINQ_PAT is not configured");
@@ -89,12 +92,17 @@ export function createThinQHeaders() {
     throw new Error("THINQ_CLIENT_ID is not configured");
   }
 
+  if (!fixedApiKey) {
+    throw new Error("THINQ_FIXED_API_KEY is not configured");
+  }
+
   return {
     Authorization: `Bearer ${pat}`,
     "Content-Type": "application/json",
     "x-message-id": createMessageId(),
     "x-country": country,
     "x-client-id": clientId,
+    "x-api-key": fixedApiKey,
   };
 }
 
@@ -163,8 +171,7 @@ function logThinQFailure(path: string, status: number, reason: string, responseT
 }
 
 function createMessageId() {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  return Array.from({ length: 22 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  return Buffer.from(randomUUID().replace(/-/g, ""), "hex").toString("base64url");
 }
 
 function parseJson(text: string) {
