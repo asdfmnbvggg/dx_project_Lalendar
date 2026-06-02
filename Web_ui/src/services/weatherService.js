@@ -14,9 +14,17 @@ export async function fetchCalendarWeather({
     throw new Error(message || `Weather API request failed: ${response.status}`);
   }
 
-  const weatherByDate = await response.json();
+  const weatherByDate = toWeatherMap(await response.json());
   writeCache(cacheKey, weatherByDate);
   return weatherByDate;
+}
+
+function toWeatherMap(payload) {
+  if (Array.isArray(payload)) {
+    return Object.fromEntries(payload.map((item) => [item.date, item]));
+  }
+
+  return payload || {};
 }
 
 function readCache(key) {
