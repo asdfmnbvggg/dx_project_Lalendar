@@ -69,7 +69,6 @@ export default function CrewPage({
           <section className="member-color-card">
             <div>
               <h2>멤버 색상</h2>
-              <p>캘린더 할 일 표시 색으로 사용돼요.</p>
             </div>
             <div className="member-color-list">
               {members.slice(1).map((member) => (
