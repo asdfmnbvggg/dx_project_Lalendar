@@ -87,10 +87,6 @@ export default function CalendarPage({
         <div className="profile-avatar" style={{ background: memberColors[selectedMember] || memberColors.all }}>
           {selectedMember === "all" ? "집" : selectedMemberName[0]}
         </div>
-        <div>
-          <h1>{selectedMemberName}</h1>
-          <p>가전 루틴과 집안일을 한눈에 관리해요.</p>
-        </div>
       </section>
 
       <section className="calendar-board">
