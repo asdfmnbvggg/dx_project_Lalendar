@@ -3053,6 +3053,345 @@ button[title*="Vercel"] {
   visibility: hidden !important;
 }
 
+.family-schedule-panel {
+  width: 100%;
+  margin-top: 24px;
+  padding: 20px;
+  border-radius: 26px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.family-schedule-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.family-schedule-head p {
+  margin: 0 0 4px;
+  color: var(--red);
+  font-weight: 950;
+}
+
+.family-schedule-head h2 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.family-schedule-actions,
+.family-member-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.family-schedule-actions button,
+.family-member-filter button {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 13px;
+  border-radius: 999px;
+  background: #f4f5f7;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.family-schedule-actions button:last-child,
+.family-schedule-actions button.active,
+.family-member-filter button.active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--pink), var(--red));
+  box-shadow: 0 12px 24px rgba(225, 29, 72, 0.14);
+}
+
+.weekly-timetable-shell {
+  width: 100%;
+  margin-top: 14px;
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: #f7f8fb;
+}
+
+.weekly-timetable {
+  min-width: 860px;
+  display: grid;
+  grid-template-columns: 88px repeat(var(--day-count), minmax(122px, 1fr));
+  align-items: start;
+}
+
+.time-spacer,
+.day-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  min-height: 42px;
+  display: grid;
+  place-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.time-spacer {
+  left: 0;
+  z-index: 4;
+}
+
+.time-axis {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  display: grid;
+  background: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+}
+
+.time-axis span {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 6px 10px 0 0;
+  border-bottom: 1px solid #eceef3;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.day-column {
+  position: relative;
+  min-width: 0;
+  border-right: 1px solid #e5e7eb;
+  background: #fff;
+  text-align: left;
+}
+
+.day-column:hover {
+  background: #fff8fa;
+}
+
+.hour-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #eceef3;
+  pointer-events: none;
+}
+
+.schedule-block {
+  position: absolute;
+  z-index: 1;
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 1px;
+  overflow: hidden;
+  padding: 7px 8px;
+  border-left: 4px solid var(--schedule-color);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--schedule-color) 13%, #fff);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+  color: #111827;
+  text-align: left;
+}
+
+.schedule-block:hover {
+  transform: translateY(-1px);
+}
+
+.schedule-block strong,
+.schedule-block span,
+.schedule-block small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule-block strong {
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.schedule-block span,
+.schedule-block small {
+  color: #4b5563;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.schedule-block.task-derived {
+  border-style: dashed;
+  opacity: 0.92;
+}
+
+.schedule-modal {
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+}
+
+.schedule-day-buttons,
+.schedule-color-row,
+.schedule-options,
+.schedule-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.schedule-day-buttons button {
+  width: 38px;
+  height: 36px;
+  border-radius: 12px;
+  background: #f4f5f7;
+  font-weight: 950;
+}
+
+.schedule-day-buttons button.active {
+  color: #fff;
+  background: var(--red);
+}
+
+.schedule-options {
+  margin-top: 12px;
+}
+
+.schedule-options label {
+  display: inline-flex;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 9px 11px;
+  border-radius: 999px;
+  background: #fff8fa;
+}
+
+.schedule-options input {
+  width: 16px;
+  height: 16px;
+}
+
+.schedule-color-row button,
+.schedule-color-row input {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+}
+
+.schedule-color-row button.active {
+  border-color: #111827;
+}
+
+.schedule-color-row input {
+  overflow: hidden;
+  background: none;
+}
+
+.schedule-error {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.schedule-modal-actions {
+  align-items: center;
+  margin-top: 16px;
+}
+
+.schedule-modal-actions .composer-submit {
+  flex: 1 1 180px;
+  margin-top: 0;
+}
+
+.schedule-secondary-action,
+.schedule-delete-action {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px;
+  border-radius: 16px;
+  font-weight: 950;
+}
+
+.schedule-secondary-action {
+  color: #0f766e;
+  background: #e6fffb;
+}
+
+.schedule-delete-action {
+  color: var(--red);
+  background: #fff1f4;
+}
+
+.template-list {
+  display: grid;
+  gap: 10px;
+}
+
+.template-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid #eceef3;
+  border-radius: 16px;
+  background: #fff8fa;
+}
+
+.template-card strong {
+  display: block;
+  font-size: 16px;
+}
+
+.template-card span {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.template-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.template-actions button {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.template-actions button:last-child {
+  color: #fff;
+  background: #111827;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

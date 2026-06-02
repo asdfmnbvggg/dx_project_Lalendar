@@ -2,8 +2,10 @@ import { ChevronRight, RotateCw, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { members } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
+import FamilySchedulePage from "../components/familySchedule/FamilySchedulePage.jsx";
 
 export default function CrewPage({
+  tasks,
   scopedTasks,
   selectedDate,
   selectedMember,
@@ -98,6 +100,7 @@ export default function CrewPage({
         ))}
         {selectedTasks.length === 0 && <p className="panel-empty">이 날짜에 담당 할 일이 없습니다.</p>}
       </section>
+      <FamilySchedulePage tasks={tasks} selectedDate={selectedDate} />
     </section>
   );
 }
