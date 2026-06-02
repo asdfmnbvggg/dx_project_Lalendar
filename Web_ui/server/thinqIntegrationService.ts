@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 const DEFAULT_COUNTRY = "KR";
 const DEFAULT_API_BASE_URL = "https://api-kic.lgthinq.com";
-const AUTH_FAILURE_MESSAGE = "ThinQ API authentication failed. Check THINQ_PAT and THINQ_FIXED_API_KEY.";
+const AUTH_FAILURE_MESSAGE = "ThinQ API authentication failed";
 
 export async function getThinQDevices() {
   const result = await requestThinQ("/devices");
@@ -51,7 +51,7 @@ export async function getThinQDeviceEnergyUsage(deviceId: string) {
 }
 
 async function requestThinQ(path: string, init: RequestInit = {}) {
-  const baseUrl = process.env.THINQ_API_BASE_URL || DEFAULT_API_BASE_URL;
+  const baseUrl = normalizeEnvValue(process.env.THINQ_API_BASE_URL) || DEFAULT_API_BASE_URL;
   const response = await fetch(`${baseUrl}${path}`, {
     ...init,
     headers: {
@@ -66,23 +66,22 @@ async function requestThinQ(path: string, init: RequestInit = {}) {
   if (!response.ok) {
     logThinQFailure(path, response.status, response.statusText, text);
 
-    if (response.status === 401 || response.status === 403) {
-      console.error(AUTH_FAILURE_MESSAGE);
-      throw new ThinQRequestError(AUTH_FAILURE_MESSAGE, response.status);
+    if (response.status === 401) {
+      throw new ThinQRequestError(AUTH_FAILURE_MESSAGE, 401, sanitizeResponseBody(text));
     }
 
     const message = body?.message || body?.error || text || `ThinQ API request failed: ${response.status}`;
-    throw new ThinQRequestError(message, response.status);
+    throw new ThinQRequestError(message, response.status, sanitizeResponseBody(text));
   }
 
   return body ?? {};
 }
 
 export function createThinQHeaders() {
-  const pat = process.env.THINQ_PAT;
-  const clientId = process.env.THINQ_CLIENT_ID;
-  const country = process.env.THINQ_COUNTRY || DEFAULT_COUNTRY;
-  const fixedApiKey = process.env.THINQ_FIXED_API_KEY;
+  const pat = normalizeEnvValue(process.env.THINQ_PAT);
+  const clientId = normalizeEnvValue(process.env.THINQ_CLIENT_ID);
+  const country = normalizeEnvValue(process.env.THINQ_COUNTRY) || DEFAULT_COUNTRY;
+  const fixedApiKey = normalizeEnvValue(process.env.THINQ_FIXED_API_KEY);
 
   if (!pat) {
     throw new Error("THINQ_PAT is not configured");
@@ -166,7 +165,7 @@ function logThinQFailure(path: string, status: number, reason: string, responseT
     path,
     status,
     reason,
-    responseBody: responseText.slice(0, 500),
+    responseBody: sanitizeResponseBody(responseText),
   });
 }
 
@@ -186,10 +185,26 @@ function parseJson(text: string) {
 
 export class ThinQRequestError extends Error {
   status: number;
+  responseBody?: string;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, responseBody?: string) {
     super(message);
     this.name = "ThinQRequestError";
     this.status = status;
+    this.responseBody = responseBody;
   }
+}
+
+function normalizeEnvValue(value: string | undefined) {
+  return String(value || "")
+    .trim()
+    .replace(/^["']|["']$/g, "");
+}
+
+function sanitizeResponseBody(value: unknown) {
+  const text = typeof value === "string" ? value : JSON.stringify(value ?? "");
+  return text
+    .replace(/Bearer\s+[A-Za-z0-9._~+/=-]+/gi, "Bearer [REDACTED]")
+    .replace(/(THINQ_PAT|access_token|token|authorization)(["'\s:=]+)([^"',\s}]+)/gi, "$1$2[REDACTED]")
+    .slice(0, 500);
 }
