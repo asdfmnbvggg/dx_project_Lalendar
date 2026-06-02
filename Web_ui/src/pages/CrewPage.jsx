@@ -51,7 +51,7 @@ export default function CrewPage({
       <section className="member-focus" style={{ "--member-color": memberColors[selected.id] }}>
         <div className="member-orb" style={{ background: memberColors[selected.id] }}>{selected.short}</div>
         <div>
-          <p>오늘의 담당자</p>
+          <p>오늘 담당자</p>
           <h1>{selected.name}</h1>
           <span>{selected.subtitle}</span>
         </div>
