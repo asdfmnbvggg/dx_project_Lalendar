@@ -2,26 +2,57 @@ import { Plus, X } from "lucide-react";
 import { useState } from "react";
 import { members } from "../data.js";
 
+const places = ["우리 집", "회사", "학교", "학원", "마트", "병원", "직접 입력"];
+const repeatOptions = ["없음", "매일", "매주", "매월", "사용자 지정"];
+const reminderOptions = ["OFF", "정시", "10분 전", "30분 전", "1시간 전", "하루 전"];
+
 export default function TaskComposer({ selectedDate, selectedMember, onAdd, onClose }) {
+  const initialOwner = selectedMember === "all" ? "me" : selectedMember;
   const [title, setTitle] = useState("");
-  const [place, setPlace] = useState("주방");
+  const [placePreset, setPlacePreset] = useState("우리 집");
+  const [customPlace, setCustomPlace] = useState("");
   const [date, setDate] = useState(selectedDate);
-  const [repeat, setRepeat] = useState("오늘");
-  const [owner, setOwner] = useState(selectedMember === "all" ? "me" : selectedMember);
+  const [repeat, setRepeat] = useState("없음");
+  const [owners, setOwners] = useState([initialOwner]);
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("10:00");
+  const [reminder, setReminder] = useState("OFF");
+  const [memo, setMemo] = useState("");
+
+  function toggleOwner(ownerId) {
+    if (ownerId === "all") {
+      setOwners(["all"]);
+      return;
+    }
+    setOwners((current) => {
+      const withoutAll = current.filter((item) => item !== "all");
+      const next = withoutAll.includes(ownerId) ? withoutAll.filter((item) => item !== ownerId) : [...withoutAll, ownerId];
+      return next.length ? next : [initialOwner];
+    });
+  }
 
   function submit(event) {
     event.preventDefault();
     const trimmedTitle = title.trim();
     if (!trimmedTitle) return;
-    onAdd({
-      date,
-      title: trimmedTitle,
-      place,
-      tag: "house",
-      owner,
-      done: false,
-      repeat,
-      source: "manual",
+
+    const place = placePreset === "직접 입력" ? customPlace.trim() || "우리 집" : placePreset;
+    const targets = owners.includes("all") ? ["all"] : owners;
+    targets.forEach((owner, index) => {
+      onAdd({
+        date,
+        title: trimmedTitle,
+        place,
+        tag: "house",
+        owner,
+        done: false,
+        repeat: `${repeat}${startTime && endTime ? ` · ${startTime}-${endTime}` : ""}`,
+        source: "manual",
+        description: memo.trim(),
+        reminder: reminder === "OFF" ? "off" : reminder,
+        groupId: targets.length > 1 ? `manual-${Date.now()}` : undefined,
+        copyIndex: index,
+      });
     });
   }
 
@@ -30,8 +61,8 @@ export default function TaskComposer({ selectedDate, selectedMember, onAdd, onCl
       <form className="composer" onSubmit={submit}>
         <div className="composer-head">
           <div>
-            <p>새 작업</p>
-            <h2>할 일 추가</h2>
+            <p>통합 일정</p>
+            <h2>일정 추가</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="닫기">
             <X size={20} />
@@ -39,32 +70,9 @@ export default function TaskComposer({ selectedDate, selectedMember, onAdd, onCl
         </div>
 
         <label>
-          작업 이름
-          <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="예: 싱크대 청소" autoFocus />
+          일정명
+          <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="싱크대 청소, 병원, 출근" autoFocus />
         </label>
-
-        <div className="composer-grid">
-          <label>
-            담당자
-            <select value={owner} onChange={(event) => setOwner(event.target.value)}>
-              {members.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            위치
-            <select value={place} onChange={(event) => setPlace(event.target.value)}>
-              <option>주방</option>
-              <option>거실</option>
-              <option>욕실</option>
-              <option>침실</option>
-              <option>세탁실</option>
-            </select>
-          </label>
-        </div>
 
         <div className="composer-grid">
           <label>
@@ -74,18 +82,64 @@ export default function TaskComposer({ selectedDate, selectedMember, onAdd, onCl
           <label>
             반복
             <select value={repeat} onChange={(event) => setRepeat(event.target.value)}>
-              <option>오늘</option>
-              <option>매일</option>
-              <option>매주</option>
-              <option>2주마다</option>
-              <option>월말</option>
+              {repeatOptions.map((option) => (
+                <option key={option}>{option}</option>
+              ))}
             </select>
           </label>
         </div>
 
+        <div className="composer-grid">
+          <label>
+            시작 시간
+            <input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
+          </label>
+          <label>
+            종료 시간
+            <input type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} />
+          </label>
+        </div>
+
+        <label>
+          대상자
+          <div className="schedule-chip-row">
+            {members.map((member) => (
+              <button key={member.id} type="button" className={owners.includes(member.id) ? "active" : ""} onClick={() => toggleOwner(member.id)}>
+                {member.id === "all" ? "전체" : member.name}
+              </button>
+            ))}
+          </div>
+        </label>
+
+        <label>
+          장소
+          <div className="schedule-chip-row">
+            {places.map((place) => (
+              <button key={place} type="button" className={placePreset === place ? "active" : ""} onClick={() => setPlacePreset(place)}>
+                {place}
+              </button>
+            ))}
+          </div>
+          {placePreset === "직접 입력" && <input value={customPlace} onChange={(event) => setCustomPlace(event.target.value)} placeholder="장소 입력" />}
+        </label>
+
+        <label>
+          알림
+          <select value={reminder} onChange={(event) => setReminder(event.target.value)}>
+            {reminderOptions.map((option) => (
+              <option key={option}>{option}</option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          메모
+          <textarea value={memo} onChange={(event) => setMemo(event.target.value)} placeholder="준비물이나 가족에게 남길 말을 적어 주세요" />
+        </label>
+
         <button className="composer-submit" type="submit">
           <Plus size={19} />
-          추가하기
+          저장
         </button>
       </form>
     </div>

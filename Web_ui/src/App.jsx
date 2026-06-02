@@ -34,6 +34,7 @@ export default function App() {
   const [automationPrompt, setAutomationPrompt] = useState(null);
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
   const [panel, setPanel] = useState(null);
+  const [isMenuOpen, setMenuOpen] = useState(false);
   const [calendarWeatherByDate, setCalendarWeatherByDate] = useState({});
   const [thinQDevices, setThinQDevices] = useState([]);
   const [thinQDeviceStates, setThinQDeviceStates] = useState({});
@@ -178,7 +179,7 @@ export default function App() {
   }
 
   function addTask(task) {
-    const nextTask = { id: Date.now(), source: "manual", ...task };
+    const nextTask = { id: task.id || Date.now() + (task.copyIndex || 0), source: "manual", ...task };
     setTasks((current) => [nextTask, ...current]);
     if (shouldSuggestAutomation(nextTask)) {
       setAutomationPrompt(nextTask);
@@ -414,9 +415,20 @@ export default function App() {
             <button className="icon-button" aria-label="알림" onClick={() => setPanel({ type: "notifications" })}>
               <Bell size={20} />
             </button>
-            <button className="icon-button" aria-label="메뉴" onClick={() => setPanel({ type: "settings" })}>
-              <Menu size={22} />
-            </button>
+            <div className="menu-popover-wrap">
+              <button className="icon-button" aria-label="메뉴" onClick={() => setMenuOpen((current) => !current)} aria-expanded={isMenuOpen}>
+                <Menu size={22} />
+              </button>
+              {isMenuOpen && (
+                <div className="menu-popover" role="menu">
+                  <button type="button" onClick={() => setMenuOpen(false)}>가족 초대</button>
+                  <button type="button" onClick={() => { setPanel({ type: "notifications" }); setMenuOpen(false); }}>알림 설정</button>
+                  <button type="button" onClick={() => { setPanel({ type: "settings" }); setMenuOpen(false); }}>테마 설정</button>
+                  <button type="button" onClick={() => setMenuOpen(false)}>데이터 내보내기</button>
+                  <button type="button" onClick={() => { setComposerOpen(true); setMenuOpen(false); }}>작업 추가</button>
+                </div>
+              )}
+            </div>
             <button className="icon-button" aria-label="LG ThinQ" onClick={() => setPanel({ type: "thinq" })}>
               <Cpu size={20} />
             </button>

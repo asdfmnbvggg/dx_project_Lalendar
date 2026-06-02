@@ -1,61 +1,75 @@
-import { CalendarPlus, LayoutTemplate } from "lucide-react";
+import { CalendarPlus, ChevronLeft, ChevronRight, LayoutTemplate } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { createScheduleId, loadSchedules, saveSchedules } from "../../services/scheduleStorage.js";
 import MemberFilter from "./MemberFilter.jsx";
 import ScheduleModal from "./ScheduleModal.jsx";
 import TemplateSelector from "./TemplateSelector.jsx";
 import WeeklyTimetable from "./WeeklyTimetable.jsx";
-import { buildTemplateSchedules, CATEGORY_COLORS } from "./scheduleConstants.js";
+import { buildTemplateSchedules, CATEGORY_COLORS, DAYS } from "./scheduleConstants.js";
 
 export default function FamilySchedulePage({ tasks = [], selectedDate, members = [], selectedMember = "all" }) {
   const [schedules, setSchedules] = useState([]);
   const [filter, setFilter] = useState(selectedMember || "all");
   const [showWeekend, setShowWeekend] = useState(false);
+  const [viewDate, setViewDate] = useState(selectedDate);
   const [modalState, setModalState] = useState(null);
   const [isTemplateOpen, setTemplateOpen] = useState(false);
 
   useEffect(() => {
-    setFilter(selectedMember || "all");
-  }, [selectedMember]);
+    setViewDate(selectedDate);
+  }, [selectedDate]);
 
-  const filterMembers = useMemo(() => members.length > 0 ? members : [{ id: "all", name: "전체" }], [members]);
+  const filterMembers = useMemo(() => (members.length > 0 ? members : [{ id: "all", name: "전체" }]), [members]);
   const schedulableMembers = filterMembers.filter((member) => member.id !== "all");
   const defaultMemberId = selectedMember !== "all" ? selectedMember : schedulableMembers[0]?.id || "all";
   const memberNameById = useMemo(() => Object.fromEntries(filterMembers.map((member) => [member.id, member.name])), [filterMembers]);
+  const weekRange = useMemo(() => getMondayWeekRange(viewDate), [viewDate]);
+  const weekLabel = `${formatShortDate(weekRange.start)} ~ ${formatShortDate(weekRange.end)}`;
 
   useEffect(() => {
     const validMemberIds = new Set(filterMembers.map((member) => member.id));
     const loaded = loadSchedules();
-    const normalized = loaded.map((schedule) => (validMemberIds.has(schedule.member) ? schedule : { ...schedule, member: defaultMemberId }));
+    const normalized = loaded.map((schedule) => normalizeStoredSchedule(schedule, validMemberIds, defaultMemberId));
     setSchedules(normalized);
-    if (normalized.some((schedule, index) => schedule.member !== loaded[index]?.member)) {
+    if (JSON.stringify(normalized) !== JSON.stringify(loaded)) {
       saveSchedules(normalized);
     }
   }, [defaultMemberId, filterMembers]);
 
-  const taskSchedules = useMemo(() => buildTaskSchedules(tasks, selectedDate), [tasks, selectedDate]);
+  const taskSchedules = useMemo(() => buildTaskSchedules(tasks, weekRange), [tasks, weekRange]);
   const visibleSchedules = useMemo(() => {
-    return [...schedules, ...taskSchedules].filter((schedule) => filter === "all" || schedule.member === filter);
-  }, [filter, schedules, taskSchedules]);
+    const manualSchedules = expandSchedulesForWeek(schedules, weekRange);
+    return [...manualSchedules, ...taskSchedules].filter((schedule) => scheduleIncludesMember(schedule, filter));
+  }, [filter, schedules, taskSchedules, weekRange]);
 
   function persist(nextSchedules) {
     setSchedules(saveSchedules(nextSchedules));
   }
 
   function openNewSchedule(defaults = {}) {
+    const date = defaults.date || viewDate;
+    const day = defaults.day || dayFromDate(date) || "월";
     setModalState({
       mode: "create",
       schedule: {
         id: createScheduleId(),
         title: "",
         member: filter === "all" ? defaultMemberId : filter,
-        day: "월",
+        members: [filter === "all" ? defaultMemberId : filter],
+        date,
+        day,
+        days: [day],
         startTime: "09:00",
         endTime: "10:00",
-        location: "",
+        location: "우리 집",
+        placePreset: "우리 집",
         color: CATEGORY_COLORS.custom,
-        repeatWeekly: true,
+        repeat: "none",
+        repeatWeekly: false,
         category: "custom",
+        reminder: "off",
+        reminderTarget: "assignees",
+        memo: "",
         ...defaults,
       },
     });
@@ -72,7 +86,7 @@ export default function FamilySchedulePage({ tasks = [], selectedDate, members =
   function deleteSchedule(schedule) {
     if (schedule.source === "task") return;
     if (!window.confirm("이 일정을 삭제할까요?")) return;
-    persist(schedules.filter((item) => item.id !== schedule.id));
+    persist(schedules.filter((item) => item.id !== schedule.parentId && item.id !== schedule.id));
     setModalState(null);
   }
 
@@ -80,18 +94,24 @@ export default function FamilySchedulePage({ tasks = [], selectedDate, members =
     if (schedule.source === "task") {
       openNewSchedule({
         title: schedule.title,
+        members: schedule.members,
         member: schedule.member,
+        date: schedule.date,
         day: schedule.day,
+        days: [schedule.day],
         startTime: schedule.startTime,
         endTime: schedule.endTime,
         location: schedule.location,
+        placePreset: presetForLocation(schedule.location),
         color: schedule.color,
+        repeat: "none",
         repeatWeekly: false,
         category: "custom",
       });
       return;
     }
-    setModalState({ mode: "edit", schedule });
+    const original = schedules.find((item) => item.id === schedule.parentId || item.id === schedule.id) || schedule;
+    setModalState({ mode: "edit", schedule: original });
   }
 
   function applyTemplate(template, mode) {
@@ -104,18 +124,26 @@ export default function FamilySchedulePage({ tasks = [], selectedDate, members =
     <section className="family-schedule-panel">
       <div className="family-schedule-head">
         <div>
-          <p>가족 시간표</p>
+          <p>일정 보기 필터</p>
           <h2>이번 주 일정</h2>
+          <span>{weekLabel}</span>
         </div>
         <div className="family-schedule-actions">
+          <button type="button" onClick={() => setViewDate(addDays(viewDate, -7))} aria-label="이전 주">
+            <ChevronLeft size={17} />
+          </button>
+          <input type="date" value={viewDate} onChange={(event) => setViewDate(event.target.value)} aria-label="기준 날짜 선택" />
+          <button type="button" onClick={() => setViewDate(addDays(viewDate, 7))} aria-label="다음 주">
+            <ChevronRight size={17} />
+          </button>
           <button type="button" onClick={() => setShowWeekend((current) => !current)} className={showWeekend ? "active" : ""}>
-            {showWeekend ? "월-금 보기" : "주말 포함"}
+            {showWeekend ? "평일만" : "주말 포함"}
           </button>
           <button type="button" onClick={() => setTemplateOpen(true)}>
             <LayoutTemplate size={17} />
             템플릿
           </button>
-          <button type="button" onClick={() => openNewSchedule()}>
+          <button type="button" className="primary-action" onClick={() => openNewSchedule()}>
             <CalendarPlus size={17} />
             일정 추가
           </button>
@@ -127,8 +155,8 @@ export default function FamilySchedulePage({ tasks = [], selectedDate, members =
       <WeeklyTimetable
         schedules={visibleSchedules}
         showWeekend={showWeekend}
-        getMemberName={(memberId) => memberNameById[memberId] || memberId}
-        onEmptyClick={(day, startTime) => openNewSchedule({ day, startTime, endTime: addOneHour(startTime) })}
+        getMemberName={(memberIds) => formatMemberNames(memberIds, memberNameById)}
+        onEmptyClick={(day, startTime) => openNewSchedule({ day, days: [day], date: dateForDayInWeek(day, weekRange.start), startTime, endTime: addOneHour(startTime) })}
         onScheduleClick={handleScheduleClick}
       />
 
@@ -148,28 +176,78 @@ export default function FamilySchedulePage({ tasks = [], selectedDate, members =
   );
 }
 
-function buildTaskSchedules(tasks, selectedDate) {
-  const weekRange = getMondayWeekRange(selectedDate);
+function normalizeStoredSchedule(schedule, validMemberIds, defaultMemberId) {
+  const members = (schedule.members?.length ? schedule.members : [schedule.member || defaultMemberId]).filter((memberId) => validMemberIds.has(memberId));
+  const nextMembers = members.length ? members : [defaultMemberId];
+  const days = schedule.days?.length ? schedule.days : [schedule.day || dayFromDate(schedule.date) || "월"];
+  return {
+    ...schedule,
+    members: nextMembers,
+    member: nextMembers[0],
+    days,
+    day: days[0],
+    repeat: schedule.repeat || (schedule.repeatWeekly ? "weekly" : "none"),
+  };
+}
 
+function expandSchedulesForWeek(schedules, weekRange) {
+  return schedules.flatMap((schedule) => {
+    const members = schedule.members?.length ? schedule.members : [schedule.member || "all"];
+    const base = { ...schedule, members, member: members[0] };
+
+    if (schedule.date && !schedule.repeatWeekly && schedule.repeat !== "weekly" && schedule.repeat !== "custom") {
+      if (schedule.date < weekRange.start || schedule.date > weekRange.end) return [];
+      return [{ ...base, day: dayFromDate(schedule.date), parentId: schedule.id }];
+    }
+
+    const days = schedule.days?.length ? schedule.days : [schedule.day].filter(Boolean);
+    return days.map((day) => ({
+      ...base,
+      id: `${schedule.id}-${day}`,
+      parentId: schedule.id,
+      day,
+      date: dateForDayInWeek(day, weekRange.start),
+    }));
+  });
+}
+
+function buildTaskSchedules(tasks, weekRange) {
   return tasks
     .filter((task) => task.date >= weekRange.start && task.date <= weekRange.end && !task.done)
     .map((task, index) => {
       const parsed = parseTimeRange(task.repeat);
       const slot = parsed || rotatingTaskSlot(task, index);
+      const members = [task.owner || "all"];
       return {
         id: `task-${task.id}`,
         title: task.title,
-        member: memberFromOwner(task.owner),
+        member: members[0],
+        members,
+        date: task.date,
         day: dayFromDate(task.date),
         startTime: slot.startTime,
         endTime: slot.endTime,
-        location: task.place || "집",
+        location: task.place || "우리 집",
         color: "#64748b",
+        repeat: "none",
         repeatWeekly: false,
         category: "custom",
         source: "task",
       };
     });
+}
+
+function scheduleIncludesMember(schedule, filter) {
+  if (filter === "all") return true;
+  const members = schedule.members?.length ? schedule.members : [schedule.member];
+  return members.includes("all") || members.includes(filter);
+}
+
+function formatMemberNames(memberIds, memberNameById) {
+  const ids = Array.isArray(memberIds) ? memberIds : [memberIds];
+  if (ids.includes("all")) return "가족 전체";
+  if (ids.length <= 1) return memberNameById[ids[0]] || "미정";
+  return `${memberNameById[ids[0]] || ids[0]} 외 ${ids.length - 1}명`;
 }
 
 function parseTimeRange(value = "") {
@@ -193,11 +271,8 @@ function rotatingTaskSlot(task, index) {
   return { startTime, endTime };
 }
 
-function memberFromOwner(owner) {
-  return owner || "all";
-}
-
 function dayFromDate(date) {
+  if (!date) return "";
   return ["일", "월", "화", "수", "목", "금", "토"][new Date(`${date}T00:00:00`).getDay()];
 }
 
@@ -211,8 +286,20 @@ function getMondayWeekRange(date) {
   return { start: toDateKey(monday), end: toDateKey(sunday) };
 }
 
+function dateForDayInWeek(day, mondayKey) {
+  const index = DAYS.indexOf(day);
+  if (index === -1) return mondayKey;
+  return addDays(mondayKey, index);
+}
+
 function toDateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function addDays(date, amount) {
+  const next = new Date(`${date}T00:00:00`);
+  next.setDate(next.getDate() + amount);
+  return toDateKey(next);
 }
 
 function addOneHour(time) {
@@ -223,4 +310,12 @@ function addOneHour(time) {
 function normalizeTime(time) {
   const [hour, minute] = time.split(":");
   return `${String(Number(hour)).padStart(2, "0")}:${minute}`;
+}
+
+function formatShortDate(date) {
+  return `${Number(date.slice(5, 7))}월 ${Number(date.slice(8, 10))}일`;
+}
+
+function presetForLocation(location) {
+  return ["우리 집", "회사", "학교", "학원", "마트", "병원"].includes(location) ? location : "직접 입력";
 }

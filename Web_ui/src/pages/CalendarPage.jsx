@@ -74,13 +74,16 @@ export default function CalendarPage({
 
   return (
     <section className="page calendar-page">
-      <div className="profile-strip">
-        {members.map((member) => (
-          <button key={member.id} className={selectedMember === member.id ? "active" : ""} onClick={() => setSelectedMember(member.id)}>
-            <span style={{ background: memberColors[member.id] || member.color }}>{member.short}</span>
-            {member.name}
-          </button>
-        ))}
+      <div className="calendar-filter-block">
+        <p>일정 보기 필터</p>
+        <div className="profile-strip" aria-label="캘린더 일정 보기 필터">
+          {members.map((member) => (
+            <button key={member.id} className={selectedMember === member.id ? "active" : ""} onClick={() => setSelectedMember(member.id)}>
+              <span style={{ background: memberColors[member.id] || member.color }}>{member.short}</span>
+              {member.id === "all" ? "전체" : member.name}
+            </button>
+          ))}
+        </div>
       </div>
 
       <section className="calendar-board">

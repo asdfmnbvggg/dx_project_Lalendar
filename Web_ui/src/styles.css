@@ -90,17 +90,17 @@ button {
 .app-shell {
   min-height: 100vh;
   display: grid;
-  place-items: center;
-  padding: 24px;
+  place-items: stretch;
+  padding: 0;
 }
 
 .app-frame {
   position: relative;
-  width: min(1180px, 100%);
-  min-height: calc(100vh - 48px);
+  width: 100%;
+  min-height: 100vh;
   padding: 26px 26px 104px;
   overflow: hidden;
-  border-radius: 34px;
+  border-radius: 0;
   background:
     radial-gradient(circle at 88% 0%, rgba(255, 214, 102, 0.24), transparent 28%),
     radial-gradient(circle at 0% 8%, rgba(255, 122, 162, 0.14), transparent 28%),
@@ -165,13 +165,49 @@ button {
 }
 
 .top-actions {
+  position: relative;
   display: flex;
   gap: 8px;
 }
 
+.menu-popover-wrap {
+  position: relative;
+}
+
+.menu-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 40;
+  width: 190px;
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.14);
+  animation: soft-enter 180ms ease both;
+}
+
+.menu-popover button {
+  min-height: 38px;
+  padding: 0 11px;
+  border-radius: 11px;
+  color: #374151;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.menu-popover button:hover {
+  color: var(--red);
+  background: var(--red-soft);
+}
+
 .page {
   width: 100%;
-  max-width: 1040px;
+  max-width: 1320px;
   margin: 0 auto;
   padding-top: 18px;
   animation: soft-enter 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
@@ -948,6 +984,18 @@ button {
   scrollbar-width: none;
 }
 
+.calendar-filter-block {
+  display: grid;
+  gap: 8px;
+}
+
+.calendar-filter-block p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 950;
+}
+
 .profile-strip::-webkit-scrollbar {
   display: none;
 }
@@ -1630,8 +1678,42 @@ button {
 
 .crew-switcher {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr repeat(3, minmax(0, 1fr));
   gap: 10px;
+}
+
+.crew-switcher-title {
+  min-height: 64px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.crew-switcher-title p,
+.crew-switcher-title .crew-date {
+  margin: 0;
+}
+
+.crew-switcher-title p {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.crew-switcher-title .crew-date {
+  display: block;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
 }
 
 .crew-switcher button {
@@ -1640,9 +1722,9 @@ button {
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border: 1px solid #ffe0c1;
+  border: 1px solid var(--line);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.76);
+  background: #fff;
   box-shadow: var(--shadow);
   text-align: left;
   transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
@@ -1657,7 +1739,7 @@ button {
   background: linear-gradient(135deg, color-mix(in srgb, var(--member-color, var(--red)) 13%, #fff), #fff7df);
 }
 
-.crew-switcher span,
+.crew-switcher .member-avatar,
 .member-orb {
   width: 38px;
   height: 38px;
@@ -1742,7 +1824,7 @@ button {
 
 .member-dashboard-head {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 14px;
 }
@@ -2440,15 +2522,23 @@ button {
 }
 
 .composer input,
-.composer select {
+.composer select,
+.composer textarea {
   width: 100%;
-  height: 48px;
-  border: 1px solid #f5c7d4;
+  min-height: 48px;
+  border: 1px solid var(--line);
   border-radius: 16px;
   outline: 0;
   padding: 0 13px;
-  background: #fff8fa;
+  background: #fff;
   color: var(--ink);
+}
+
+.composer textarea {
+  min-height: 92px;
+  padding: 12px 13px;
+  resize: vertical;
+  line-height: 1.45;
 }
 
 .composer-grid {
@@ -2834,7 +2924,12 @@ button {
   }
 
   .app-frame {
-    padding: 18px 14px 132px;
+    padding: 14px 8px 120px;
+  }
+
+  .page {
+    max-width: 100%;
+    padding-top: 12px;
   }
 
   .hero-panel {
@@ -2879,7 +2974,26 @@ button {
   }
 
   .calendar-board {
-    padding: 14px;
+    padding: 10px 6px;
+    border-radius: 18px;
+  }
+
+  .month-grid {
+    gap: 3px;
+  }
+
+  .weekdays {
+    margin: 12px 0 6px;
+    font-size: 11px;
+  }
+
+  .weather-pop,
+  .weather-temps small:last-child {
+    display: none;
+  }
+
+  .date-tasks {
+    gap: 2px;
   }
 
   .calendar-header {
@@ -2905,27 +3019,28 @@ button {
 
   .blank-day,
   .date-cell {
-    min-height: 104px;
+    min-height: 70px;
   }
 
   .calendar-compact .blank-day,
   .calendar-compact .date-cell {
-    min-height: 82px;
+    min-height: 58px;
   }
 
   .calendar-large .blank-day,
   .calendar-large .date-cell {
-    min-height: 220px;
+    min-height: 112px;
   }
 
   .date-cell {
-    grid-template-rows: auto minmax(44px, 1fr) auto;
-    padding: 4px 2px 6px;
+    grid-template-rows: auto minmax(26px, auto) auto;
+    padding: 3px 1px 4px;
+    border-radius: 10px;
   }
 
   .calendar-large .date-cell {
-    grid-template-rows: auto minmax(50px, auto) 1fr;
-    padding: 5px 4px 7px;
+    grid-template-rows: auto minmax(32px, auto) 1fr;
+    padding: 4px 2px 5px;
   }
 
   .calendar-large .date-cell strong {
@@ -2948,31 +3063,31 @@ button {
   }
 
   .date-cell strong {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     margin-bottom: 4px;
-    font-size: 14px;
+    font-size: 12px;
   }
 
   .day-weather {
-    min-height: 44px;
+    min-height: 28px;
   }
 
   .weather-icon {
-    height: 20px;
-    font-size: 20px;
+    height: 15px;
+    font-size: 15px;
   }
 
   .weather-temps b {
-    font-size: 14px;
+    font-size: 11px;
   }
 
   .weather-temps small {
-    font-size: 12px;
+    font-size: 10px;
   }
 
   .day-weather em {
-    font-size: 12px;
+    font-size: 10px;
   }
 
   .calendar-compact .date-cell i {
@@ -2984,12 +3099,12 @@ button {
   }
 
   .date-cell i {
-    width: min(64px, 100%);
+    width: min(42px, 100%);
     height: auto;
-    padding: 3px 5px;
-    border-radius: 6px;
+    padding: 2px 3px;
+    border-radius: 5px;
     color: #fff;
-    font-size: 10px;
+    font-size: 8px;
   }
 
   .calendar-large .date-cell i {
@@ -3019,7 +3134,7 @@ button {
   }
 
   .calendar-scale-0 {
-    --cell-min: 76px;
+    --cell-min: 48px;
     --date-size: 12px;
     --date-circle: 22px;
     --weather-temp-size: 10px;
@@ -3031,51 +3146,51 @@ button {
   }
 
   .calendar-scale-1 {
-    --cell-min: 94px;
-    --date-size: 13px;
-    --date-circle: 24px;
-    --weather-icon-size: 15px;
-    --weather-temp-size: 12px;
-    --weather-low-size: 11px;
-    --weather-min: 34px;
-    --task-font: 9px;
-    --task-width: min(58px, 100%);
+    --cell-min: 58px;
+    --date-size: 12px;
+    --date-circle: 22px;
+    --weather-icon-size: 13px;
+    --weather-temp-size: 10px;
+    --weather-low-size: 9px;
+    --weather-min: 24px;
+    --task-font: 0px;
+    --task-width: 7px;
   }
 
   .calendar-scale-2 {
-    --cell-min: 112px;
-    --date-size: 14px;
-    --date-circle: 26px;
-    --weather-icon-size: 20px;
-    --weather-temp-size: 14px;
-    --weather-low-size: 12px;
-    --weather-min: 44px;
-    --task-font: 10px;
-    --task-width: min(66px, 100%);
+    --cell-min: 68px;
+    --date-size: 12px;
+    --date-circle: 22px;
+    --weather-icon-size: 15px;
+    --weather-temp-size: 11px;
+    --weather-low-size: 10px;
+    --weather-min: 28px;
+    --task-font: 8px;
+    --task-width: min(42px, 100%);
   }
 
   .calendar-scale-3 {
-    --cell-min: 174px;
-    --date-size: 18px;
-    --date-circle: 32px;
-    --weather-icon-size: 27px;
-    --weather-temp-size: 17px;
-    --weather-low-size: 14px;
-    --weather-min: 58px;
-    --task-font: 11px;
-    --task-width: min(92px, 100%);
+    --cell-min: 88px;
+    --date-size: 14px;
+    --date-circle: 26px;
+    --weather-icon-size: 18px;
+    --weather-temp-size: 12px;
+    --weather-low-size: 10px;
+    --weather-min: 34px;
+    --task-font: 9px;
+    --task-width: min(54px, 100%);
   }
 
   .calendar-scale-4 {
-    --cell-min: 230px;
-    --date-size: 21px;
-    --date-circle: 38px;
-    --weather-icon-size: 34px;
-    --weather-temp-size: 21px;
-    --weather-low-size: 17px;
-    --weather-min: 72px;
-    --task-font: 13px;
-    --task-width: min(112px, 100%);
+    --cell-min: 112px;
+    --date-size: 16px;
+    --date-circle: 30px;
+    --weather-icon-size: 22px;
+    --weather-temp-size: 14px;
+    --weather-low-size: 12px;
+    --weather-min: 42px;
+    --task-font: 10px;
+    --task-width: min(68px, 100%);
   }
 
   .sheet-head {
@@ -3233,6 +3348,14 @@ button[title*="Vercel"] {
   font-size: 26px;
 }
 
+.family-schedule-head span {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .family-schedule-actions,
 .family-member-filter {
   display: flex;
@@ -3255,12 +3378,37 @@ button[title*="Vercel"] {
   font-weight: 950;
 }
 
-.family-schedule-actions button:last-child,
+.family-schedule-actions input {
+  width: 148px;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.family-schedule-actions button.primary-action,
 .family-schedule-actions button.active,
 .family-member-filter button.active {
   color: #fff;
   background: linear-gradient(135deg, var(--pink), var(--red));
   box-shadow: 0 12px 24px rgba(225, 29, 72, 0.14);
+}
+
+.family-member-filter-wrap {
+  display: grid;
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+
+.family-member-filter-wrap p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 950;
 }
 
 .weekly-timetable-shell {
@@ -3274,6 +3422,8 @@ button[title*="Vercel"] {
 }
 
 .weekly-timetable {
+  --timetable-scale: 1;
+  --timetable-mobile-height: var(--schedule-total-height);
   min-width: 920px;
   display: grid;
   grid-template-columns: 82px repeat(var(--day-count), minmax(132px, 1fr));
@@ -3305,6 +3455,7 @@ button[title*="Vercel"] {
   left: 0;
   z-index: 2;
   display: grid;
+  height: var(--timetable-mobile-height, var(--column-height));
   background: #fbfcfe;
   border-right: 1px solid #e8ebf0;
 }
@@ -3322,6 +3473,7 @@ button[title*="Vercel"] {
 
 .day-column {
   position: relative;
+  height: var(--timetable-mobile-height, var(--column-height));
   min-width: 0;
   display: block;
   border-right: 1px solid #edf0f4;
@@ -3346,6 +3498,8 @@ button[title*="Vercel"] {
 .schedule-block {
   position: absolute;
   z-index: 1;
+  top: calc(var(--schedule-top) * var(--timetable-scale, 1));
+  height: calc(var(--schedule-height) * var(--timetable-scale, 1));
   min-width: 0;
   display: grid;
   align-content: start;
@@ -3382,11 +3536,22 @@ button[title*="Vercel"] {
 }
 
 .schedule-block span,
-.schedule-block small {
+.schedule-block small,
+.schedule-block em {
   color: #475569;
   font-size: 11px;
   font-weight: 850;
   line-height: 1.15;
+}
+
+.schedule-block em {
+  width: fit-content;
+  margin-top: 2px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(225, 29, 72, 0.1);
+  color: var(--red);
+  font-style: normal;
 }
 
 .schedule-block.task-derived {
@@ -3401,6 +3566,7 @@ button[title*="Vercel"] {
 }
 
 .schedule-day-buttons,
+.schedule-chip-row,
 .schedule-color-row,
 .schedule-options,
 .schedule-modal-actions {
@@ -3417,13 +3583,47 @@ button[title*="Vercel"] {
   font-weight: 950;
 }
 
-.schedule-day-buttons button.active {
+.schedule-day-buttons button.active,
+.schedule-chip-row button.active {
   color: #fff;
   background: var(--red);
 }
 
+.schedule-chip-row button {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #f4f5f7;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 950;
+}
+
 .schedule-options {
   margin-top: 12px;
+}
+
+.ai-suggestion-note {
+  display: grid;
+  gap: 5px;
+  margin-top: 12px;
+  padding: 12px 13px;
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  background: #eff6ff;
+  color: #1e3a8a;
+}
+
+.ai-suggestion-note strong {
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.ai-suggestion-note span {
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.45;
 }
 
 .schedule-options label {
@@ -3551,6 +3751,284 @@ button[title*="Vercel"] {
 .template-actions button:last-child {
   color: #fff;
   background: #111827;
+}
+
+@media (max-width: 640px) {
+  html,
+  body,
+  #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .app-shell,
+  .app-frame {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .app-frame {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .page,
+  .crew-page,
+  .calendar-page {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .crew-switcher,
+  .member-dashboard,
+  .family-schedule-panel,
+  .task-sheet,
+  .calendar-board {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .crew-switcher {
+    grid-template-columns: 1fr !important;
+    gap: 8px;
+  }
+
+  .crew-switcher-title {
+    min-height: auto;
+    padding: 10px 12px;
+  }
+
+  .crew-switcher-title .crew-date {
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    color: var(--muted) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+    text-align: left !important;
+  }
+
+  .crew-switcher .member-avatar,
+  .member-orb {
+    flex: 0 0 38px;
+  }
+
+  .crew-switcher button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .crew-switcher button div,
+  .member-dashboard-title,
+  .member-task-list-head {
+    min-width: 0;
+  }
+
+  .calendar-page {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .calendar-filter-block,
+  .calendar-board,
+  .calendar-page .task-sheet.compact {
+    width: 100%;
+  }
+
+  .calendar-board {
+    padding: 10px 6px !important;
+    overflow: hidden;
+  }
+
+  .weekdays,
+  .month-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  }
+
+  .weekdays {
+    margin: 10px 0 5px !important;
+    font-size: 10px !important;
+  }
+
+  .month-grid {
+    gap: 2px !important;
+  }
+
+  .calendar-scale-0,
+  .calendar-scale-1,
+  .calendar-scale-2,
+  .calendar-scale-3,
+  .calendar-scale-4 {
+    --cell-min: 58px;
+    --date-size: 11px;
+    --date-circle: 20px;
+    --weather-icon-size: 14px;
+    --weather-temp-size: 10px;
+    --weather-low-size: 9px;
+    --weather-min: 24px;
+    --task-font: 0px;
+    --task-width: 6px;
+    --task-height: 6px;
+  }
+
+  .calendar-scale-0 .blank-day,
+  .calendar-scale-0 .date-cell,
+  .calendar-scale-1 .blank-day,
+  .calendar-scale-1 .date-cell,
+  .calendar-scale-2 .blank-day,
+  .calendar-scale-2 .date-cell,
+  .calendar-scale-3 .blank-day,
+  .calendar-scale-3 .date-cell,
+  .calendar-scale-4 .blank-day,
+  .calendar-scale-4 .date-cell {
+    min-height: var(--cell-min) !important;
+  }
+
+  .date-cell {
+    padding: 3px 1px 4px !important;
+    border-radius: 9px !important;
+    grid-template-rows: auto minmax(20px, auto) auto !important;
+  }
+
+  .date-cell strong {
+    width: var(--date-circle) !important;
+    height: var(--date-circle) !important;
+    margin-bottom: 2px !important;
+    font-size: var(--date-size) !important;
+  }
+
+  .day-weather {
+    min-height: var(--weather-min) !important;
+  }
+
+  .weather-icon {
+    height: calc(var(--weather-icon-size) + 1px) !important;
+    font-size: var(--weather-icon-size) !important;
+  }
+
+  .weather-temps {
+    gap: 0 !important;
+  }
+
+  .weather-temps b {
+    font-size: var(--weather-temp-size) !important;
+  }
+
+  .weather-temps small,
+  .weather-pop,
+  .weather-temps small:last-child {
+    display: none !important;
+  }
+
+  .date-cell i {
+    width: var(--task-width) !important;
+    height: var(--task-height) !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    color: transparent !important;
+    font-size: 0 !important;
+  }
+
+  .date-cell i span,
+  .date-cell i small,
+  .weather-recommendation-chip,
+  .more-tasks {
+    display: none !important;
+  }
+
+  .family-schedule-panel {
+    padding: 12px 8px !important;
+    border-radius: 18px !important;
+  }
+
+  .family-schedule-head {
+    display: grid;
+    gap: 10px;
+  }
+
+  .family-schedule-head h2 {
+    font-size: 20px;
+  }
+
+  .family-schedule-actions {
+    gap: 6px;
+  }
+
+  .family-schedule-actions button,
+  .family-member-filter button {
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .family-schedule-actions input {
+    width: 132px;
+    height: 34px;
+    font-size: 12px;
+  }
+
+  .weekly-timetable-shell {
+    overflow-x: hidden !important;
+    border-radius: 14px;
+  }
+
+  .weekly-timetable {
+    --timetable-scale: 0.54;
+    --timetable-mobile-height: calc(var(--schedule-total-height) * var(--timetable-scale));
+    width: 100% !important;
+    min-width: 0 !important;
+    grid-template-columns: 34px repeat(var(--day-count), minmax(0, 1fr)) !important;
+    transform: none !important;
+    zoom: 1 !important;
+  }
+
+  .time-spacer,
+  .day-head {
+    min-height: 30px;
+    font-size: 11px;
+  }
+
+  .time-axis span {
+    padding: 4px 3px 0 0;
+    font-size: 9px;
+    letter-spacing: -0.2px;
+  }
+
+  .hour-line {
+    opacity: 0.75;
+  }
+
+  .schedule-block {
+    min-height: 24px;
+    gap: 1px;
+    padding: 4px 4px;
+    border-left-width: 3px;
+    border-radius: 6px;
+    box-shadow: none;
+  }
+
+  .schedule-block strong {
+    font-size: 9px;
+    line-height: 1.12;
+  }
+
+  .schedule-block span,
+  .schedule-block small,
+  .schedule-block em {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

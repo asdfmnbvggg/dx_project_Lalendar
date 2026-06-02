@@ -10,7 +10,7 @@ export default function WeeklyTimetable({ schedules, showWeekend, getMemberName,
 
   return (
     <div className="weekly-timetable-shell">
-      <div className="weekly-timetable" style={{ "--day-count": days.length }}>
+      <div className="weekly-timetable" style={{ "--day-count": days.length, "--schedule-total-height": `${TOTAL_HEIGHT}px` }}>
         <div className="time-spacer" />
         {days.map((day) => (
           <div className="day-head" key={day}>
@@ -18,7 +18,7 @@ export default function WeeklyTimetable({ schedules, showWeekend, getMemberName,
           </div>
         ))}
 
-        <div className="time-axis" style={{ height: TOTAL_HEIGHT }}>
+        <div className="time-axis" style={{ "--column-height": `${TOTAL_HEIGHT}px` }}>
           {hours.slice(0, -1).map((hour) => (
             <span key={hour} style={{ height: HOUR_HEIGHT }}>
               {formatHour(hour)}
@@ -30,7 +30,7 @@ export default function WeeklyTimetable({ schedules, showWeekend, getMemberName,
           <div
             key={day}
             className="day-column"
-            style={{ height: TOTAL_HEIGHT }}
+            style={{ "--column-height": `${TOTAL_HEIGHT}px` }}
             onClick={(event) => onEmptyClick(day, timeFromOffset(event.nativeEvent.offsetY))}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") onEmptyClick(day, "09:00");
@@ -43,7 +43,7 @@ export default function WeeklyTimetable({ schedules, showWeekend, getMemberName,
               <span key={hour} className="hour-line" style={{ top: `${(hour - START_HOUR) * HOUR_HEIGHT}px` }} />
             ))}
             {layoutSchedules(schedulesByDay[day] || []).map(({ schedule, layout }) => (
-              <ScheduleBlock key={schedule.id} schedule={schedule} layout={layout} memberName={getMemberName(schedule.member)} onClick={onScheduleClick} />
+              <ScheduleBlock key={schedule.id} schedule={schedule} layout={layout} memberName={getMemberName(schedule.members || schedule.member)} onClick={onScheduleClick} />
             ))}
           </div>
         ))}

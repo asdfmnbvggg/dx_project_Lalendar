@@ -6,8 +6,8 @@ export default function ScheduleBlock({ schedule, layout, memberName, onClick })
       style={{
         "--schedule-color": schedule.color,
         "--schedule-bg": hexToRgba(schedule.color, 0.13),
-        top: `${layout.top}px`,
-        height: `${layout.height}px`,
+        "--schedule-top": `${layout.top}px`,
+        "--schedule-height": `${layout.height}px`,
         left: `${layout.left}%`,
         width: `${layout.width}%`,
       }}
@@ -15,11 +15,12 @@ export default function ScheduleBlock({ schedule, layout, memberName, onClick })
         event.stopPropagation();
         onClick(schedule);
       }}
-      title={`${schedule.title} / ${schedule.member} / ${schedule.location}`}
+      title={`${schedule.title} / ${memberName} / ${schedule.location || "장소 없음"}`}
     >
       <strong>{schedule.title}</strong>
       <span>{memberName}</span>
       <small>{schedule.location || "장소 없음"}</small>
+      {schedule.reminder && schedule.reminder !== "off" && <em>알림</em>}
     </button>
   );
 }
