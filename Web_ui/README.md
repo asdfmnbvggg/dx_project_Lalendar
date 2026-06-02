@@ -30,9 +30,10 @@ THINQ_PAT=
 THINQ_CLIENT_ID=
 THINQ_COUNTRY=KR
 THINQ_API_BASE_URL=https://api-kic.lgthinq.com
+THINQ_API_KEY=
 ```
 
-`THINQ_API_KEY` is not used. ThinQ requests use `THINQ_PAT` as the Bearer token only.
+ThinQ secrets, including `THINQ_PAT` and `THINQ_API_KEY`, must stay server-only and must not use the `VITE_` prefix.
 
 Do not commit real keys or tokens to git. After adding or changing values in Vercel Dashboard -> Settings -> Environment Variables, redeploy the Vercel project so the serverless functions receive the new values.
 

@@ -1,5 +1,5 @@
-import { getThinQDeviceState } from "../../../../server/thinqIntegrationService";
-import { handleThinQError } from "../../../../server/thinqApiError";
+import { getThinQDeviceState } from "../../../../server/thinqIntegrationService.js";
+import { handleThinQError } from "../../../../server/thinqApiError.js";
 
 export default async function handler(request: any, response: any) {
   if (request.method !== "GET") {
