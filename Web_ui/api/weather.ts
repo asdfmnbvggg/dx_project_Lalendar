@@ -24,18 +24,15 @@ export default async function handler(request: any, response: any) {
   url.searchParams.set("ny", ny);
 
   try {
-    const weatherResponse = await fetch(`${url.toString()}&serviceKey=${weatherApiKey}`);
-
-    if (!weatherResponse.ok) {
-      response.status(weatherResponse.status).send(`Weather API request failed: ${weatherResponse.status}`);
-      return;
-    }
-
-    const payload = await weatherResponse.json();
+    const payload = await fetchWeatherPayload(url, weatherApiKey);
     const items = payload?.response?.body?.items?.item;
 
     if (!Array.isArray(items)) {
-      response.status(502).json({ message: "Invalid weather API response" });
+      const header = payload?.response?.header;
+      response.status(502).json({
+        message: header?.resultMsg || "Invalid weather API response",
+        resultCode: header?.resultCode,
+      });
       return;
     }
 
@@ -44,6 +41,38 @@ export default async function handler(request: any, response: any) {
   } catch (error) {
     response.status(500).json({ message: error instanceof Error ? error.message : "Weather API request failed" });
   }
+}
+
+async function fetchWeatherPayload(url: URL, weatherApiKey: string) {
+  const urls = buildWeatherRequestUrls(url, weatherApiKey);
+  let lastPayload: any = null;
+  let lastStatus = 500;
+
+  for (const requestUrl of urls) {
+    const weatherResponse = await fetch(requestUrl);
+    lastStatus = weatherResponse.status;
+
+    if (!weatherResponse.ok) {
+      continue;
+    }
+
+    const payload = await weatherResponse.json();
+    lastPayload = payload;
+
+    if (payload?.response?.header?.resultCode === "00") {
+      return payload;
+    }
+  }
+
+  if (lastPayload) return lastPayload;
+  throw new Error(`Weather API request failed: ${lastStatus}`);
+}
+
+function buildWeatherRequestUrls(url: URL, weatherApiKey: string) {
+  const rawKeyUrl = `${url.toString()}&serviceKey=${weatherApiKey}`;
+  const encodedKeyUrl = new URL(url.toString());
+  encodedKeyUrl.searchParams.set("serviceKey", weatherApiKey);
+  return [...new Set([rawKeyUrl, encodedKeyUrl.toString()])];
 }
 
 function summarizeForecastItems(items: any[]) {

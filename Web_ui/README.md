@@ -13,6 +13,15 @@ API keys and tokens never use the `VITE_` prefix. They are read only inside Verc
 Weather data is loaded through the Vercel Serverless Function at `/api/weather`.
 ThinQ data is loaded through internal Vercel Serverless Functions under `/api/thinq`.
 
+For local development, run the app through Vercel so `/api/*` serverless functions are available:
+
+```bash
+npm run dev:vercel
+```
+
+Running only `npm run dev` starts the Vite frontend server, but it does not serve `/api/weather` or `/api/thinq/*`.
+For local serverless testing, make sure the server-only variables are also available locally, for example by running `vercel env pull .env.local` or by adding them to a gitignored local env file without the `VITE_` prefix.
+
 Register the same server-only values in Vercel Dashboard -> Settings -> Environment Variables:
 
 ```env
