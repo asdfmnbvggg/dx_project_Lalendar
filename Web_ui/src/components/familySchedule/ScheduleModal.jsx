@@ -1,5 +1,6 @@
 import { Plus, Save, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   CATEGORY_COLORS,
   CATEGORY_LABELS,
@@ -14,19 +15,19 @@ import {
 const AI_CATEGORY_HINTS = {
   weather: {
     reminder: "30m",
-    memo: "비 예보나 미세먼지 상태를 확인해 우산 챙기기, 환기 자제, 공기청정기 확인을 추천합니다.",
+    memo: "날씨 예보와 실내 상태를 확인해 준비 시간을 추천합니다.",
   },
   appliance: {
     reminder: "10m",
-    memo: "세탁기/건조기/공기청정기 상태를 확인해 후속 집안일과 필터 점검을 추천합니다.",
+    memo: "세탁기, 건조기, 공기청정기 상태와 사용 패턴을 함께 확인하세요.",
   },
   routine: {
     reminder: "30m",
-    memo: "가족의 출근, 하교, 귀가 루틴에 맞춰 준비물과 이동 알림을 추천합니다.",
+    memo: "가족의 등교, 출근, 귀가 루틴에 맞춰 미리 알림을 추천합니다.",
   },
   housework: {
     reminder: "1h",
-    memo: "반복되는 생활/가사 패턴을 기준으로 장보기, 정리, 청소 일정을 추천합니다.",
+    memo: "반복되는 생활 패턴을 기준으로 집안일 일정을 정리합니다.",
   },
 };
 
@@ -117,7 +118,7 @@ export default function ScheduleModal({ mode, initialSchedule, members, onClose,
     }
   }
 
-  return (
+  const modal = (
     <div className="composer-backdrop" role="presentation">
       <form className="composer schedule-modal" onSubmit={submit}>
         <div className="composer-head">
@@ -132,7 +133,7 @@ export default function ScheduleModal({ mode, initialSchedule, members, onClose,
 
         <label>
           일정명
-          <input value={form.title} onChange={(event) => updateField("title", event.target.value)} placeholder="국어, 픽업, 출근" autoFocus />
+          <input value={form.title} onChange={(event) => updateField("title", event.target.value)} placeholder="등교, 학원, 집안일" autoFocus />
         </label>
 
         <div className="composer-grid">
@@ -195,7 +196,7 @@ export default function ScheduleModal({ mode, initialSchedule, members, onClose,
             ))}
           </div>
           {form.placePreset === "직접 입력" && (
-            <input value={form.location} onChange={(event) => updateField("location", event.target.value)} placeholder="장소를 입력해 주세요" />
+            <input value={form.location} onChange={(event) => updateField("location", event.target.value)} placeholder="장소를 입력해 주세요." />
           )}
         </label>
 
@@ -244,7 +245,7 @@ export default function ScheduleModal({ mode, initialSchedule, members, onClose,
 
         <label>
           메모
-          <textarea value={form.memo} onChange={(event) => updateField("memo", event.target.value)} placeholder="준비물, 설명, 가족에게 남길 말을 적어 주세요" />
+          <textarea value={form.memo} onChange={(event) => updateField("memo", event.target.value)} placeholder="준비물, 설명, 가족에게 남길 말을 적어 주세요." />
         </label>
 
         <label>
@@ -296,6 +297,8 @@ export default function ScheduleModal({ mode, initialSchedule, members, onClose,
       </form>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }
 
 function normalizeSchedule(schedule = {}) {
@@ -324,5 +327,6 @@ function normalizeSchedule(schedule = {}) {
 
 function dayFromDate(date) {
   if (!date) return "";
-  return ["일", "월", "화", "수", "목", "금", "토"][new Date(`${date}T00:00:00`).getDay()];
+  const dateDay = new Date(`${date}T00:00:00`).getDay();
+  return DAYS[dateDay === 0 ? 6 : dateDay - 1];
 }

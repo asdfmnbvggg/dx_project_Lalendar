@@ -8,6 +8,8 @@ export default function ScheduleBlock({ schedule, layout, memberName, onClick })
     .filter(Boolean)
     .join(" ");
 
+  const location = schedule.location || "장소 없음";
+
   return (
     <button
       type="button"
@@ -24,11 +26,11 @@ export default function ScheduleBlock({ schedule, layout, memberName, onClick })
         event.stopPropagation();
         onClick(schedule);
       }}
-      title={`${schedule.title} / ${memberName} / ${schedule.location || "장소 없음"}`}
+      title={`${schedule.title} / ${memberName} / ${location}`}
     >
       <strong>{schedule.title}</strong>
       <span>{memberName}</span>
-      <small>{schedule.location || "장소 없음"}</small>
+      <small>{location}</small>
       {schedule.reminder && schedule.reminder !== "off" && <em>알림</em>}
     </button>
   );
