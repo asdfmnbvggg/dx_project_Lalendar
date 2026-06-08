@@ -1,4 +1,4 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: SmartHomeHARLib
 Version: 0.1
 Summary: SmartHomeHARLib is a Human Activity Recognition Lib from Smart Home Datasets
@@ -9,3 +9,13 @@ Keywords: human activity recognition,home-automation
 Platform: any
 Classifier: Programming Language :: Python
 Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Dist: pandas
+Requires-Dist: numpy
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: keywords
+Dynamic: license
+Dynamic: platform
+Dynamic: requires-dist
+Dynamic: summary

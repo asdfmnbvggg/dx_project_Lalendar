@@ -471,7 +471,7 @@ class GPTExperiment2:
         model = Model(inputs=inputs, outputs=outputs, name="GPT")
 
         # ceate a picture of the model
-        picture_name = model.name + "_" + self.experiment_tag + ".png"
+        picture_name = model.name + "_architecture.png"
         picture_path = os.path.join(self.experiment_result_path, picture_name)
 
         plot_model(model, show_shapes=True, to_file=picture_path)
@@ -483,11 +483,10 @@ class GPTExperiment2:
         perp = keras_nlp.metrics.Perplexity(from_logits=True, name="perplexity")
 
         model.compile(
-            # optimizer =optimizer, loss=[loss_fn, None], metrics = [perplexity]
             optimizer=optimizer,
-            loss=[loss_fn, None],
+            loss=loss_fn,
             metrics=[perp],
-        )  # No loss and optimization based on word embeddings from transformer block
+        )
 
         # print summary
         print(model.summary())
@@ -500,19 +499,14 @@ class GPTExperiment2:
             "logs_{}_{}".format(self.experiment_parameters["name"], self.dataset_name),
         )
 
-        run_id = (
-            self.model.name + "_" + self.experiment_tag + "_" + str(self.current_time)
-        )
+        # Keep TensorBoard log folder compact to avoid Windows path length issues.
+        run_id = self.model.name + "_run_" + str(self.current_time)
         log_dir = os.path.join(root_logdir, run_id)
 
-        if not os.path.exists(log_dir):
-            os.makedirs(log_dir)
+        os.makedirs(log_dir, exist_ok=True)
 
-        csv_name = self.model.name + "_" + self.experiment_tag + ".csv"
+        csv_name = self.model.name + "_train_log.csv"
         csv_path = os.path.join(self.experiment_result_path, csv_name)
-
-        # create a callback for the tensorboard
-        tensorboard_cb = tf.keras.callbacks.TensorBoard(log_dir)
 
         # callbacks
         csv_logger = CSVLogger(csv_path)
@@ -523,6 +517,8 @@ class GPTExperiment2:
             mode="min",
             verbose=1,
             patience=self.experiment_parameters["patience"],
+            min_delta=self.experiment_parameters.get("early_stopping_min_delta", 0.0),
+            restore_best_weights=True,
         )
         mc = ModelCheckpoint(
             final_model_path,
@@ -533,7 +529,8 @@ class GPTExperiment2:
         )
 
         # cbs = [csv_logger,tensorboard_cb,mc,es,cm_callback]
-        cbs = [csv_logger, tensorboard_cb, mc, es]
+        # TensorBoard can fail on OneDrive/ReparsePoint paths on Windows.
+        cbs = [csv_logger, mc, es]
 
         if self.dataset == None:
             self.model.fit(
@@ -562,19 +559,17 @@ class GPTExperiment2:
 
     def start(self):
         # Star time of the experiment
-        self.current_time = time.strftime("%Y_%m_%d_%H_%M_%S")
+        self.current_time = time.strftime("%m%d_%H%M")
 
         self.experiment_result_path = os.path.join(
             self.experiment_parameters["name"],
             self.experiment_parameters["model_type"],
             self.dataset_name,
-            "run_" + str(self.current_time) + "_" + self.experiment_tag,
+            "run_" + str(self.current_time),
         )
 
-        # create a folder with the model name
-        # if the folder doesn't exist
-        if not os.path.exists(self.experiment_result_path):
-            os.makedirs(self.experiment_result_path)
+        # Keep the run folder compact to avoid Windows path length issues.
+        os.makedirs(self.experiment_result_path, exist_ok=True)
 
         filename_base = "GPT_basic_raw_{}_{}_{}".format(
             self.dataset_name,

@@ -40,6 +40,7 @@ import json
 import argparse
 import numpy as np
 import random as rn
+from pathlib import Path
 
 import tensorflow as tf
 
@@ -67,6 +68,84 @@ def load_config(config_path):
     # returns JSON object as
     # a dictionary
     return json.load(f)
+
+
+def _resolve_existing_path(path_value, config_path):
+    raw_path = Path(path_value)
+    code_dir = Path(__file__).resolve().parent
+    config_dir = Path(config_path).resolve().parent
+
+    candidates = []
+    if raw_path.is_absolute():
+        candidates.append(raw_path)
+    else:
+        candidates.extend(
+            [
+                Path.cwd() / raw_path,
+                code_dir / raw_path,
+                config_dir / raw_path,
+            ]
+        )
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate.resolve()
+
+    return None
+
+
+def validate_and_print_config(config, config_path, dataset_name, require_multi_task=False):
+    config.setdefault("time_slot_loss_alpha", 0.5)
+
+    required_path_keys = [
+        "pre_train_embedding",
+        "word_dict",
+        "embedding_parameters",
+    ]
+
+    missing_keys = [key for key in required_path_keys if key not in config]
+    if missing_keys:
+        raise KeyError("Missing required config keys: {}".format(missing_keys))
+
+    dataset_key = str(dataset_name).lower()
+    wrong_dataset_paths = []
+    for key in required_path_keys:
+        if dataset_key not in str(config[key]).lower():
+            wrong_dataset_paths.append("{}={}".format(key, config[key]))
+
+    if wrong_dataset_paths:
+        raise ValueError(
+            "Config paths do not appear to point to the '{}' dataset: {}".format(
+                dataset_key, wrong_dataset_paths
+            )
+        )
+
+    missing_files = []
+    for key in required_path_keys:
+        resolved_path = _resolve_existing_path(config[key], config_path)
+        if resolved_path is None:
+            missing_files.append("{}: {}".format(key, config[key]))
+        else:
+            config[key] = str(resolved_path)
+
+    if missing_files:
+        raise FileNotFoundError(
+            "Missing pretrained config file(s):\n"
+            + "\n".join(["- " + missing_file for missing_file in missing_files])
+        )
+
+    if require_multi_task and config.get("multi_task_learning", False) is not True:
+        raise ValueError("multi_task_learning must be true for the multi-task GPTHAR_H run.")
+
+    print("\nConfig check")
+    print("dataset: {}".format(dataset_key))
+    print("multi_task_learning: {}".format(config.get("multi_task_learning")))
+    if config.get("multi_task_learning", False):
+        print("targets: service_activity_label + time_slot_label")
+    print("pre_train_embedding: {}".format(config["pre_train_embedding"]))
+    print("word_dict: {}".format(config["word_dict"]))
+    print("embedding_parameters: {}".format(config["embedding_parameters"]))
+    print("time_slot_loss_alpha: {}".format(config["time_slot_loss_alpha"]))
 
 
 milan_dict = {
@@ -166,6 +245,7 @@ if __name__ == "__main__":
     )
     p.add_argument(
         "--nb",
+        "--n",
         dest="nb_run",
         action="store",
         default="1",
@@ -228,6 +308,12 @@ if __name__ == "__main__":
 
     # Load the config file
     config = load_config(config_path)
+    validate_and_print_config(
+        config,
+        config_path,
+        data,
+        require_multi_task=(experiment == "GPTHAR_H"),
+    )
 
     label_columns_to_run = (
         ["activity_label", "service_activity_label"]
