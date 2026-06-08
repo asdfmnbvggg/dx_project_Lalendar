@@ -17,5 +17,7 @@
     "trainable": false,
     "output_embedding_layer_nomalized": false,
     "patience": 20,
-    "activity_renamed": false
+    "activity_renamed": false,
+    "multi_task_learning": true,
+    "time_slot_loss_alpha": 0.5
 }

@@ -6,6 +6,35 @@ import os
 from label_mapping import add_service_activity_label
 
 
+def get_time_slot_label_from_hour(hour):
+    hour = int(hour)
+    if 5 <= hour <= 8:
+        return "아침"
+    if 9 <= hour <= 11:
+        return "오전"
+    if 12 <= hour <= 13:
+        return "점심"
+    if 14 <= hour <= 17:
+        return "오후"
+    if 18 <= hour <= 20:
+        return "저녁"
+    if 21 <= hour <= 23:
+        return "밤"
+    return "새벽"
+
+
+def _first_sequence_hour(hour_sequence):
+    if hasattr(hour_sequence, "__len__") and not isinstance(hour_sequence, str):
+        if len(hour_sequence) == 0:
+            return 0
+        hour = hour_sequence[0]
+    else:
+        hour = hour_sequence
+
+    # Existing preprocessing stores hours as dt.hour + 1 for embedding mask_zero.
+    return (int(hour) - 1) % 24
+
+
 def load_config(config_path):
     f = open(
         config_path,
@@ -39,6 +68,16 @@ def prepare_classification_dataframe_labels(
             dataset_name,
             source_column="activity_label",
             target_column="service_activity_label",
+        )
+
+    if "time_slot_label" not in df.columns:
+        if "input_12" not in df.columns:
+            raise ValueError(
+                "time_slot_label is missing and input_12 is not available to derive it."
+            )
+        df["activity_start_hour"] = df["input_12"].map(_first_sequence_hour)
+        df["time_slot_label"] = df["activity_start_hour"].map(
+            get_time_slot_label_from_hour
         )
 
     if label_column not in df.columns:

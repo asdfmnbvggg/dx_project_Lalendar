@@ -7,12 +7,18 @@ import time
 import json
 import numpy as np
 import h5py
+import pandas as pd
 
 from tqdm import tqdm
 
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import balanced_accuracy_score
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import f1_score
 import keras_nlp
 import tensorflow as tf
 from tensorflow import keras
@@ -32,6 +38,23 @@ from SmartHomeHARLib.custom_layers.transfomers import padding_attention_mask_3
 
 
 from SmartHomeHARLib.utils import Evaluator
+from SmartHomeHARLib.utils import MultiTaskEvaluator
+
+from appliance_postprocessing import add_appliance_recommendations
+
+
+SERVICE_ACTIVITY_CLASSES = [
+    "식사준비",
+    "설거지",
+    "청소/정리",
+    "세탁",
+    "외출",
+    "귀가",
+    "휴식/수면",
+    "기타",
+]
+
+TIME_SLOT_CLASSES = ["새벽", "아침", "오전", "점심", "오후", "저녁", "밤"]
 
 
 def isGroup(obj):
@@ -113,15 +136,29 @@ class GPTBiLSTMHierarchyHourExperiment2:
         # General
         self.global_classifier_accuracy = []
         self.global_classifier_balance_accuracy = []
+        self.global_time_slot_accuracy = []
+        self.global_activity_macro_f1 = []
+        self.global_time_slot_macro_f1 = []
+        self.global_joint_accuracy = []
         self.current_time = None
         self.wordDict = self.load_vocabulay_file(
             self.experiment_parameters["word_dict"]
         )
         self.actDict = {}
+        self.timeSlotDict = {}
+        self.multi_task_learning = self.experiment_parameters.get(
+            "multi_task_learning", False
+        )
+        self.time_slot_loss_alpha = self.experiment_parameters.get(
+            "time_slot_loss_alpha", 0.5
+        )
         self.train_x = train_x
         self.train_y = None
+        self.train_time_slot_y = None
         self.train_x_encoded = None
         self.train_y_encoded = None
+        self.train_activity_y_encoded = None
+        self.train_time_slot_y_encoded = None
         self.dataset_name = dataset_name
         self.cross_validation = cross_validation
 
@@ -152,9 +189,27 @@ class GPTBiLSTMHierarchyHourExperiment2:
         with open(vocab_filename) as json_file:
             return json.load(json_file)
 
+    def _normalize_service_activity_labels(self, labels):
+        if not self.multi_task_learning:
+            return labels
+
+        allowed_labels = set(SERVICE_ACTIVITY_CLASSES)
+        return np.array(
+            [label if label in allowed_labels else "기타" for label in labels]
+        )
+
     def data_preprocessing(self):
         # extract labels
-        self.train_y = self.train_x.labels.values
+        if "service_activity_label" in self.train_x.columns:
+            self.train_y = self.train_x.service_activity_label.values
+        else:
+            self.train_y = self.train_x.labels.values
+        self.train_y = self._normalize_service_activity_labels(self.train_y)
+
+        if self.multi_task_learning:
+            if "time_slot_label" not in self.train_x.columns:
+                raise ValueError("time_slot_label column is required for multi-task learning.")
+            self.train_time_slot_y = self.train_x.time_slot_label.values
 
         # extract inputs
         x1 = self.train_x.input_1.values
@@ -237,11 +292,12 @@ class GPTBiLSTMHierarchyHourExperiment2:
         # encode labels
 
         le = preprocessing.LabelEncoder()
-        le.fit(self.train_y)
+        le.fit(SERVICE_ACTIVITY_CLASSES if self.multi_task_learning else self.train_y)
 
         self.label_encoder = le
 
-        self.train_y_encoded = le.transform(self.train_y)
+        self.train_activity_y_encoded = le.transform(self.train_y)
+        self.train_y_encoded = self.train_activity_y_encoded
 
         self.actDict = dict(zip(le.classes_, le.transform(le.classes_)))
 
@@ -249,9 +305,35 @@ class GPTBiLSTMHierarchyHourExperiment2:
         for keys in self.actDict:
             self.actDict[keys] = int(self.actDict[keys])
 
+        if self.multi_task_learning:
+            time_slot_le = preprocessing.LabelEncoder()
+            time_slot_le.fit(TIME_SLOT_CLASSES)
+            self.time_slot_label_encoder = time_slot_le
+            self.train_time_slot_y_encoded = time_slot_le.transform(
+                self.train_time_slot_y
+            )
+            self.timeSlotDict = dict(
+                zip(time_slot_le.classes_, time_slot_le.transform(time_slot_le.classes_))
+            )
+            for keys in self.timeSlotDict:
+                self.timeSlotDict[keys] = int(self.timeSlotDict[keys])
+            self.train_y_encoded = np.stack(
+                [self.train_activity_y_encoded, self.train_time_slot_y_encoded],
+                axis=1,
+            )
+
     def data_preprocessing_test(self):
         # extract labels
-        self.test_y = self.test_x.labels.values
+        if "service_activity_label" in self.test_x.columns:
+            self.test_y = self.test_x.service_activity_label.values
+        else:
+            self.test_y = self.test_x.labels.values
+        self.test_y = self._normalize_service_activity_labels(self.test_y)
+
+        if self.multi_task_learning:
+            if "time_slot_label" not in self.test_x.columns:
+                raise ValueError("time_slot_label column is required for multi-task learning.")
+            self.test_time_slot_y = self.test_x.time_slot_label.values
 
         # extract inputs
         x1 = self.test_x.input_1.values
@@ -333,7 +415,17 @@ class GPTBiLSTMHierarchyHourExperiment2:
 
         # encode labels
 
-        self.test_y_encoded = self.label_encoder.transform(self.test_y)
+        self.test_activity_y_encoded = self.label_encoder.transform(self.test_y)
+        self.test_y_encoded = self.test_activity_y_encoded
+
+        if self.multi_task_learning:
+            self.test_time_slot_y_encoded = self.time_slot_label_encoder.transform(
+                self.test_time_slot_y
+            )
+            self.test_y_encoded = np.stack(
+                [self.test_activity_y_encoded, self.test_time_slot_y_encoded],
+                axis=1,
+            )
 
     def model_selection(self):
         if self.cross_validation:
@@ -344,8 +436,14 @@ class GPTBiLSTMHierarchyHourExperiment2:
                     random_state=self.experiment_parameters["seed"],
                 )
 
+                stratify_y = (
+                    self.train_y_encoded[:, 0]
+                    if self.multi_task_learning
+                    else self.train_y_encoded
+                )
+
                 for train, test in kfold.split(
-                    self.train_x_encoded, self.train_y_encoded, groups=None
+                    self.train_x_encoded, stratify_y, groups=None
                 ):
                     self.classifier_data_X_train.append(
                         np.array(self.train_x_encoded)[train]
@@ -393,7 +491,11 @@ class GPTBiLSTMHierarchyHourExperiment2:
                     self.train_y_encoded,
                     test_size=0.2,
                     shuffle=True,
-                    stratify=self.train_y_encoded,
+                    stratify=(
+                        self.train_y_encoded[:, 0]
+                        if self.multi_task_learning
+                        else self.train_y_encoded
+                    ),
                     random_state=self.experiment_parameters["seed"],
                 )
 
@@ -416,6 +518,7 @@ class GPTBiLSTMHierarchyHourExperiment2:
     def build_model_classifier(self, run_number=0):
         nb_timesteps = 3
         nb_classes = len(list(self.actDict.keys()))
+        nb_time_slot_classes = len(list(self.timeSlotDict.keys()))
         embed_dim = self.embedding_parameters["embedding_size"]
         num_heads = self.embedding_parameters["num_heads"]
         dropout_rate = self.embedding_parameters["dropout"]
@@ -572,20 +675,37 @@ class GPTBiLSTMHierarchyHourExperiment2:
 
         # lstm_1 = BatchNormalization()(lstm_1)
 
-        output_layer = Dense(nb_classes, activation="softmax")(lstm_1)
+        if self.multi_task_learning:
+            activity_output = Dense(
+                nb_classes, activation="softmax", name="activity_output"
+            )(lstm_1)
+            time_slot_output = Dense(
+                nb_time_slot_classes, activation="softmax", name="time_slot_output"
+            )(lstm_1)
+            output_layer = [activity_output, time_slot_output]
+        else:
+            output_layer = Dense(nb_classes, activation="softmax")(lstm_1)
 
         if output_embedding_layer_nomalized:
             self.classifier_model = Model(
                 inputs=[input_sensor, input_hour],
                 outputs=output_layer,
                 # name="GPT_Hierachy_Hour_BiLSTM_NORM_V1_Classifier",
-                name="GPT_Hierachy_Hour_BiLSTM_NORM_V4_224_Encoder_Classifier",
+                name=(
+                    "GPT_Hierachy_Hour_BiLSTM_NORM_V4_224_Encoder_MTL_Classifier"
+                    if self.multi_task_learning
+                    else "GPT_Hierachy_Hour_BiLSTM_NORM_V4_224_Encoder_Classifier"
+                ),
             )
         else:
             self.classifier_model = Model(
                 inputs=[input_sensor, input_hour],
                 outputs=output_layer,
-                name="GPT_Hierachy_Hour_BiLSTM_Classifier",
+                name=(
+                    "GPT_Hierachy_Hour_BiLSTM_MTL_Classifier"
+                    if self.multi_task_learning
+                    else "GPT_Hierachy_Hour_BiLSTM_Classifier"
+                ),
             )
 
         # ceate a picture of the model
@@ -600,6 +720,28 @@ class GPTBiLSTMHierarchyHourExperiment2:
         picture_path = os.path.join(self.experiment_result_path, picture_name)
 
         plot_model(self.classifier_model, show_shapes=True, to_file=picture_path)
+
+    def _format_y_for_model(self, y):
+        if not self.multi_task_learning:
+            return y
+
+        return {
+            "activity_output": y[:, 0],
+            "time_slot_output": y[:, 1],
+        }
+
+    def _has_validation_data(self):
+        return isinstance(self.classifier_data_X_val, np.ndarray) and len(
+            self.classifier_data_X_val
+        ) > 0
+
+    def _extract_target_hours(self, X_input):
+        encoded_hours = np.array(X_input[1])
+        target_hours = []
+        for row in encoded_hours:
+            hour_value = row[2][0] if len(row) > 2 and len(row[2]) > 0 else 1
+            target_hours.append((int(hour_value) - 1) % 24)
+        return target_hours
 
     def train(
         self, X_train_input, Y_train_input, X_val_input, Y_val_input, run_number=0
@@ -659,7 +801,11 @@ class GPTBiLSTMHierarchyHourExperiment2:
         )
         mc = ModelCheckpoint(
             self.classifier_best_model_path,
-            monitor="val_sparse_categorical_accuracy",
+            monitor=(
+                "val_activity_output_sparse_categorical_accuracy"
+                if self.multi_task_learning
+                else "val_sparse_categorical_accuracy"
+            ),
             mode="max",
             verbose=1,
             save_best_only=True,
@@ -674,7 +820,7 @@ class GPTBiLSTMHierarchyHourExperiment2:
         if self.cross_validation:
             self.classifier_model.fit(
                 X_train_input,
-                Y_train_input,
+                self._format_y_for_model(Y_train_input),
                 epochs=self.experiment_parameters["nb_epochs"],
                 batch_size=self.experiment_parameters["batch_size"],
                 verbose=self.experiment_parameters["verbose"],
@@ -685,12 +831,12 @@ class GPTBiLSTMHierarchyHourExperiment2:
         else:
             self.classifier_model.fit(
                 X_train_input,
-                Y_train_input,
+                self._format_y_for_model(Y_train_input),
                 epochs=self.experiment_parameters["nb_epochs"],
                 batch_size=self.experiment_parameters["batch_size"],
                 verbose=self.experiment_parameters["verbose"],
                 callbacks=cbs,
-                validation_data=(X_val_input, Y_val_input),
+                validation_data=(X_val_input, self._format_y_for_model(Y_val_input)),
                 shuffle=True,
             )
 
@@ -703,7 +849,7 @@ class GPTBiLSTMHierarchyHourExperiment2:
             print(self.classifier_data_X_train.ndim)
             print(self.classifier_data_X_train.shape)
             print(self.classifier_data_X_test.shape)
-            if self.classifier_data_X_val != []:
+            if self._has_validation_data():
                 print(self.classifier_data_X_val.shape)
             else:
                 print("None")
@@ -724,7 +870,7 @@ class GPTBiLSTMHierarchyHourExperiment2:
             data_X_test = self.classifier_data_X_test[run_number]
             data_Y_test = self.classifier_data_Y_test[run_number]
 
-        if self.classifier_data_X_val != []:
+        if self._has_validation_data():
             if self.classifier_data_X_val.ndim < 5:
                 data_X_val = self.classifier_data_X_val
                 data_Y_val = self.classifier_data_Y_val
@@ -750,7 +896,7 @@ class GPTBiLSTMHierarchyHourExperiment2:
         X_train_input = [data_X_train[:, :, :, 0], data_X_train[:, :, :, 1]]
         X_test_input = [data_X_test[:, :, :, 0], data_X_test[:, :, :, 1]]
 
-        if self.classifier_data_X_val != []:
+        if self._has_validation_data():
             X_val_input = [data_X_val[:, :, :, 0], data_X_val[:, :, :, 1]]
 
         # X_train_input = data_X_train.transpose(3, 0, 1, 2)
@@ -762,12 +908,12 @@ class GPTBiLSTMHierarchyHourExperiment2:
         Y_train_input = data_Y_train
         Y_test_input = data_Y_test
 
-        if self.classifier_data_X_val != []:
+        if self._has_validation_data():
             Y_val_input = data_Y_val
 
         if self.DEBUG:
             print("Train {}:".format(np.array(X_train_input).shape))
-            if self.classifier_data_X_val != []:
+            if self._has_validation_data():
                 print("Val : {}".format(np.array(X_val_input).shape))
             else:
                 print("Val : None")
@@ -786,12 +932,29 @@ class GPTBiLSTMHierarchyHourExperiment2:
         )
 
     def compile_model(self):
-        self.classifier_model.compile(
-            loss="sparse_categorical_crossentropy",
-            # optimizer = tf.keras.optimizers.Adam(learning_rate=cyclical_learning_rate),
-            optimizer=tf.keras.optimizers.Adam(),
-            metrics=["sparse_categorical_accuracy"],
-        )
+        if self.multi_task_learning:
+            self.classifier_model.compile(
+                loss={
+                    "activity_output": "sparse_categorical_crossentropy",
+                    "time_slot_output": "sparse_categorical_crossentropy",
+                },
+                loss_weights={
+                    "activity_output": 1.0,
+                    "time_slot_output": self.time_slot_loss_alpha,
+                },
+                optimizer=tf.keras.optimizers.Adam(),
+                metrics={
+                    "activity_output": ["sparse_categorical_accuracy"],
+                    "time_slot_output": ["sparse_categorical_accuracy"],
+                },
+            )
+        else:
+            self.classifier_model.compile(
+                loss="sparse_categorical_crossentropy",
+                # optimizer = tf.keras.optimizers.Adam(learning_rate=cyclical_learning_rate),
+                optimizer=tf.keras.optimizers.Adam(),
+                metrics=["sparse_categorical_accuracy"],
+            )
 
         # print summary
         print(self.classifier_model.summary())
@@ -804,6 +967,147 @@ class GPTBiLSTMHierarchyHourExperiment2:
             print(np.array(Y_test_input).shape)
             print(self.classifier_best_model_path)
             input("Press Enter to continue...")
+
+        if self.multi_task_learning:
+            y_activity_true = Y_test_input[:, 0]
+            y_time_slot_true = Y_test_input[:, 1]
+
+            y_hat = self.classifier_model.predict(X_test_input)
+            y_activity_pred = np.argmax(y_hat[0], axis=1).astype("int32")
+            y_time_slot_pred = np.argmax(y_hat[1], axis=1).astype("int32")
+
+            multitask_evaluator = MultiTaskEvaluator(
+                y_activity_true,
+                y_activity_pred,
+                y_time_slot_true,
+                y_time_slot_pred,
+            )
+            metrics = multitask_evaluator.compute()
+            activity_accuracy = metrics["service_activity_label_accuracy"]
+            time_slot_accuracy = metrics["time_slot_label_accuracy"]
+            activity_macro_f1 = metrics["service_activity_label_macro_f1"]
+            time_slot_macro_f1 = metrics["time_slot_label_macro_f1"]
+            joint_accuracy = metrics["joint_accuracy"]
+
+            self.global_classifier_accuracy.append(activity_accuracy)
+            self.global_classifier_balance_accuracy.append(
+                balanced_accuracy_score(y_activity_true, y_activity_pred)
+            )
+            self.global_time_slot_accuracy.append(time_slot_accuracy)
+            self.global_activity_macro_f1.append(activity_macro_f1)
+            self.global_time_slot_macro_f1.append(time_slot_macro_f1)
+            self.global_joint_accuracy.append(joint_accuracy)
+
+            activity_labels = list(self.actDict.keys())
+            activity_indexes = list(self.actDict.values())
+            time_slot_labels = list(self.timeSlotDict.keys())
+            time_slot_indexes = list(self.timeSlotDict.values())
+
+            activity_report, time_slot_report = multitask_evaluator.classification_reports(
+                activity_labels,
+                activity_indexes,
+                time_slot_labels,
+                time_slot_indexes,
+            )
+
+            activity_report_path = os.path.join(
+                self.experiment_result_path,
+                "{}_activity_report_{}_{}.csv".format(
+                    self.classifier_model.name, self.experiment_tag, run_number
+                ),
+            )
+            time_slot_report_path = os.path.join(
+                self.experiment_result_path,
+                "{}_time_slot_report_{}_{}.csv".format(
+                    self.classifier_model.name, self.experiment_tag, run_number
+                ),
+            )
+            pd.DataFrame(activity_report).transpose().to_csv(
+                activity_report_path, sep="\t", encoding="utf-8"
+            )
+            pd.DataFrame(time_slot_report).transpose().to_csv(
+                time_slot_report_path, sep="\t", encoding="utf-8"
+            )
+
+            activity_cm, time_slot_cm = multitask_evaluator.confusion_matrices(
+                activity_indexes, time_slot_indexes
+            )
+            pd.DataFrame(
+                activity_cm, index=activity_labels, columns=activity_labels
+            ).to_csv(
+                os.path.join(
+                    self.experiment_result_path,
+                    "{}_activity_confusion_matrix_{}_{}.csv".format(
+                        self.classifier_model.name, self.experiment_tag, run_number
+                    ),
+                ),
+                sep="\t",
+                encoding="utf-8",
+            )
+            pd.DataFrame(
+                time_slot_cm, index=time_slot_labels, columns=time_slot_labels
+            ).to_csv(
+                os.path.join(
+                    self.experiment_result_path,
+                    "{}_time_slot_confusion_matrix_{}_{}.csv".format(
+                        self.classifier_model.name, self.experiment_tag, run_number
+                    ),
+                ),
+                sep="\t",
+                encoding="utf-8",
+            )
+
+            print(
+                "service_activity_label accuracy: {:.4f}, macro F1: {:.4f}".format(
+                    activity_accuracy, activity_macro_f1
+                )
+            )
+            print(
+                "time_slot_label accuracy: {:.4f}, macro F1: {:.4f}".format(
+                    time_slot_accuracy, time_slot_macro_f1
+                )
+            )
+            print("joint accuracy: {:.4f}".format(joint_accuracy))
+
+            if len(y_activity_pred) > 0:
+                predicted_activity_labels = self.label_encoder.inverse_transform(
+                    y_activity_pred
+                )
+                predicted_time_slot_labels = self.time_slot_label_encoder.inverse_transform(
+                    y_time_slot_pred
+                )
+                target_hours = self._extract_target_hours(X_test_input)
+                prediction_df = pd.DataFrame(
+                    {
+                        "date": "",
+                        "predicted_service_activity_label": predicted_activity_labels,
+                        "predicted_time_slot_label": predicted_time_slot_labels,
+                        "hour": target_hours,
+                        "day_of_week": "",
+                    }
+                )
+                recommendation_df = add_appliance_recommendations(prediction_df)
+                recommendation_path = os.path.join(
+                    self.experiment_result_path,
+                    "{}_appliance_recommendations_{}_{}.csv".format(
+                        self.classifier_model.name, self.experiment_tag, run_number
+                    ),
+                )
+                recommendation_df.to_csv(
+                    recommendation_path, index=False, encoding="utf-8-sig"
+                )
+
+                predicted_activity = predicted_activity_labels[0]
+                predicted_time_slot = predicted_time_slot_labels[0]
+                print("예측 활동: {}".format(predicted_activity))
+                print("예상 시작 시간대: {}".format(predicted_time_slot))
+                print(
+                    "추천 가전: {}".format(
+                        recommendation_df.iloc[0]["recommended_appliance"]
+                    )
+                )
+
+            return
 
         evaluator = Evaluator(X_test_input, Y_test_input, model=self.classifier_model)
 
@@ -920,6 +1224,13 @@ class GPTBiLSTMHierarchyHourExperiment2:
 
         self.__save_dict_to_json(activity_dict_path, self.actDict)
 
+        if self.multi_task_learning:
+            time_slot_dict_name = "timeSlotDict.json"
+            time_slot_dict_path = os.path.join(
+                self.experiment_result_path, time_slot_dict_name
+            )
+            self.__save_dict_to_json(time_slot_dict_path, self.timeSlotDict)
+
     def save_config(self):
         experiment_parameters_name = "experiment_parameters.json"
         experiment_parameters_path = os.path.join(
@@ -958,3 +1269,32 @@ class GPTBiLSTMHierarchyHourExperiment2:
             writer.writerow([])
             writer.writerow([np.mean(self.global_classifier_balance_accuracy) * 100])
             writer.writerow([np.std(self.global_classifier_balance_accuracy)])
+
+            if self.multi_task_learning:
+                writer.writerow([])
+                writer.writerow(["activity macro f1 :"])
+                for val in self.global_activity_macro_f1:
+                    writer.writerow([val])
+                writer.writerow([np.mean(self.global_activity_macro_f1)])
+                writer.writerow([np.std(self.global_activity_macro_f1)])
+
+                writer.writerow([])
+                writer.writerow(["time slot accuracy score :"])
+                for val in self.global_time_slot_accuracy:
+                    writer.writerow([val * 100])
+                writer.writerow([np.mean(self.global_time_slot_accuracy) * 100])
+                writer.writerow([np.std(self.global_time_slot_accuracy)])
+
+                writer.writerow([])
+                writer.writerow(["time slot macro f1 :"])
+                for val in self.global_time_slot_macro_f1:
+                    writer.writerow([val])
+                writer.writerow([np.mean(self.global_time_slot_macro_f1)])
+                writer.writerow([np.std(self.global_time_slot_macro_f1)])
+
+                writer.writerow([])
+                writer.writerow(["joint accuracy score :"])
+                for val in self.global_joint_accuracy:
+                    writer.writerow([val * 100])
+                writer.writerow([np.mean(self.global_joint_accuracy) * 100])
+                writer.writerow([np.std(self.global_joint_accuracy)])

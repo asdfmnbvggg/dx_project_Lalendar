@@ -251,6 +251,12 @@ if __name__ == "__main__":
             label_column=current_label_column,
             title="Train {} class distribution".format(current_label_column),
         )
+        if config.get("multi_task_learning", False) and "time_slot_label" in train_x.columns:
+            print_class_distribution(
+                train_x,
+                label_column="time_slot_label",
+                title="Train time_slot_label class distribution",
+            )
 
         if not cross_val:
             test_x = load_test_data_from_dataframe_time(
@@ -261,6 +267,12 @@ if __name__ == "__main__":
                 label_column=current_label_column,
                 title="Test {} class distribution".format(current_label_column),
             )
+            if config.get("multi_task_learning", False) and "time_slot_label" in test_x.columns:
+                print_class_distribution(
+                    test_x,
+                    label_column="time_slot_label",
+                    title="Test time_slot_label class distribution",
+                )
         else:
             test_x = None
 
@@ -347,6 +359,28 @@ if __name__ == "__main__":
                     )
                 )
 
+                if getattr(exp, "multi_task_learning", False):
+                    print(
+                        "Activity Macro F1 run {}: {:.4f}".format(
+                            i + 1, np.mean(exp.global_activity_macro_f1)
+                        )
+                    )
+                    print(
+                        "Time Slot Accuracy run {}: {:.2f}%".format(
+                            i + 1, np.mean(exp.global_time_slot_accuracy) * 100
+                        )
+                    )
+                    print(
+                        "Time Slot Macro F1 run {}: {:.4f}".format(
+                            i + 1, np.mean(exp.global_time_slot_macro_f1)
+                        )
+                    )
+                    print(
+                        "Joint Accuracy run {}: {:.2f}%".format(
+                            i + 1, np.mean(exp.global_joint_accuracy) * 100
+                        )
+                    )
+
                 tab_acc.append(np.mean(exp.global_classifier_accuracy))
                 tab_bal_acc.append(np.mean(exp.global_classifier_balance_accuracy))
 
@@ -373,6 +407,32 @@ if __name__ == "__main__":
                 avg_bal_acc * 100, std_bal_acc
             )
         )
+
+        if "exp" in locals() and getattr(exp, "multi_task_learning", False):
+            print(
+                "Average Activity Macro F1 over all runs: {:.4f} (+/- {:.4f})".format(
+                    np.mean(exp.global_activity_macro_f1),
+                    np.std(exp.global_activity_macro_f1),
+                )
+            )
+            print(
+                "Average Time Slot Accuracy over all runs: {:.2f}% (+/- {:.2f}%)".format(
+                    np.mean(exp.global_time_slot_accuracy) * 100,
+                    np.std(exp.global_time_slot_accuracy),
+                )
+            )
+            print(
+                "Average Time Slot Macro F1 over all runs: {:.4f} (+/- {:.4f})".format(
+                    np.mean(exp.global_time_slot_macro_f1),
+                    np.std(exp.global_time_slot_macro_f1),
+                )
+            )
+            print(
+                "Average Joint Accuracy over all runs: {:.2f}% (+/- {:.2f}%)".format(
+                    np.mean(exp.global_joint_accuracy) * 100,
+                    np.std(exp.global_joint_accuracy),
+                )
+            )
 
     if compare_labels:
         print("\nLabel comparison summary")
