@@ -2,6 +2,8 @@
 
 DEFAULT_SERVICE_LABEL = "기타"
 
+NO_RECOMMENDED_APPLIANCE = "추천없음"
+
 ARUBA_SERVICE_ACTIVITY_MAPPING = {
     "Meal_Preparation": "식사준비",
     "Wash_Dishes": "설거지",
@@ -59,6 +61,28 @@ SERVICE_ACTIVITY_MAPPINGS = {
     "milan": MILAN_SERVICE_ACTIVITY_MAPPING,
 }
 
+SERVICE_ACTIVITY_APPLIANCE_MAPPING = {
+    "세탁": "세탁기",
+    "설거지": "식기세척기",
+    "청소/정리": "로봇청소기",
+    "식사준비": "공기청정기",
+    "외출": "로봇청소기",
+    "귀가": "에어컨/공기청정기",
+    "휴식/수면": NO_RECOMMENDED_APPLIANCE,
+    "기타": NO_RECOMMENDED_APPLIANCE,
+}
+
+SERVICE_ACTIVITY_APPLIANCE_CANDIDATES = {
+    "세탁": ["세탁기", "건조기", "제습기"],
+    "설거지": ["식기세척기"],
+    "청소/정리": ["로봇청소기"],
+    "식사준비": ["공기청정기"],
+    "외출": ["로봇청소기"],
+    "귀가": ["에어컨", "공기청정기"],
+    "휴식/수면": [NO_RECOMMENDED_APPLIANCE],
+    "기타": [NO_RECOMMENDED_APPLIANCE],
+}
+
 
 def normalize_dataset_name(dataset_name):
     return str(dataset_name).strip().lower()
@@ -89,3 +113,15 @@ def add_service_activity_label(
         lambda activity: map_activity_to_service_label(activity, dataset_name)
     )
     return df
+
+
+def map_service_label_to_appliance(service_activity_label):
+    return SERVICE_ACTIVITY_APPLIANCE_MAPPING.get(
+        str(service_activity_label), NO_RECOMMENDED_APPLIANCE
+    )
+
+
+def map_service_label_to_appliance_candidates(service_activity_label):
+    return SERVICE_ACTIVITY_APPLIANCE_CANDIDATES.get(
+        str(service_activity_label), [NO_RECOMMENDED_APPLIANCE]
+    )

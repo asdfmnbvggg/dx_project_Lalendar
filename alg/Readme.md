@@ -76,6 +76,23 @@ To properly set up the datasets for experiments, follow these steps:
 - **Preparation for tasks with separators**: 
     Run the `GPT_sep.ipynb` and `classification_data_preprocessing_time_with_sep.ipynb`scripts on each dataset. This will prepare the dataset for the experiments with the special separator token.
 
+- **Preparation for service activity start-time prediction**:
+  Run `data_preprocessing_time.ipynb` or the script below to extract rows whose CASAS activity status is `begin`, remap the original activity into `service_activity_label`, and create start-time/appliance recommendation CSV files.
+
+```bash
+python build_service_activity_datasets.py --datasets aruba cairo milan --output_dir datasets
+```
+
+Generated files:
+
+| File | Columns |
+|------|---------|
+| `processed_service_activity_sequences.csv` | `dataset`: CASAS dataset name. `activity_label`: original CASAS activity. `service_activity_label`: remapped service-oriented label. `activity_start_time`: timestamp of the `begin` row. `activity_start_hour`: hour extracted from the timestamp. `day_of_week`: weekday extracted from the date. `time_slot_label`: Korean time slot label derived from the hour. `recommended_appliance`: primary appliance recommendation. `recommended_appliance_candidates`: semicolon-separated candidate appliances. |
+| `activity_start_time_dataset.csv` | `dataset`, `service_activity_label`, `activity_start_time`, `activity_start_hour`, `day_of_week`, `time_slot_label`. Use this for activity start-time prediction. |
+| `appliance_recommendation_dataset.csv` | `dataset`, `service_activity_label`, `time_slot_label`, `recommended_appliance`, `recommended_appliance_candidates`, `activity_start_time`, `activity_start_hour`, `day_of_week`. Use this for appliance recommendation experiments. |
+
+`time_slot_label` is generated as follows: 05:00-08:59 `아침`, 09:00-11:59 `오전`, 12:00-13:59 `점심`, 14:00-17:59 `오후`, 18:00-20:59 `저녁`, 21:00-23:59 `밤`, and 00:00-04:59 `새벽`.
+
 
 2. **Train the Pre-trained Embeddings**
 
