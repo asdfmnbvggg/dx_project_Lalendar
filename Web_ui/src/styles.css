@@ -5737,17 +5737,6 @@ body {
   letter-spacing: 0;
 }
 
-.thinq-green-mark {
-  width: 82px;
-  height: 38px;
-  flex: 0 0 auto;
-  border-radius: 52% 48% 45% 55%;
-  background: #12b43c;
-  box-shadow:
-    18px 7px 0 -4px #12b43c,
-    45px 6px 0 -11px #12b43c;
-}
-
 .thinq-home-actions {
   gap: 15px;
   color: #596474;

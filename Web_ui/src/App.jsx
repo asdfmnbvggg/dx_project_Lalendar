@@ -752,8 +752,7 @@ function HomePage({ onOpenNotifications, onOpenThinQ }) {
 
       <div className="thinq-home-top">
         <button className="thinq-home-selector" type="button">
-          <span className="thinq-green-mark" aria-hidden="true" />
-          <strong>홈</strong>
+          <strong>엘린이의 홈</strong>
           <ChevronDown size={24} />
         </button>
         <div className="thinq-home-actions">
