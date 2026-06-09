@@ -6,6 +6,7 @@ import airConditionerImage from "../assets/appliances/에어컨.png";
 import dryerImage from "../assets/appliances/건조기.png";
 import fridgeImage from "../assets/appliances/냉장고.png";
 import washerImage from "../assets/appliances/세탁기.png";
+import lgCharacterImage from "../assets/lg-character.png";
 
 import jaehyeokImage from "../assets/people/재혁님.png";
 import suhyunImage from "../assets/people/김수현.jpg";
@@ -225,6 +226,7 @@ export default function CalendarPage({
               할일 추가
             </button>
           </div>
+          <img className="calendar-hanging-character" src={lgCharacterImage} alt="" aria-hidden="true" />
         </div>
 
         <div className="calendar-toolbar">

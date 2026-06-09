@@ -4870,10 +4870,26 @@ body {
 }
 
 .calendar-header {
+  position: relative;
   align-items: flex-start;
   min-height: 38px;
   padding-bottom: 7px;
   border-bottom: 1px solid #eceef2;
+  overflow: visible;
+}
+
+.calendar-hanging-character {
+  position: absolute;
+  right: 4px;
+  bottom: -1px;
+  z-index: 2;
+  width: 78px;
+  height: 35px;
+  object-fit: contain;
+  object-position: center bottom;
+  pointer-events: none;
+  transform: rotate(-2deg);
+  transform-origin: center bottom;
 }
 
 .calendar-page-week > .calendar-board > .calendar-header {
