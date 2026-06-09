@@ -809,7 +809,7 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
   const isReady = step === "ready";
   const [selectedApplianceTypes, setSelectedApplianceTypes] = useState([]);
   const [applianceAssignees, setApplianceAssignees] = useState({});
-  const introMessage = "어서오세요!\n당신을 위한 최적의 가사일 계획을\n자동으로 짜주는 AI 가사일 플래너\n(현우)입니다.";
+  const introMessage = "어서오세요!\n당신을 위한 최적의 가사일 계획을\n자동으로 짜주는 AI 가사일 플래너\n현우입니다.";
   const [introTextLength, setIntroTextLength] = useState(0);
   const guideByStep = {
     intro: "어서오세요!",
@@ -1041,7 +1041,7 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
                 <br />
                 데이터를 분석해서
                 <br />
-                (현우)가 최적의 가사일 계획을
+                현우가 최적의 가사일 계획을
                 <br />
                 짜고 있어요!
               </p>

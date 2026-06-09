@@ -6543,6 +6543,8 @@ body {
 }
 
 .onboarding-next-button:not(:disabled):active {
+  background: #e11d48;
+  box-shadow: 0 10px 24px rgba(225, 29, 72, 0.34);
   transform: scale(0.96);
 }
 
@@ -6762,13 +6764,21 @@ body {
 }
 
 .onboarding-appliance-grid button.selected {
-  background: #4a9df0;
+  background: #e11d48;
   color: #fff;
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.48), 0 10px 22px rgba(74, 157, 240, 0.24);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.48), 0 10px 22px rgba(225, 29, 72, 0.26);
 }
 
 .onboarding-appliance-grid button:active {
+  background: #e11d48;
+  color: #fff;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5), 0 12px 24px rgba(225, 29, 72, 0.28);
   transform: scale(0.97);
+}
+
+.onboarding-appliance-grid button:active .onboarding-appliance-icon {
+  border-color: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(180deg, #ffffff, #ffe4ec);
 }
 
 .onboarding-appliance-grid button.selected .onboarding-appliance-icon {
@@ -6863,6 +6873,8 @@ body {
 }
 
 .onboarding-appliance-complete.active:active {
+  background: #be123c;
+  box-shadow: 0 14px 28px rgba(225, 29, 72, 0.36);
   transform: scale(0.98);
 }
 
@@ -7004,6 +7016,8 @@ body {
 }
 
 .onboarding-assignee-complete.active:active {
+  background: #be123c;
+  box-shadow: 0 14px 28px rgba(225, 29, 72, 0.36);
   transform: scale(0.98);
 }
 
@@ -7024,6 +7038,14 @@ body {
   color: #555;
   font-size: 15px;
   font-weight: 850;
+  transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.onboarding-method-list button:active {
+  background: #e11d48;
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(225, 29, 72, 0.3);
+  transform: scale(0.98);
 }
 
 .onboarding-method-list button span {
@@ -7036,6 +7058,14 @@ body {
     linear-gradient(45deg, transparent 45%, #f4f4f4 47% 53%, transparent 55%),
     linear-gradient(-45deg, transparent 45%, #f4f4f4 47% 53%, transparent 55%),
     #c7c7c7;
+}
+
+.onboarding-method-list button:active span {
+  border-color: rgba(255, 255, 255, 0.8);
+  background:
+    linear-gradient(45deg, transparent 45%, #fff 47% 53%, transparent 55%),
+    linear-gradient(-45deg, transparent 45%, #fff 47% 53%, transparent 55%),
+    #be123c;
 }
 
 .onboarding-recommend-list span {
