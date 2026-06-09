@@ -299,6 +299,15 @@ export default function CalendarPage({
         )}
       </section>
 
+      {calendarView === "month" && (
+        <section className="calendar-ai-report" aria-label="AI Report">
+          <h3>AI Report</h3>
+          <div>
+            <p>{buildAiReport(selectedDate, selectedTasks)}</p>
+          </div>
+        </section>
+      )}
+
       {isDatePickerOpen && (
         <div className="calendar-date-picker-backdrop" role="presentation" onClick={() => setDatePickerOpen(false)}>
           <section
@@ -499,6 +508,24 @@ function getRecommendationsForDate(date, weatherByDate, routineRecommendations) 
   const routineItems = routineRecommendations.filter((item) => item.date === date);
   if (routineItems.length > 0) return routineItems;
   return weatherByDate[date]?.applianceRecommendations || [];
+}
+
+function buildAiReport(selectedDate, selectedTasks) {
+  const date = new Date(`${selectedDate}T00:00:00`);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const fixedTasks = selectedTasks.filter((task) => task.displayType === "fixed");
+  const applianceTasks = selectedTasks.filter((task) => task.displayType === "appliance");
+  const fixedSummary = fixedTasks.length > 0 ? `${fixedTasks[0].repeat} ${fixedTasks[0].title}` : "등록된 고정 일정은 없습니다";
+  const applianceSummary =
+    applianceTasks.length > 0
+      ? applianceTasks
+          .slice(0, 3)
+          .map((task) => task.title.replace(/ 예약| 시작| 정리| 예냉| 확인| 체크/g, ""))
+          .join(", ")
+      : "추천 가사일이 없습니다";
+
+  return `${month}월 ${day}일은 ${fixedSummary}. 오늘 제가 진행할 일은 ${applianceSummary} 입니다.`;
 }
 
 function formatWeatherState(weather) {

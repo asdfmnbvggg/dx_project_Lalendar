@@ -4675,7 +4675,7 @@ body {
 }
 
 .calendar-page {
-  height: calc(100svh - 112px);
+  height: calc(100svh - 174px);
   display: flex;
   flex-direction: column;
   padding-top: 4px;
@@ -4890,6 +4890,74 @@ body {
   line-height: 1.2 !important;
   text-align: left;
   box-shadow: none;
+}
+
+.calendar-page-month .calendar-board {
+  flex: 1 1 auto;
+}
+
+.calendar-ai-report {
+  flex: 0 0 88px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 5px;
+  padding: 0 22px 2px;
+}
+
+.calendar-ai-report h3 {
+  position: relative;
+  margin: 0;
+  padding-left: 24px;
+  color: #616161;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.calendar-ai-report h3::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border: 1.6px solid currentColor;
+  border-radius: 3px;
+  transform: translateY(-50%) rotate(-8deg);
+}
+
+.calendar-ai-report h3::after {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 4px;
+  width: 8px;
+  height: 1.6px;
+  border-radius: 999px;
+  background: currentColor;
+  transform: rotate(-42deg);
+  transform-origin: left center;
+}
+
+.calendar-ai-report div {
+  min-height: 60px;
+  display: grid;
+  place-items: center start;
+  padding: 8px 18px;
+  overflow: hidden;
+  border-radius: 9px;
+  background: #616161;
+}
+
+.calendar-ai-report p {
+  max-width: 262px;
+  margin: 0;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.22;
+  text-align: left;
+  word-break: keep-all;
 }
 
 .calendar-month-view .date-cell i.auto-appliance-task {
@@ -5580,6 +5648,7 @@ body {
 
   .calendar-board {
     height: auto;
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     padding: 0 10px 2px !important;
