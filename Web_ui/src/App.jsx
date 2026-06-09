@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  ArrowRight,
   Bell,
   CalendarDays,
   ChartColumnIncreasing,
@@ -805,8 +806,11 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
   const isProfile = step === "profile";
   const isAppliance = step === "appliance";
   const isAssignee = step === "assignee";
+  const isReady = step === "ready";
   const [selectedApplianceTypes, setSelectedApplianceTypes] = useState([]);
   const [applianceAssignees, setApplianceAssignees] = useState({});
+  const introMessage = "어서오세요!\n당신을 위한 최적의 가사일 계획을\n자동으로 짜주는 AI 가사일 플래너\n(현우)입니다.";
+  const [introTextLength, setIntroTextLength] = useState(0);
   const guideByStep = {
     intro: "어서오세요!",
     ready: "추천 준비 완료",
@@ -820,6 +824,33 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
   const selectedAppliances = applianceOptions.filter(([, type]) => selectedApplianceTypes.includes(type));
   const hasSelectedAppliance = selectedApplianceTypes.length > 0;
   const hasAssignedAppliance = selectedAppliances.some(([, type]) => Boolean(applianceAssignees[type]));
+  const introText = introMessage.slice(0, introTextLength);
+  const isIntroComplete = introTextLength >= introMessage.length;
+
+  useEffect(() => {
+    if (!isIntro) return undefined;
+
+    setIntroTextLength(0);
+    const interval = window.setInterval(() => {
+      setIntroTextLength((current) => {
+        if (current >= introMessage.length) {
+          window.clearInterval(interval);
+          return current;
+        }
+
+        return current + 1;
+      });
+    }, 34);
+
+    return () => window.clearInterval(interval);
+  }, [isIntro, introMessage.length]);
+
+  useEffect(() => {
+    if (!isReady) return undefined;
+
+    const timeout = window.setTimeout(onComplete, 2800);
+    return () => window.clearTimeout(timeout);
+  }, [isReady, onComplete]);
 
   function toggleApplianceType(type) {
     setSelectedApplianceTypes((current) => {
@@ -842,12 +873,14 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
 
   return (
     <section className="onboarding-page" aria-label="온보딩">
-      {!isIntro && <button className="onboarding-back-zone" type="button" onClick={onBack} aria-label="이전 단계로 이동" />}
-      <div className="onboarding-progress" aria-hidden="true">
-        {["intro", "profile", "appliance", "assignee", "ready"].map((item) => (
-          <span key={item} className={step === item ? "active" : ""} />
-        ))}
-      </div>
+      {!isIntro && !isReady && <button className="onboarding-back-zone" type="button" onClick={onBack} aria-label="이전 단계로 이동" />}
+      {!isIntro && !isReady && (
+        <div className="onboarding-progress" aria-hidden="true">
+          {["intro", "profile", "appliance", "assignee", "ready"].map((item) => (
+            <span key={item} className={step === item ? "active" : ""} />
+          ))}
+        </div>
+      )}
 
       {isProfile && false && (
         <div className="onboarding-card">
@@ -891,18 +924,26 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
       )}
 
       <div
-        className={`onboarding-character-scene ${isProfile ? "profile" : ""} ${isAppliance ? "appliance" : ""} ${
+        className={`onboarding-character-scene ${isIntro ? "intro" : ""} ${isProfile ? "profile" : ""} ${isAppliance ? "appliance" : ""} ${
           isAssignee ? "assignee" : ""
-        } ${!isIntro && !isProfile && !isAppliance && !isAssignee ? "ready" : ""}`}
+        } ${isReady ? "ready" : ""}`}
       >
         {isIntro ? (
-          <button className="onboarding-speech-bubble onboarding-intro-message" type="button" onClick={onNext} aria-label="온보딩 시작하기">
-            <strong>
-              어서오세요!
-              <br />
-              AI 가사일 플래너 현우입니다!
-            </strong>
-          </button>
+          <section className="onboarding-intro-panel" aria-label="환영 멘트">
+            <p className="onboarding-intro-type">
+              {introText.split("\n").map((line, index) => (
+                <span key={index}>
+                  {line}
+                  {index < introText.split("\n").length - 1 && <br />}
+                </span>
+              ))}
+              {!isIntroComplete && <i aria-hidden="true" />}
+            </p>
+            <button className="onboarding-next-button" type="button" onClick={onNext} disabled={!isIntroComplete} aria-label="다음 단계로 이동">
+              <span>NEXT</span>
+              <ArrowRight size={18} strokeWidth={2.6} />
+            </button>
+          </section>
         ) : isProfile ? (
           <div className="onboarding-card onboarding-method-card">
             <div>
@@ -992,30 +1033,23 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
             </button>
           </div>
         ) : (
-          <div className="onboarding-card onboarding-ready-card">
-            <div>
-              <p className="onboarding-kicker">추천 준비 완료</p>
-              <h1>10일간의 루틴을 캘린더에 담아둘게요</h1>
-              <p>빨래, 제습, 환기, 청소 루틴을 날씨와 귀가 시간에 맞춰 먼저 배치합니다.</p>
-            </div>
-
-            <div className="onboarding-recommend-list" aria-label="추천 일정 미리보기">
-              {["빨래와 건조 일정", "귀가 전 실내 환경 준비", "주간 청소 루틴", "가족별 담당 배분"].map((item) => (
-                <span key={item}>{item}</span>
-              ))}
-            </div>
-
-            <div className="onboarding-actions">
-              <button type="button" onClick={onBack}>
-                이전
-              </button>
-              <button className="onboarding-primary" type="button" onClick={onComplete}>
-                캘린더 시작하기
-              </button>
-            </div>
+          <div className="onboarding-ai-wait" role="status" aria-live="polite">
+            <section className="onboarding-ai-wait-card">
+              <span className="onboarding-ai-spinner" aria-hidden="true" />
+              <p>
+                00님의 일정, 날씨, 온습도
+                <br />
+                데이터를 분석해서
+                <br />
+                (현우)가 최적의 가사일 계획을
+                <br />
+                짜고 있어요!
+              </p>
+              <img src={lgCharacter} alt="" />
+            </section>
           </div>
         )}
-        <img className="onboarding-character-image" src={lgCharacter} alt="" />
+        {!isReady && <img className="onboarding-character-image" src={lgCharacter} alt="" />}
       </div>
     </section>
   );
