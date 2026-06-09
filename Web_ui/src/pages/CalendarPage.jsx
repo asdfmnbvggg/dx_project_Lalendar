@@ -71,6 +71,7 @@ export default function CalendarPage({
   const selectedDay = Number(selectedDate.slice(-2));
   const displayDates = getDisplayDates(calendarView, selectedDate, month);
   const displayLabel = getDisplayLabel(calendarView, selectedDate, monthLabel);
+  const calendarTitle = calendarView === "month" ? monthLabel.replace(". ", ".") : displayLabel;
   const leadingBlanks = calendarView === "month" ? monthLeadingBlanks : 0;
   const calendarCells =
     calendarView === "month"
@@ -82,6 +83,8 @@ export default function CalendarPage({
   const selectedRecommendations = getRecommendationsForDate(selectedDate, weatherByDate, routineRecommendations);
   const detailDate = selectedDetailDate || selectedDate;
   const detailTasks = tasksByDate[detailDate] || [];
+  const familyMembers = members.filter((member) => member.id !== "all");
+  const selectedMemberProfile = familyMembers.find((member) => member.id === selectedMember) || familyMembers[0] || members[0];
 
   function moveCalendar(offset) {
     if (calendarView === "month") {
@@ -144,15 +147,36 @@ export default function CalendarPage({
   return (
     <section className={`page calendar-page calendar-page-${calendarView}`}>
       <div className="calendar-filter-block">
+        <button className="calendar-settings-button" type="button" aria-label="설정">
+          <span />
+          <span />
+          <span />
+        </button>
         <p>일정 보기 필터</p>
         <div className="profile-strip" aria-label="캘린더 일정 보기 필터">
-          {members.map((member) => (
-            <button key={member.id} className={selectedMember === member.id ? "active" : ""} onClick={() => setSelectedMember(member.id)}>
+          {familyMembers.map((member) => (
+            <button
+              key={member.id}
+              className={selectedMember === member.id || (selectedMember === "all" && member.id === selectedMemberProfile.id) ? "active" : ""}
+              onClick={() => setSelectedMember(member.id)}
+            >
               <span style={{ background: memberColors[member.id] || member.color }}>{member.short}</span>
               {member.id === "all" ? "전체" : member.name}
             </button>
           ))}
         </div>
+        <article className="calendar-selected-profile">
+          <span className="calendar-selected-avatar" style={{ background: memberColors[selectedMemberProfile.id] || selectedMemberProfile.color }}>
+            {selectedMemberProfile.short}
+          </span>
+          <div>
+            <strong>{selectedMemberProfile.name}</strong>
+            <small>each task shapes who we become.</small>
+          </div>
+          <button type="button" aria-label="프로필 설정">
+            <Plus size={15} />
+          </button>
+        </article>
       </div>
 
       <section className="calendar-board">
@@ -163,7 +187,7 @@ export default function CalendarPage({
             </button>
             <h2>
               <button type="button" className="month-title-button" onClick={openDatePicker}>
-                {displayLabel}
+                {calendarTitle}
               </button>
             </h2>
             <button onClick={() => moveCalendar(1)} aria-label="다음 기간">
