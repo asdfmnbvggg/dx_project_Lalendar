@@ -250,8 +250,8 @@ export default function App() {
     setOnboardingProfile((current) => ({ ...current, [field]: value }));
   }
 
-  function completeOnboarding() {
-    const generated = buildOnboardingTasks(onboardingProfile, selectedMember);
+  function completeOnboarding(onboardingSetup = {}) {
+    const generated = buildOnboardingTasks(onboardingProfile, selectedMember, onboardingSetup);
     setTasks((current) => [...generated, ...current]);
     setSelectedDate(generated[0]?.date || getTodayKey());
     const firstDate = generated[0]?.date?.split("-").map(Number);
@@ -848,9 +848,16 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
   useEffect(() => {
     if (!isReady) return undefined;
 
-    const timeout = window.setTimeout(onComplete, 2800);
+    const timeout = window.setTimeout(
+      () =>
+        onComplete({
+          applianceTypes: selectedApplianceTypes,
+          applianceAssignees,
+        }),
+      2800,
+    );
     return () => window.clearTimeout(timeout);
-  }, [isReady, onComplete]);
+  }, [applianceAssignees, isReady, onComplete, selectedApplianceTypes]);
 
   function toggleApplianceType(type) {
     setSelectedApplianceTypes((current) => {
@@ -1152,6 +1159,9 @@ function sortTasks(tasks) {
 
 function taskSorter(a, b) {
   if (a.done !== b.done) return Number(a.done) - Number(b.done);
+  if (Number.isFinite(a.sortOrder) || Number.isFinite(b.sortOrder)) {
+    return (a.sortOrder ?? 99) - (b.sortOrder ?? 99);
+  }
   return b.id - a.id;
 }
 
@@ -1166,9 +1176,11 @@ function getTodayKey() {
   return dateKey(today.getFullYear(), today.getMonth() + 1, today.getDate());
 }
 
-function buildOnboardingTasks(profile, selectedMember) {
+function buildOnboardingTasks(profile, selectedMember, onboardingSetup = {}) {
   const baseDate = new Date(`${getTodayKey()}T00:00:00`);
   const familyOwners = ["me", "minsu", "theresa", "all"].slice(0, Math.max(1, Number(profile.familyCount) || 1));
+  const timestamp = Date.now();
+  const selectedApplianceTypes = normalizeOnboardingApplianceTypes(onboardingSetup.applianceTypes);
   const ownerAt = (index) => {
     if (selectedMember !== "all") return selectedMember;
     return familyOwners[index % familyOwners.length] || "me";
@@ -1178,75 +1190,74 @@ function buildOnboardingTasks(profile, selectedMember) {
     next.setDate(baseDate.getDate() + offset);
     return dateKey(next.getFullYear(), next.getMonth() + 1, next.getDate());
   };
-
-  return [
-    {
-      id: Date.now() + 501,
-      date: at(0),
-      title: "AI 추천 일정 확인",
-      place: "Lalendar",
-      tag: "routine",
-      owner: ownerAt(0),
-      done: false,
-      repeat: "온보딩",
-      source: "auto",
-    },
-    {
-      id: Date.now() + 502,
-      date: at(1),
-      title: "빨래와 건조 루틴",
-      place: "세탁실",
-      tag: "house",
-      owner: ownerAt(1),
-      done: false,
-      repeat: profile.laundryDays || "주 2회",
-      source: "auto",
-    },
-    {
-      id: Date.now() + 503,
-      date: at(2),
-      title: "귀가 전 제습기 켜기",
-      place: "거실",
-      tag: "routine",
-      owner: ownerAt(2),
-      done: false,
-      repeat: profile.returnHomeTime ? `${profile.returnHomeTime} 전` : "귀가 전",
-      source: "auto",
-    },
-    {
-      id: Date.now() + 504,
-      date: at(4),
-      title: "주간 청소 루틴",
-      place: "공용 공간",
-      tag: "house",
-      owner: ownerAt(3),
-      done: false,
-      repeat: profile.cleaningDay || "주 1회",
-      source: "auto",
-    },
-    {
-      id: Date.now() + 505,
-      date: at(6),
-      title: "공기청정기 필터 확인",
-      place: "거실",
-      tag: "house",
-      owner: ownerAt(4),
-      done: false,
-      repeat: "10일 추천",
-      source: "auto",
-    },
-    {
-      id: Date.now() + 506,
-      date: at(9),
-      title: "가족 루틴 점검",
-      place: "공유",
-      tag: "share",
-      owner: "all",
-      done: false,
-      repeat: "10일 후",
-      source: "auto",
-    },
+  const fixedPlans = [
+    { title: "12시 약 문의", place: "고정 일정", repeat: "12:00", tag: "plan" },
+    { title: "18시 회식 참석", place: "고정 일정", repeat: "18:00", tag: "plan" },
   ];
+
+  return Array.from({ length: 10 }, (_, dayIndex) => {
+    const dayAppliances = [selectedApplianceTypes[dayIndex % selectedApplianceTypes.length], selectedApplianceTypes[(dayIndex + 1) % selectedApplianceTypes.length]];
+    const dayTasks = [
+      ...fixedPlans.map((plan, index) => ({
+        id: timestamp + dayIndex * 10 + index,
+        date: at(dayIndex),
+        title: plan.title,
+        place: plan.place,
+        tag: plan.tag,
+        owner: ownerAt(index),
+        done: false,
+        repeat: plan.repeat,
+        source: "manual",
+        displayType: "fixed",
+        sortOrder: index,
+      })),
+      ...dayAppliances.map((type, index) => {
+        const plan = applianceOnboardingPlans[type] || applianceOnboardingPlans.washer;
+        return {
+          id: timestamp + dayIndex * 10 + index + 2,
+          date: at(dayIndex),
+          title: plan.titles[(dayIndex + index) % plan.titles.length],
+          place: plan.place,
+          tag: "house",
+          owner: onboardingSetup.applianceAssignees?.[type] || ownerAt(index + 2),
+          done: false,
+          repeat: profile.returnHomeTime && index === 1 ? `${profile.returnHomeTime} 전 자동` : "AI 자동",
+          source: "auto",
+          displayType: "appliance",
+          applianceType: type,
+          sortOrder: index + 2,
+        };
+      }),
+    ];
+
+    return dayTasks;
+  }).flat();
+}
+
+const applianceOnboardingPlans = {
+  washer: {
+    place: "세탁실",
+    titles: ["세탁 예약", "빨래 시작", "세탁물 정리"],
+  },
+  air: {
+    place: "거실",
+    titles: ["에어컨 예냉", "실내 온도 조절", "귀가 전 냉방"],
+  },
+  fridge: {
+    place: "주방",
+    titles: ["냉장고 정리", "식재료 확인", "유통기한 체크"],
+  },
+  dryer: {
+    place: "세탁실",
+    titles: ["건조 예약", "건조 필터 확인", "습도 맞춤 건조"],
+  },
+};
+
+function normalizeOnboardingApplianceTypes(applianceTypes = []) {
+  const normalized = applianceTypes.filter((type) => applianceOnboardingPlans[type]);
+  if (normalized.length >= 2) return normalized;
+
+  return [...new Set([...normalized, "washer", "air"])].slice(0, 2);
 }
 
 const appliancePlaceLabel = {

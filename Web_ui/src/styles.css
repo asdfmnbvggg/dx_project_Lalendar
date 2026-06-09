@@ -4794,6 +4794,7 @@ body {
 }
 
 .calendar-month-view .date-cell {
+  position: relative;
   min-height: 0 !important;
   height: 100%;
   grid-template-rows: 28px 0 1fr !important;
@@ -4856,11 +4857,22 @@ body {
 }
 
 .calendar-month-view .date-tasks {
-  min-height: 42px;
+  position: static;
+  min-height: 72px;
   align-content: start;
   justify-items: center;
-  gap: 4px;
-  padding-top: 5px;
+  gap: 3px;
+  padding-top: 4px;
+}
+
+.calendar-month-view .date-tasks:has(.fixed-event-task) {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
+  justify-content: center;
+  gap: 3px;
+  height: 100%;
+  padding-top: 1px;
+  padding-bottom: 22px;
 }
 
 .calendar-month-view .date-cell i,
@@ -4880,10 +4892,57 @@ body {
   box-shadow: none;
 }
 
+.calendar-month-view .date-cell i.auto-appliance-task {
+  width: 18px !important;
+  height: 18px;
+  min-height: 18px;
+  display: inline-grid !important;
+  position: absolute;
+  bottom: 1px;
+  left: calc(50% - 21px);
+  place-items: center;
+  padding: 0 !important;
+  border: 0;
+  border-radius: 0 !important;
+  color: #111 !important;
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.calendar-month-view .date-cell i.auto-appliance-task ~ i.auto-appliance-task {
+  left: calc(50% + 3px);
+}
+
 .calendar-month-view .date-cell i:nth-of-type(2n) {
   color: #6f6fac !important;
   background: #e0defb !important;
   border-left-color: #8a88df;
+}
+
+.calendar-month-view .date-cell i.auto-appliance-task,
+.calendar-month-view .date-cell i.auto-appliance-task:nth-of-type(2n) {
+  color: #111 !important;
+  background: transparent !important;
+  border-left-color: transparent;
+}
+
+.calendar-month-view .date-cell i.fixed-event-task {
+  width: 48px !important;
+  max-width: 48px;
+  min-height: 9px;
+  justify-self: center;
+  padding: 0 3px !important;
+  border: 0;
+  border-radius: 0 !important;
+  color: #000 !important;
+  background: #fff3d8 !important;
+  font-size: 6.5px !important;
+  font-weight: 800;
+  line-height: 9px !important;
+}
+
+.calendar-month-view .date-cell i.fixed-event-task:nth-of-type(2) {
+  background: #f4d0d1 !important;
 }
 
 .calendar-month-view .date-cell i span,
@@ -4897,6 +4956,24 @@ body {
 
 .calendar-month-view .date-cell i small {
   display: none !important;
+}
+
+.calendar-month-view .date-cell i.auto-appliance-task span {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.task-appliance-image {
+  width: 18px;
+  height: 18px;
+  display: block;
+  object-fit: contain;
+  background: transparent;
+  pointer-events: none;
 }
 
 .calendar-month-view .more-tasks {

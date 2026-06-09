@@ -2,6 +2,10 @@ import { ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Search, Trash2 }
 import { useState } from "react";
 import { members } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
+import airConditionerImage from "../assets/appliances/에어컨.png";
+import dryerImage from "../assets/appliances/건조기.png";
+import fridgeImage from "../assets/appliances/냉장고.png";
+import washerImage from "../assets/appliances/세탁기.png";
 
 const weatherIcon = {
   sunny: "☀️",
@@ -21,6 +25,13 @@ const applianceTypeLabel = {
   AIR_PURIFIER: "공기청정기",
   ROBOT_CLEANER: "로봇청소기",
   ETC: "가전",
+};
+
+const applianceImages = {
+  air: airConditionerImage,
+  dryer: dryerImage,
+  fridge: fridgeImage,
+  washer: washerImage,
 };
 
 export default function CalendarPage({
@@ -66,7 +77,7 @@ export default function CalendarPage({
       ? getMonthCells(month, monthLeadingBlanks)
       : displayDates.map((key) => ({ key, day: Number(key.slice(-2)), isCurrentMonth: true }));
   const isExpanded = calendarScale >= 3;
-  const taskLimit = calendarView === "day" ? 99 : calendarView === "month" ? 2 : calendarScale <= 1 ? 2 : calendarScale >= 4 ? 5 : 3;
+  const taskLimit = calendarView === "day" ? 99 : calendarView === "month" ? 4 : calendarScale <= 1 ? 2 : calendarScale >= 4 ? 5 : 3;
   const selectedWeather = weatherByDate[selectedDate];
   const selectedRecommendations = getRecommendationsForDate(selectedDate, weatherByDate, routineRecommendations);
   const detailDate = selectedDetailDate || selectedDate;
@@ -258,7 +269,16 @@ export default function CalendarPage({
                         <>
                           {recommendations.length > 0 && <em className="weather-recommendation-chip">추천 {recommendations[0].title}</em>}
                           {tasks.slice(0, taskLimit).map((task) => (
-                            <i className={task.tag} key={task.id} style={{ background: memberColors[task.owner] || memberColors.all }}>
+                            <i
+                              className={`${task.tag} ${task.displayType === "fixed" ? "fixed-event-task" : ""} ${
+                                task.displayType === "appliance" ? "auto-appliance-task" : ""
+                              }`}
+                              key={task.id}
+                              style={task.displayType === "appliance" ? undefined : { background: memberColors[task.owner] || memberColors.all }}
+                            >
+                              {task.displayType === "appliance" && (
+                                <img className="task-appliance-image" src={applianceImages[task.applianceType] || washerImage} alt="" aria-hidden="true" />
+                              )}
                               <span>{task.title}</span>
                               {isExpanded && (
                                 <small>
