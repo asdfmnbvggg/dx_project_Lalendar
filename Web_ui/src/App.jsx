@@ -32,7 +32,7 @@ export default function App() {
   const [tasks, setTasks] = useState(initialTasks);
   const [memberColors, setMemberColors] = useState(() => Object.fromEntries(members.map((member) => [member.id, member.color])));
   const [activeTab, setActiveTab] = useState("home");
-  const [isOnboardingComplete, setOnboardingComplete] = useState(() => window.localStorage.getItem("lalendar-onboarding-complete") === "true");
+  const [isOnboardingComplete, setOnboardingComplete] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState("intro");
   const [onboardingProfile, setOnboardingProfile] = useState({
     familyCount: 2,
@@ -256,8 +256,15 @@ export default function App() {
     if (firstDate?.length === 3) {
       setVisibleMonth({ year: firstDate[0], month: firstDate[1] });
     }
-    window.localStorage.setItem("lalendar-onboarding-complete", "true");
     setOnboardingComplete(true);
+  }
+
+  function selectMainTab(id) {
+    setActiveTab(id);
+    if (id === "schedule") {
+      setOnboardingComplete(false);
+      setOnboardingStep("intro");
+    }
   }
 
   function addWeatherRecommendationTask(date, recommendation) {
@@ -583,7 +590,7 @@ export default function App() {
 
         <nav className="tabbar thinq-main-tabbar" aria-label="하단 탭">
           {mainNavItems.map(({ id, label, icon: Icon }) => (
-            <button key={id} className={activeTab === id ? "active" : ""} onClick={() => setActiveTab(id)}>
+            <button key={id} className={activeTab === id ? "active" : ""} onClick={() => selectMainTab(id)}>
               <Icon size={22} />
               <span>{label}</span>
             </button>
@@ -783,6 +790,13 @@ function OnboardingPage({ step, profile, onChangeProfile, onNext, onPreview, onB
 
   return (
     <section className="onboarding-page" aria-label="온보딩">
+      <div className="onboarding-highlight-bg" aria-hidden="true">
+        <div className="onboarding-mini-calendar">
+          {Array.from({ length: 35 }, (_, index) => (
+            <span key={index}>{index % 7 === 0 ? index + 1 : ""}</span>
+          ))}
+        </div>
+      </div>
       <div className="onboarding-progress" aria-hidden="true">
         {["intro", "profile", "ready"].map((item) => (
           <span key={item} className={step === item ? "active" : ""} />
@@ -814,6 +828,27 @@ function OnboardingPage({ step, profile, onChangeProfile, onNext, onPreview, onB
       )}
 
       {isProfile && (
+        <div className="onboarding-card onboarding-method-card">
+          <div>
+            <p className="onboarding-kicker">고정 일정</p>
+            <h1>고정 일정을 알려주세요.</h1>
+            <p>일정 입력 방식을 선택해 주세요.</p>
+          </div>
+
+          <div className="onboarding-method-list">
+            <button type="button" onClick={onPreview}>
+              <span aria-hidden="true" />
+              직접 입력하기
+            </button>
+            <button type="button" onClick={onPreview}>
+              <span aria-hidden="true" />
+              구글 캘린더 불러오기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isProfile && false && (
         <div className="onboarding-card">
           <div>
             <p className="onboarding-kicker">기본 정보</p>
@@ -878,6 +913,15 @@ function OnboardingPage({ step, profile, onChangeProfile, onNext, onPreview, onB
           </div>
         </div>
       )}
+      <div className="onboarding-character-scene" aria-hidden="true">
+        <div className="onboarding-character">
+          <span className="character-face" />
+          <span className="character-blush left" />
+          <span className="character-blush right" />
+        </div>
+        <div className="character-side-bubble left">좋아요!</div>
+        <div className="character-side-bubble right">다음으로</div>
+      </div>
     </section>
   );
 }
