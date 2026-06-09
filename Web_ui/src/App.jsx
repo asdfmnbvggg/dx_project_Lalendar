@@ -49,7 +49,7 @@ export default function App() {
     const today = new Date();
     return { year: today.getFullYear(), month: today.getMonth() + 1 };
   });
-  const [selectedMember, setSelectedMember] = useState("all");
+  const [selectedMember, setSelectedMember] = useState("me");
   const [query, setQuery] = useState("");
   const [isComposerOpen, setComposerOpen] = useState(false);
   const [pendingPostpone, setPendingPostpone] = useState(null);

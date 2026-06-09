@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Search, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Search, Settings, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { members } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
@@ -6,6 +6,9 @@ import airConditionerImage from "../assets/appliances/에어컨.png";
 import dryerImage from "../assets/appliances/건조기.png";
 import fridgeImage from "../assets/appliances/냉장고.png";
 import washerImage from "../assets/appliances/세탁기.png";
+
+import jaehyeokImage from "../assets/people/재혁님.png";
+import suhyunImage from "../assets/people/김수현.jpg";
 
 const weatherIcon = {
   sunny: "☀️",
@@ -32,6 +35,29 @@ const applianceImages = {
   dryer: dryerImage,
   fridge: fridgeImage,
   washer: washerImage,
+};
+
+const memberImages = {
+  me: jaehyeokImage,
+  theresa: suhyunImage,
+};
+
+const calendarMemberLabels = {
+  me: "MY",
+  minsu: "김철수",
+  theresa: "김영희",
+};
+
+const calendarProfileNames = {
+  me: "최재혁",
+  minsu: "김철수",
+  theresa: "김영희",
+};
+
+const calendarMemberIconText = {
+  me: "MY",
+  minsu: "김철수",
+  theresa: "김영희",
 };
 
 export default function CalendarPage({
@@ -85,6 +111,8 @@ export default function CalendarPage({
   const detailTasks = tasksByDate[detailDate] || [];
   const familyMembers = members.filter((member) => member.id !== "all");
   const selectedMemberProfile = familyMembers.find((member) => member.id === selectedMember) || familyMembers[0] || members[0];
+  const selectedMemberName = calendarProfileNames[selectedMemberProfile.id] || selectedMemberProfile.name;
+  const calendarOwnerTitle = `${selectedMemberName}의 캘린더`;
 
   function moveCalendar(offset) {
     if (calendarView === "month") {
@@ -147,10 +175,9 @@ export default function CalendarPage({
   return (
     <section className={`page calendar-page calendar-page-${calendarView}`}>
       <div className="calendar-filter-block">
-        <button className="calendar-settings-button" type="button" aria-label="설정">
-          <span />
-          <span />
-          <span />
+        <h1 className="calendar-family-title">{calendarOwnerTitle}</h1>
+        <button className="calendar-settings-button" type="button" aria-label="설정" onClick={() => onOpenPanel?.({ type: "settings" })}>
+          <Settings size={22} strokeWidth={2.3} />
         </button>
         <p>일정 보기 필터</p>
         <div className="profile-strip" aria-label="캘린더 일정 보기 필터">
@@ -158,25 +185,15 @@ export default function CalendarPage({
             <button
               key={member.id}
               className={selectedMember === member.id || (selectedMember === "all" && member.id === selectedMemberProfile.id) ? "active" : ""}
+              aria-label={`${calendarProfileNames[member.id] || member.name}의 캘린더 보기`}
               onClick={() => setSelectedMember(member.id)}
             >
-              <span style={{ background: memberColors[member.id] || member.color }}>{member.short}</span>
-              {member.id === "all" ? "전체" : member.name}
+              <span style={{ background: memberImages[member.id] ? "#fff" : memberColors[member.id] || member.color }}>
+                {memberImages[member.id] ? <img src={memberImages[member.id]} alt="" aria-hidden="true" /> : calendarMemberIconText[member.id] || member.short}
+              </span>
             </button>
           ))}
         </div>
-        <article className="calendar-selected-profile">
-          <span className="calendar-selected-avatar" style={{ background: memberColors[selectedMemberProfile.id] || selectedMemberProfile.color }}>
-            {selectedMemberProfile.short}
-          </span>
-          <div>
-            <strong>{selectedMemberProfile.name}</strong>
-            <small>each task shapes who we become.</small>
-          </div>
-          <button type="button" aria-label="프로필 설정">
-            <Plus size={15} />
-          </button>
-        </article>
       </div>
 
       <section className="calendar-board">
@@ -327,7 +344,7 @@ export default function CalendarPage({
         <section className="calendar-ai-report" aria-label="AI Report">
           <h3>AI Report</h3>
           <div>
-            <p>{buildAiReport(selectedDate, selectedTasks)}</p>
+            <p>{buildAiReport(selectedDate, selectedTasks, tasksByDate)}</p>
           </div>
         </section>
       )}
@@ -534,12 +551,16 @@ function getRecommendationsForDate(date, weatherByDate, routineRecommendations) 
   return weatherByDate[date]?.applianceRecommendations || [];
 }
 
-function buildAiReport(selectedDate, selectedTasks) {
+function buildAiReport(selectedDate, selectedTasks, tasksByDate = {}) {
   const date = new Date(`${selectedDate}T00:00:00`);
   const month = date.getMonth() + 1;
   const day = date.getDate();
-  const fixedTasks = selectedTasks.filter((task) => task.displayType === "fixed");
-  const applianceTasks = selectedTasks.filter((task) => task.displayType === "appliance");
+  const upcomingTasks = [0, 1, 2]
+    .flatMap((offset) => tasksByDate[addDays(selectedDate, offset)] || [])
+    .filter((task, index, list) => list.findIndex((item) => item.id === task.id) === index);
+  const reportTasks = upcomingTasks.length > 0 ? upcomingTasks : selectedTasks;
+  const fixedTasks = reportTasks.filter((task) => task.displayType === "fixed");
+  const applianceTasks = reportTasks.filter((task) => task.displayType === "appliance");
   const fixedSummary = fixedTasks.length > 0 ? `${fixedTasks[0].repeat} ${fixedTasks[0].title}` : "등록된 고정 일정은 없습니다";
   const applianceSummary =
     applianceTasks.length > 0

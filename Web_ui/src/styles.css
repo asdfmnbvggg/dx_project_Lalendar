@@ -4694,20 +4694,32 @@ body {
 .calendar-filter-block {
   position: relative;
   display: grid;
-  gap: 11px;
-  padding: 0 18px;
+  gap: 12px;
+  padding: 8px 32px 0;
 }
 
 .calendar-filter-block > p {
   display: none;
 }
 
+.calendar-family-title {
+  min-width: 0;
+  margin: 0;
+  padding-right: 44px;
+  color: #616161;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
 .profile-strip {
   display: flex;
-  gap: 9px;
+  gap: 14px;
   min-width: 0;
-  overflow-x: auto;
-  padding: 24px 0 0;
+  overflow: visible;
+  padding: 0;
   scrollbar-width: none;
 }
 
@@ -4716,58 +4728,79 @@ body {
 }
 
 .profile-strip button {
-  flex: 0 0 calc((100% - 18px) / 2.5);
-  min-width: 112px;
-  height: 34px;
-  min-height: 34px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 4px 12px 4px 5px;
-  border-radius: 999px;
-  background: #efeff0;
-  color: #222;
-  font-size: 10.5px;
+  flex: 0 0 auto;
+  width: 39px;
+  height: 39px;
+  min-width: 39px;
+  min-height: 39px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  font-size: 9.5px;
   font-weight: 800;
   white-space: nowrap;
+  overflow: hidden;
+  text-align: center;
+}
+
+.profile-strip button:last-child {
+  margin-right: 0;
 }
 
 .profile-strip button.active {
-  background: #050505;
+  border-color: #050505;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(5, 5, 5, 0.08);
+}
+
+.profile-strip button.active span {
   color: #fff;
+  border-color: #fff;
+  box-shadow: none;
 }
 
 .profile-strip span {
-  width: 26px;
-  height: 26px;
+  width: 35px;
+  height: 35px;
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  border: 2px solid rgba(255, 255, 255, 0.74);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.86);
   border-radius: 50%;
   color: #fff;
-  font-size: 10px;
+  font-size: 8.8px;
   font-weight: 900;
+  line-height: 1.05;
+  word-break: keep-all;
+}
+
+.profile-strip span img,
+.calendar-selected-avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 
 .calendar-settings-button {
   position: absolute;
-  top: 0;
-  right: 18px;
+  top: 8px;
+  right: 14px;
   z-index: 2;
-  width: 30px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: grid;
-  place-content: center;
-  gap: 3px;
+  place-items: center;
   color: #111;
 }
 
-.calendar-settings-button span {
-  width: 14px;
-  height: 2px;
-  border-radius: 999px;
-  background: currentColor;
+.calendar-settings-button svg {
+  display: block;
 }
 
 .calendar-selected-profile {
@@ -4778,10 +4811,11 @@ body {
 }
 
 .calendar-selected-avatar {
-  width: 50px;
-  height: 50px;
+  width: 52px;
+  height: 52px;
   display: grid;
   place-items: center;
+  overflow: hidden;
   border-radius: 50%;
   color: #fff;
   font-size: 16px;
@@ -4828,8 +4862,8 @@ body {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  margin-top: 2px;
-  padding: 0 18px 8px;
+  margin-top: 6px;
+  padding: 0 22px 8px;
   border: 0;
   background: transparent;
   box-shadow: none;
@@ -5038,7 +5072,8 @@ body {
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 5px;
-  padding: 0 22px 0;
+  padding: 7px 22px 0;
+  border-top: 1px solid #eceef2;
 }
 
 .calendar-ai-report h3 {
