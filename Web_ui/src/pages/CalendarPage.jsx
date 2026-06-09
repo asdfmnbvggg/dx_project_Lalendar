@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { members } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
@@ -31,6 +31,7 @@ export default function CalendarPage({
   routineRecommendations = [],
   onPrevMonth,
   onNextMonth,
+  onSelectCalendarDate,
   tasksByDate,
   selectedDate,
   setSelectedDate,
@@ -47,17 +48,29 @@ export default function CalendarPage({
   onAddWeatherRecommendation,
   openComposer,
   onOpenPanel,
+  calendarView = "month",
+  setCalendarView,
 }) {
-  const [calendarView, setCalendarView] = useState("month");
   const [calendarScale, setCalendarScale] = useState(2);
+  const [selectedDetailDate, setSelectedDetailDate] = useState(null);
+  const [isDeleteMode, setDeleteMode] = useState(false);
+  const [selectedDeleteTaskIds, setSelectedDeleteTaskIds] = useState([]);
+  const [isDatePickerOpen, setDatePickerOpen] = useState(false);
+  const [draftDate, setDraftDate] = useState(() => parseDateKey(selectedDate));
   const selectedDay = Number(selectedDate.slice(-2));
   const displayDates = getDisplayDates(calendarView, selectedDate, month);
   const displayLabel = getDisplayLabel(calendarView, selectedDate, monthLabel);
   const leadingBlanks = calendarView === "month" ? monthLeadingBlanks : 0;
+  const calendarCells =
+    calendarView === "month"
+      ? getMonthCells(month, monthLeadingBlanks)
+      : displayDates.map((key) => ({ key, day: Number(key.slice(-2)), isCurrentMonth: true }));
   const isExpanded = calendarScale >= 3;
-  const taskLimit = calendarView === "day" ? 99 : calendarScale <= 1 ? 2 : calendarScale >= 4 ? 5 : 3;
+  const taskLimit = calendarView === "day" ? 99 : calendarView === "month" ? 2 : calendarScale <= 1 ? 2 : calendarScale >= 4 ? 5 : 3;
   const selectedWeather = weatherByDate[selectedDate];
   const selectedRecommendations = getRecommendationsForDate(selectedDate, weatherByDate, routineRecommendations);
+  const detailDate = selectedDetailDate || selectedDate;
+  const detailTasks = tasksByDate[detailDate] || [];
 
   function moveCalendar(offset) {
     if (calendarView === "month") {
@@ -72,8 +85,53 @@ export default function CalendarPage({
     setCalendarScale((current) => Math.min(4, Math.max(0, current + offset)));
   }
 
+  function openDatePicker() {
+    setDraftDate(parseDateKey(selectedDate));
+    setDatePickerOpen(true);
+  }
+
+  function chooseToday() {
+    const today = new Date();
+    setDraftDate({ year: today.getFullYear(), month: today.getMonth() + 1, day: today.getDate() });
+  }
+
+  function applyDatePicker() {
+    const normalizedDay = Math.min(draftDate.day, getDaysInMonth(draftDate.year, draftDate.month));
+    onSelectCalendarDate?.(draftDate.year, draftDate.month, normalizedDay);
+    setDatePickerOpen(false);
+  }
+
+  function closeDateDetail() {
+    setSelectedDetailDate(null);
+    setDeleteMode(false);
+    setSelectedDeleteTaskIds([]);
+  }
+
+  function toggleDeleteMode() {
+    setDeleteMode((current) => !current);
+    setSelectedDeleteTaskIds([]);
+  }
+
+  function toggleDeleteSelection(taskId) {
+    setSelectedDeleteTaskIds((current) => (current.includes(taskId) ? current.filter((id) => id !== taskId) : [...current, taskId]));
+  }
+
+  function deleteSelectedTasks() {
+    selectedDeleteTaskIds.forEach((taskId) => deleteTask(taskId));
+    setSelectedDeleteTaskIds([]);
+    setDeleteMode(false);
+  }
+
+  function updateDraftDate(part, value) {
+    setDraftDate((current) => {
+      const next = { ...current, [part]: value };
+      next.day = Math.min(next.day, getDaysInMonth(next.year, next.month));
+      return next;
+    });
+  }
+
   return (
-    <section className="page calendar-page">
+    <section className={`page calendar-page calendar-page-${calendarView}`}>
       <div className="calendar-filter-block">
         <p>일정 보기 필터</p>
         <div className="profile-strip" aria-label="캘린더 일정 보기 필터">
@@ -92,7 +150,11 @@ export default function CalendarPage({
             <button onClick={() => moveCalendar(-1)} aria-label="이전 기간">
               <ChevronLeft size={18} />
             </button>
-            <h2>{displayLabel}</h2>
+            <h2>
+              <button type="button" className="month-title-button" onClick={openDatePicker}>
+                {displayLabel}
+              </button>
+            </h2>
             <button onClick={() => moveCalendar(1)} aria-label="다음 기간">
               <ChevronRight size={18} />
             </button>
@@ -127,63 +189,218 @@ export default function CalendarPage({
           </div>
         </div>
 
-        <div className={`weekdays ${calendarView === "day" ? "day-weekday" : ""}`}>
-          {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
-            <span key={day}>{day}</span>
-          ))}
-        </div>
+        {calendarView === "week" ? (
+          <WeekTimetable
+            dates={displayDates}
+            tasksByDate={tasksByDate}
+            memberColors={memberColors}
+            selectedDate={selectedDate}
+            onPrevWeek={() => moveCalendar(-1)}
+            onNextWeek={() => moveCalendar(1)}
+            onSelectDate={(date) => {
+              setSelectedDate(date);
+              setSelectedDetailDate(date);
+            }}
+          />
+        ) : (
+          <>
+            {calendarView === "day" && (
+              <DayTimelineHead selectedDate={selectedDate} onPrevDay={() => moveCalendar(-1)} onNextDay={() => moveCalendar(1)} />
+            )}
+            <div className={`weekdays ${calendarView === "day" ? "day-weekday" : ""}`}>
+              {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
+                <span key={day}>{day}</span>
+              ))}
+            </div>
 
-        <div className={`month-grid calendar-scale-${calendarScale} calendar-${calendarView}-view`}>
-          {Array.from({ length: leadingBlanks }).map((_, index) => (
-            <span className="blank-day" key={index} />
-          ))}
-          {displayDates.map((key) => {
-            const tasks = tasksByDate[key] || [];
-            const day = Number(key.slice(-2));
-            const weather = weatherByDate[key];
-            const recommendations = getRecommendationsForDate(key, weatherByDate, routineRecommendations);
-            const hasWeatherData = Boolean(weather?.hasWeatherData);
+            <div
+              className={`month-grid calendar-scale-${calendarScale} calendar-${calendarView}-view`}
+              style={{ "--calendar-row-count": calendarView === "month" ? calendarCells.length / 7 : 1 }}
+            >
+              {calendarView !== "month" &&
+                Array.from({ length: leadingBlanks }).map((_, index) => <span className="blank-day" key={index} />)}
+              {calendarCells.map(({ key, day, isCurrentMonth }) => {
+                const tasks = tasksByDate[key] || [];
+                const weather = weatherByDate[key];
+                const recommendations = getRecommendationsForDate(key, weatherByDate, routineRecommendations);
+                const hasWeatherData = Boolean(weather?.hasWeatherData);
 
-            return (
-              <button key={key} className={`date-cell ${selectedDate === key ? "selected" : ""}`} onClick={() => setSelectedDate(key)}>
-                <strong>{day}</strong>
-                <span className={`day-weather ${hasWeatherData ? "" : "empty"}`}>
-                  {!hasWeatherData ? (
-                    <em>날씨 정보 없음</em>
-                  ) : (
-                    <>
-                      <span className="weather-icon" role="img" aria-label={weather.sky || weather.pty || "날씨"}>
-                        {weatherIcon[weather.icon] || weatherIcon.unknown}
+                return (
+                  <button
+                    key={key}
+                    className={`date-cell ${selectedDate === key ? "selected" : ""} ${isCurrentMonth ? "" : "outside-month"}`}
+                    onClick={() => {
+                      if (!isCurrentMonth) return;
+                      setSelectedDate(key);
+                      setSelectedDetailDate(key);
+                    }}
+                    disabled={!isCurrentMonth}
+                  >
+                    <strong>{day}</strong>
+                    {hasWeatherData && (
+                      <span className="day-weather">
+                        <>
+                          <span className="weather-icon" role="img" aria-label={weather.sky || weather.pty || "날씨"}>
+                            {weatherIcon[weather.icon] || weatherIcon.unknown}
+                          </span>
+                          <span className="weather-temps">
+                            <b>{formatTemp(weather.maxTemp)}</b>
+                            <small>{formatTemp(weather.minTemp)}</small>
+                            {Number.isFinite(weather.pop) && <small className="weather-pop">강수 {weather.pop}%</small>}
+                            <small>{formatWeatherState(weather)}</small>
+                          </span>
+                        </>
                       </span>
-                      <span className="weather-temps">
-                        <b>{formatTemp(weather.maxTemp)}</b>
-                        <small>{formatTemp(weather.minTemp)}</small>
-                        {Number.isFinite(weather.pop) && <small className="weather-pop">강수 {weather.pop}%</small>}
-                        <small>{formatWeatherState(weather)}</small>
-                      </span>
-                    </>
-                  )}
-                </span>
+                    )}
 
-                <div className="date-tasks">
-                  {recommendations.length > 0 && <em className="weather-recommendation-chip">추천 {recommendations[0].title}</em>}
-                  {tasks.slice(0, taskLimit).map((task) => (
-                    <i className={task.tag} key={task.id} style={{ background: memberColors[task.owner] || memberColors.all }}>
-                      <span>{task.title}</span>
-                      {isExpanded && (
-                        <small>
-                          {task.place} · {task.repeat}
-                        </small>
-                      )}
-                    </i>
-                  ))}
-                  {tasks.length > taskLimit && <em className="more-tasks">+{tasks.length - taskLimit}개</em>}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                    <div className="date-tasks">
+                      {isCurrentMonth && (
+                        <>
+                          {recommendations.length > 0 && <em className="weather-recommendation-chip">추천 {recommendations[0].title}</em>}
+                          {tasks.slice(0, taskLimit).map((task) => (
+                            <i className={task.tag} key={task.id} style={{ background: memberColors[task.owner] || memberColors.all }}>
+                              <span>{task.title}</span>
+                              {isExpanded && (
+                                <small>
+                                  {task.place} · {task.repeat}
+                                </small>
+                              )}
+                            </i>
+                          ))}
+                          {tasks.length > taskLimit && <em className="more-tasks">+{tasks.length - taskLimit}개</em>}
+                        </>
+                          )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
       </section>
+
+      {isDatePickerOpen && (
+        <div className="calendar-date-picker-backdrop" role="presentation" onClick={() => setDatePickerOpen(false)}>
+          <section
+            className="calendar-date-picker"
+            role="dialog"
+            aria-modal="true"
+            aria-label="날짜 변경"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <span className="date-picker-drag-handle" aria-hidden="true" />
+            <div className="date-picker-wheels">
+              <DateWheel
+                label="연도"
+                values={getYearOptions(draftDate.year)}
+                value={draftDate.year}
+                formatter={(value) => `${value}년`}
+                onChange={(value) => updateDraftDate("year", value)}
+              />
+              <DateWheel
+                label="월"
+                values={Array.from({ length: 12 }, (_, index) => index + 1)}
+                value={draftDate.month}
+                formatter={(value) => `${value}월`}
+                onChange={(value) => updateDraftDate("month", value)}
+                loop
+              />
+              <DateWheel
+                label="일"
+                values={Array.from({ length: getDaysInMonth(draftDate.year, draftDate.month) }, (_, index) => index + 1)}
+                value={draftDate.day}
+                formatter={(value) => `${value}일`}
+                onChange={(value) => updateDraftDate("day", value)}
+                loop
+              />
+            </div>
+            <div className="date-picker-actions">
+              <button type="button" onClick={chooseToday}>
+                오늘
+              </button>
+              <button type="button" onClick={applyDatePicker}>
+                완료
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {selectedDetailDate && (
+        <div className="date-detail-backdrop" role="presentation" onClick={closeDateDetail}>
+          <section className="date-detail-card" role="dialog" aria-modal="true" aria-label={`${formatDateTitle(detailDate)} 할 일`} onClick={(event) => event.stopPropagation()}>
+            <div className="date-detail-head">
+              <div>
+                <h3>{formatDateTitle(detailDate)}</h3>
+                <p>{formatDDay(detailDate)}</p>
+              </div>
+              <button
+                type="button"
+                className={`date-detail-delete-toggle ${isDeleteMode ? "active" : ""}`}
+                aria-label={isDeleteMode ? "삭제 선택 취소" : "일정 삭제"}
+                disabled={detailTasks.length === 0}
+                onClick={toggleDeleteMode}
+              >
+                <Trash2 size={24} />
+              </button>
+            </div>
+
+            <div className="date-detail-list">
+              {detailTasks.map((task) => (
+                <article
+                  className={`date-detail-task ${task.done ? "done" : ""} ${isDeleteMode ? "delete-selecting" : ""} ${
+                    selectedDeleteTaskIds.includes(task.id) ? "selected-for-delete" : ""
+                  }`}
+                  key={task.id}
+                  onClick={() => {
+                    if (isDeleteMode) toggleDeleteSelection(task.id);
+                  }}
+                >
+                  <button
+                    type="button"
+                    aria-label={isDeleteMode ? `${task.title} 삭제 선택` : `${task.title} 완료`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      if (isDeleteMode) {
+                        toggleDeleteSelection(task.id);
+                        return;
+                      }
+                      toggleTask(task.id);
+                    }}
+                  >
+                    <span />
+                  </button>
+                  <div>
+                    <strong>{task.title}</strong>
+                    <small>
+                      {task.place} · {task.repeat}
+                    </small>
+                  </div>
+                </article>
+              ))}
+              {detailTasks.length === 0 && <p className="date-detail-empty">이 날의 할 일이 없어요.</p>}
+            </div>
+
+            {isDeleteMode ? (
+              <button type="button" className="date-detail-delete-action" onClick={deleteSelectedTasks} disabled={selectedDeleteTaskIds.length === 0}>
+                삭제하기
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="date-detail-add"
+                onClick={() => {
+                  setSelectedDate(detailDate);
+                  closeDateDetail();
+                  openComposer();
+                }}
+              >
+                + 할 일을 추가하세요
+              </button>
+            )}
+          </section>
+        </div>
+      )}
 
       <section className="task-sheet compact">
         <div className="sheet-head">
@@ -194,7 +411,7 @@ export default function CalendarPage({
           </label>
         </div>
 
-        {selectedWeather?.hasWeatherData ? (
+        {selectedWeather?.hasWeatherData && (
           <div className="selected-weather-summary">
             <span className="weather-icon" role="img" aria-label={selectedWeather.sky || "날씨"}>
               {weatherIcon[selectedWeather.icon] || weatherIcon.unknown}
@@ -204,11 +421,6 @@ export default function CalendarPage({
               최고 {formatTemp(selectedWeather.maxTemp)} / 최저 {formatTemp(selectedWeather.minTemp)}
               {Number.isFinite(selectedWeather.pop) ? ` · 강수 ${selectedWeather.pop}%` : ""}
             </small>
-          </div>
-        ) : (
-          <div className="selected-weather-summary empty">
-            <strong>날씨 정보 없음</strong>
-            <small>기상청 API 응답이 없거나 해당 날짜 예보가 없습니다.</small>
           </div>
         )}
 
@@ -236,7 +448,7 @@ export default function CalendarPage({
                   <div>
                     <span>{applianceTypeLabel[recommendation.applianceType] || "가전"}</span>
                     <strong>{recommendation.title}</strong>
-                    <p>{recommendation.reason}</p>
+                    {formatRecommendationReason(recommendation.reason) && <p>{formatRecommendationReason(recommendation.reason)}</p>}
                     <small>
                       {recommendation.recommendedStartTime || recommendation.startTime}-{recommendation.recommendedEndTime || recommendation.endTime} ·{" "}
                       {formatRecommendationSource(recommendation)}
@@ -288,28 +500,294 @@ function formatRecommendationSource(recommendation) {
   return labels[recommendation.source] || recommendation.automationType || "추천";
 }
 
+function formatRecommendationReason(reason) {
+  return String(reason || "")
+    .replaceAll("날씨 정보 없음.", "")
+    .replaceAll("날씨 정보 없음", "")
+    .trim();
+}
+
+function formatDateTitle(date) {
+  const parsed = new Date(`${date}T00:00:00`);
+  const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+  return `${parsed.getMonth() + 1}월 ${parsed.getDate()}일 (${weekdays[parsed.getDay()]})`;
+}
+
+function formatDDay(date) {
+  const today = new Date();
+  const target = new Date(`${date}T00:00:00`);
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const diff = Math.round((target - todayStart) / 86400000);
+
+  if (diff === 0) return "D-day";
+  return diff > 0 ? `D - ${diff}` : `D + ${Math.abs(diff)}`;
+}
+
+function DayTimelineHead({ selectedDate, onPrevDay, onNextDay }) {
+  return (
+    <div className="day-timeline-head">
+      <button type="button" aria-label="이전 날" onClick={onPrevDay}>
+        ‹
+      </button>
+      <strong>{formatDayTitle(selectedDate)}</strong>
+      <button type="button" aria-label="다음 날" onClick={onNextDay}>
+        ›
+      </button>
+    </div>
+  );
+}
+
+function formatDayTitle(date) {
+  const parsed = new Date(`${date}T00:00:00`);
+  const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+  return `${parsed.getMonth() + 1}.${parsed.getDate()} (${weekdays[parsed.getDay()]})`;
+}
+
+function WeekTimetable({ dates, tasksByDate, memberColors, selectedDate, onPrevWeek, onNextWeek, onSelectDate }) {
+  const hours = Array.from({ length: 25 }, (_, index) => index);
+  const dayLabels = ["월", "화", "수", "목", "금", "토", "일"];
+
+  return (
+    <section className="week-timetable-card" aria-label="주간 시간표">
+      <div className="week-timetable-head">
+        <button type="button" aria-label="이전 주" onClick={onPrevWeek}>
+          ‹
+        </button>
+        <strong>{formatWeekTitle(dates)}</strong>
+        <button type="button" aria-label="다음 주" onClick={onNextWeek}>
+          ›
+        </button>
+      </div>
+      <div className="week-timetable-scroll">
+        <div className="week-timetable-grid" style={{ "--week-hour-count": hours.length }}>
+          <span className="week-time-spacer" />
+          {dates.map((date, dayIndex) => {
+            const parsed = new Date(`${date}T00:00:00`);
+            return (
+              <button
+                type="button"
+                className={`week-day-head ${date === selectedDate ? "active" : ""}`}
+                key={date}
+                onClick={() => onSelectDate(date)}
+              >
+                <span>{dayLabels[dayIndex]}</span>
+                <strong>{parsed.getDate()}</strong>
+              </button>
+            );
+          })}
+
+          {hours.map((hour, rowIndex) => (
+            <span className="week-time-label" style={{ gridRow: rowIndex + 2 }} key={hour}>
+              <strong>{formatWeekHour(hour).hour}</strong>
+              <small>{formatWeekHour(hour).period}</small>
+              <small>{formatWeekHour(hour).time}</small>
+            </span>
+          ))}
+
+          {hours.map((hour, rowIndex) =>
+            dates.map((date, dayIndex) => <span className="week-grid-line" style={{ gridColumn: dayIndex + 2, gridRow: rowIndex + 2 }} key={`${date}-${hour}`} />),
+          )}
+
+          {dates.flatMap((date, dayIndex) =>
+            (tasksByDate[date] || []).slice(0, 4).map((task, taskIndex) => {
+              const placement = getWeekTaskPlacement(task, dayIndex, taskIndex, hours);
+              return (
+                <button
+                  type="button"
+                  className={`week-task-block ${task.tag}`}
+                  key={`${date}-${task.id}`}
+                  style={{
+                    gridColumn: dayIndex + 2,
+                    gridRow: `${placement.row} / span ${placement.span}`,
+                    background: getWeekTaskColor(task, memberColors, taskIndex),
+                  }}
+                  onClick={() => onSelectDate(date)}
+                >
+                  <strong>{task.title}</strong>
+                  <span>{task.place}</span>
+                </button>
+              );
+            }),
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function formatWeekTitle(dates) {
+  if (!dates.length) return "주간";
+  const start = new Date(`${dates[0]}T00:00:00`);
+  const end = new Date(`${dates[dates.length - 1]}T00:00:00`);
+  return `${start.getMonth() + 1}.${start.getDate()} - ${end.getMonth() + 1}.${end.getDate()}`;
+}
+
+function formatWeekHour(hour) {
+  if (hour === 0) {
+    return { period: "오전", hour: "12", time: "12시" };
+  }
+
+  if (hour === 12) {
+    return { period: "", hour: "정오", time: "12시" };
+  }
+
+  if (hour === 24) {
+    return { period: "오후", hour: "12", time: "12시" };
+  }
+
+  if (hour < 12) {
+    return { period: "오전", hour: String(hour), time: `${hour}시` };
+  }
+
+  return { period: "오후", hour: String(hour - 12), time: `${hour - 12}시` };
+}
+
+function getWeekTaskPlacement(task, dayIndex, taskIndex, hours) {
+  const parsedHour = Number(String(task.repeat || "").match(/(\d{1,2}):\d{2}/)?.[1]);
+  const fallbackHour = 8 + ((dayIndex * 2 + taskIndex * 3) % 10);
+  const hour = Number.isFinite(parsedHour) ? parsedHour : fallbackHour;
+  const row = Math.max(2, Math.min(hours.length + 1, hour - hours[0] + 2));
+  const span = task.source === "auto" ? 2 : 1;
+  return { row, span };
+}
+
+function getWeekTaskColor(task, memberColors, index) {
+  const palette = ["#fb7185", "#fbbf24", "#60a5fa", "#a78bfa", "#fb8a6b", "#34d399"];
+  if (task.owner && memberColors[task.owner]) return colorMix(memberColors[task.owner], palette[index % palette.length]);
+  return palette[index % palette.length];
+}
+
+function colorMix(primary, fallback) {
+  return primary === "#d4144b" ? fallback : primary;
+}
+
+function DateWheel({ label, values, value, formatter, onChange, loop = false }) {
+  const selectedIndex = values.indexOf(value);
+  const visibleValues = Array.from({ length: 7 }, (_, offset) => {
+    const index = selectedIndex - 3 + offset;
+    if (loop) return values[wrapIndex(index, values.length)];
+    return values[index];
+  }).filter((item) => item !== undefined);
+
+  function startWheelDrag(event) {
+    event.preventDefault();
+    const startY = event.clientY;
+    const startIndex = values.indexOf(value);
+    let lastStep = 0;
+
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+
+    const moveWheel = (moveEvent) => {
+      moveEvent.preventDefault();
+      const step = Math.trunc((startY - moveEvent.clientY) / 12);
+      if (step === lastStep) return;
+
+      lastStep = step;
+      const nextIndex = loop ? wrapIndex(startIndex + step, values.length) : Math.min(values.length - 1, Math.max(0, startIndex + step));
+      onChange(values[nextIndex]);
+    };
+
+    const stopWheelDrag = () => {
+      window.removeEventListener("pointermove", moveWheel);
+      window.removeEventListener("pointerup", stopWheelDrag);
+    };
+
+    window.addEventListener("pointermove", moveWheel);
+    window.addEventListener("pointerup", stopWheelDrag);
+  }
+
+  function handleWheel(event) {
+    event.preventDefault();
+    const currentIndex = values.indexOf(value);
+    const direction = event.deltaY > 0 ? 1 : -1;
+    const nextIndex = loop ? wrapIndex(currentIndex + direction, values.length) : Math.min(values.length - 1, Math.max(0, currentIndex + direction));
+    onChange(values[nextIndex]);
+  }
+
+  return (
+    <div className="date-picker-wheel" aria-label={label} onPointerDown={startWheelDrag} onWheel={handleWheel}>
+      {visibleValues.map((item) => (
+        <button key={item} type="button" className={item === value ? "active" : ""} onClick={() => onChange(item)}>
+          {formatter(item)}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function wrapIndex(index, length) {
+  return ((index % length) + length) % length;
+}
+
+function parseDateKey(date) {
+  const [year, month, day] = date.split("-").map(Number);
+  return { year, month, day };
+}
+
+function getYearOptions(year) {
+  return Array.from({ length: 9 }, (_, index) => year - 4 + index);
+}
+
+function getDaysInMonth(year, month) {
+  return new Date(year, month, 0).getDate();
+}
+
 function getDisplayDates(view, selectedDate, month) {
   if (view === "month") return month;
   if (view === "day") return [selectedDate];
 
   const selected = new Date(`${selectedDate}T00:00:00`);
-  const sunday = new Date(selected);
-  sunday.setDate(selected.getDate() - selected.getDay());
+  const monday = new Date(selected);
+  const mondayOffset = (selected.getDay() + 6) % 7;
+  monday.setDate(selected.getDate() - mondayOffset);
   return Array.from({ length: 7 }, (_, index) => {
-    const day = new Date(sunday);
-    day.setDate(sunday.getDate() + index);
+    const day = new Date(monday);
+    day.setDate(monday.getDate() + index);
     return toDateKey(day);
   });
 }
 
 function getDisplayLabel(view, selectedDate, monthLabel) {
-  if (view === "month") return monthLabel;
+  if (view === "month") {
+    const [year, month] = monthLabel.split(". ").map(Number);
+    const currentYear = new Date().getFullYear();
+    return year === currentYear ? `${month}월` : `${year}년 ${month}월`;
+  }
   if (view === "day") return selectedDate.replaceAll("-", ". ");
 
   const dates = getDisplayDates("week", selectedDate, []);
   const start = dates[0].slice(5).replace("-", ".");
   const end = dates[6].slice(5).replace("-", ".");
   return `${selectedDate.slice(0, 4)}. ${start} - ${end}`;
+}
+
+function getMonthCells(month, leadingBlanks) {
+  if (month.length === 0) return [];
+
+  const [year, monthNumber] = month[0].split("-").map(Number);
+  const totalDays = month.length;
+  const previousMonthLastDay = new Date(year, monthNumber - 1, 0).getDate();
+  const cellCount = Math.ceil((leadingBlanks + totalDays) / 7) * 7;
+
+  return Array.from({ length: cellCount }, (_, index) => {
+    const currentDay = index - leadingBlanks + 1;
+
+    if (currentDay < 1) {
+      const day = previousMonthLastDay + currentDay;
+      return { key: toDateKey(new Date(year, monthNumber - 2, day)), day, isCurrentMonth: false };
+    }
+
+    if (currentDay > totalDays) {
+      const day = currentDay - totalDays;
+      return { key: toDateKey(new Date(year, monthNumber, day)), day, isCurrentMonth: false };
+    }
+
+    return {
+      key: `${year}-${String(monthNumber).padStart(2, "0")}-${String(currentDay).padStart(2, "0")}`,
+      day: currentDay,
+      isCurrentMonth: true,
+    };
+  });
 }
 
 function addDays(date, amount) {

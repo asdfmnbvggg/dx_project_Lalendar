@@ -1,54 +1,68 @@
-import ScheduleBlock from "./ScheduleBlock.jsx";
-import { DAYS, END_HOUR, HOUR_HEIGHT, START_HOUR } from "./scheduleConstants.js";
+import { DAYS, END_HOUR, START_HOUR } from "./scheduleConstants.js";
 
-const TOTAL_HEIGHT = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
-
-export default function WeeklyTimetable({ schedules, showWeekend, getMemberName, onEmptyClick, onScheduleClick }) {
+export default function WeeklyTimetable({ schedules, showWeekend, weekStart, getMemberName, onEmptyClick, onScheduleClick }) {
   const days = showWeekend ? DAYS : DAYS.slice(0, 5);
+  const dates = days.map((day) => ({ day, date: dateForDayInWeek(day, weekStart) }));
   const schedulesByDay = groupSchedulesByDay(schedules, days);
   const hours = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, index) => START_HOUR + index);
 
   return (
-    <div className="weekly-timetable-shell">
-      <div className="weekly-timetable" style={{ "--day-count": days.length, "--schedule-total-height": `${TOTAL_HEIGHT}px` }}>
-        <div className="time-spacer" />
-        {days.map((day) => (
-          <div className="day-head" key={day}>
-            {day}
-          </div>
-        ))}
+    <section className="week-timetable-card family-week-timetable" aria-label="주간 일정표">
+      <div className="week-timetable-scroll">
+        <div className="week-timetable-grid" style={{ "--week-hour-count": hours.length, "--week-day-count": days.length }}>
+          <span className="week-time-spacer" />
+          {dates.map(({ day, date }) => (
+            <button type="button" className="week-day-head" key={day} onClick={() => onEmptyClick(day, "09:00")}>
+              <span>{day}</span>
+              <strong>{Number(date.slice(8, 10))}</strong>
+            </button>
+          ))}
 
-        <div className="time-axis" style={{ "--column-height": `${TOTAL_HEIGHT}px` }}>
-          {hours.slice(0, -1).map((hour) => (
-            <span key={hour} style={{ height: HOUR_HEIGHT }}>
-              {formatHour(hour)}
+          {hours.map((hour, rowIndex) => (
+            <span className="week-time-label" style={{ gridRow: rowIndex + 2 }} key={hour}>
+              <strong>{formatWeekHour(hour).hour}</strong>
+              <small>{formatWeekHour(hour).period}</small>
+              <small>{formatWeekHour(hour).time}</small>
             </span>
           ))}
-        </div>
 
-        {days.map((day) => (
-          <div
-            key={day}
-            className="day-column"
-            style={{ "--column-height": `${TOTAL_HEIGHT}px` }}
-            onClick={(event) => onEmptyClick(day, timeFromOffset(event.nativeEvent.offsetY))}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") onEmptyClick(day, "09:00");
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label={`${day}요일 시간표`}
-          >
-            {hours.slice(0, -1).map((hour) => (
-              <span key={hour} className="hour-line" style={{ top: `${(hour - START_HOUR) * HOUR_HEIGHT}px` }} />
-            ))}
-            {layoutSchedules(schedulesByDay[day] || []).map(({ schedule, layout }) => (
-              <ScheduleBlock key={schedule.id} schedule={schedule} layout={layout} memberName={getMemberName(schedule.members || schedule.member)} onClick={onScheduleClick} />
-            ))}
-          </div>
-        ))}
+          {hours.map((hour, rowIndex) =>
+            days.map((day, dayIndex) => (
+              <button
+                type="button"
+                className="week-grid-line"
+                style={{ gridColumn: dayIndex + 2, gridRow: rowIndex + 2 }}
+                key={`${day}-${hour}`}
+                aria-label={`${day}요일 ${formatTime(hour, 0)} 일정 추가`}
+                onClick={() => onEmptyClick(day, formatTime(hour, 0))}
+              />
+            )),
+          )}
+
+          {days.flatMap((day, dayIndex) =>
+            layoutSchedules(schedulesByDay[day] || []).map(({ schedule, row, span, lane, laneCount }) => (
+              <button
+                type="button"
+                className={`week-task-block family-week-task ${schedule.source === "task" ? "task-derived" : ""}`}
+                key={schedule.id}
+                style={{
+                  gridColumn: dayIndex + 2,
+                  gridRow: `${row} / span ${span}`,
+                  background: schedule.color || "#64748b",
+                  "--lane-index": lane,
+                  "--lane-count": laneCount,
+                }}
+                onClick={() => onScheduleClick(schedule)}
+                title={`${schedule.title} / ${getMemberName(schedule.members || schedule.member)} / ${schedule.location || "장소 없음"}`}
+              >
+                <strong>{schedule.title}</strong>
+                <span>{getMemberName(schedule.members || schedule.member)}</span>
+              </button>
+            )),
+          )}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -62,58 +76,37 @@ function groupSchedulesByDay(schedules, days) {
 
 function layoutSchedules(schedules) {
   const sorted = [...schedules].sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime) || toMinutes(a.endTime) - toMinutes(b.endTime));
-  const groups = [];
+  const lanes = [];
 
-  sorted.forEach((schedule) => {
-    const group = groups.find((items) => items.some((item) => overlaps(item, schedule)));
-    if (group) group.push(schedule);
-    else groups.push([schedule]);
-  });
+  return sorted.map((schedule) => {
+    let lane = lanes.findIndex((end) => end <= toMinutes(schedule.startTime));
+    if (lane === -1) {
+      lane = lanes.length;
+      lanes.push(0);
+    }
+    lanes[lane] = toMinutes(schedule.endTime);
 
-  return groups.flatMap((group) => {
-    const columns = [];
-    const assignments = group.map((schedule) => {
-      let columnIndex = columns.findIndex((end) => end <= toMinutes(schedule.startTime));
-      if (columnIndex === -1) {
-        columnIndex = columns.length;
-        columns.push(0);
-      }
-      columns[columnIndex] = toMinutes(schedule.endTime);
-      return { schedule, columnIndex };
-    });
-    const width = 100 / Math.max(columns.length, 1);
+    const startMinutes = Math.max(START_HOUR * 60, toMinutes(schedule.startTime));
+    const endMinutes = Math.min(END_HOUR * 60, toMinutes(schedule.endTime));
+    const row = Math.max(2, Math.floor((startMinutes - START_HOUR * 60) / 60) + 2);
+    const span = Math.max(1, Math.ceil((endMinutes - startMinutes) / 60));
 
-    return assignments.map(({ schedule, columnIndex }) => {
-      const height = Math.max(26, minutesToPixels(toMinutes(schedule.endTime) - toMinutes(schedule.startTime)) - 4);
-      const blockWidth = Math.max(0, width - 2);
-
-      return {
-        schedule,
-        layout: {
-          top: minutesToPixels(toMinutes(schedule.startTime) - START_HOUR * 60),
-          height,
-          left: columnIndex * width,
-          width: blockWidth,
-          compact: blockWidth < 48,
-          short: height < 42,
-        },
-      };
-    });
+    return {
+      schedule,
+      row,
+      span,
+      lane,
+      laneCount: lanes.length,
+    };
   });
 }
 
-function overlaps(a, b) {
-  return toMinutes(a.startTime) < toMinutes(b.endTime) && toMinutes(b.startTime) < toMinutes(a.endTime);
-}
-
-function timeFromOffset(offsetY) {
-  const minutes = Math.max(0, Math.min((END_HOUR - START_HOUR) * 60 - 30, Math.floor((offsetY / HOUR_HEIGHT) * 60)));
-  const rounded = Math.floor(minutes / 30) * 30 + START_HOUR * 60;
-  return formatTime(rounded);
-}
-
-function minutesToPixels(minutes) {
-  return (minutes / 60) * HOUR_HEIGHT;
+function dateForDayInWeek(day, mondayKey) {
+  const index = DAYS.indexOf(day);
+  if (index === -1) return mondayKey;
+  const date = new Date(`${mondayKey}T00:00:00`);
+  date.setDate(date.getDate() + index);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
 function toMinutes(time) {
@@ -121,12 +114,13 @@ function toMinutes(time) {
   return hour * 60 + minute;
 }
 
-function formatTime(minutes) {
-  const hour = Math.floor(minutes / 60);
-  const minute = minutes % 60;
+function formatTime(hour, minute) {
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
-function formatHour(hour) {
-  return hour < 12 ? `오전 ${hour}시` : `오후 ${hour === 12 ? 12 : hour - 12}시`;
+function formatWeekHour(hour) {
+  if (hour === 0 || hour === 24) return { period: "오전", hour: "12", time: "12시" };
+  if (hour === 12) return { period: "", hour: "정오", time: "12시" };
+  if (hour < 12) return { period: "오전", hour: String(hour), time: `${hour}시` };
+  return { period: "오후", hour: String(hour - 12), time: `${hour - 12}시` };
 }
