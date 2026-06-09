@@ -30,6 +30,8 @@ import {
   subscribeThinQDevicePush,
 } from "./services/thinqIntegrationService.js";
 
+const ENABLE_ONBOARDING_TASK_GENERATION = false;
+
 export default function App() {
   const [tasks, setTasks] = useState(initialTasks);
   const [memberColors, setMemberColors] = useState(() => Object.fromEntries(members.map((member) => [member.id, member.color])));
@@ -251,6 +253,11 @@ export default function App() {
   }
 
   function completeOnboarding(onboardingSetup = {}) {
+    if (!ENABLE_ONBOARDING_TASK_GENERATION) {
+      setOnboardingComplete(true);
+      return;
+    }
+
     const generated = buildOnboardingTasks(onboardingProfile, selectedMember, onboardingSetup);
     setTasks((current) => [...generated, ...current]);
     setSelectedDate(generated[0]?.date || getTodayKey());
@@ -583,12 +590,12 @@ export default function App() {
               step={onboardingStep}
               onNext={() => setOnboardingStep("profile")}
               onPreview={() => setOnboardingStep("appliance")}
-              onApplianceNext={() => setOnboardingStep("assignee")}
+              onApplianceNext={() => setOnboardingStep("ready")}
               onAssigneeNext={() => setOnboardingStep("ready")}
               onBack={() =>
                 setOnboardingStep(
                   onboardingStep === "ready"
-                    ? "assignee"
+                    ? "appliance"
                     : onboardingStep === "assignee"
                       ? "appliance"
                       : onboardingStep === "appliance"
@@ -809,21 +816,27 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
   const isReady = step === "ready";
   const [selectedApplianceTypes, setSelectedApplianceTypes] = useState([]);
   const [applianceAssignees, setApplianceAssignees] = useState({});
+  const [selectedImportMethod, setSelectedImportMethod] = useState("");
   const introMessage = "어서오세요!\n당신을 위한 최적의 가사일 계획을\n자동으로 짜주는 AI 가사일 플래너\n현우입니다.";
   const [introTextLength, setIntroTextLength] = useState(0);
   const guideByStep = {
     intro: "어서오세요!",
     ready: "추천 준비 완료",
   };
-  const applianceOptions = [
+  const onboardingApplianceOptions = [
     ["세탁기", "washer"],
     ["에어컨", "air"],
     ["냉장고", "fridge"],
     ["건조기", "dryer"],
+    ["제습기", "dehumidifier"],
+    ["로봇청소기", "robot"],
   ];
-  const selectedAppliances = applianceOptions.filter(([, type]) => selectedApplianceTypes.includes(type));
-  const hasSelectedAppliance = selectedApplianceTypes.length > 0;
-  const hasAssignedAppliance = selectedAppliances.some(([, type]) => Boolean(applianceAssignees[type]));
+  const selectedAppliances = isAppliance || isAssignee ? onboardingApplianceOptions : onboardingApplianceOptions.filter(([, type]) => selectedApplianceTypes.includes(type));
+  const assignedApplianceTypes = useMemo(
+    () => onboardingApplianceOptions.map(([, type]) => type).filter((type) => Boolean(applianceAssignees[type])),
+    [applianceAssignees],
+  );
+  const hasAssignedAppliance = selectedAppliances.length > 0 && selectedAppliances.every(([, type]) => Boolean(applianceAssignees[type]));
   const introText = introMessage.slice(0, introTextLength);
   const isIntroComplete = introTextLength >= introMessage.length;
 
@@ -851,18 +864,17 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
     const timeout = window.setTimeout(
       () =>
         onComplete({
-          applianceTypes: selectedApplianceTypes,
+          applianceTypes: assignedApplianceTypes,
           applianceAssignees,
         }),
       2800,
     );
     return () => window.clearTimeout(timeout);
-  }, [applianceAssignees, isReady, onComplete, selectedApplianceTypes]);
+  }, [applianceAssignees, assignedApplianceTypes, isReady, onComplete]);
 
   function toggleApplianceType(type) {
     setSelectedApplianceTypes((current) => {
       if (!current.includes(type)) {
-        setApplianceAssignees((assignees) => ({ ...assignees, [type]: assignees[type] || "me" }));
         return [...current, type];
       }
 
@@ -878,12 +890,17 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
     setApplianceAssignees((current) => ({ ...current, [type]: assignee }));
   }
 
+  function importGoogleCalendar() {
+    setSelectedImportMethod("google");
+    window.setTimeout(onPreview, 180);
+  }
+
   return (
     <section className="onboarding-page" aria-label="온보딩">
       {!isIntro && !isReady && <button className="onboarding-back-zone" type="button" onClick={onBack} aria-label="이전 단계로 이동" />}
       {!isIntro && !isReady && (
         <div className="onboarding-progress" aria-hidden="true">
-          {["intro", "profile", "appliance", "assignee", "ready"].map((item) => (
+          {["intro", "profile", "appliance", "ready"].map((item) => (
             <span key={item} className={step === item ? "active" : ""} />
           ))}
         </div>
@@ -959,26 +976,57 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
             </div>
 
             <div className="onboarding-method-list">
-              <button type="button" onClick={onPreview}>
-                <span aria-hidden="true" />
+              <button className="onboarding-method-button direct" type="button" disabled aria-disabled="true">
+                <span className="onboarding-method-icon direct" aria-hidden="true" />
                 직접 입력하기
               </button>
-              <button type="button" onClick={onPreview}>
-                <span aria-hidden="true" />
+              <button
+                className={`onboarding-method-button google ${selectedImportMethod === "google" ? "active" : ""}`}
+                type="button"
+                onClick={importGoogleCalendar}
+              >
+                <span className="onboarding-method-icon google" aria-hidden="true" />
                 구글 캘린더 불러오기
               </button>
             </div>
           </div>
         ) : isAppliance ? (
-          <div className="onboarding-card onboarding-appliance-card">
+          <div className="onboarding-card onboarding-appliance-card onboarding-combined-appliance-card">
             <div>
               <h1>자동화할 가전을 알려주세요.</h1>
               <p>ThinQ가 자동 작동시킬 가전을 선택해 주세요.</p>
             </div>
 
+            <div className="onboarding-assignee-list" aria-label="가전별 담당자 지정">
+              {selectedAppliances.map(([label, type]) => (
+                <label className={`onboarding-assignee-row ${applianceAssignees[type] ? "assigned" : ""}`} key={type}>
+                  <span className={`onboarding-assignee-icon ${type}`} aria-hidden="true">
+                    <i />
+                  </span>
+                  <strong>{label}</strong>
+                  <select
+                    className={applianceAssignees[type] ? "assigned" : ""}
+                    value={applianceAssignees[type] || ""}
+                    onChange={(event) => changeApplianceAssignee(type, event.target.value)}
+                  >
+                    <option value="" disabled>
+                      담당자를 선택해 주세요.
+                    </option>
+                    {members
+                      .filter((member) => member.id !== "all")
+                      .map((member) => (
+                        <option key={member.id} value={member.id}>
+                          {member.name}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+              ))}
+            </div>
+
             <div className="onboarding-appliance-layout">
               <div className="onboarding-appliance-grid" aria-label="자동화할 가전 선택">
-                {applianceOptions.map(([label, type]) => {
+                {onboardingApplianceOptions.map(([label, type]) => {
                   const isSelected = selectedApplianceTypes.includes(type);
 
                   return (
@@ -1000,10 +1048,11 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
             </div>
 
             <button
-              className={`onboarding-appliance-complete ${hasSelectedAppliance ? "active" : ""}`}
+              className={`onboarding-assignee-complete ${hasAssignedAppliance ? "active" : ""}`}
               type="button"
               onClick={onApplianceNext}
-              disabled={!hasSelectedAppliance}
+              disabled={!hasAssignedAppliance}
+              aria-label="담당자 지정 완료"
             >
               완료
             </button>
@@ -1017,12 +1066,19 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
 
             <div className="onboarding-assignee-list" aria-label="가전별 담당자 지정">
               {selectedAppliances.map(([label, type]) => (
-                <label className="onboarding-assignee-row" key={type}>
+                <label className={`onboarding-assignee-row ${applianceAssignees[type] ? "assigned" : ""}`} key={type}>
                   <span className={`onboarding-assignee-icon ${type}`} aria-hidden="true">
                     <i />
                   </span>
                   <strong>{label}</strong>
-                  <select value={applianceAssignees[type] || "me"} onChange={(event) => changeApplianceAssignee(type, event.target.value)}>
+                  <select
+                    className={applianceAssignees[type] ? "assigned" : ""}
+                    value={applianceAssignees[type] || ""}
+                    onChange={(event) => changeApplianceAssignee(type, event.target.value)}
+                  >
+                    <option value="" disabled>
+                      담당자를 선택해 주세요.
+                    </option>
                     {members
                       .filter((member) => member.id !== "all")
                       .map((member) => (
@@ -1035,7 +1091,13 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
               ))}
             </div>
 
-            <button className={`onboarding-assignee-complete ${hasAssignedAppliance ? "active" : ""}`} type="button" onClick={onAssigneeNext} disabled={!hasAssignedAppliance}>
+            <button
+              className={`onboarding-assignee-complete ${hasAssignedAppliance ? "active" : ""}`}
+              type="button"
+              onClick={onAssigneeNext}
+              disabled={!hasAssignedAppliance}
+              aria-label="담당자 지정 완료"
+            >
               완료
             </button>
           </div>
@@ -1250,6 +1312,14 @@ const applianceOnboardingPlans = {
   dryer: {
     place: "세탁실",
     titles: ["건조 예약", "건조 필터 확인", "습도 맞춤 건조"],
+  },
+  dehumidifier: {
+    place: "거실",
+    titles: ["제습기 예약", "습도 맞춤 제습", "실내 습도 확인"],
+  },
+  robot: {
+    place: "거실",
+    titles: ["로봇청소 시작", "바닥 청소 예약", "청소 구역 확인"],
   },
 };
 

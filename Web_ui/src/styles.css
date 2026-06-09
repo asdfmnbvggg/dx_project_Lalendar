@@ -6276,6 +6276,10 @@ body {
   background: #fff;
 }
 
+.app-frame.onboarding-frame .thinq-main-tabbar {
+  z-index: 60;
+}
+
 .onboarding-frame .topbar {
   position: relative;
   z-index: 4;
@@ -6290,6 +6294,8 @@ body {
 
 .onboarding-calendar-backdrop {
   min-height: calc(100svh - 184px);
+  opacity: 0.78;
+  filter: grayscale(0.32) saturate(0.72);
   pointer-events: none;
 }
 
@@ -6315,7 +6321,7 @@ body {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: rgba(0, 0, 0, 0.62);
+  background: rgba(0, 0, 0, 0.58);
   pointer-events: none;
 }
 
@@ -6713,18 +6719,24 @@ body {
 
 .onboarding-character-image {
   position: relative;
-  width: 266px;
-  max-width: 82vw;
+  width: 212px;
+  max-width: 68vw;
   height: auto;
   object-fit: contain;
   filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.22));
+  animation: onboarding-character-float 2.6s ease-in-out infinite;
   user-select: none;
 }
 
 .onboarding-character-scene.intro .onboarding-character-image {
-  width: 168px;
+  width: 150px;
   filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.2));
-  animation: onboarding-character-float 2.4s ease-in-out infinite;
+}
+
+.onboarding-character-scene.appliance .onboarding-character-image,
+.onboarding-character-scene.assignee .onboarding-character-image {
+  width: 196px;
+  max-width: 60vw;
 }
 
 .onboarding-character-scene .onboarding-card {
@@ -6863,14 +6875,78 @@ body {
 }
 
 .onboarding-method-card {
+  width: min(305px, calc(100vw - 54px));
   min-height: 0;
   align-content: center;
+  gap: 18px;
+  padding: 28px 22px 26px;
+}
+
+.onboarding-method-card h1,
+.onboarding-method-card p {
+  text-align: left;
+}
+
+.onboarding-method-card h1 {
+  font-size: 20px;
+}
+
+.onboarding-method-card > div:first-child h1,
+.onboarding-method-card > div:first-child p {
+  font-size: 0;
+}
+
+.onboarding-method-card > div:first-child h1::before {
+  content: "고정 일정을 알려주세요.";
+  font-size: 20px;
+}
+
+.onboarding-method-card > div:first-child p::before {
+  content: "캘린더에서 일정을 불러올 수 있어요.";
+  font-size: 13px;
 }
 
 .onboarding-appliance-card {
   width: min(318px, calc(100vw - 44px));
   gap: 16px;
+  max-height: min(430px, calc(100svh - 250px));
   padding: 28px 26px 28px;
+  overflow: hidden;
+}
+
+.onboarding-combined-appliance-card {
+  width: min(305px, calc(100vw - 54px));
+  gap: 14px;
+  max-height: min(338px, calc(100svh - 270px));
+  padding: 28px 22px 62px;
+}
+
+.onboarding-combined-appliance-card .onboarding-appliance-layout {
+  display: none;
+}
+
+.onboarding-combined-appliance-card h1,
+.onboarding-combined-appliance-card p {
+  text-align: left;
+}
+
+.onboarding-combined-appliance-card h1 {
+  font-size: 20px;
+}
+
+.onboarding-combined-appliance-card > div:first-child h1,
+.onboarding-combined-appliance-card > div:first-child p {
+  font-size: 0;
+}
+
+.onboarding-combined-appliance-card > div:first-child h1::before {
+  content: "가전별 담당자를 지정해주세요.";
+  font-size: 20px;
+}
+
+.onboarding-combined-appliance-card > div:first-child p::before {
+  content: "담당자에게 가전 작동 알림이 가요.";
+  font-size: 13px;
 }
 
 .onboarding-appliance-card h1 {
@@ -6887,12 +6963,29 @@ body {
   grid-template-columns: 1fr;
   align-items: stretch;
   width: 100%;
+  min-height: 0;
 }
 
 .onboarding-appliance-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  max-height: 182px;
+  overflow-y: auto;
+  padding-right: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: #aeb3ba transparent;
+}
+
+.onboarding-appliance-grid::-webkit-scrollbar,
+.onboarding-assignee-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.onboarding-appliance-grid::-webkit-scrollbar-thumb,
+.onboarding-assignee-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #aeb3ba;
 }
 
 .onboarding-appliance-grid button {
@@ -7027,7 +7120,9 @@ body {
 .onboarding-assignee-card {
   width: min(322px, calc(100vw - 42px));
   gap: 16px;
-  padding: 28px 22px 26px;
+  max-height: min(430px, calc(100svh - 250px));
+  padding: 28px 22px 76px;
+  overflow: hidden;
 }
 
 .onboarding-assignee-card h1 {
@@ -7042,17 +7137,36 @@ body {
 .onboarding-assignee-list {
   display: grid;
   gap: 9px;
+  max-height: 216px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: #aeb3ba transparent;
+}
+
+.onboarding-combined-appliance-card .onboarding-assignee-list {
+  max-height: 178px;
+  margin-bottom: 6px;
 }
 
 .onboarding-assignee-row {
-  min-height: 36px;
+  min-height: 40px;
   display: grid;
-  grid-template-columns: auto minmax(54px, 1fr) minmax(126px, 1.35fr);
+  grid-template-columns: auto minmax(74px, 1fr) minmax(116px, 1.2fr);
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
-  border-radius: 8px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
   background: #f4f5f7;
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.onboarding-assignee-row.assigned {
+  border-color: rgba(74, 157, 240, 0.34);
+  background: #eef6ff;
+  box-shadow: inset 0 0 0 1px rgba(74, 157, 240, 0.08);
 }
 
 .onboarding-assignee-icon {
@@ -7119,8 +7233,8 @@ body {
 
 .onboarding-assignee-row select {
   min-width: 0;
-  height: 22px;
-  padding: 0 20px 0 9px;
+  height: 20px;
+  padding: 0 22px 0 10px;
   border: 0;
   border-radius: 999px;
   outline: 0;
@@ -7129,9 +7243,26 @@ body {
     linear-gradient(135deg, #fefefe, #e5e7eb);
   color: #8a8f98;
   font: inherit;
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 850;
   appearance: none;
+}
+
+.onboarding-assignee-row select.assigned {
+  background:
+    linear-gradient(45deg, transparent 50%, #ffffff 50%) right 9px center / 5px 5px no-repeat,
+    linear-gradient(135deg, #4a9df0, #2f7ddb);
+  color: #fff;
+}
+
+.onboarding-assignee-row select option {
+  background: #fff;
+  color: #111;
+}
+
+.onboarding-assignee-row select option:checked {
+  background: #4a9df0;
+  color: #fff;
 }
 
 .onboarding-assignee-row select:focus {
@@ -7139,22 +7270,35 @@ body {
 }
 
 .onboarding-assignee-complete {
-  width: 100%;
-  min-height: 48px;
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  width: 38px;
+  height: 38px;
+  min-height: 38px;
   display: grid;
   place-items: center;
-  border-radius: 14px;
+  border-radius: 50%;
   background: #b8bcc3;
   color: #fff;
-  font-size: 15px;
+  font-size: 0;
   font-weight: 950;
   box-shadow: 0 8px 16px rgba(73, 80, 89, 0.18);
   transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
+.onboarding-assignee-complete::before {
+  content: "";
+  width: 13px;
+  height: 7px;
+  border-left: 3px solid currentColor;
+  border-bottom: 3px solid currentColor;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+
 .onboarding-assignee-complete.active {
-  background: #e11d48;
-  box-shadow: 0 12px 24px rgba(225, 29, 72, 0.24);
+  background: #4a9df0;
+  box-shadow: 0 12px 24px rgba(74, 157, 240, 0.28);
 }
 
 .onboarding-assignee-complete:disabled {
@@ -7169,7 +7313,7 @@ body {
 
 .onboarding-method-list {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .onboarding-method-list button {
@@ -7177,41 +7321,76 @@ body {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 13px;
-  padding: 0 20px;
+  gap: 12px;
+  padding: 0 18px;
   border-radius: 999px;
-  background: #bdbdbd;
-  color: #555;
-  font-size: 15px;
+  background: #c7c7c7;
+  color: #5f6268;
+  font-size: 0;
   font-weight: 850;
   transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
-.onboarding-method-list button:active {
-  background: #e11d48;
+.onboarding-method-list button:disabled {
+  cursor: default;
+  opacity: 0.62;
+}
+
+.onboarding-method-list .onboarding-method-button {
+  position: relative;
+}
+
+.onboarding-method-list .onboarding-method-button::after {
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.onboarding-method-list .onboarding-method-button.direct {
+  color: #74777e;
+  background: #d0d0d0;
+}
+
+.onboarding-method-list .onboarding-method-button.direct::after {
+  content: "직접 입력하기";
+}
+
+.onboarding-method-list .onboarding-method-button.google::after {
+  content: "구글 캘린더 불러오기";
+}
+
+.onboarding-method-list .onboarding-method-button.google:not(:disabled):active,
+.onboarding-method-list .onboarding-method-button.google.active {
+  background: #4a9df0;
   color: #fff;
-  box-shadow: 0 12px 24px rgba(225, 29, 72, 0.3);
+  box-shadow: 0 12px 24px rgba(74, 157, 240, 0.28);
   transform: scale(0.98);
 }
 
-.onboarding-method-list button span {
+.onboarding-method-list .onboarding-method-icon {
   width: 22px;
   height: 22px;
   flex: 0 0 auto;
-  border: 2px solid #f4f4f4;
+  display: grid;
+  place-items: center;
   border-radius: 50%;
-  background:
-    linear-gradient(45deg, transparent 45%, #f4f4f4 47% 53%, transparent 55%),
-    linear-gradient(-45deg, transparent 45%, #f4f4f4 47% 53%, transparent 55%),
-    #c7c7c7;
+  background: #fff;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 950;
 }
 
-.onboarding-method-list button:active span {
-  border-color: rgba(255, 255, 255, 0.8);
-  background:
-    linear-gradient(45deg, transparent 45%, #fff 47% 53%, transparent 55%),
-    linear-gradient(-45deg, transparent 45%, #fff 47% 53%, transparent 55%),
-    #be123c;
+.onboarding-method-list .onboarding-method-icon.direct::before {
+  content: "+";
+}
+
+.onboarding-method-list .onboarding-method-icon.google::before {
+  content: "G";
+  color: #4285f4;
+}
+
+.onboarding-method-list .onboarding-method-button.google.active .onboarding-method-icon.google::before,
+.onboarding-method-list .onboarding-method-button.google:active .onboarding-method-icon.google::before {
+  color: #1a73e8;
 }
 
 .onboarding-recommend-list span {
