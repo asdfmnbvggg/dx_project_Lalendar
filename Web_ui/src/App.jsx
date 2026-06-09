@@ -209,6 +209,10 @@ export default function App() {
     setTasks((current) => current.map((task) => (task.id === id ? { ...task, owner } : task)));
   }
 
+  function updateTask(id, updates) {
+    setTasks((current) => current.map((task) => (task.id === id ? { ...task, ...updates } : task)));
+  }
+
   function changeMemberColor(memberId, color) {
     setMemberColors((current) => ({ ...current, [memberId]: color }));
   }
@@ -269,6 +273,13 @@ export default function App() {
   }
 
   function selectMainTab(id) {
+    if (id === "devices") {
+      setActiveTab("schedule");
+      setOnboardingComplete(true);
+      setOnboardingStep("ready");
+      return;
+    }
+
     setActiveTab(id);
     if (id === "schedule") {
       setOnboardingComplete(false);
@@ -485,6 +496,7 @@ export default function App() {
     toggleTask,
     deleteTask,
     changeTaskOwner,
+    updateTask,
     postponeTask,
     onAddWeatherRecommendation: addWeatherRecommendationTask,
     openComposer: () => setComposerOpen(true),

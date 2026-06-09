@@ -82,6 +82,7 @@ export default function CalendarPage({
   toggleTask,
   deleteTask,
   changeTaskOwner,
+  updateTask,
   postponeTask,
   onAddWeatherRecommendation,
   openComposer,
@@ -93,6 +94,7 @@ export default function CalendarPage({
   const [selectedDetailDate, setSelectedDetailDate] = useState(null);
   const [isDeleteMode, setDeleteMode] = useState(false);
   const [selectedDeleteTaskIds, setSelectedDeleteTaskIds] = useState([]);
+  const [activeAddColumn, setActiveAddColumn] = useState(null);
   const [isDatePickerOpen, setDatePickerOpen] = useState(false);
   const [draftDate, setDraftDate] = useState(() => parseDateKey(selectedDate));
   const selectedDay = Number(selectedDate.slice(-2));
@@ -110,6 +112,9 @@ export default function CalendarPage({
   const selectedRecommendations = getRecommendationsForDate(selectedDate, weatherByDate, routineRecommendations);
   const detailDate = selectedDetailDate || selectedDate;
   const detailTasks = tasksByDate[detailDate] || [];
+  const dailyFixedTasks = detailTasks.filter((task) => getDailyTaskGroup(task) === "schedule");
+  const dailyHouseTasks = detailTasks.filter((task) => getDailyTaskGroup(task) === "housework");
+  const dailyHours = buildDailyHours(detailTasks);
   const familyMembers = members.filter((member) => member.id !== "all");
   const selectedMemberProfile = familyMembers.find((member) => member.id === selectedMember) || familyMembers[0] || members[0];
   const selectedMemberName = calendarProfileNames[selectedMemberProfile.id] || selectedMemberProfile.name;
@@ -148,6 +153,7 @@ export default function CalendarPage({
     setSelectedDetailDate(null);
     setDeleteMode(false);
     setSelectedDeleteTaskIds([]);
+    setActiveAddColumn(null);
   }
 
   function toggleDeleteMode() {
@@ -173,6 +179,90 @@ export default function CalendarPage({
     });
   }
 
+  if (selectedDetailDate) {
+    return (
+      <section className="page calendar-page daily-detail-page">
+        <section className="date-detail-card" aria-label="Daily schedule">
+          <div className="date-detail-head">
+            <button type="button" className="date-detail-back-button" aria-label="Back to calendar" onClick={closeDateDetail}>
+              <ChevronLeft size={22} />
+            </button>
+            <div>
+              <span>{formatDateTitle(detailDate)} · {formatDDay(detailDate)}</span>
+              <h3>{selectedMemberName}님의 캘린더</h3>
+            </div>
+            <button
+              type="button"
+              className={`date-detail-delete-toggle ${isDeleteMode ? "active" : ""}`}
+              aria-label={isDeleteMode ? "Cancel delete selection" : "Delete schedule"}
+              disabled={detailTasks.length === 0}
+              onClick={toggleDeleteMode}
+            >
+              <Trash2 size={24} />
+            </button>
+          </div>
+
+          <div className="date-detail-member-strip" aria-label="Members">
+            {familyMembers.slice(0, 3).map((member) => (
+              <span key={member.id} style={{ "--member-color": memberColors[member.id] || member.color }}>
+                {memberImages[member.id] ? <img src={memberImages[member.id]} alt="" aria-hidden="true" /> : calendarMemberIconText[member.id] || member.short}
+              </span>
+            ))}
+          </div>
+
+          <div className="daily-timetable-shell" aria-label="Daily timetable">
+            <section className="daily-time-rail" aria-label="Time">
+              <strong>시간</strong>
+              <div className="daily-time-scale" style={{ "--hour-count": dailyHours.length }}>
+                {dailyHours.map((hour) => (
+                  <span key={hour}>{formatDailyHour(hour)}</span>
+                ))}
+              </div>
+            </section>
+
+            <DailyTimetableColumn title="개인 일정" tasks={dailyFixedTasks} hours={dailyHours} memberColors={memberColors} variant="personal" />
+            <DailyTimetableColumn title="가사일 일정" tasks={dailyHouseTasks} hours={dailyHours} memberColors={memberColors} variant="housework" />
+
+            {detailTasks.length === 0 && <p className="date-detail-empty">이 날의 일정이 없어요.</p>}
+          </div>
+
+          {isDeleteMode ? (
+            <button type="button" className="date-detail-delete-action" onClick={deleteSelectedTasks} disabled={selectedDeleteTaskIds.length === 0}>
+              선택한 일정 삭제
+            </button>
+          ) : (
+            <div className="daily-add-row" aria-label="일정 추가">
+              <span aria-hidden="true" />
+              <button
+                type="button"
+                className={`date-detail-add personal ${activeAddColumn === "personal" ? "active" : ""}`}
+                aria-label="개인 일정 추가"
+                onClick={() => {
+                  setSelectedDate(detailDate);
+                  setActiveAddColumn("personal");
+                  openComposer();
+                }}
+              >
+                <Plus size={24} strokeWidth={2.4} />
+              </button>
+              <button
+                type="button"
+                className={`date-detail-add housework ${activeAddColumn === "housework" ? "active" : ""}`}
+                aria-label="가사일 일정 추가"
+                onClick={() => {
+                  setSelectedDate(detailDate);
+                  setActiveAddColumn("housework");
+                  openComposer();
+                }}
+              >
+                <Plus size={24} strokeWidth={2.4} />
+              </button>
+            </div>
+          )}
+        </section>
+      </section>
+    );
+  }
   return (
     <section className={`page calendar-page calendar-page-${calendarView}`}>
       <div className="calendar-filter-block">
@@ -400,11 +490,11 @@ export default function CalendarPage({
 
       {selectedDetailDate && (
         <div className="date-detail-backdrop" role="presentation" onClick={closeDateDetail}>
-          <section className="date-detail-card" role="dialog" aria-modal="true" aria-label={`${formatDateTitle(detailDate)} 할 일`} onClick={(event) => event.stopPropagation()}>
+          <section className="date-detail-card" role="dialog" aria-modal="true" aria-label={`${formatDateTitle(detailDate)} 하루일정`} onClick={(event) => event.stopPropagation()}>
             <div className="date-detail-head">
               <div>
-                <h3>{formatDateTitle(detailDate)}</h3>
-                <p>{formatDDay(detailDate)}</p>
+                <span>{formatDateTitle(detailDate)} · {formatDDay(detailDate)}</span>
+                <h3>{selectedMemberName}님의 하루일정</h3>
               </div>
               <button
                 type="button"
@@ -417,45 +507,56 @@ export default function CalendarPage({
               </button>
             </div>
 
-            <div className="date-detail-list">
-              {detailTasks.map((task) => (
-                <article
-                  className={`date-detail-task ${task.done ? "done" : ""} ${isDeleteMode ? "delete-selecting" : ""} ${
-                    selectedDeleteTaskIds.includes(task.id) ? "selected-for-delete" : ""
-                  }`}
-                  key={task.id}
-                  onClick={() => {
-                    if (isDeleteMode) toggleDeleteSelection(task.id);
-                  }}
-                >
-                  <button
-                    type="button"
-                    aria-label={isDeleteMode ? `${task.title} 삭제 선택` : `${task.title} 완료`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      if (isDeleteMode) {
-                        toggleDeleteSelection(task.id);
-                        return;
-                      }
-                      toggleTask(task.id);
-                    }}
-                  >
-                    <span />
-                  </button>
-                  <div>
-                    <strong>{task.title}</strong>
-                    <small>
-                      {task.place} · {task.repeat}
-                    </small>
-                  </div>
-                </article>
+            <div className="date-detail-member-strip" aria-label="등록된 구성원">
+              {familyMembers.slice(0, 3).map((member) => (
+                <span key={member.id} style={{ "--member-color": memberColors[member.id] || member.color }}>
+                  {memberImages[member.id] ? <img src={memberImages[member.id]} alt="" aria-hidden="true" /> : calendarMemberIconText[member.id] || member.short}
+                </span>
               ))}
-              {detailTasks.length === 0 && <p className="date-detail-empty">이 날의 할 일이 없어요.</p>}
+            </div>
+
+            <div className="date-detail-tables" aria-label="하루 일정 편집 테이블">
+              <section className="date-detail-column time-column" aria-label="시간">
+                <strong>시간</strong>
+                <div>
+                  {dailyHours.map((hour) => (
+                    <span key={hour}>{formatDailyHour(hour)}</span>
+                  ))}
+                </div>
+              </section>
+
+              <DailyEditColumn
+                title="일정 타임테이블"
+                tasks={dailyFixedTasks}
+                hours={dailyHours}
+                isDeleteMode={isDeleteMode}
+                selectedDeleteTaskIds={selectedDeleteTaskIds}
+                members={familyMembers}
+                memberColors={memberColors}
+                onToggleTask={toggleTask}
+                onToggleDeleteSelection={toggleDeleteSelection}
+                onUpdateTask={updateTask}
+              />
+
+              <DailyEditColumn
+                title="가사일 테이블"
+                tasks={dailyHouseTasks}
+                hours={dailyHours}
+                isDeleteMode={isDeleteMode}
+                selectedDeleteTaskIds={selectedDeleteTaskIds}
+                members={familyMembers}
+                memberColors={memberColors}
+                onToggleTask={toggleTask}
+                onToggleDeleteSelection={toggleDeleteSelection}
+                onUpdateTask={updateTask}
+              />
+
+              {detailTasks.length === 0 && <p className="date-detail-empty">이 날의 일정이 없어요.</p>}
             </div>
 
             {isDeleteMode ? (
               <button type="button" className="date-detail-delete-action" onClick={deleteSelectedTasks} disabled={selectedDeleteTaskIds.length === 0}>
-                삭제하기
+                선택한 일정 삭제
               </button>
             ) : (
               <button
@@ -467,7 +568,7 @@ export default function CalendarPage({
                   openComposer();
                 }}
               >
-                + 할 일을 추가하세요
+                + 하루 일정 추가
               </button>
             )}
           </section>
@@ -553,6 +654,120 @@ function getRecommendationsForDate(date, weatherByDate, routineRecommendations) 
   return weatherByDate[date]?.applianceRecommendations || [];
 }
 
+function DailyTimetableColumn({ title, tasks, hours, memberColors, variant }) {
+  const startHour = hours[0] ?? 8;
+  const endHour = hours[hours.length - 1] ?? 22;
+  const totalMinutes = Math.max(60, (endHour - startHour + 1) * 60);
+
+  return (
+    <section className={`daily-timetable-column ${variant}`} aria-label={title}>
+      <strong>{title}</strong>
+      <div className="daily-timetable-track" style={{ "--hour-count": hours.length }}>
+        {hours.map((hour) => (
+          <span className="daily-timetable-line" key={hour} />
+        ))}
+        {tasks.map((task, index) => {
+          const range = getDailyTaskRange(task, index);
+          const top = ((range.startMinutes - startHour * 60) / totalMinutes) * 100;
+          const height = Math.max(7, ((range.endMinutes - range.startMinutes) / totalMinutes) * 100);
+          const color = getDailyBlockColor(task, memberColors, variant, index);
+
+          return (
+            <article
+              className="daily-time-block"
+              key={task.id}
+              style={{
+                "--block-top": `${Math.max(0, Math.min(96, top))}%`,
+                "--block-height": `${Math.min(96, height)}%`,
+                "--block-color": color,
+              }}
+            >
+              <strong>{getDailyBlockTitle(task, variant)}</strong>
+              <span>{formatTaskRange(range)}</span>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function buildDailyHours(tasks) {
+  const ranges = tasks.map(getDailyTaskRange);
+  const min = Math.min(8, ...ranges.map((range) => Math.floor(range.startMinutes / 60)));
+  const max = Math.max(22, ...ranges.map((range) => Math.ceil(range.endMinutes / 60)));
+  return Array.from({ length: max - min + 1 }, (_, index) => min + index);
+}
+
+function getDailyTaskGroup(task) {
+  if (task.displayType === "appliance") return "housework";
+  if (task.tag === "house" || task.source === "auto") return "housework";
+  return "schedule";
+}
+
+function getDailyTaskRange(task, index = 0) {
+  const timeText = String(task.repeat || "");
+  const rangeMatch = timeText.match(/\b(\d{1,2}):(\d{2})\s*(?:~|-|–|—|to)\s*(\d{1,2}):(\d{2})\b/i);
+
+  if (rangeMatch) {
+    const startMinutes = Number(rangeMatch[1]) * 60 + Number(rangeMatch[2]);
+    const endMinutes = Number(rangeMatch[3]) * 60 + Number(rangeMatch[4]);
+    return normalizeTimeRange(startMinutes, endMinutes);
+  }
+
+  const clockMatch = timeText.match(/\b(\d{1,2}):(\d{2})\b/);
+  if (clockMatch) {
+    const startMinutes = Number(clockMatch[1]) * 60 + Number(clockMatch[2]);
+    return normalizeTimeRange(startMinutes, startMinutes + 60);
+  }
+
+  const koreanTime = timeText.match(/(오전|오후)?\s*(\d{1,2})시/);
+  if (koreanTime) {
+    const period = koreanTime[1];
+    const hour = Number(koreanTime[2]);
+    if (Number.isFinite(hour)) {
+      const normalizedHour = period === "오후" && hour < 12 ? hour + 12 : period === "오전" && hour === 12 ? 0 : hour;
+      return normalizeTimeRange(normalizedHour * 60, normalizedHour * 60 + 60);
+    }
+  }
+
+  const fallbackHour = getDailyTaskGroup(task) === "housework" ? 17 + (index % 4) : 9 + (index % 5);
+  return normalizeTimeRange(fallbackHour * 60, fallbackHour * 60 + 60);
+}
+
+function normalizeTimeRange(startMinutes, endMinutes) {
+  const start = Math.max(0, Math.min(23 * 60 + 59, startMinutes));
+  const end = Math.max(start + 30, Math.min(24 * 60, endMinutes));
+  return { startMinutes: start, endMinutes: end };
+}
+
+function formatDailyHour(hour) {
+  return `${String(hour).padStart(2, "0")}:00`;
+}
+
+function formatTaskRange(range) {
+  return `${formatMinutes(range.startMinutes)} ~ ${formatMinutes(range.endMinutes)}`;
+}
+
+function formatMinutes(minutes) {
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function getDailyBlockTitle(task, variant) {
+  if (variant === "housework" && task.applianceType) {
+    return applianceTypeLabel[task.applianceType] || task.title;
+  }
+  return task.title;
+}
+
+function getDailyBlockColor(task, memberColors, variant, index) {
+  const personalPalette = ["#ef4444", "#2563eb", "#16a34a", "#9333ea", "#ea580c"];
+  const housePalette = ["#0f766e", "#7c3aed", "#c2410c", "#0891b2", "#be123c"];
+  if (variant === "personal" && memberColors[task.owner]) return memberColors[task.owner];
+  return (variant === "housework" ? housePalette : personalPalette)[index % 5];
+}
 function buildAiReport(selectedDate, selectedTasks, tasksByDate = {}) {
   const date = new Date(`${selectedDate}T00:00:00`);
   const month = date.getMonth() + 1;
@@ -561,18 +776,12 @@ function buildAiReport(selectedDate, selectedTasks, tasksByDate = {}) {
     .flatMap((offset) => tasksByDate[addDays(selectedDate, offset)] || [])
     .filter((task, index, list) => list.findIndex((item) => item.id === task.id) === index);
   const reportTasks = upcomingTasks.length > 0 ? upcomingTasks : selectedTasks;
-  const fixedTasks = reportTasks.filter((task) => task.displayType === "fixed");
-  const applianceTasks = reportTasks.filter((task) => task.displayType === "appliance");
-  const fixedSummary = fixedTasks.length > 0 ? `${fixedTasks[0].repeat} ${fixedTasks[0].title}` : "등록된 고정 일정은 없습니다";
-  const applianceSummary =
-    applianceTasks.length > 0
-      ? applianceTasks
-          .slice(0, 3)
-          .map((task) => task.title.replace(/ 예약| 시작| 정리| 예냉| 확인| 체크/g, ""))
-          .join(", ")
-      : "추천 가사일이 없습니다";
+  const fixedTasks = reportTasks.filter((task) => task.displayType === "fixed" || getDailyTaskGroup(task) === "schedule");
+  const applianceTasks = reportTasks.filter((task) => getDailyTaskGroup(task) === "housework");
+  const fixedSummary = fixedTasks.length > 0 ? `${fixedTasks[0].repeat} ${fixedTasks[0].title}` : "등록된 개인 일정이 없습니다";
+  const applianceSummary = applianceTasks.length > 0 ? applianceTasks.slice(0, 3).map((task) => task.title).join(", ") : "추천 가사일이 없습니다";
 
-  return `${month}월 ${day}일은 ${fixedSummary}. 오늘 제가 진행할 일은 ${applianceSummary} 입니다.`;
+  return `${month}.${day} ${fixedSummary}. 오늘 진행할 가사일은 ${applianceSummary} 입니다.`;
 }
 
 function formatWeatherState(weather) {
