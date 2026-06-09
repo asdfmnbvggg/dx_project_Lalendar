@@ -5,6 +5,7 @@ import os
 import csv
 import time
 import json
+import shutil
 import numpy as np
 import h5py
 import pandas as pd
@@ -1266,7 +1267,22 @@ class GPTBiLSTMHierarchyHourExperiment2:
         self.compile_model()
 
         print("Loading checkpoint weights: {}".format(checkpoint_path))
-        self.classifier_model.load_weights(checkpoint_path)
+        try:
+            self.classifier_model.load_weights(checkpoint_path)
+        except ValueError as exc:
+            if ".weights.h5" not in str(exc):
+                raise
+            # Keras 3 requires weight files to end with .weights.h5.
+            keras3_checkpoint_path = os.path.join(
+                self.experiment_result_path, "checkpoint_for_keras3.weights.h5"
+            )
+            shutil.copyfile(checkpoint_path, keras3_checkpoint_path)
+            print(
+                "Retrying checkpoint load with Keras 3-compatible name: {}".format(
+                    keras3_checkpoint_path
+                )
+            )
+            self.classifier_model.load_weights(keras3_checkpoint_path)
         self.classifier_best_model_path = checkpoint_path
 
         self.evaluate(X_test_input, Y_test_input, run_number)

@@ -3,3 +3,18 @@ Code/datasets/*
 Code/pretrain_embedding/*
 Code/pretrain_embedding_with_sep/*
 *.pyc
+
+# Aruba evaluate-only assets
+!Code/datasets/aruba_train_classification_data_time_dataframe.pickle
+!Code/datasets/aruba_test_classification_data_time_dataframe.pickle
+
+!Code/pretrain_embedding/GPT2_8H_3L_384E/
+!Code/pretrain_embedding/GPT2_8H_3L_384E/aruba/
+!Code/pretrain_embedding/GPT2_8H_3L_384E/aruba/run_0608_0821/
+Code/pretrain_embedding/GPT2_8H_3L_384E/aruba/run_0608_0821/*
+!Code/pretrain_embedding/GPT2_8H_3L_384E/aruba/run_0608_0821/GPT_basic_raw_aruba_1024_384_model.h5
+!Code/pretrain_embedding/GPT2_8H_3L_384E/aruba/run_0608_0821/GPT_basic_raw_aruba_1024_384_dict_vocabulary.json
+!Code/pretrain_embedding/GPT2_8H_3L_384E/aruba/run_0608_0821/experiment_parameters.json
+
+!Code/checkpoints/
+!Code/checkpoints/aruba_BEST_0.h5
