@@ -6376,6 +6376,14 @@ body {
   top: 172px;
 }
 
+.onboarding-character-scene.appliance {
+  top: 104px;
+}
+
+.onboarding-character-scene.assignee {
+  top: 106px;
+}
+
 .onboarding-character-scene.ready {
   top: 92px;
 }
@@ -6535,9 +6543,303 @@ body {
   gap: 10px;
 }
 
+.onboarding-ready-card .onboarding-primary {
+  background: #e11d48;
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(225, 29, 72, 0.24);
+}
+
 .onboarding-method-card {
   min-height: 0;
   align-content: center;
+}
+
+.onboarding-appliance-card {
+  width: min(318px, calc(100vw - 44px));
+  gap: 16px;
+  padding: 28px 26px 28px;
+}
+
+.onboarding-appliance-card h1 {
+  font-size: 19px;
+}
+
+.onboarding-appliance-card p {
+  margin-top: 7px;
+  font-size: 12px;
+}
+
+.onboarding-appliance-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  width: 100%;
+}
+
+.onboarding-appliance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.onboarding-appliance-grid button {
+  min-height: 86px;
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border-radius: 12px;
+  background: #c8c8c8;
+  color: #62666d;
+  font-size: 11px;
+  font-weight: 900;
+  transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.onboarding-appliance-grid button.selected {
+  background: #4a9df0;
+  color: #fff;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.48), 0 10px 22px rgba(74, 157, 240, 0.24);
+}
+
+.onboarding-appliance-grid button:active {
+  transform: scale(0.97);
+}
+
+.onboarding-appliance-grid button.selected .onboarding-appliance-icon {
+  border-color: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(180deg, #ffffff, #dcecff);
+}
+
+.onboarding-appliance-icon {
+  position: relative;
+  width: 30px;
+  height: 35px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #eef3f7;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #f7fafc, #dfe5ea);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.onboarding-appliance-icon::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #7a8997;
+}
+
+.onboarding-appliance-icon i {
+  width: 13px;
+  height: 13px;
+  border: 2px solid #8da3b4;
+  border-radius: 50%;
+  background: #eaf7ff;
+}
+
+.onboarding-appliance-icon.air::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 7px;
+  height: 3px;
+  border-radius: 999px;
+  background: #8da3b4;
+}
+
+.onboarding-appliance-icon.fridge {
+  height: 42px;
+}
+
+.onboarding-appliance-icon.fridge::after {
+  content: "";
+  position: absolute;
+  inset: 18px 3px auto;
+  height: 2px;
+  background: #a8b4bd;
+}
+
+.onboarding-appliance-icon.dryer i {
+  background: #eef0ff;
+}
+
+.onboarding-appliance-scroll {
+  display: none;
+}
+
+.onboarding-appliance-next {
+  display: none;
+}
+
+.onboarding-appliance-complete {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 14px;
+  background: #bdbdbd;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 950;
+  transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.onboarding-appliance-complete.active {
+  background: #e11d48;
+  box-shadow: 0 12px 24px rgba(225, 29, 72, 0.24);
+}
+
+.onboarding-appliance-complete:disabled {
+  cursor: default;
+}
+
+.onboarding-appliance-complete.active:active {
+  transform: scale(0.98);
+}
+
+.onboarding-assignee-card {
+  width: min(322px, calc(100vw - 42px));
+  gap: 16px;
+  padding: 28px 22px 26px;
+}
+
+.onboarding-assignee-card h1 {
+  font-size: 18px;
+}
+
+.onboarding-assignee-card p {
+  margin-top: 7px;
+  font-size: 12px;
+}
+
+.onboarding-assignee-list {
+  display: grid;
+  gap: 9px;
+}
+
+.onboarding-assignee-row {
+  min-height: 36px;
+  display: grid;
+  grid-template-columns: auto minmax(54px, 1fr) minmax(126px, 1.35fr);
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #f4f5f7;
+}
+
+.onboarding-assignee-icon {
+  position: relative;
+  width: 20px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d8e0e8;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #ffffff, #e7edf3);
+}
+
+.onboarding-assignee-icon::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #7d8c99;
+}
+
+.onboarding-assignee-icon i {
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid #8298aa;
+  border-radius: 50%;
+  background: #eaf7ff;
+}
+
+.onboarding-assignee-icon.air::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 5px;
+  height: 2px;
+  border-radius: 999px;
+  background: #8298aa;
+}
+
+.onboarding-assignee-icon.fridge {
+  height: 26px;
+}
+
+.onboarding-assignee-icon.fridge::after {
+  content: "";
+  position: absolute;
+  inset: 11px 3px auto;
+  height: 1px;
+  background: #9daab4;
+}
+
+.onboarding-assignee-row strong {
+  overflow: hidden;
+  color: #555b66;
+  font-size: 11px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.onboarding-assignee-row select {
+  min-width: 0;
+  height: 22px;
+  padding: 0 20px 0 9px;
+  border: 0;
+  border-radius: 999px;
+  outline: 0;
+  background:
+    linear-gradient(45deg, transparent 50%, #99a1ad 50%) right 9px center / 5px 5px no-repeat,
+    linear-gradient(135deg, #fefefe, #e5e7eb);
+  color: #8a8f98;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 850;
+  appearance: none;
+}
+
+.onboarding-assignee-row select:focus {
+  box-shadow: 0 0 0 2px rgba(74, 157, 240, 0.2);
+}
+
+.onboarding-assignee-complete {
+  width: 100%;
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #b8bcc3;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 950;
+  box-shadow: 0 8px 16px rgba(73, 80, 89, 0.18);
+  transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.onboarding-assignee-complete.active {
+  background: #e11d48;
+  box-shadow: 0 12px 24px rgba(225, 29, 72, 0.24);
+}
+
+.onboarding-assignee-complete:disabled {
+  cursor: default;
+}
+
+.onboarding-assignee-complete.active:active {
+  transform: scale(0.98);
 }
 
 .onboarding-method-list {

@@ -581,8 +581,20 @@ export default function App() {
             <OnboardingPage
               step={onboardingStep}
               onNext={() => setOnboardingStep("profile")}
-              onPreview={() => setOnboardingStep("ready")}
-              onBack={() => setOnboardingStep(onboardingStep === "ready" ? "profile" : "intro")}
+              onPreview={() => setOnboardingStep("appliance")}
+              onApplianceNext={() => setOnboardingStep("assignee")}
+              onAssigneeNext={() => setOnboardingStep("ready")}
+              onBack={() =>
+                setOnboardingStep(
+                  onboardingStep === "ready"
+                    ? "assignee"
+                    : onboardingStep === "assignee"
+                      ? "appliance"
+                      : onboardingStep === "appliance"
+                        ? "profile"
+                        : "intro",
+                )
+              }
               onComplete={completeOnboarding}
             />
           </div>
@@ -788,19 +800,51 @@ const mainNavItems = [
   { id: "menu", label: "메뉴", icon: Menu },
 ];
 
-function OnboardingPage({ step, onNext, onPreview, onBack, onComplete }) {
+function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNext, onBack, onComplete }) {
   const isIntro = step === "intro";
   const isProfile = step === "profile";
+  const isAppliance = step === "appliance";
+  const isAssignee = step === "assignee";
+  const [selectedApplianceTypes, setSelectedApplianceTypes] = useState([]);
+  const [applianceAssignees, setApplianceAssignees] = useState({});
   const guideByStep = {
     intro: "어서오세요!",
     ready: "추천 준비 완료",
   };
+  const applianceOptions = [
+    ["세탁기", "washer"],
+    ["에어컨", "air"],
+    ["냉장고", "fridge"],
+    ["건조기", "dryer"],
+  ];
+  const selectedAppliances = applianceOptions.filter(([, type]) => selectedApplianceTypes.includes(type));
+  const hasSelectedAppliance = selectedApplianceTypes.length > 0;
+  const hasAssignedAppliance = selectedAppliances.some(([, type]) => Boolean(applianceAssignees[type]));
+
+  function toggleApplianceType(type) {
+    setSelectedApplianceTypes((current) => {
+      if (!current.includes(type)) {
+        setApplianceAssignees((assignees) => ({ ...assignees, [type]: assignees[type] || "me" }));
+        return [...current, type];
+      }
+
+      setApplianceAssignees((assignees) => {
+        const { [type]: _removed, ...next } = assignees;
+        return next;
+      });
+      return current.filter((item) => item !== type);
+    });
+  }
+
+  function changeApplianceAssignee(type, assignee) {
+    setApplianceAssignees((current) => ({ ...current, [type]: assignee }));
+  }
 
   return (
     <section className="onboarding-page" aria-label="온보딩">
       {!isIntro && <button className="onboarding-back-zone" type="button" onClick={onBack} aria-label="이전 단계로 이동" />}
       <div className="onboarding-progress" aria-hidden="true">
-        {["intro", "profile", "ready"].map((item) => (
+        {["intro", "profile", "appliance", "assignee", "ready"].map((item) => (
           <span key={item} className={step === item ? "active" : ""} />
         ))}
       </div>
@@ -846,10 +890,18 @@ function OnboardingPage({ step, onNext, onPreview, onBack, onComplete }) {
         </div>
       )}
 
-      <div className={`onboarding-character-scene ${isProfile ? "profile" : ""} ${!isIntro && !isProfile ? "ready" : ""}`}>
+      <div
+        className={`onboarding-character-scene ${isProfile ? "profile" : ""} ${isAppliance ? "appliance" : ""} ${
+          isAssignee ? "assignee" : ""
+        } ${!isIntro && !isProfile && !isAppliance && !isAssignee ? "ready" : ""}`}
+      >
         {isIntro ? (
           <button className="onboarding-speech-bubble onboarding-intro-message" type="button" onClick={onNext} aria-label="온보딩 시작하기">
-            <strong>{guideByStep.intro}</strong>
+            <strong>
+              어서오세요!
+              <br />
+              AI 가사일 플래너 현우입니다!
+            </strong>
           </button>
         ) : isProfile ? (
           <div className="onboarding-card onboarding-method-card">
@@ -868,6 +920,76 @@ function OnboardingPage({ step, onNext, onPreview, onBack, onComplete }) {
                 구글 캘린더 불러오기
               </button>
             </div>
+          </div>
+        ) : isAppliance ? (
+          <div className="onboarding-card onboarding-appliance-card">
+            <div>
+              <h1>자동화할 가전을 알려주세요.</h1>
+              <p>ThinQ가 자동 작동시킬 가전을 선택해 주세요.</p>
+            </div>
+
+            <div className="onboarding-appliance-layout">
+              <div className="onboarding-appliance-grid" aria-label="자동화할 가전 선택">
+                {applianceOptions.map(([label, type]) => {
+                  const isSelected = selectedApplianceTypes.includes(type);
+
+                  return (
+                    <button
+                      key={label}
+                      className={isSelected ? "selected" : ""}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => toggleApplianceType(type)}
+                    >
+                      <span className={`onboarding-appliance-icon ${type}`} aria-hidden="true">
+                        <i />
+                      </span>
+                      <strong>{label}</strong>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button
+              className={`onboarding-appliance-complete ${hasSelectedAppliance ? "active" : ""}`}
+              type="button"
+              onClick={onApplianceNext}
+              disabled={!hasSelectedAppliance}
+            >
+              완료
+            </button>
+          </div>
+        ) : isAssignee ? (
+          <div className="onboarding-card onboarding-assignee-card">
+            <div>
+              <h1>가전별 담당자를 지정해주세요.</h1>
+              <p>담당자에게 가전 작동 알림이 가요.</p>
+            </div>
+
+            <div className="onboarding-assignee-list" aria-label="가전별 담당자 지정">
+              {selectedAppliances.map(([label, type]) => (
+                <label className="onboarding-assignee-row" key={type}>
+                  <span className={`onboarding-assignee-icon ${type}`} aria-hidden="true">
+                    <i />
+                  </span>
+                  <strong>{label}</strong>
+                  <select value={applianceAssignees[type] || "me"} onChange={(event) => changeApplianceAssignee(type, event.target.value)}>
+                    {members
+                      .filter((member) => member.id !== "all")
+                      .map((member) => (
+                        <option key={member.id} value={member.id}>
+                          {member.name}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+              ))}
+            </div>
+
+            <button className={`onboarding-assignee-complete ${hasAssignedAppliance ? "active" : ""}`} type="button" onClick={onAssigneeNext} disabled={!hasAssignedAppliance}>
+              완료
+            </button>
           </div>
         ) : (
           <div className="onboarding-card onboarding-ready-card">
