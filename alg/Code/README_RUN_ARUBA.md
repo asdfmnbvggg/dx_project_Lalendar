@@ -109,6 +109,79 @@ datasets/aruba_train_classification_data_time_dataframe.pickle
 datasets/aruba_test_classification_data_time_dataframe.pickle
 ```
 
+## 4-1. Why the Classification Dataset Is Smaller
+
+The classification dataset is smaller than the raw CASAS sensor log because the
+preprocessing does not use every sensor event as one training sample.
+
+In `data_preprocessing_time.ipynb`, the raw log is first split into weekly
+dataframes and saved as:
+
+```text
+datasets/<dataset>_train_data_time.pickle
+datasets/<dataset>_test_data_time.pickle
+```
+
+Then `classification_data_preprocessing_time.ipynb` converts the weekly logs into
+activity-level sequences. The function `split_dataset_into_segments()` creates a
+new sequence only when the `activity` value changes, and it discards segments
+whose length is 1:
+
+```python
+transitionIndex = df.activity.ne(df.activity.shift())
+if len(df[start:end]) > 1:
+    chunks.append(df[start:end])
+```
+
+After that, `generate_dict_dataset_for_multi_seg_inputs()` builds one model input
+from three consecutive activity sequences. Therefore, the model input is not a
+single raw sensor row, but a sequence group such as:
+
+```text
+M005OFF -> M007ON -> M004ON
+```
+
+Because three consecutive activity segments are required, the loop condition is:
+
+```python
+while stride < len(activity_sequences_X) - 2:
+```
+
+This means the final two activity sequences in each processed split cannot form a
+complete 3-sequence input window and are not converted into classification
+samples. As a result, the final training/evaluation data size is determined by
+the number of valid activity segments, not by the number of raw CASAS sensor
+events.
+
+For the appliance recommendation dataset, `build_service_activity_datasets.py`
+applies an additional start-event filter:
+
+```python
+activityState == "begin"
+```
+
+This keeps only the activity start point and removes ordinary intermediate sensor
+events. Therefore, the start-time/recommendation CSVs are also much smaller than
+the original sensor log.
+
+In the current Aruba run, the final classification dataframe contains:
+
+```text
+train: 8,875 samples
+test:  3,720 samples
+total: 12,595 samples
+```
+
+The same preprocessing rule is applied to Cairo and Milan. Thus, the reported
+final counts correspond to valid activity-sequence samples after segmentation and
+3-sequence windowing:
+
+```text
+Aruba: 12,595 samples
+Milan: 4,536 samples
+Cairo: 1,196 samples
+```
+
 ## 5. Run Aruba GPTHAR_H Classification
 
 From `alg/Code`, run:
