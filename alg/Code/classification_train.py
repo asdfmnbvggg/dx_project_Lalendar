@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+import os
+from pathlib import Path
+
 from utils import *
 
 
@@ -92,6 +95,26 @@ def _resolve_existing_path(path_value, config_path):
             return candidate.resolve()
 
     return None
+
+
+def _resolve_checkpoint_path(checkpoint_path):
+    if os.path.isfile(checkpoint_path):
+        return checkpoint_path
+
+    absolute_path = os.path.abspath(checkpoint_path)
+    if os.path.isfile(absolute_path):
+        return absolute_path
+
+    # Windows can fail to open long OneDrive paths unless the extended prefix is used.
+    if os.name == "nt":
+        extended_path = "\\\\?\\" + absolute_path
+        if os.path.isfile(extended_path):
+            print("Using Windows extended checkpoint path: {}".format(extended_path))
+            return extended_path
+
+    raise FileNotFoundError(
+        "Checkpoint file not found or not readable: {}".format(checkpoint_path)
+    )
 
 
 def validate_and_print_config(config, config_path, dataset_name, require_multi_task=False):
@@ -327,6 +350,11 @@ if __name__ == "__main__":
 
     if evaluate_only and checkpoint == "":
         raise ValueError("--checkpoint is required when --evaluate_only True")
+    if evaluate_only:
+        if cross_val:
+            print("evaluate_only=True: forcing --cv False because checkpoint evaluation uses the test set.")
+            cross_val = False
+        checkpoint = _resolve_checkpoint_path(checkpoint)
 
     # Load the config file
     config = load_config(config_path)
