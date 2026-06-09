@@ -464,11 +464,41 @@ class GPTBiLSTMHierarchyHourExperiment2:
 
                 pbar.update(1)
 
-                self.classifier_data_X_train = np.array(self.classifier_data_X_train)
-                self.classifier_data_Y_train = np.array(self.classifier_data_Y_train)
+                print(
+                    "Before concatenate X_train folds:",
+                    [x.shape for x in self.classifier_data_X_train],
+                )
+                print(
+                    "Before concatenate Y_train folds:",
+                    [y.shape for y in self.classifier_data_Y_train],
+                )
+                print(
+                    "Before concatenate X_test folds:",
+                    [x.shape for x in self.classifier_data_X_test],
+                )
+                print(
+                    "Before concatenate Y_test folds:",
+                    [y.shape for y in self.classifier_data_Y_test],
+                )
 
-                self.classifier_data_X_test = np.array(self.classifier_data_X_test)
-                self.classifier_data_Y_test = np.array(self.classifier_data_Y_test)
+                self.classifier_data_X_train = np.concatenate(
+                    self.classifier_data_X_train, axis=0
+                )
+                self.classifier_data_Y_train = np.concatenate(
+                    self.classifier_data_Y_train, axis=0
+                )
+
+                self.classifier_data_X_test = np.concatenate(
+                    self.classifier_data_X_test, axis=0
+                )
+                self.classifier_data_Y_test = np.concatenate(
+                    self.classifier_data_Y_test, axis=0
+                )
+
+                print("After concatenate X_train:", self.classifier_data_X_train.shape)
+                print("After concatenate Y_train:", self.classifier_data_Y_train.shape)
+                print("After concatenate X_test:", self.classifier_data_X_test.shape)
+                print("After concatenate Y_test:", self.classifier_data_Y_test.shape)
                 pbar.update(1)
 
                 if self.DEBUG:
