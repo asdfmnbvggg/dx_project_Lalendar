@@ -16,6 +16,7 @@ import CalendarPage from "./pages/CalendarPage.jsx";
 import CrewPage from "./pages/CrewPage.jsx";
 import TaskComposer from "./components/TaskComposer.jsx";
 import DetailPanel from "./components/DetailPanel.jsx";
+import lgCharacter from "./assets/lg-character.png";
 import { fetchCalendarWeather } from "./services/weatherService.js";
 import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendationService.js";
 import { buildRoutineRecommendations, recordThinQUsageLog } from "./services/routinePredictionService.js";
@@ -573,15 +574,18 @@ export default function App() {
 
         {activeTab === "home" && <HomePage onOpenNotifications={() => setNotificationOpen(true)} onOpenThinQ={() => setPanel({ type: "thinq" })} />}
         {activeTab === "schedule" && !isOnboardingComplete && (
-          <OnboardingPage
-            step={onboardingStep}
-            profile={onboardingProfile}
-            onChangeProfile={updateOnboardingProfile}
-            onNext={() => setOnboardingStep("profile")}
-            onPreview={() => setOnboardingStep("ready")}
-            onBack={() => setOnboardingStep(onboardingStep === "ready" ? "profile" : "intro")}
-            onComplete={completeOnboarding}
-          />
+          <div className="onboarding-live-stage">
+            <div className="onboarding-calendar-backdrop" aria-hidden="true">
+              <CalendarPage {...pageProps} />
+            </div>
+            <OnboardingPage
+              step={onboardingStep}
+              onNext={() => setOnboardingStep("profile")}
+              onPreview={() => setOnboardingStep("ready")}
+              onBack={() => setOnboardingStep(onboardingStep === "ready" ? "profile" : "intro")}
+              onComplete={completeOnboarding}
+            />
+          </div>
         )}
         {activeTab === "schedule" && isOnboardingComplete && <CalendarPage {...pageProps} />}
         {activeTab === "devices" && <SimpleTabPage icon={<Grid2X2 size={28} />} title="디바이스" text="자주 쓰는 제품을 홈 화면에 배치해 바로 사용할 수 있어요." />}
@@ -784,69 +788,22 @@ const mainNavItems = [
   { id: "menu", label: "메뉴", icon: Menu },
 ];
 
-function OnboardingPage({ step, profile, onChangeProfile, onNext, onPreview, onBack, onComplete }) {
+function OnboardingPage({ step, onNext, onPreview, onBack, onComplete }) {
   const isIntro = step === "intro";
   const isProfile = step === "profile";
+  const guideByStep = {
+    intro: "어서오세요!",
+    ready: "추천 준비 완료",
+  };
 
   return (
     <section className="onboarding-page" aria-label="온보딩">
-      <div className="onboarding-highlight-bg" aria-hidden="true">
-        <div className="onboarding-mini-calendar">
-          {Array.from({ length: 35 }, (_, index) => (
-            <span key={index}>{index % 7 === 0 ? index + 1 : ""}</span>
-          ))}
-        </div>
-      </div>
+      {!isIntro && <button className="onboarding-back-zone" type="button" onClick={onBack} aria-label="이전 단계로 이동" />}
       <div className="onboarding-progress" aria-hidden="true">
         {["intro", "profile", "ready"].map((item) => (
           <span key={item} className={step === item ? "active" : ""} />
         ))}
       </div>
-
-      {isIntro && (
-        <div className="onboarding-card onboarding-intro-card">
-          <div className="onboarding-calendar-preview" aria-hidden="true">
-            <div className="preview-head">
-              <span />
-              <span />
-            </div>
-            <div className="preview-grid">
-              {Array.from({ length: 14 }, (_, index) => (
-                <i key={index} className={index === 3 || index === 8 || index === 10 ? "filled" : ""} />
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="onboarding-kicker">Lalendar 시작하기</p>
-            <h1>가사 루틴을 자동으로 정리해드릴게요</h1>
-            <p>반복 일정과 가족 정보를 입력하면 AI가 10일간의 가사 일정을 추천합니다.</p>
-          </div>
-          <button className="onboarding-primary" type="button" onClick={onNext}>
-            시작하기
-          </button>
-        </div>
-      )}
-
-      {isProfile && (
-        <div className="onboarding-card onboarding-method-card">
-          <div>
-            <p className="onboarding-kicker">고정 일정</p>
-            <h1>고정 일정을 알려주세요.</h1>
-            <p>일정 입력 방식을 선택해 주세요.</p>
-          </div>
-
-          <div className="onboarding-method-list">
-            <button type="button" onClick={onPreview}>
-              <span aria-hidden="true" />
-              직접 입력하기
-            </button>
-            <button type="button" onClick={onPreview}>
-              <span aria-hidden="true" />
-              구글 캘린더 불러오기
-            </button>
-          </div>
-        </div>
-      )}
 
       {isProfile && false && (
         <div className="onboarding-card">
@@ -889,38 +846,54 @@ function OnboardingPage({ step, profile, onChangeProfile, onNext, onPreview, onB
         </div>
       )}
 
-      {!isIntro && !isProfile && (
-        <div className="onboarding-card">
-          <div>
-            <p className="onboarding-kicker">추천 준비 완료</p>
-            <h1>10일간의 루틴을 캘린더에 담아둘게요</h1>
-            <p>빨래, 제습, 환기, 청소 루틴을 날씨와 귀가 시간에 맞춰 먼저 배치합니다.</p>
-          </div>
+      <div className={`onboarding-character-scene ${isProfile ? "profile" : ""} ${!isIntro && !isProfile ? "ready" : ""}`}>
+        {isIntro ? (
+          <button className="onboarding-speech-bubble onboarding-intro-message" type="button" onClick={onNext} aria-label="온보딩 시작하기">
+            <strong>{guideByStep.intro}</strong>
+          </button>
+        ) : isProfile ? (
+          <div className="onboarding-card onboarding-method-card">
+            <div>
+              <p className="onboarding-kicker">고정 일정</p>
+              <h1>고정 일정을 알려주세요.</h1>
+            </div>
 
-          <div className="onboarding-recommend-list" aria-label="추천 일정 미리보기">
-            {["빨래와 건조 일정", "귀가 전 실내 환경 준비", "주간 청소 루틴", "가족별 담당 배분"].map((item) => (
-              <span key={item}>{item}</span>
-            ))}
+            <div className="onboarding-method-list">
+              <button type="button" onClick={onPreview}>
+                <span aria-hidden="true" />
+                직접 입력하기
+              </button>
+              <button type="button" onClick={onPreview}>
+                <span aria-hidden="true" />
+                구글 캘린더 불러오기
+              </button>
+            </div>
           </div>
+        ) : (
+          <div className="onboarding-card onboarding-ready-card">
+            <div>
+              <p className="onboarding-kicker">추천 준비 완료</p>
+              <h1>10일간의 루틴을 캘린더에 담아둘게요</h1>
+              <p>빨래, 제습, 환기, 청소 루틴을 날씨와 귀가 시간에 맞춰 먼저 배치합니다.</p>
+            </div>
 
-          <div className="onboarding-actions">
-            <button type="button" onClick={onBack}>
-              이전
-            </button>
-            <button className="onboarding-primary" type="button" onClick={onComplete}>
-              캘린더 시작하기
-            </button>
+            <div className="onboarding-recommend-list" aria-label="추천 일정 미리보기">
+              {["빨래와 건조 일정", "귀가 전 실내 환경 준비", "주간 청소 루틴", "가족별 담당 배분"].map((item) => (
+                <span key={item}>{item}</span>
+              ))}
+            </div>
+
+            <div className="onboarding-actions">
+              <button type="button" onClick={onBack}>
+                이전
+              </button>
+              <button className="onboarding-primary" type="button" onClick={onComplete}>
+                캘린더 시작하기
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-      <div className="onboarding-character-scene" aria-hidden="true">
-        <div className="onboarding-character">
-          <span className="character-face" />
-          <span className="character-blush left" />
-          <span className="character-blush right" />
-        </div>
-        <div className="character-side-bubble left">좋아요!</div>
-        <div className="character-side-bubble right">다음으로</div>
+        )}
+        <img className="onboarding-character-image" src={lgCharacter} alt="" />
       </div>
     </section>
   );

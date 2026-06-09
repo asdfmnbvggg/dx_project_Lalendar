@@ -6098,7 +6098,7 @@ body {
 
 .app-frame.onboarding-frame {
   overflow: hidden;
-  background: #f6f7fb;
+  background: #fff;
 }
 
 .onboarding-frame .topbar {
@@ -6107,9 +6107,26 @@ body {
   margin-bottom: 8px;
 }
 
-.onboarding-page {
+.onboarding-live-stage {
   position: relative;
   min-height: calc(100svh - 184px);
+  overflow: hidden;
+}
+
+.onboarding-calendar-backdrop {
+  min-height: calc(100svh - 184px);
+  pointer-events: none;
+}
+
+.onboarding-calendar-backdrop .calendar-page {
+  min-height: calc(100svh - 184px);
+}
+
+.onboarding-page {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  min-height: 100%;
   display: grid;
   align-content: center;
   gap: 18px;
@@ -6121,10 +6138,20 @@ body {
 .onboarding-page::before {
   content: "";
   position: absolute;
-  inset: -88px -18px -104px;
+  inset: 0;
   z-index: 0;
-  background: rgba(0, 0, 0, 0.64);
+  background: rgba(0, 0, 0, 0.62);
   pointer-events: none;
+}
+
+.onboarding-back-zone {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  width: 38%;
+  cursor: pointer;
 }
 
 .onboarding-highlight-bg {
@@ -6158,11 +6185,14 @@ body {
 }
 
 .onboarding-progress {
-  position: relative;
+  position: absolute;
+  top: 18px;
+  left: 50%;
   z-index: 3;
   display: flex;
   justify-content: center;
   gap: 7px;
+  transform: translateX(-50%);
 }
 
 .onboarding-progress span {
@@ -6331,20 +6361,81 @@ body {
 .onboarding-character-scene {
   position: absolute;
   left: 50%;
-  bottom: 10px;
+  top: 236px;
   z-index: 3;
-  width: 172px;
-  height: 114px;
+  width: min(360px, 96vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
   transform: translateX(-50%);
   pointer-events: none;
+}
+
+.onboarding-character-scene.profile {
+  top: 172px;
+}
+
+.onboarding-character-scene.ready {
+  top: 92px;
+}
+
+.onboarding-speech-bubble {
+  position: relative;
+  z-index: 1;
+  width: min(268px, 78vw);
+  min-height: 118px;
+  display: grid;
+  place-items: center;
+  padding: 30px 24px 34px;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #ffffff 0%, #f4f4f4 58%, #d4d7dc 100%);
+  color: #565b65;
+  font-size: 16px;
+  font-weight: 950;
+  line-height: 1.32;
+  text-align: center;
+  word-break: keep-all;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 18px 34px rgba(0, 0, 0, 0.2);
+}
+
+.onboarding-speech-bubble.onboarding-intro-message {
+  pointer-events: auto;
+}
+
+.onboarding-intro-message strong,
+.onboarding-intro-message span,
+.onboarding-speech-bubble > strong {
+  display: block;
+  position: relative;
+}
+
+.onboarding-intro-message strong {
+  color: #555b64;
+  font-size: 17px;
+  font-weight: 950;
+}
+
+.onboarding-speech-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -26px;
+  width: 34px;
+  height: 28px;
+  background: linear-gradient(145deg, #f5f5f5 0%, #d4d7dc 100%);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform: translateX(-50%);
 }
 
 .onboarding-character {
   position: absolute;
   left: 50%;
-  bottom: 13px;
-  width: 78px;
-  height: 70px;
+  bottom: 8px;
+  width: 82px;
+  height: 74px;
   border: 4px solid #f6c13d;
   border-radius: 48% 48% 44% 44%;
   background:
@@ -6354,6 +6445,20 @@ body {
     #ffc63b;
   box-shadow: 0 9px 0 #e4a82e;
   transform: translateX(-50%);
+}
+
+.onboarding-character-image {
+  position: relative;
+  width: 266px;
+  max-width: 82vw;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.22));
+  user-select: none;
+}
+
+.onboarding-character-scene .onboarding-card {
+  pointer-events: auto;
 }
 
 .onboarding-character::before,
@@ -6405,7 +6510,7 @@ body {
 
 .character-side-bubble {
   position: absolute;
-  bottom: 30px;
+  bottom: 42px;
   min-width: 52px;
   padding: 7px 8px;
   border-radius: 999px;
@@ -6418,11 +6523,11 @@ body {
 }
 
 .character-side-bubble.left {
-  left: -6px;
+  left: 8px;
 }
 
 .character-side-bubble.right {
-  right: -8px;
+  right: 4px;
 }
 
 .onboarding-recommend-list {
