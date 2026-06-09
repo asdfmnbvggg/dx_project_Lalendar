@@ -1237,9 +1237,6 @@ class GPTBiLSTMHierarchyHourExperiment2:
             self.evaluate(X_test_input, Y_test_input, run_number)
 
     def start_from_checkpoint(self, checkpoint_path, run_number=0):
-        if not (os.path.exists(checkpoint_path) or os.path.lexists(checkpoint_path)):
-            raise FileNotFoundError("Checkpoint file not found: {}".format(checkpoint_path))
-
         self.current_time = time.strftime("%m%d_%H%M")
         self.experiment_result_path = os.path.join(
             self.experiment_parameters["name"],
