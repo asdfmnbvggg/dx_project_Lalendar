@@ -286,6 +286,22 @@ if __name__ == "__main__":
         help="load *_time_with_sep_dataframe.pickle files",
         required=False,
     )
+    p.add_argument(
+        "--evaluate_only",
+        dest="evaluate_only",
+        action="store",
+        default="False",
+        help="skip training and evaluate a saved checkpoint",
+        required=False,
+    )
+    p.add_argument(
+        "--checkpoint",
+        dest="checkpoint",
+        action="store",
+        default="",
+        help="checkpoint path used with --evaluate_only True",
+        required=False,
+    )
 
     args = p.parse_args()
 
@@ -297,6 +313,8 @@ if __name__ == "__main__":
     label_column = str(args.label_column)
     compare_labels = str(args.compare_labels)
     with_sep = str(args.with_sep)
+    evaluate_only = str(args.evaluate_only)
+    checkpoint = str(args.checkpoint)
 
     if cross_val == "True":
         cross_val = True
@@ -305,6 +323,10 @@ if __name__ == "__main__":
 
     compare_labels = compare_labels == "True"
     with_sep = with_sep == "True"
+    evaluate_only = evaluate_only == "True"
+
+    if evaluate_only and checkpoint == "":
+        raise ValueError("--checkpoint is required when --evaluate_only True")
 
     # Load the config file
     config = load_config(config_path)
@@ -415,7 +437,10 @@ if __name__ == "__main__":
 
                 exp.DEBUG = DEBUG_MODE
 
-                exp.start()
+                if evaluate_only:
+                    exp.start_from_checkpoint(checkpoint)
+                else:
+                    exp.start()
 
                 # Save word dict
                 exp.save_word_dict()

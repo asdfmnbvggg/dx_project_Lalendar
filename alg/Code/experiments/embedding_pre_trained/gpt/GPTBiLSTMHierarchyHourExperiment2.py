@@ -1236,6 +1236,44 @@ class GPTBiLSTMHierarchyHourExperiment2:
 
             self.evaluate(X_test_input, Y_test_input, run_number)
 
+    def start_from_checkpoint(self, checkpoint_path, run_number=0):
+        if not (os.path.exists(checkpoint_path) or os.path.lexists(checkpoint_path)):
+            raise FileNotFoundError("Checkpoint file not found: {}".format(checkpoint_path))
+
+        self.current_time = time.strftime("%m%d_%H%M")
+        self.experiment_result_path = os.path.join(
+            self.experiment_parameters["name"],
+            self.experiment_parameters["model_type"],
+            "eval_" + str(self.current_time),
+        )
+        os.makedirs(self.experiment_result_path, exist_ok=True)
+
+        self.data_preprocessing()
+
+        if not self.cross_validation:
+            self.data_preprocessing_test()
+
+        self.model_selection()
+
+        (
+            X_train_input,
+            Y_train_input,
+            X_val_input,
+            Y_val_input,
+            X_test_input,
+            Y_test_input,
+            nb_features,
+        ) = self.check_input_model(run_number)
+
+        self.build_model_classifier(run_number)
+        self.compile_model()
+
+        print("Loading checkpoint weights: {}".format(checkpoint_path))
+        self.classifier_model.load_weights(checkpoint_path)
+        self.classifier_best_model_path = checkpoint_path
+
+        self.evaluate(X_test_input, Y_test_input, run_number)
+
     def __save_dict_to_json(self, where_to_save, dict_to_save):
         with open(where_to_save, "w") as json_dict_file:
             json.dump(dict_to_save, json_dict_file, indent=4)
