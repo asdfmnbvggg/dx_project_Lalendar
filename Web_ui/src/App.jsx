@@ -32,6 +32,14 @@ export default function App() {
   const [tasks, setTasks] = useState(initialTasks);
   const [memberColors, setMemberColors] = useState(() => Object.fromEntries(members.map((member) => [member.id, member.color])));
   const [activeTab, setActiveTab] = useState("home");
+  const [isOnboardingComplete, setOnboardingComplete] = useState(() => window.localStorage.getItem("lalendar-onboarding-complete") === "true");
+  const [onboardingStep, setOnboardingStep] = useState("intro");
+  const [onboardingProfile, setOnboardingProfile] = useState({
+    familyCount: 2,
+    laundryDays: "월, 목",
+    cleaningDay: "토요일",
+    returnHomeTime: "19:30",
+  });
   const [selectedDate, setSelectedDate] = useState(getTodayKey);
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const today = new Date();
@@ -234,6 +242,22 @@ export default function App() {
     if (shouldSuggestAutomation(nextTask)) {
       setAutomationPrompt(nextTask);
     }
+  }
+
+  function updateOnboardingProfile(field, value) {
+    setOnboardingProfile((current) => ({ ...current, [field]: value }));
+  }
+
+  function completeOnboarding() {
+    const generated = buildOnboardingTasks(onboardingProfile, selectedMember);
+    setTasks((current) => [...generated, ...current]);
+    setSelectedDate(generated[0]?.date || getTodayKey());
+    const firstDate = generated[0]?.date?.split("-").map(Number);
+    if (firstDate?.length === 3) {
+      setVisibleMonth({ year: firstDate[0], month: firstDate[1] });
+    }
+    window.localStorage.setItem("lalendar-onboarding-complete", "true");
+    setOnboardingComplete(true);
   }
 
   function addWeatherRecommendationTask(date, recommendation) {
@@ -455,7 +479,7 @@ export default function App() {
 
   return (
     <main className="app-shell">
-      <section className={`app-frame ${activeTab === "home" ? "thinq-home-frame" : ""}`}>
+      <section className={`app-frame ${activeTab === "home" ? "thinq-home-frame" : ""} ${activeTab === "schedule" && !isOnboardingComplete ? "onboarding-frame" : ""}`}>
         {activeTab !== "home" && (
         <header className="topbar">
           <div className="brand">
@@ -541,7 +565,18 @@ export default function App() {
         )}
 
         {activeTab === "home" && <HomePage onOpenNotifications={() => setNotificationOpen(true)} onOpenThinQ={() => setPanel({ type: "thinq" })} />}
-        {activeTab === "schedule" && <CalendarPage {...pageProps} />}
+        {activeTab === "schedule" && !isOnboardingComplete && (
+          <OnboardingPage
+            step={onboardingStep}
+            profile={onboardingProfile}
+            onChangeProfile={updateOnboardingProfile}
+            onNext={() => setOnboardingStep("profile")}
+            onPreview={() => setOnboardingStep("ready")}
+            onBack={() => setOnboardingStep(onboardingStep === "ready" ? "profile" : "intro")}
+            onComplete={completeOnboarding}
+          />
+        )}
+        {activeTab === "schedule" && isOnboardingComplete && <CalendarPage {...pageProps} />}
         {activeTab === "devices" && <SimpleTabPage icon={<Grid2X2 size={28} />} title="디바이스" text="자주 쓰는 제품을 홈 화면에 배치해 바로 사용할 수 있어요." />}
         {activeTab === "care" && <SimpleTabPage icon={<ChartColumnIncreasing size={28} />} title="케어" text="제품 상태와 사용 리포트를 한눈에 볼 수 있게 준비 중이에요." />}
         {activeTab === "menu" && <CrewPage {...pageProps} />}
@@ -742,6 +777,111 @@ const mainNavItems = [
   { id: "menu", label: "메뉴", icon: Menu },
 ];
 
+function OnboardingPage({ step, profile, onChangeProfile, onNext, onPreview, onBack, onComplete }) {
+  const isIntro = step === "intro";
+  const isProfile = step === "profile";
+
+  return (
+    <section className="onboarding-page" aria-label="온보딩">
+      <div className="onboarding-progress" aria-hidden="true">
+        {["intro", "profile", "ready"].map((item) => (
+          <span key={item} className={step === item ? "active" : ""} />
+        ))}
+      </div>
+
+      {isIntro && (
+        <div className="onboarding-card onboarding-intro-card">
+          <div className="onboarding-calendar-preview" aria-hidden="true">
+            <div className="preview-head">
+              <span />
+              <span />
+            </div>
+            <div className="preview-grid">
+              {Array.from({ length: 14 }, (_, index) => (
+                <i key={index} className={index === 3 || index === 8 || index === 10 ? "filled" : ""} />
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="onboarding-kicker">Lalendar 시작하기</p>
+            <h1>가사 루틴을 자동으로 정리해드릴게요</h1>
+            <p>반복 일정과 가족 정보를 입력하면 AI가 10일간의 가사 일정을 추천합니다.</p>
+          </div>
+          <button className="onboarding-primary" type="button" onClick={onNext}>
+            시작하기
+          </button>
+        </div>
+      )}
+
+      {isProfile && (
+        <div className="onboarding-card">
+          <div>
+            <p className="onboarding-kicker">기본 정보</p>
+            <h1>생활 패턴을 알려주세요</h1>
+            <p>입력한 값은 첫 10일 추천 일정과 가족별 담당 배분에만 사용됩니다.</p>
+          </div>
+
+          <label className="onboarding-field">
+            가족 구성원
+            <select value={profile.familyCount} onChange={(event) => onChangeProfile("familyCount", Number(event.target.value))}>
+              <option value={1}>1명</option>
+              <option value={2}>2명</option>
+              <option value={3}>3명</option>
+              <option value={4}>4명 이상</option>
+            </select>
+          </label>
+          <label className="onboarding-field">
+            빨래하는 요일
+            <input value={profile.laundryDays} onChange={(event) => onChangeProfile("laundryDays", event.target.value)} />
+          </label>
+          <label className="onboarding-field">
+            주 청소 요일
+            <input value={profile.cleaningDay} onChange={(event) => onChangeProfile("cleaningDay", event.target.value)} />
+          </label>
+          <label className="onboarding-field">
+            보통 귀가 시간
+            <input type="time" value={profile.returnHomeTime} onChange={(event) => onChangeProfile("returnHomeTime", event.target.value)} />
+          </label>
+
+          <div className="onboarding-actions">
+            <button type="button" onClick={onBack}>
+              이전
+            </button>
+            <button className="onboarding-primary" type="button" onClick={onPreview}>
+              추천 보기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!isIntro && !isProfile && (
+        <div className="onboarding-card">
+          <div>
+            <p className="onboarding-kicker">추천 준비 완료</p>
+            <h1>10일간의 루틴을 캘린더에 담아둘게요</h1>
+            <p>빨래, 제습, 환기, 청소 루틴을 날씨와 귀가 시간에 맞춰 먼저 배치합니다.</p>
+          </div>
+
+          <div className="onboarding-recommend-list" aria-label="추천 일정 미리보기">
+            {["빨래와 건조 일정", "귀가 전 실내 환경 준비", "주간 청소 루틴", "가족별 담당 배분"].map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+
+          <div className="onboarding-actions">
+            <button type="button" onClick={onBack}>
+              이전
+            </button>
+            <button className="onboarding-primary" type="button" onClick={onComplete}>
+              캘린더 시작하기
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function HomePage({ onOpenNotifications, onOpenThinQ }) {
   return (
     <section className="thinq-home-page" aria-label="홈">
@@ -851,6 +991,89 @@ function addDays(date, amount) {
 function getTodayKey() {
   const today = new Date();
   return dateKey(today.getFullYear(), today.getMonth() + 1, today.getDate());
+}
+
+function buildOnboardingTasks(profile, selectedMember) {
+  const baseDate = new Date(`${getTodayKey()}T00:00:00`);
+  const familyOwners = ["me", "minsu", "theresa", "all"].slice(0, Math.max(1, Number(profile.familyCount) || 1));
+  const ownerAt = (index) => {
+    if (selectedMember !== "all") return selectedMember;
+    return familyOwners[index % familyOwners.length] || "me";
+  };
+  const at = (offset) => {
+    const next = new Date(baseDate);
+    next.setDate(baseDate.getDate() + offset);
+    return dateKey(next.getFullYear(), next.getMonth() + 1, next.getDate());
+  };
+
+  return [
+    {
+      id: Date.now() + 501,
+      date: at(0),
+      title: "AI 추천 일정 확인",
+      place: "Lalendar",
+      tag: "routine",
+      owner: ownerAt(0),
+      done: false,
+      repeat: "온보딩",
+      source: "auto",
+    },
+    {
+      id: Date.now() + 502,
+      date: at(1),
+      title: "빨래와 건조 루틴",
+      place: "세탁실",
+      tag: "house",
+      owner: ownerAt(1),
+      done: false,
+      repeat: profile.laundryDays || "주 2회",
+      source: "auto",
+    },
+    {
+      id: Date.now() + 503,
+      date: at(2),
+      title: "귀가 전 제습기 켜기",
+      place: "거실",
+      tag: "routine",
+      owner: ownerAt(2),
+      done: false,
+      repeat: profile.returnHomeTime ? `${profile.returnHomeTime} 전` : "귀가 전",
+      source: "auto",
+    },
+    {
+      id: Date.now() + 504,
+      date: at(4),
+      title: "주간 청소 루틴",
+      place: "공용 공간",
+      tag: "house",
+      owner: ownerAt(3),
+      done: false,
+      repeat: profile.cleaningDay || "주 1회",
+      source: "auto",
+    },
+    {
+      id: Date.now() + 505,
+      date: at(6),
+      title: "공기청정기 필터 확인",
+      place: "거실",
+      tag: "house",
+      owner: ownerAt(4),
+      done: false,
+      repeat: "10일 추천",
+      source: "auto",
+    },
+    {
+      id: Date.now() + 506,
+      date: at(9),
+      title: "가족 루틴 점검",
+      place: "공유",
+      tag: "share",
+      owner: "all",
+      done: false,
+      repeat: "10일 후",
+      source: "auto",
+    },
+  ];
 }
 
 const appliancePlaceLabel = {
