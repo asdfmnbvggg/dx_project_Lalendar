@@ -38,6 +38,9 @@ const applianceImages = {
   washer: washerImage,
 };
 
+const MONTH_PERSONAL_TASK_LIMIT = 2;
+const MONTH_HOUSE_TASK_LIMIT = 2;
+
 const memberImages = {
   me: jaehyeokImage,
   theresa: suhyunImage,
@@ -110,7 +113,6 @@ export default function CalendarPage({
       ? getMonthCells(month, monthLeadingBlanks)
       : displayDates.map((key) => ({ key, day: Number(key.slice(-2)), isCurrentMonth: true }));
   const isExpanded = calendarScale >= 3;
-  const taskLimit = calendarView === "day" ? 99 : calendarView === "month" ? 4 : calendarScale <= 1 ? 2 : calendarScale >= 4 ? 5 : 3;
   const selectedWeather = weatherByDate[selectedDate];
   const selectedRecommendations = getRecommendationsForDate(selectedDate, weatherByDate, routineRecommendations);
   const detailDate = selectedDetailDate || selectedDate;
@@ -428,10 +430,9 @@ export default function CalendarPage({
                 Array.from({ length: leadingBlanks }).map((_, index) => <span className="blank-day" key={index} />)}
               {calendarCells.map(({ key, day, isCurrentMonth }) => {
                 const tasks = tasksByDate[key] || [];
-                const personalTasks = tasks.filter((task) => getDailyTaskGroup(task) !== "housework").slice(0, 2);
-                const houseTasks = tasks.filter((task) => getDailyTaskGroup(task) === "housework").slice(0, 2);
+                const personalTasks = tasks.filter((task) => getDailyTaskGroup(task) !== "housework").slice(0, MONTH_PERSONAL_TASK_LIMIT);
+                const houseTasks = tasks.filter((task) => getDailyTaskGroup(task) === "housework").slice(0, MONTH_HOUSE_TASK_LIMIT);
                 const weather = weatherByDate[key];
-                const recommendations = getRecommendationsForDate(key, weatherByDate, routineRecommendations);
                 const hasWeatherData = Boolean(weather?.hasWeatherData);
 
                 return (
@@ -465,7 +466,6 @@ export default function CalendarPage({
                     <div className="date-tasks">
                       {isCurrentMonth && (
                         <>
-                          {false && recommendations.length > 0 && <em className="weather-recommendation-chip">추천 {recommendations[0].title}</em>}
                           {personalTasks.map((task) => (
                             <i
                               className={[task.tag, task.displayType === "fixed" ? "fixed-event-task" : ""].filter(Boolean).join(" ")}
@@ -491,7 +491,7 @@ export default function CalendarPage({
                             <span className="month-house-icons" aria-label="가사 일정">
                               {houseTasks.map((task) => (
                                 <span className="month-house-icon" key={task.id} title={task.title}>
-                                  {getMonthHouseIcon(task)}
+                                  <img src={getMonthHouseImage(task)} alt="" aria-hidden="true" />
                                 </span>
                               ))}
                             </span>
@@ -890,15 +890,14 @@ function getMonthTaskLabel(title) {
   return String(title || "").trim().slice(0, 3);
 }
 
-function getMonthHouseIcon(task) {
+function getMonthHouseImage(task) {
   const type = String(task.applianceType || "").toLowerCase();
-  if (type.includes("washer")) return "🧺";
-  if (type.includes("dryer")) return "☀️";
-  if (type.includes("air")) return "❄️";
-  if (type.includes("fridge")) return "🧊";
-  if (type.includes("dehumidifier")) return "💧";
-  if (type.includes("robot")) return "🧹";
-  return "🧽";
+  const text = `${type} ${task.title || ""} ${task.place || ""}`.toLowerCase();
+
+  if (text.includes("dryer") || text.includes("건조")) return dryerImage;
+  if (text.includes("fridge") || text.includes("냉장")) return fridgeImage;
+  if (text.includes("air") || text.includes("에어컨") || text.includes("공기")) return airConditionerImage;
+  return washerImage;
 }
 
 function getDailyTaskGroup(task) {
@@ -909,7 +908,7 @@ function getDailyTaskGroup(task) {
 
 function getDailyTaskRange(task, index = 0) {
   const timeText = String(task.repeat || "");
-  const rangeMatch = timeText.match(/\b(\d{1,2}):(\d{2})\s*(?:~|-|????to)\s*(\d{1,2}):(\d{2})\b/i);
+  const rangeMatch = timeText.match(/\b(\d{1,2}):(\d{2})\s*(?:~|-|to)\s*(\d{1,2}):(\d{2})\b/i);
 
   if (rangeMatch) {
     const startMinutes = Number(rangeMatch[1]) * 60 + Number(rangeMatch[2]);

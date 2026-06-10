@@ -1247,3 +1247,29 @@ Visit https://react.dev/link/error-boundaries to learn more about error boundari
 [2mAM 11:02:45[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/CalendarPage.jsx[22m
 [2mAM 11:02:45[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[vite] SyntaxError: Invalid regular expression: /\b(\d{1,2}):(\d{2})\s*(?:~|-|????to)\s*(\d{1,2}):(\d{2})\b/i: Nothing to repeat
 [2mAM 11:02:45[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[vite] Failed to reload /src/pages/CalendarPage.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)
+[2mAM 11:16:33[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/CalendarPage.jsx[22m
+[2mAM 11:16:33[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[vite] SyntaxError: Invalid regular expression: /\b(\d{1,2}):(\d{2})\s*(?:~|-|????to)\s*(\d{1,2}):(\d{2})\b/i: Nothing to repeat
+[2mAM 11:16:33[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[vite] Failed to reload /src/pages/CalendarPage.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)
+[2mAM 11:16:48[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2mAM 11:17:04[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2mAM 11:20:44[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/CalendarPage.jsx[22m
+[2mAM 11:20:45[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[vite] SyntaxError: Invalid regular expression: /\b(\d{1,2}):(\d{2})\s*(?:~|-|????to)\s*(\d{1,2}):(\d{2})\b/i: Nothing to repeat
+[2mAM 11:20:45[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[vite] Failed to reload /src/pages/CalendarPage.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)
+[2mAM 11:20:56[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2mAM 11:24:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2mAM 11:24:02[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[vite] SyntaxError: Invalid regular expression: /\b(\d{1,2}):(\d{2})\s*(?:~|-|????to)\s*(\d{1,2}):(\d{2})\b/i: Nothing to repeat
+[2mAM 11:24:02[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[vite] Failed to reload /src/App.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)
+[2mAM 11:24:43[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2mAM 11:24:43[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[vite] SyntaxError: Invalid regular expression: /\b(\d{1,2}):(\d{2})\s*(?:~|-|????to)\s*(\d{1,2}):(\d{2})\b/i: Nothing to repeat
+[2mAM 11:24:43[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22m[vite] Failed to reload /src/App.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)
+[2mAM 11:24:58[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2mAM 11:25:09[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2mAM 11:25:41[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled error] [1mSyntaxError[22m: Invalid regular expression: /\b(\d{1,2}):(\d{2})\s*(?:~|-|????to)\s*(\d{1,2}):(\d{2})\b/i: Nothing to repeat
+[39m
+[2mAM 11:25:55[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled error] [1mSyntaxError[22m: Invalid regular expression: /\b(\d{1,2}):(\d{2})\s*(?:~|-|????to)\s*(\d{1,2}):(\d{2})\b/i: Nothing to repeat
+[39m
+[2mAM 11:25:57[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled error] [1mSyntaxError[22m: Invalid regular expression: /\b(\d{1,2}):(\d{2})\s*(?:~|-|????to)\s*(\d{1,2}):(\d{2})\b/i: Nothing to repeat
+[39m
+[2mAM 11:26:27[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled error] [1mSyntaxError[22m: Invalid regular expression: /\b(\d{1,2}):(\d{2})\s*(?:~|-|????to)\s*(\d{1,2}):(\d{2})\b/i: Nothing to repeat
+[39m
+[2mAM 11:27:49[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/CalendarPage.jsx[22m

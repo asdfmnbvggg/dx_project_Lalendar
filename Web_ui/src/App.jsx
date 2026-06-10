@@ -129,11 +129,14 @@ export default function App() {
   const monthLeadingBlanks = useMemo(() => new Date(visibleMonth.year, visibleMonth.month - 1, 1).getDay(), [visibleMonth]);
   const monthLabel = `${visibleMonth.year}. ${String(visibleMonth.month).padStart(2, "0")}`;
   const tasksByDate = useMemo(() => {
-    return scopedTasks.reduce((map, task) => {
+    return tasks.reduce((map, task) => {
+      const shouldShowTask = selectedMember === "all" || task.owner === selectedMember || isCalendarHouseworkTask(task);
+      if (!shouldShowTask) return map;
+
       map[task.date] = sortTasks([...(map[task.date] || []), task]);
       return map;
     }, {});
-  }, [scopedTasks]);
+  }, [tasks, selectedMember]);
   const notificationItems = useMemo(() => {
     const automationItems = automationAlerts
       .filter((alert) => !dismissedAlerts.includes(alert.id))
@@ -1357,6 +1360,10 @@ const appliancePlaceLabel = {
 
 function isLaundryTask(task) {
   return /세탁|빨래/.test(task.title);
+}
+
+function isCalendarHouseworkTask(task) {
+  return task.displayType === "appliance" || task.tag === "house" || task.source === "auto";
 }
 
 function normalizeThinQDevices(result) {
