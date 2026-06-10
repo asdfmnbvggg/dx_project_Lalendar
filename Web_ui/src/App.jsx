@@ -33,7 +33,7 @@ import {
 const ENABLE_ONBOARDING_TASK_GENERATION = true;
 
 export default function App() {
-  const [tasks, setTasks] = useState(initialTasks);
+  const [tasks, setTasks] = useState(() => normalizeGeneratedTaskTitles(initialTasks));
   const [memberColors, setMemberColors] = useState(() => Object.fromEntries(members.map((member) => [member.id, member.color])));
   const [activeTab, setActiveTab] = useState("home");
   const [isOnboardingComplete, setOnboardingComplete] = useState(false);
@@ -70,6 +70,13 @@ export default function App() {
   const [thinQError, setThinQError] = useState("");
   const [isThinQLoading, setThinQLoading] = useState(false);
   const [pendingThinQControl, setPendingThinQControl] = useState(null);
+
+  useEffect(() => {
+    setTasks((current) => {
+      const normalized = normalizeGeneratedTaskTitles(current);
+      return normalized.some((task, index) => task !== current[index]) ? normalized : current;
+    });
+  }, []);
 
   useEffect(() => {
     const selectors = [
@@ -242,7 +249,7 @@ export default function App() {
   }
 
   function addTask(task) {
-    const nextTask = { id: task.id || Date.now() + (task.copyIndex || 0), source: "manual", ...task };
+    const nextTask = normalizeGeneratedTaskTitle({ id: task.id || Date.now() + (task.copyIndex || 0), source: "manual", ...task });
     setTasks((current) => [nextTask, ...current]);
     if (nextTask.date) {
       const [year, month] = nextTask.date.split("-").map(Number);
@@ -1256,6 +1263,20 @@ function getTodayKey() {
   return dateKey(today.getFullYear(), today.getMonth() + 1, today.getDate());
 }
 
+function normalizeGeneratedTaskTitles(tasks) {
+  return tasks.map(normalizeGeneratedTaskTitle);
+}
+
+function normalizeGeneratedTaskTitle(task) {
+  if (task.displayType !== "fixed") return task;
+
+  const title = String(task.title || "");
+  const nextTitle = title.replace(/^\s*\d{1,2}\s*시\s*/, "").trim();
+  if (!nextTitle || nextTitle === title) return task;
+
+  return { ...task, title: nextTitle };
+}
+
 function buildOnboardingTasks(profile, selectedMember, onboardingSetup = {}) {
   const baseDate = new Date(`${getTodayKey()}T00:00:00`);
   const familyOwners = ["me", "minsu", "theresa", "all"].slice(0, Math.max(1, Number(profile.familyCount) || 1));
@@ -1271,8 +1292,8 @@ function buildOnboardingTasks(profile, selectedMember, onboardingSetup = {}) {
     return dateKey(next.getFullYear(), next.getMonth() + 1, next.getDate());
   };
   const fixedPlans = [
-    { title: "12시 약 문의", place: "고정 일정", repeat: "12:00", tag: "plan" },
-    { title: "18시 회식 참석", place: "고정 일정", repeat: "18:00", tag: "plan" },
+    { title: "약 문의", place: "고정 일정", repeat: "12:00", tag: "plan" },
+    { title: "회식 참석", place: "고정 일정", repeat: "18:00", tag: "plan" },
   ];
 
   return Array.from({ length: 10 }, (_, dayIndex) => {

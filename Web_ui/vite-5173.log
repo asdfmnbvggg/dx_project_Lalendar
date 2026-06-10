@@ -1306,3 +1306,31 @@ Visit https://react.dev/link/error-boundaries to learn more about error boundari
 [2mPM 12:12:11[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/CalendarPage.jsx[22m
 [2mPM 12:12:32[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/CalendarPage.jsx[22m
 [2mPM 12:14:11[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/CalendarPage.jsx[22m
+[2mPM 12:15:29[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2mPM 12:15:29[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m{"message":"WEATHER_API_KEY is not configured"}
+[2mPM 12:17:04[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2mPM 12:17:05[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled error] [1mReferenceError[22m: normalizeGeneratedTaskTitles is not defined
+[39m > src/App.jsx:36:43
+    34 |  
+    35 |  export default function App() {
+    36 |    const [tasks, setTasks] = useState(() => normalizeGeneratedTaskTitles(initialTasks));
+       |                                             ^
+    37 |    const [memberColors, setMemberColors] = useState(() => Object.fromEntries(members.map((member) => [member.id, membe...
+    38 |    const [activeTab, setActiveTab] = useState("home");
+ > mountStateImpl node_modules/react-dom/cjs/react-dom-client.development.js:8268:23
+ > mountState node_modules/react-dom/cjs/react-dom-client.development.js:8289:21
+ > Object.useState node_modules/react-dom/cjs/react-dom-client.development.js:26243:17
+ > exports.useState node_modules/react/cjs/react.development.js:1263:33
+ > App src/App.jsx:36:28
+ > Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:19
+ > renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:21
+ > updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:18
+ > beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:17
+
+[2mPM 12:17:05[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22mAn error occurred in the <App> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+[2mPM 12:17:13[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.jsx[22m
+[2mPM 12:17:13[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m{"message":"WEATHER_API_KEY is not configured"}
