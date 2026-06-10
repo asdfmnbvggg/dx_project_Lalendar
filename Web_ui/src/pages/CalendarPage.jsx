@@ -368,9 +368,7 @@ export default function CalendarPage({
               closeDateDetail();
             }}
           >
-            <span className="vacuum-symbol" aria-hidden="true">
-              <i />
-            </span>
+            <img className="house-calendar-toggle-image" src={dryerImage} alt="" aria-hidden="true" />
           </button>
         </div>
       </div>
