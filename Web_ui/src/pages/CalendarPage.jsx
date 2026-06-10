@@ -997,16 +997,36 @@ function buildAiReport(selectedDate, selectedTasks, tasksByDate = {}) {
   const date = new Date(selectedDate + "T00:00:00");
   const month = date.getMonth() + 1;
   const day = date.getDate();
+  const dateLabel = month + "월 " + day + "일";
   const upcomingTasks = [0, 1, 2]
     .flatMap((offset) => tasksByDate[addDays(selectedDate, offset)] || [])
     .filter((task, index, list) => list.findIndex((item) => item.id === task.id) === index);
   const reportTasks = upcomingTasks.length > 0 ? upcomingTasks : selectedTasks;
   const fixedTasks = reportTasks.filter((task) => task.displayType === "fixed" || getDailyTaskGroup(task) === "schedule");
   const applianceTasks = reportTasks.filter((task) => getDailyTaskGroup(task) === "housework");
-  const fixedSummary = fixedTasks.length > 0 ? fixedTasks[0].repeat + " " + fixedTasks[0].title : "등록된 개인 일정이 없습니다";
-  const applianceSummary = applianceTasks.length > 0 ? applianceTasks.slice(0, 3).map((task) => task.title).join(", ") : "추천 가사일이 없습니다";
+  const fixedTask = fixedTasks[0];
+  const applianceSummary = formatReportList(applianceTasks.slice(0, 3).map((task) => task.title));
 
-  return month + "." + day + " " + fixedSummary + ". 오늘 진행할 가사일은 " + applianceSummary + " 입니다";
+  if (fixedTask && applianceSummary) {
+    return dateLabel + "에는 " + fixedTask.title + " 일정이 있어요. 오늘은 " + applianceSummary + "을 챙기면 좋아요.";
+  }
+
+  if (fixedTask) {
+    return dateLabel + "에는 " + fixedTask.title + " 일정이 있어요. 추천 가사일은 아직 없어서 개인 일정에 집중해도 좋아요.";
+  }
+
+  if (applianceSummary) {
+    return "오늘 등록된 개인 일정은 없어요. 대신 " + applianceSummary + "을 진행하면 좋아요.";
+  }
+
+  return "오늘은 등록된 개인 일정과 추천 가사일이 없어요. 여유 있게 하루를 보내도 괜찮아요.";
+}
+
+function formatReportList(items) {
+  const filtered = items.map((item) => String(item || "").trim()).filter(Boolean);
+  if (filtered.length <= 1) return filtered[0] || "";
+  if (filtered.length === 2) return filtered[0] + "와 " + filtered[1];
+  return filtered.slice(0, -1).join(", ") + "와 " + filtered[filtered.length - 1];
 }
 
 function formatWeatherState(weather) {
