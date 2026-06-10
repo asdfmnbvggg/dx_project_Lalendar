@@ -100,6 +100,7 @@ export default function CalendarPage({
   const [isDeleteMode, setDeleteMode] = useState(false);
   const [selectedDeleteTaskIds, setSelectedDeleteTaskIds] = useState([]);
   const [activeAddColumn, setActiveAddColumn] = useState(null);
+  const [editingTask, setEditingTask] = useState(null);
   const [dailyContextTaskId, setDailyContextTaskId] = useState(null);
   const [dailyContextAction, setDailyContextAction] = useState(null);
   const [isDatePickerOpen, setDatePickerOpen] = useState(false);
@@ -163,6 +164,7 @@ export default function CalendarPage({
     setDeleteMode(false);
     setSelectedDeleteTaskIds([]);
     setActiveAddColumn(null);
+    setEditingTask(null);
     setDailyContextTaskId(null);
     setDailyContextAction(null);
   }
@@ -197,7 +199,8 @@ export default function CalendarPage({
       }
 
       if (action === "edit") {
-        onOpenPanel?.({ type: "task", task });
+        setActiveAddColumn(null);
+        setEditingTask(task);
       }
 
       setDailyContextTaskId(null);
@@ -211,6 +214,24 @@ export default function CalendarPage({
       next.day = Math.min(next.day, getDaysInMonth(next.year, next.month));
       return next;
     });
+  }
+
+  if (selectedDetailDate && editingTask) {
+    return (
+      <DailyScheduleEditPage
+        task={editingTask}
+        selectedDate={detailDate}
+        onClose={() => setEditingTask(null)}
+        onSave={(updates) => {
+          updateTask?.(editingTask.id, updates);
+          setEditingTask(null);
+          if (updates.date) {
+            setSelectedDate(updates.date);
+            setSelectedDetailDate(updates.date);
+          }
+        }}
+      />
+    );
   }
 
   if (selectedDetailDate && activeAddColumn === "personal") {
@@ -788,7 +809,150 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
           </div>
 
           <div className={["daily-time-row", isAllDay ? "disabled" : ""].filter(Boolean).join(" ")}>
-            <strong>?쒓컙</strong>
+            <strong>시간</strong>
+            <input type="time" value={startTime} disabled={isAllDay} onChange={(event) => setStartTime(event.target.value)} />
+            <span>~</span>
+            <input type="time" value={endTime} disabled={isAllDay} onChange={(event) => setEndTime(event.target.value)} />
+          </div>
+        </section>
+      </form>
+    </section>
+  );
+}
+
+function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
+  const parsedDate = parseDateKey(task.date || selectedDate);
+  const parsedEndDate = parseDateKey(task.endDate || task.date || selectedDate);
+  const colorOptions = ["#ff9e9e", "#7bd3ff", "#d7a8ff", "#f7fda6"];
+  const initialTime = getEditableTaskTime(task);
+  const [title, setTitle] = useState(task.title || "");
+  const [color, setColor] = useState(task.color || colorOptions[1]);
+  const [isColorOpen, setColorOpen] = useState(false);
+  const [isAllDay, setAllDay] = useState(initialTime.isAllDay);
+  const [startMonth, setStartMonth] = useState(parsedDate.month);
+  const [startDay, setStartDay] = useState(parsedDate.day);
+  const [endMonth, setEndMonth] = useState(parsedEndDate.month);
+  const [endDay, setEndDay] = useState(parsedEndDate.day);
+  const [startTime, setStartTime] = useState(initialTime.startTime);
+  const [endTime, setEndTime] = useState(initialTime.endTime);
+  const [error, setError] = useState("");
+
+  function saveSchedule() {
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      setError("필수 입력 필요");
+      return;
+    }
+
+    const date = dateKey(parsedDate.year, startMonth, startDay);
+    onSave({
+      title: trimmedTitle,
+      date,
+      color,
+      endDate: dateKey(parsedDate.year, endMonth, endDay),
+      repeat: isAllDay ? "하루종일" : startTime + " ~ " + endTime,
+    });
+  }
+
+  const daysForStart = getDaysInMonth(parsedDate.year, startMonth);
+  const daysForEnd = getDaysInMonth(parsedDate.year, endMonth);
+
+  return (
+    <section className="page calendar-page daily-add-page daily-edit-page">
+      <form
+        className="daily-add-card"
+        onSubmit={(event) => {
+          event.preventDefault();
+          saveSchedule();
+        }}
+      >
+        <div className="daily-add-head">
+          <button type="button" aria-label="닫기" onClick={onClose}>
+            <X size={28} />
+          </button>
+          <h2>일정 수정</h2>
+          <button type="button" onClick={saveSchedule}>저장</button>
+        </div>
+
+        <section className="daily-add-title-section">
+          <label htmlFor="daily-edit-title">제목</label>
+          <div className={["daily-add-title-input", error ? "invalid" : ""].filter(Boolean).join(" ")}>
+            <input
+              id="daily-edit-title"
+              value={title}
+              onChange={(event) => {
+                setTitle(event.target.value);
+                setError("");
+              }}
+              placeholder="제목을 입력해 주세요."
+              autoFocus
+            />
+            <button
+              type="button"
+              className="daily-color-button"
+              style={{ "--selected-color": color }}
+              aria-label="색상 변경"
+              onClick={() => setColorOpen((current) => !current)}
+            />
+          </div>
+          {error && <p className="daily-add-error">{error}</p>}
+          {isColorOpen && (
+            <div className="daily-color-popover" aria-label="색상 변경">
+              {colorOptions.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={option === color ? "active" : ""}
+                  style={{ "--option-color": option }}
+                  aria-label={option + " 선택"}
+                  onClick={() => {
+                    setColor(option);
+                    setColorOpen(false);
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="daily-add-time-card">
+          <label className="daily-all-day-row">
+            <span>하루종일</span>
+            <input type="checkbox" checked={isAllDay} onChange={(event) => setAllDay(event.target.checked)} />
+            <i aria-hidden="true" />
+          </label>
+
+          <div className="daily-date-row">
+            <strong>기간</strong>
+            <div className="daily-date-pair">
+              <select value={startMonth} onChange={(event) => setStartMonth(Number(event.target.value))}>
+                {monthOptions().map((month) => (
+                  <option key={month} value={month}>{month + "월"}</option>
+                ))}
+              </select>
+              <select value={startDay} onChange={(event) => setStartDay(Number(event.target.value))}>
+                {dayOptions(daysForStart).map((day) => (
+                  <option key={day} value={day}>{day + "일"}</option>
+                ))}
+              </select>
+            </div>
+            <span>~</span>
+            <div className="daily-date-pair">
+              <select value={endMonth} onChange={(event) => setEndMonth(Number(event.target.value))}>
+                {monthOptions().map((month) => (
+                  <option key={month} value={month}>{month + "월"}</option>
+                ))}
+              </select>
+              <select value={endDay} onChange={(event) => setEndDay(Number(event.target.value))}>
+                {dayOptions(daysForEnd).map((day) => (
+                  <option key={day} value={day}>{day + "일"}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className={["daily-time-row", isAllDay ? "disabled" : ""].filter(Boolean).join(" ")}>
+            <strong>시간</strong>
             <input type="time" value={startTime} disabled={isAllDay} onChange={(event) => setStartTime(event.target.value)} />
             <span>~</span>
             <input type="time" value={endTime} disabled={isAllDay} onChange={(event) => setEndTime(event.target.value)} />
@@ -957,6 +1121,29 @@ function getDailyTaskRange(task, index = 0) {
 
   const fallbackHour = getDailyTaskGroup(task) === "housework" ? 17 + (index % 4) : 9 + (index % 5);
   return normalizeTimeRange(fallbackHour * 60, fallbackHour * 60 + 60);
+}
+
+function getEditableTaskTime(task) {
+  const timeText = String(task.repeat || "");
+  if (timeText.includes("하루종일")) {
+    return { isAllDay: true, startTime: "09:00", endTime: "10:00" };
+  }
+
+  const rangeMatch = timeText.match(/\b(\d{1,2}):(\d{2})\s*(?:~|-|to)\s*(\d{1,2}):(\d{2})\b/i);
+  if (rangeMatch) {
+    const range = normalizeTimeRange(Number(rangeMatch[1]) * 60 + Number(rangeMatch[2]), Number(rangeMatch[3]) * 60 + Number(rangeMatch[4]));
+    return { isAllDay: false, startTime: formatMinutes(range.startMinutes), endTime: formatMinutes(range.endMinutes) };
+  }
+
+  const clockMatch = timeText.match(/\b(\d{1,2}):(\d{2})\b/);
+  if (clockMatch) {
+    const startMinutes = Number(clockMatch[1]) * 60 + Number(clockMatch[2]);
+    const range = normalizeTimeRange(startMinutes, startMinutes + 60);
+    return { isAllDay: false, startTime: formatMinutes(range.startMinutes), endTime: formatMinutes(range.endMinutes) };
+  }
+
+  const fallbackRange = getDailyTaskRange(task);
+  return { isAllDay: false, startTime: formatMinutes(fallbackRange.startMinutes), endTime: formatMinutes(fallbackRange.endMinutes) };
 }
 
 function normalizeTimeRange(startMinutes, endMinutes) {

@@ -6410,13 +6410,17 @@ body {
   width: 23px;
   height: 16px;
   border-radius: 999px;
-  background: #7bd3ff;
+  background: #d9d9d9;
   transition: transform 160ms ease, background 160ms ease;
 }
 
 .daily-all-day-row input:checked + i::before {
-  background: var(--red);
+  background: #7bd3ff;
   transform: translateX(11px);
+}
+
+.daily-edit-page .daily-add-card {
+  min-height: min(530px, calc(100svh - 142px));
 }
 
 .daily-date-row,
