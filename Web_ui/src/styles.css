@@ -5070,7 +5070,7 @@ body {
   padding: 2px 5px !important;
   border-radius: 4px !important;
   color: #6f7fa0 !important;
-  background: #dbe8f8 !important;
+  background: var(--task-bg, #dbe8f8) !important;
   border-left: 4px solid #86afe4;
   font-size: 10px !important;
   font-weight: 850;
@@ -5148,85 +5148,69 @@ body {
   word-break: keep-all;
 }
 
-.calendar-month-view .date-cell i.auto-appliance-task {
-  width: 18px !important;
-  height: 18px;
-  min-height: 18px;
-  display: inline-grid !important;
-  position: absolute;
-  bottom: 1px;
-  left: calc(50% - 21px);
-  place-items: center;
-  padding: 0 !important;
-  border: 0;
-  border-radius: 0 !important;
-  color: #111 !important;
-  background: transparent !important;
-  box-shadow: none;
-}
-
-.calendar-month-view .date-cell i.auto-appliance-task ~ i.auto-appliance-task {
-  left: calc(50% + 3px);
-}
-
 .calendar-month-view .date-cell i:nth-of-type(2n) {
-  color: #6f6fac !important;
+  color: #5661b8 !important;
   background: #e0defb !important;
-  border-left-color: #8a88df;
 }
 
 .calendar-month-view .date-cell i.auto-appliance-task,
 .calendar-month-view .date-cell i.auto-appliance-task:nth-of-type(2n) {
-  color: #111 !important;
-  background: transparent !important;
-  border-left-color: transparent;
+  color: #5661b8 !important;
+  background: #e0defb !important;
+  border: 0;
 }
 
-.calendar-month-view .date-cell i.fixed-event-task {
+.calendar-month-view .date-cell i,
+.calendar-month-view .date-cell i.fixed-event-task,
+.calendar-month-view .date-cell i.auto-appliance-task {
   width: 48px !important;
   max-width: 48px;
-  min-height: 9px;
+  height: 15px;
+  min-height: 15px;
   justify-self: center;
-  padding: 0 3px !important;
+  display: grid !important;
+  place-items: center;
+  position: static;
+  padding: 0 4px !important;
   border: 0;
-  border-radius: 0 !important;
-  color: #000 !important;
-  background: #fff3d8 !important;
-  font-size: 6.5px !important;
+  border-left: 0;
+  border-radius: 2px !important;
+  color: #5661b8 !important;
+  background: #e0defb !important;
+  font-size: 10px !important;
   font-weight: 800;
-  line-height: 9px !important;
+  line-height: 15px !important;
+  text-align: center;
+  box-shadow: none;
 }
 
 .calendar-month-view .date-cell i.fixed-event-task:nth-of-type(2) {
-  background: #f4d0d1 !important;
+  color: #5661b8 !important;
+  background: #e0defb !important;
+  border: 0;
 }
 
 .calendar-month-view .date-cell i span,
 .calendar-month-view .weather-recommendation-chip {
   display: block !important;
   max-width: 100%;
+  width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: clip;
   white-space: nowrap;
+  text-align: center;
+  font-size: 10px !important;
+  line-height: 15px !important;
 }
 
 .calendar-month-view .date-cell i small {
   display: none !important;
 }
 
-.calendar-month-view .date-cell i.auto-appliance-task span {
-  position: absolute !important;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-
 .task-appliance-image {
-  width: 18px;
-  height: 18px;
-  display: block;
+  display: none;
+  width: 0;
+  height: 0;
   object-fit: contain;
   background: transparent;
   pointer-events: none;

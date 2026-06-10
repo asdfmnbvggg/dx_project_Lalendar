@@ -470,12 +470,16 @@ export default function CalendarPage({
                                 task.displayType === "appliance" ? "auto-appliance-task" : ""
                               }`}
                               key={task.id}
-                              style={task.displayType === "appliance" ? undefined : { background: memberColors[task.owner] || memberColors.all }}
+                              style={
+                                task.displayType === "appliance"
+                                  ? undefined
+                                  : { "--task-bg": task.color || memberColors[task.owner] || memberColors.all }
+                              }
                             >
                               {task.displayType === "appliance" && (
                                 <img className="task-appliance-image" src={applianceImages[task.applianceType] || washerImage} alt="" aria-hidden="true" />
                               )}
-                              <span>{task.title}</span>
+                              <span>{getMonthTaskLabel(task.title)}</span>
                               {isExpanded && (
                                 <small>
                                   {task.place} · {task.repeat}
@@ -958,6 +962,10 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
 
 function buildDailyHours(tasks) {
   return Array.from({ length: 24 }, (_, index) => index);
+}
+
+function getMonthTaskLabel(title) {
+  return String(title || "").trim().slice(0, 3);
 }
 
 function getDailyTaskGroup(task) {
