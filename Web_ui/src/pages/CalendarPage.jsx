@@ -254,7 +254,7 @@ export default function CalendarPage({
             ))}
           </div>
 
-          <div className="daily-timetable-shell" aria-label="Daily timetable">
+          <div className="daily-timetable-shell" aria-label="Daily timetable" style={{ "--hour-count": dailyHours.length }}>
             <section className="daily-time-rail" aria-label="Time">
               <strong>시간</strong>
               <div className="daily-time-scale" style={{ "--hour-count": dailyHours.length }}>
@@ -957,10 +957,7 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
 }
 
 function buildDailyHours(tasks) {
-  const ranges = tasks.map(getDailyTaskRange);
-  const min = Math.min(8, ...ranges.map((range) => Math.floor(range.startMinutes / 60)));
-  const max = Math.max(22, ...ranges.map((range) => Math.ceil(range.endMinutes / 60)));
-  return Array.from({ length: max - min + 1 }, (_, index) => min + index);
+  return Array.from({ length: 24 }, (_, index) => index);
 }
 
 function getDailyTaskGroup(task) {

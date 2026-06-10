@@ -5948,13 +5948,16 @@ body {
   display: grid;
   grid-template-columns: 54px minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
-  overflow: visible;
+  overflow-y: auto;
+  overflow-x: visible;
+  scrollbar-width: thin;
+  scrollbar-color: #d7dbe0 transparent;
 }
 
 .daily-time-rail,
 .daily-timetable-column {
   min-width: 0;
-  min-height: 0;
+  min-height: calc(38px + (var(--hour-count, 24) * 36px));
   display: grid;
   grid-template-rows: 38px minmax(0, 1fr);
   overflow: visible;
@@ -5979,7 +5982,7 @@ body {
 .daily-time-scale,
 .daily-timetable-track {
   position: relative;
-  min-height: 0;
+  min-height: calc(var(--hour-count, 24) * 36px);
   overflow: hidden;
 }
 
