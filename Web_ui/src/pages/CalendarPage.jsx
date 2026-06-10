@@ -368,9 +368,7 @@ export default function CalendarPage({
               closeDateDetail();
             }}
           >
-            <span className="vacuum-symbol" aria-hidden="true">
-              <i />
-            </span>
+            <img className="house-calendar-toggle-image" src={dryerImage} alt="" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -404,7 +402,6 @@ export default function CalendarPage({
               일정 추가
             </button>
           </div>
-          <img className="calendar-hanging-character" src={lgCharacterImage} alt="" aria-hidden="true" />
         </div>
 
         <div className="calendar-toolbar">
