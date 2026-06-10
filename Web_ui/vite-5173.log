@@ -1273,3 +1273,4 @@ Visit https://react.dev/link/error-boundaries to learn more about error boundari
 [2mAM 11:26:27[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [31m[Unhandled error] [1mSyntaxError[22m: Invalid regular expression: /\b(\d{1,2}):(\d{2})\s*(?:~|-|????to)\s*(\d{1,2}):(\d{2})\b/i: Nothing to repeat
 [39m
 [2mAM 11:27:49[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/CalendarPage.jsx[22m
+[2mAM 11:28:20[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [2m[console.warn] [22m{"message":"WEATHER_API_KEY is not configured"}
