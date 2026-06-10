@@ -246,7 +246,7 @@ export default function CalendarPage({
               <ChevronLeft size={22} />
             </button>
             <div>
-              <span>{formatDateTitle(detailDate)} 쨌 {formatDDay(detailDate)}</span>
+              <span>{formatDateTitle(detailDate)} · {formatDDay(detailDate)}</span>
               <h3>{selectedMemberName}님의 캘린더</h3>
             </div>
             <span aria-hidden="true" />
@@ -262,7 +262,7 @@ export default function CalendarPage({
 
           <div className="daily-timetable-shell" aria-label="Daily timetable" style={{ "--hour-count": dailyHours.length }}>
             <section className="daily-time-rail" aria-label="Time">
-              <strong>?쒓컙</strong>
+              <strong>시간</strong>
               <div className="daily-time-scale" style={{ "--hour-count": dailyHours.length }}>
                 {dailyHours.map((hour) => (
                   <span key={hour}>{formatDailyHour(hour)}</span>
@@ -271,7 +271,7 @@ export default function CalendarPage({
             </section>
 
             <DailyTimetableColumn
-              title="媛쒖씤 ?쇱젙"
+              title="개인 일정"
               tasks={dailyFixedTasks}
               hours={dailyHours}
               memberColors={memberColors}
@@ -282,7 +282,7 @@ export default function CalendarPage({
               onChooseContextAction={chooseDailyContextAction}
             />
             <DailyTimetableColumn
-              title="媛?ъ씪 ?쇱젙"
+              title="가사 일정"
               tasks={dailyHouseTasks}
               hours={dailyHours}
               memberColors={memberColors}
@@ -293,12 +293,12 @@ export default function CalendarPage({
               onChooseContextAction={chooseDailyContextAction}
             />
 
-            {detailTasks.length === 0 && <p className="date-detail-empty">???좎쓽 ?쇱젙???놁뼱??</p>}
+            {detailTasks.length === 0 && <p className="date-detail-empty">이 날의 일정이 없어요</p>}
           </div>
 
           {isDeleteMode ? (
             <button type="button" className="date-detail-delete-action" onClick={deleteSelectedTasks} disabled={selectedDeleteTaskIds.length === 0}>
-              ?좏깮???쇱젙 ??젣
+              선택한 일정 삭제
             </button>
           ) : (
             <div className="daily-add-row" aria-label="일정 추가">
@@ -378,7 +378,7 @@ export default function CalendarPage({
       <section className="calendar-board">
         <div className="calendar-header">
           <div className="month-switcher">
-            <button onClick={() => moveCalendar(-1)} aria-label="?댁쟾 湲곌컙">
+            <button onClick={() => moveCalendar(-1)} aria-label="이전 기간">
               <ChevronLeft size={18} />
             </button>
             <h2>
@@ -386,33 +386,33 @@ export default function CalendarPage({
                 {calendarTitle}
               </button>
             </h2>
-            <button onClick={() => moveCalendar(1)} aria-label="?ㅼ쓬 湲곌컙">
+            <button onClick={() => moveCalendar(1)} aria-label="다음 기간">
               <ChevronRight size={18} />
             </button>
           </div>
           <div className="calendar-header-actions">
             <button className="calendar-zoom-button" onClick={() => changeScale(-1)} disabled={calendarScale === 0}>
               <Minus size={15} />
-              異뺤냼
+              축소
             </button>
             <button className="calendar-zoom-button" onClick={() => changeScale(1)} disabled={calendarScale === 4}>
               <Plus size={15} />
-              ?뺣?
+              확대
             </button>
             <button className="calendar-add-button" onClick={openComposer}>
               <Plus size={18} />
-              ?좎씪 異붽?
+              일정 추가
             </button>
           </div>
           <img className="calendar-hanging-character" src={lgCharacterImage} alt="" aria-hidden="true" />
         </div>
 
         <div className="calendar-toolbar">
-          <div className="calendar-mode-controls" aria-label="罹섎┛??蹂닿린 諛⑹떇">
+          <div className="calendar-mode-controls" aria-label="캘린더 보기 방식">
             {[
-              ["month", "?붽컙"],
-              ["week", "二쇨컙"],
-              ["day", "?쇨컙"],
+              ["month", "월간"],
+              ["week", "주간"],
+              ["day", "일간"],
             ].map(([view, label]) => (
               <button key={view} className={calendarView === view ? "active" : ""} onClick={() => setCalendarView(view)}>
                 {label}
@@ -473,13 +473,13 @@ export default function CalendarPage({
                     {hasWeatherData && (
                       <span className="day-weather">
                         <>
-                          <span className="weather-icon" role="img" aria-label={weather.sky || weather.pty || "?좎뵪"}>
+                          <span className="weather-icon" role="img" aria-label={weather.sky || weather.pty || "날씨"}>
                             {weatherIcon[weather.icon] || weatherIcon.unknown}
                           </span>
                           <span className="weather-temps">
                             <b>{formatTemp(weather.maxTemp)}</b>
                             <small>{formatTemp(weather.minTemp)}</small>
-                            {Number.isFinite(weather.pop) && <small className="weather-pop">媛뺤닔 {weather.pop}%</small>}
+                            {Number.isFinite(weather.pop) && <small className="weather-pop">강수 {weather.pop}%</small>}
                             <small>{formatWeatherState(weather)}</small>
                           </span>
                         </>
@@ -499,7 +499,7 @@ export default function CalendarPage({
                                 <span>{getMonthTaskLabel(task.title)}</span>
                                 {isExpanded && (
                                   <small>
-                                    {task.place} 쨌 {task.repeat}
+                                    {task.place} · {task.repeat}
                                   </small>
                                 )}
                               </i>
@@ -583,7 +583,7 @@ export default function CalendarPage({
 
       <section className="task-sheet compact">
         <div className="sheet-head">
-          <h2>{selectedDay}???묒뾽</h2>
+          <h2>{selectedDay}일 작업</h2>
           <label className="search-field">
             <Search size={16} />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="검색" />
@@ -646,7 +646,7 @@ export default function CalendarPage({
         {selectedTasks.length === 0 && (
           <div className="empty-state">
             <ClipboardList size={24} />
-            <p>?좏깮???좎쭨???묒뾽???놁뼱??</p>
+            <p>선택한 날짜에 작업이 없어요</p>
           </div>
         )}
       </section>
@@ -729,7 +729,7 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
                 setTitle(event.target.value);
                 setError("");
               }}
-              placeholder="?쒕ぉ???낅젰??二쇱꽭??"
+              placeholder="제목을 입력해 주세요"
               autoFocus
             />
             <button type="button" className="daily-color-button" style={{ "--selected-color": color }} aria-label="색상 변경" onClick={() => setColorOpen((current) => !current)} />
@@ -873,7 +873,7 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
                       onChooseContextAction?.("delete", task);
                     }}
                   >
-                    ??젣
+                    삭제
                   </button>
                   <button
                     type="button"
@@ -884,10 +884,10 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
                       onChooseContextAction?.("edit", task);
                     }}
                   >
-                    ?몄쭛
+                    편집
                   </button>
                   <button type="button" className="disabled" role="menuitem" disabled aria-disabled="true">
-                    蹂듭궗
+                    복사
                   </button>
                 </div>
               )}
@@ -1007,34 +1007,34 @@ function buildAiReport(selectedDate, selectedTasks, tasksByDate = {}) {
   const fixedTasks = reportTasks.filter((task) => task.displayType === "fixed" || getDailyTaskGroup(task) === "schedule");
   const applianceTasks = reportTasks.filter((task) => getDailyTaskGroup(task) === "housework");
   const fixedSummary = fixedTasks.length > 0 ? fixedTasks[0].repeat + " " + fixedTasks[0].title : "등록된 개인 일정이 없습니다";
-  const applianceSummary = applianceTasks.length > 0 ? applianceTasks.slice(0, 3).map((task) => task.title).join(", ") : "異붿쿇 媛?ъ씪???놁뒿?덈떎";
+  const applianceSummary = applianceTasks.length > 0 ? applianceTasks.slice(0, 3).map((task) => task.title).join(", ") : "추천 가사일이 없습니다";
 
   return month + "." + day + " " + fixedSummary + ". 오늘 진행할 가사일은 " + applianceSummary + " 입니다";
 }
 
 function formatWeatherState(weather) {
-  if (!weather?.hasWeatherData) return "?뺣낫 ?놁쓬";
-  const sky = weather.sky && weather.sky !== "?뺣낫 ?놁쓬" ? weather.sky : "";
-  const pty = weather.pty && weather.pty !== "?놁쓬" && weather.pty !== "?뺣낫 ?놁쓬" ? weather.pty : "";
-  return [sky, pty].filter(Boolean).join(" 쨌 ") || "?뺣낫 ?놁쓬";
+  if (!weather?.hasWeatherData) return "정보 없음";
+  const sky = weather.sky && weather.sky !== "정보 없음" ? weather.sky : "";
+  const pty = weather.pty && weather.pty !== "없음" && weather.pty !== "정보 없음" ? weather.pty : "";
+  return [sky, pty].filter(Boolean).join(" · ") || "정보 없음";
 }
 
 function formatRecommendationSource(recommendation) {
   const labels = {
-    WEATHER_COMBINED: "?좎뵪+ThinQ",
-    THINQ_LOG: "ThinQ 湲곕줉",
-    THINQ_STATE: "ThinQ ?곹깭",
+    WEATHER_COMBINED: "날씨+ThinQ",
+    THINQ_LOG: "ThinQ 기록",
+    THINQ_STATE: "ThinQ 상태",
     THINQ_ENERGY: "전력량",
-    WEATHER_BASED: "?좎뵪",
+    WEATHER_BASED: "날씨",
   };
 
-  return labels[recommendation.source] || recommendation.automationType || "異붿쿇";
+  return labels[recommendation.source] || recommendation.automationType || "추천";
 }
 
 function formatRecommendationReason(reason) {
   return String(reason || "")
-    .replaceAll("?좎뵪 ?뺣낫 ?놁쓬.", "")
-    .replaceAll("?좎뵪 ?뺣낫 ?놁쓬", "")
+    .replaceAll("날씨 정보 없음.", "")
+    .replaceAll("날씨 정보 없음", "")
     .trim();
 }
 
@@ -1058,11 +1058,11 @@ function DayTimelineHead({ selectedDate, onPrevDay, onNextDay }) {
   return (
     <div className="day-timeline-head">
       <button type="button" aria-label="이전 날" onClick={onPrevDay}>
-        ??
+        ‹
       </button>
       <strong>{formatDayTitle(selectedDate)}</strong>
       <button type="button" aria-label="다음 날" onClick={onNextDay}>
-        ??
+        ›
       </button>
     </div>
   );
@@ -1082,11 +1082,11 @@ function WeekTimetable({ dates, tasksByDate, memberColors, selectedDate, onPrevW
     <section className="week-timetable-card" aria-label="주간 시간표">
       <div className="week-timetable-head">
         <button type="button" aria-label="이전 주" onClick={onPrevWeek}>
-          ??
+          ‹
         </button>
         <strong>{formatWeekTitle(dates)}</strong>
         <button type="button" aria-label="다음 주" onClick={onNextWeek}>
-          ??
+          ›
         </button>
       </div>
       <div className="week-timetable-scroll">
@@ -1147,7 +1147,7 @@ function WeekTimetable({ dates, tasksByDate, memberColors, selectedDate, onPrevW
 }
 
 function formatWeekTitle(dates) {
-  if (!dates.length) return "二쇨컙";
+  if (!dates.length) return "주간";
   const start = new Date(dates[0] + "T00:00:00");
   const end = new Date(dates[dates.length - 1] + "T00:00:00");
   return (start.getMonth() + 1) + "." + start.getDate() + " - " + (end.getMonth() + 1) + "." + end.getDate();
