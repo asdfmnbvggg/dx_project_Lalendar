@@ -124,7 +124,7 @@ export default function App() {
   const scopedTasks = tasks.filter((task) => selectedMember === "all" || task.owner === selectedMember);
   const selectedTasks = sortTasks(
     scopedTasks
-      .filter((task) => task.date === selectedDate)
+      .filter((task) => isTaskVisibleOnDate(task, selectedDate))
       .filter((task) => `${task.title} ${task.place} ${tagLabel[task.tag]}`.includes(query)),
   );
   const completed = scopedTasks.filter((task) => task.done).length;
@@ -140,7 +140,9 @@ export default function App() {
       const shouldShowTask = selectedMember === "all" || task.owner === selectedMember || isCalendarHouseworkTask(task);
       if (!shouldShowTask) return map;
 
-      map[task.date] = sortTasks([...(map[task.date] || []), task]);
+      getTaskDateKeys(task).forEach((date) => {
+        map[date] = sortTasks([...(map[date] || []), task]);
+      });
       return map;
     }, {});
   }, [tasks, selectedMember]);
@@ -1242,6 +1244,33 @@ function SimpleTabPage({ icon, title, text }) {
 
 function sortTasks(tasks) {
   return [...tasks].sort(taskSorter);
+}
+
+function isTaskVisibleOnDate(task, date) {
+  return getTaskDateKeys(task).includes(date);
+}
+
+function getTaskDateKeys(task) {
+  const startDate = normalizeTaskDateKey(task.date);
+  if (!startDate) return [];
+
+  const endDate = normalizeTaskDateKey(task.endDate) || startDate;
+  const [fromDate, toDate] = startDate <= endDate ? [startDate, endDate] : [endDate, startDate];
+  const dates = [];
+  let currentDate = fromDate;
+
+  for (let count = 0; count < 370; count += 1) {
+    dates.push(currentDate);
+    if (currentDate === toDate) break;
+    currentDate = addDays(currentDate, 1);
+  }
+
+  return dates;
+}
+
+function normalizeTaskDateKey(value) {
+  const text = String(value || "");
+  return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : "";
 }
 
 function taskSorter(a, b) {

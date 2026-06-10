@@ -701,9 +701,9 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
       return;
     }
 
-    const date = dateKey(parsedDate.year, startMonth, startDay);
+    const scheduleDates = orderScheduleDates(dateKey(parsedDate.year, startMonth, startDay), dateKey(parsedDate.year, endMonth, endDay));
     onSave({
-      date,
+      date: scheduleDates.date,
       title: trimmedTitle,
       place: "개인 일정",
       tag: "plan",
@@ -712,7 +712,7 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
       repeat: isAllDay ? "하루종일" : startTime + " ~ " + endTime,
       source: "manual",
       color,
-      endDate: dateKey(parsedDate.year, endMonth, endDay),
+      endDate: scheduleDates.endDate,
       displayType: "fixed",
     });
   }
@@ -844,12 +844,12 @@ function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
       return;
     }
 
-    const date = dateKey(parsedDate.year, startMonth, startDay);
+    const scheduleDates = orderScheduleDates(dateKey(parsedDate.year, startMonth, startDay), dateKey(parsedDate.year, endMonth, endDay));
     onSave({
       title: trimmedTitle,
-      date,
+      date: scheduleDates.date,
       color,
-      endDate: dateKey(parsedDate.year, endMonth, endDay),
+      endDate: scheduleDates.endDate,
       repeat: isAllDay ? "하루종일" : startTime + " ~ " + endTime,
     });
   }
@@ -969,6 +969,10 @@ function monthOptions() {
 
 function dayOptions(daysInMonth) {
   return Array.from({ length: daysInMonth }, (_, index) => index + 1);
+}
+
+function orderScheduleDates(date, endDate) {
+  return date <= endDate ? { date, endDate } : { date: endDate, endDate: date };
 }
 
 function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, activeTaskId, activeAction, onOpenContext, onChooseContextAction }) {
