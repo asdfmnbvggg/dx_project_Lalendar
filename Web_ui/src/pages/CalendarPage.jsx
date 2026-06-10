@@ -404,7 +404,6 @@ export default function CalendarPage({
               일정 추가
             </button>
           </div>
-          <img className="calendar-hanging-character" src={lgCharacterImage} alt="" aria-hidden="true" />
         </div>
 
         <div className="calendar-toolbar">
