@@ -112,9 +112,7 @@ time_slot_label     <- activity_start_hour
 00:00~04:59 -> 새벽
 ```
 
-## 5. 데이터 수가 줄어드는 이유
-
-최종 학습 데이터 수는 원본 CASAS 센서 row 수보다 작다. 이유는 모든 센서 이벤트를 개별 학습 샘플로 사용하지 않기 때문이다.
+## 5. 데이터 제거
 
 전처리 흐름:
 
@@ -125,17 +123,10 @@ time_slot_label     <- activity_start_hour
 -> 3개의 연속 activity sequence를 하나의 모델 입력으로 구성
 ```
 
-즉 모델 입력은 단일 센서 row가 아니라, 이전 활동 2개와 현재 활동 1개를 포함하는 3-sequence window이다. 완전한 3-sequence window를 만들 수 없는 일부 sequence는 제외된다.
+즉 모델 입력은 단일 센서 row가 아니라, 이전 활동 2개와 현재 활동 1개를 포함하는 3-sequence window이다. 완전한 3-sequence window를 만들 수 없는 일부 sequence는 제거한다.
 
-또한 추천 가전 및 시작 시점 데이터셋은 `activityState == "begin"`인 row만 추출하므로 원본 로그보다 더 작다.
+또한 추천 가전 및 시작 시점 데이터셋은 `activityState == "begin"`인 row만 추출한다.
 
-Aruba 기준 최종 classification 데이터:
-
-```text
-train: 8,875 samples
-test:  3,720 samples
-total: 12,595 samples
-```
 
 분할 방식:
 
