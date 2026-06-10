@@ -35,6 +35,18 @@ def _first_sequence_hour(hour_sequence):
     return (int(hour) - 1) % 24
 
 
+def _first_sequence_weekday(weekday_sequence):
+    if hasattr(weekday_sequence, "__len__") and not isinstance(weekday_sequence, str):
+        if len(weekday_sequence) == 0:
+            return 0
+        weekday = weekday_sequence[0]
+    else:
+        weekday = weekday_sequence
+
+    # Existing preprocessing stores weekdays as weekday + 1 for embedding mask_zero.
+    return (int(weekday) - 1) % 7
+
+
 def load_config(config_path):
     f = open(
         config_path,
@@ -70,15 +82,23 @@ def prepare_classification_dataframe_labels(
             target_column="service_activity_label",
         )
 
-    if "time_slot_label" not in df.columns:
+    if "activity_start_hour" not in df.columns:
         if "input_12" not in df.columns:
-            raise ValueError(
-                "time_slot_label is missing and input_12 is not available to derive it."
-            )
+            raise ValueError("activity_start_hour is missing and input_12 is not available to derive it.")
         df["activity_start_hour"] = df["input_12"].map(_first_sequence_hour)
+
+    if "time_slot_label" not in df.columns:
         df["time_slot_label"] = df["activity_start_hour"].map(
             get_time_slot_label_from_hour
         )
+
+    if "day_of_week_index" not in df.columns:
+        if "input_15" not in df.columns:
+            raise ValueError("day_of_week_index is missing and input_15 is not available to derive it.")
+        df["day_of_week_index"] = df["input_15"].map(_first_sequence_weekday)
+
+    if "day_of_week" not in df.columns:
+        df["day_of_week"] = df["day_of_week_index"]
 
     if label_column not in df.columns:
         raise ValueError(

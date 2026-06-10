@@ -119,6 +119,8 @@ def _resolve_checkpoint_path(checkpoint_path):
 
 def validate_and_print_config(config, config_path, dataset_name, require_multi_task=False):
     config.setdefault("time_slot_loss_alpha", 0.5)
+    config.setdefault("hour_loss_beta", 0.3)
+    config.setdefault("day_loss_gamma", 0.3)
 
     required_path_keys = [
         "pre_train_embedding",
@@ -164,11 +166,13 @@ def validate_and_print_config(config, config_path, dataset_name, require_multi_t
     print("dataset: {}".format(dataset_key))
     print("multi_task_learning: {}".format(config.get("multi_task_learning")))
     if config.get("multi_task_learning", False):
-        print("targets: service_activity_label + time_slot_label")
+        print("targets: service_activity_label + time_slot_label + activity_start_hour + day_of_week")
     print("pre_train_embedding: {}".format(config["pre_train_embedding"]))
     print("word_dict: {}".format(config["word_dict"]))
     print("embedding_parameters: {}".format(config["embedding_parameters"]))
     print("time_slot_loss_alpha: {}".format(config["time_slot_loss_alpha"]))
+    print("hour_loss_beta: {}".format(config["hour_loss_beta"]))
+    print("day_loss_gamma: {}".format(config["day_loss_gamma"]))
 
 
 milan_dict = {
@@ -393,6 +397,16 @@ if __name__ == "__main__":
                 label_column="time_slot_label",
                 title="Train time_slot_label class distribution",
             )
+            print_class_distribution(
+                train_x,
+                label_column="activity_start_hour",
+                title="Train activity_start_hour class distribution",
+            )
+            print_class_distribution(
+                train_x,
+                label_column="day_of_week_index",
+                title="Train day_of_week class distribution",
+            )
 
         if not cross_val:
             test_x = load_test_data_from_dataframe_time(
@@ -408,6 +422,16 @@ if __name__ == "__main__":
                     test_x,
                     label_column="time_slot_label",
                     title="Test time_slot_label class distribution",
+                )
+                print_class_distribution(
+                    test_x,
+                    label_column="activity_start_hour",
+                    title="Test activity_start_hour class distribution",
+                )
+                print_class_distribution(
+                    test_x,
+                    label_column="day_of_week_index",
+                    title="Test day_of_week class distribution",
                 )
         else:
             test_x = None
@@ -519,6 +543,31 @@ if __name__ == "__main__":
                             i + 1, np.mean(exp.global_joint_accuracy) * 100
                         )
                     )
+                    print(
+                        "Activity Start Hour Accuracy run {}: {:.2f}%".format(
+                            i + 1, np.mean(exp.global_hour_accuracy) * 100
+                        )
+                    )
+                    print(
+                        "Activity Start Hour Macro F1 run {}: {:.4f}".format(
+                            i + 1, np.mean(exp.global_hour_macro_f1)
+                        )
+                    )
+                    print(
+                        "Day of Week Accuracy run {}: {:.2f}%".format(
+                            i + 1, np.mean(exp.global_day_accuracy) * 100
+                        )
+                    )
+                    print(
+                        "Day of Week Macro F1 run {}: {:.4f}".format(
+                            i + 1, np.mean(exp.global_day_macro_f1)
+                        )
+                    )
+                    print(
+                        "All-task Joint Accuracy run {}: {:.2f}%".format(
+                            i + 1, np.mean(exp.global_joint_all_accuracy) * 100
+                        )
+                    )
 
                 tab_acc.append(np.mean(exp.global_classifier_accuracy))
                 tab_bal_acc.append(np.mean(exp.global_classifier_balance_accuracy))
@@ -570,6 +619,36 @@ if __name__ == "__main__":
                 "Average Joint Accuracy over all runs: {:.2f}% (+/- {:.2f}%)".format(
                     np.mean(exp.global_joint_accuracy) * 100,
                     np.std(exp.global_joint_accuracy),
+                )
+            )
+            print(
+                "Average Activity Start Hour Accuracy over all runs: {:.2f}% (+/- {:.2f}%)".format(
+                    np.mean(exp.global_hour_accuracy) * 100,
+                    np.std(exp.global_hour_accuracy),
+                )
+            )
+            print(
+                "Average Activity Start Hour Macro F1 over all runs: {:.4f} (+/- {:.4f})".format(
+                    np.mean(exp.global_hour_macro_f1),
+                    np.std(exp.global_hour_macro_f1),
+                )
+            )
+            print(
+                "Average Day of Week Accuracy over all runs: {:.2f}% (+/- {:.2f}%)".format(
+                    np.mean(exp.global_day_accuracy) * 100,
+                    np.std(exp.global_day_accuracy),
+                )
+            )
+            print(
+                "Average Day of Week Macro F1 over all runs: {:.4f} (+/- {:.4f})".format(
+                    np.mean(exp.global_day_macro_f1),
+                    np.std(exp.global_day_macro_f1),
+                )
+            )
+            print(
+                "Average All-task Joint Accuracy over all runs: {:.2f}% (+/- {:.2f}%)".format(
+                    np.mean(exp.global_joint_all_accuracy) * 100,
+                    np.std(exp.global_joint_all_accuracy),
                 )
             )
 

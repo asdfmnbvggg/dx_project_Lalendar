@@ -19,5 +19,7 @@
     "patience": 20,
     "activity_renamed": false,
     "multi_task_learning": true,
-    "time_slot_loss_alpha": 0.5
+    "time_slot_loss_alpha": 0.5,
+    "hour_loss_beta": 0.3,
+    "day_loss_gamma": 0.3
 }

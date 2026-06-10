@@ -56,6 +56,8 @@ SERVICE_ACTIVITY_CLASSES = [
 ]
 
 TIME_SLOT_CLASSES = ["새벽", "아침", "오전", "점심", "오후", "저녁", "밤"]
+HOUR_CLASSES = list(range(24))
+DAY_OF_WEEK_CLASSES = list(range(7))
 
 
 def isGroup(obj):
@@ -138,28 +140,41 @@ class GPTBiLSTMHierarchyHourExperiment2:
         self.global_classifier_accuracy = []
         self.global_classifier_balance_accuracy = []
         self.global_time_slot_accuracy = []
+        self.global_hour_accuracy = []
+        self.global_day_accuracy = []
         self.global_activity_macro_f1 = []
         self.global_time_slot_macro_f1 = []
+        self.global_hour_macro_f1 = []
+        self.global_day_macro_f1 = []
         self.global_joint_accuracy = []
+        self.global_joint_all_accuracy = []
         self.current_time = None
         self.wordDict = self.load_vocabulay_file(
             self.experiment_parameters["word_dict"]
         )
         self.actDict = {}
         self.timeSlotDict = {}
+        self.hourDict = {}
+        self.dayOfWeekDict = {}
         self.multi_task_learning = self.experiment_parameters.get(
             "multi_task_learning", False
         )
         self.time_slot_loss_alpha = self.experiment_parameters.get(
             "time_slot_loss_alpha", 0.5
         )
+        self.hour_loss_beta = self.experiment_parameters.get("hour_loss_beta", 0.3)
+        self.day_loss_gamma = self.experiment_parameters.get("day_loss_gamma", 0.3)
         self.train_x = train_x
         self.train_y = None
         self.train_time_slot_y = None
+        self.train_hour_y = None
+        self.train_day_y = None
         self.train_x_encoded = None
         self.train_y_encoded = None
         self.train_activity_y_encoded = None
         self.train_time_slot_y_encoded = None
+        self.train_hour_y_encoded = None
+        self.train_day_y_encoded = None
         self.dataset_name = dataset_name
         self.cross_validation = cross_validation
 
@@ -210,7 +225,13 @@ class GPTBiLSTMHierarchyHourExperiment2:
         if self.multi_task_learning:
             if "time_slot_label" not in self.train_x.columns:
                 raise ValueError("time_slot_label column is required for multi-task learning.")
+            if "activity_start_hour" not in self.train_x.columns:
+                raise ValueError("activity_start_hour column is required for multi-task learning.")
+            if "day_of_week_index" not in self.train_x.columns:
+                raise ValueError("day_of_week_index column is required for multi-task learning.")
             self.train_time_slot_y = self.train_x.time_slot_label.values
+            self.train_hour_y = self.train_x.activity_start_hour.values.astype("int32")
+            self.train_day_y = self.train_x.day_of_week_index.values.astype("int32")
 
         # extract inputs
         x1 = self.train_x.input_1.values
@@ -318,8 +339,35 @@ class GPTBiLSTMHierarchyHourExperiment2:
             )
             for keys in self.timeSlotDict:
                 self.timeSlotDict[keys] = int(self.timeSlotDict[keys])
+            hour_le = preprocessing.LabelEncoder()
+            hour_le.fit(HOUR_CLASSES)
+            self.hour_label_encoder = hour_le
+            self.train_hour_y_encoded = hour_le.transform(self.train_hour_y)
+            self.hourDict = {
+                int(key): int(value)
+                for key, value in zip(
+                    hour_le.classes_, hour_le.transform(hour_le.classes_)
+                )
+            }
+
+            day_le = preprocessing.LabelEncoder()
+            day_le.fit(DAY_OF_WEEK_CLASSES)
+            self.day_label_encoder = day_le
+            self.train_day_y_encoded = day_le.transform(self.train_day_y)
+            self.dayOfWeekDict = {
+                int(key): int(value)
+                for key, value in zip(
+                    day_le.classes_, day_le.transform(day_le.classes_)
+                )
+            }
+
             self.train_y_encoded = np.stack(
-                [self.train_activity_y_encoded, self.train_time_slot_y_encoded],
+                [
+                    self.train_activity_y_encoded,
+                    self.train_time_slot_y_encoded,
+                    self.train_hour_y_encoded,
+                    self.train_day_y_encoded,
+                ],
                 axis=1,
             )
 
@@ -334,7 +382,13 @@ class GPTBiLSTMHierarchyHourExperiment2:
         if self.multi_task_learning:
             if "time_slot_label" not in self.test_x.columns:
                 raise ValueError("time_slot_label column is required for multi-task learning.")
+            if "activity_start_hour" not in self.test_x.columns:
+                raise ValueError("activity_start_hour column is required for multi-task learning.")
+            if "day_of_week_index" not in self.test_x.columns:
+                raise ValueError("day_of_week_index column is required for multi-task learning.")
             self.test_time_slot_y = self.test_x.time_slot_label.values
+            self.test_hour_y = self.test_x.activity_start_hour.values.astype("int32")
+            self.test_day_y = self.test_x.day_of_week_index.values.astype("int32")
 
         # extract inputs
         x1 = self.test_x.input_1.values
@@ -423,8 +477,19 @@ class GPTBiLSTMHierarchyHourExperiment2:
             self.test_time_slot_y_encoded = self.time_slot_label_encoder.transform(
                 self.test_time_slot_y
             )
+            self.test_hour_y_encoded = self.hour_label_encoder.transform(
+                self.test_hour_y
+            )
+            self.test_day_y_encoded = self.day_label_encoder.transform(
+                self.test_day_y
+            )
             self.test_y_encoded = np.stack(
-                [self.test_activity_y_encoded, self.test_time_slot_y_encoded],
+                [
+                    self.test_activity_y_encoded,
+                    self.test_time_slot_y_encoded,
+                    self.test_hour_y_encoded,
+                    self.test_day_y_encoded,
+                ],
                 axis=1,
             )
 
@@ -550,6 +615,8 @@ class GPTBiLSTMHierarchyHourExperiment2:
         nb_timesteps = 3
         nb_classes = len(list(self.actDict.keys()))
         nb_time_slot_classes = len(list(self.timeSlotDict.keys()))
+        nb_hour_classes = len(HOUR_CLASSES)
+        nb_day_classes = len(DAY_OF_WEEK_CLASSES)
         embed_dim = self.embedding_parameters["embedding_size"]
         num_heads = self.embedding_parameters["num_heads"]
         dropout_rate = self.embedding_parameters["dropout"]
@@ -713,7 +780,13 @@ class GPTBiLSTMHierarchyHourExperiment2:
             time_slot_output = Dense(
                 nb_time_slot_classes, activation="softmax", name="time_slot_output"
             )(lstm_1)
-            output_layer = [activity_output, time_slot_output]
+            hour_output = Dense(
+                nb_hour_classes, activation="softmax", name="hour_output"
+            )(lstm_1)
+            day_output = Dense(
+                nb_day_classes, activation="softmax", name="day_output"
+            )(lstm_1)
+            output_layer = [activity_output, time_slot_output, hour_output, day_output]
         else:
             output_layer = Dense(nb_classes, activation="softmax")(lstm_1)
 
@@ -759,6 +832,8 @@ class GPTBiLSTMHierarchyHourExperiment2:
         return {
             "activity_output": y[:, 0],
             "time_slot_output": y[:, 1],
+            "hour_output": y[:, 2],
+            "day_output": y[:, 3],
         }
 
     def _has_validation_data(self):
@@ -968,15 +1043,21 @@ class GPTBiLSTMHierarchyHourExperiment2:
                 loss={
                     "activity_output": "sparse_categorical_crossentropy",
                     "time_slot_output": "sparse_categorical_crossentropy",
+                    "hour_output": "sparse_categorical_crossentropy",
+                    "day_output": "sparse_categorical_crossentropy",
                 },
                 loss_weights={
                     "activity_output": 1.0,
                     "time_slot_output": self.time_slot_loss_alpha,
+                    "hour_output": self.hour_loss_beta,
+                    "day_output": self.day_loss_gamma,
                 },
                 optimizer=tf.keras.optimizers.Adam(),
                 metrics={
                     "activity_output": ["sparse_categorical_accuracy"],
                     "time_slot_output": ["sparse_categorical_accuracy"],
+                    "hour_output": ["sparse_categorical_accuracy"],
+                    "day_output": ["sparse_categorical_accuracy"],
                 },
             )
         else:
@@ -1002,10 +1083,14 @@ class GPTBiLSTMHierarchyHourExperiment2:
         if self.multi_task_learning:
             y_activity_true = Y_test_input[:, 0]
             y_time_slot_true = Y_test_input[:, 1]
+            y_hour_true = Y_test_input[:, 2]
+            y_day_true = Y_test_input[:, 3]
 
             y_hat = self.classifier_model.predict(X_test_input)
             y_activity_pred = np.argmax(y_hat[0], axis=1).astype("int32")
             y_time_slot_pred = np.argmax(y_hat[1], axis=1).astype("int32")
+            y_hour_pred = np.argmax(y_hat[2], axis=1).astype("int32")
+            y_day_pred = np.argmax(y_hat[3], axis=1).astype("int32")
 
             multitask_evaluator = MultiTaskEvaluator(
                 y_activity_true,
@@ -1019,20 +1104,39 @@ class GPTBiLSTMHierarchyHourExperiment2:
             activity_macro_f1 = metrics["service_activity_label_macro_f1"]
             time_slot_macro_f1 = metrics["time_slot_label_macro_f1"]
             joint_accuracy = metrics["joint_accuracy"]
+            hour_accuracy = accuracy_score(y_hour_true, y_hour_pred)
+            day_accuracy = accuracy_score(y_day_true, y_day_pred)
+            hour_macro_f1 = f1_score(y_hour_true, y_hour_pred, average="macro", zero_division=0)
+            day_macro_f1 = f1_score(y_day_true, y_day_pred, average="macro", zero_division=0)
+            joint_all_accuracy = np.mean(
+                (y_activity_true == y_activity_pred)
+                & (y_time_slot_true == y_time_slot_pred)
+                & (y_hour_true == y_hour_pred)
+                & (y_day_true == y_day_pred)
+            )
 
             self.global_classifier_accuracy.append(activity_accuracy)
             self.global_classifier_balance_accuracy.append(
                 balanced_accuracy_score(y_activity_true, y_activity_pred)
             )
             self.global_time_slot_accuracy.append(time_slot_accuracy)
+            self.global_hour_accuracy.append(hour_accuracy)
+            self.global_day_accuracy.append(day_accuracy)
             self.global_activity_macro_f1.append(activity_macro_f1)
             self.global_time_slot_macro_f1.append(time_slot_macro_f1)
+            self.global_hour_macro_f1.append(hour_macro_f1)
+            self.global_day_macro_f1.append(day_macro_f1)
             self.global_joint_accuracy.append(joint_accuracy)
+            self.global_joint_all_accuracy.append(joint_all_accuracy)
 
             activity_labels = list(self.actDict.keys())
             activity_indexes = list(self.actDict.values())
             time_slot_labels = list(self.timeSlotDict.keys())
             time_slot_indexes = list(self.timeSlotDict.values())
+            hour_labels = list(self.hourDict.keys())
+            hour_indexes = list(self.hourDict.values())
+            day_labels = list(self.dayOfWeekDict.keys())
+            day_indexes = list(self.dayOfWeekDict.values())
 
             activity_report, time_slot_report = multitask_evaluator.classification_reports(
                 activity_labels,
@@ -1058,6 +1162,43 @@ class GPTBiLSTMHierarchyHourExperiment2:
             )
             pd.DataFrame(time_slot_report).transpose().to_csv(
                 time_slot_report_path, sep="\t", encoding="utf-8"
+            )
+
+            hour_report = classification_report(
+                y_hour_true,
+                y_hour_pred,
+                labels=hour_indexes,
+                target_names=[str(label) for label in hour_labels],
+                output_dict=True,
+                zero_division=0,
+            )
+            day_report = classification_report(
+                y_day_true,
+                y_day_pred,
+                labels=day_indexes,
+                target_names=[str(label) for label in day_labels],
+                output_dict=True,
+                zero_division=0,
+            )
+            pd.DataFrame(hour_report).transpose().to_csv(
+                os.path.join(
+                    self.experiment_result_path,
+                    "{}_hour_report_{}_{}.csv".format(
+                        self.classifier_model.name, self.experiment_tag, run_number
+                    ),
+                ),
+                sep="\t",
+                encoding="utf-8",
+            )
+            pd.DataFrame(day_report).transpose().to_csv(
+                os.path.join(
+                    self.experiment_result_path,
+                    "{}_day_report_{}_{}.csv".format(
+                        self.classifier_model.name, self.experiment_tag, run_number
+                    ),
+                ),
+                sep="\t",
+                encoding="utf-8",
             )
 
             activity_cm, time_slot_cm = multitask_evaluator.confusion_matrices(
@@ -1087,6 +1228,34 @@ class GPTBiLSTMHierarchyHourExperiment2:
                 sep="\t",
                 encoding="utf-8",
             )
+            pd.DataFrame(
+                confusion_matrix(y_hour_true, y_hour_pred, labels=hour_indexes),
+                index=hour_labels,
+                columns=hour_labels,
+            ).to_csv(
+                os.path.join(
+                    self.experiment_result_path,
+                    "{}_hour_confusion_matrix_{}_{}.csv".format(
+                        self.classifier_model.name, self.experiment_tag, run_number
+                    ),
+                ),
+                sep="\t",
+                encoding="utf-8",
+            )
+            pd.DataFrame(
+                confusion_matrix(y_day_true, y_day_pred, labels=day_indexes),
+                index=day_labels,
+                columns=day_labels,
+            ).to_csv(
+                os.path.join(
+                    self.experiment_result_path,
+                    "{}_day_confusion_matrix_{}_{}.csv".format(
+                        self.classifier_model.name, self.experiment_tag, run_number
+                    ),
+                ),
+                sep="\t",
+                encoding="utf-8",
+            )
 
             print(
                 "service_activity_label accuracy: {:.4f}, macro F1: {:.4f}".format(
@@ -1098,7 +1267,18 @@ class GPTBiLSTMHierarchyHourExperiment2:
                     time_slot_accuracy, time_slot_macro_f1
                 )
             )
-            print("joint accuracy: {:.4f}".format(joint_accuracy))
+            print(
+                "activity_start_hour accuracy: {:.4f}, macro F1: {:.4f}".format(
+                    hour_accuracy, hour_macro_f1
+                )
+            )
+            print(
+                "day_of_week accuracy: {:.4f}, macro F1: {:.4f}".format(
+                    day_accuracy, day_macro_f1
+                )
+            )
+            print("activity+time_slot joint accuracy: {:.4f}".format(joint_accuracy))
+            print("all-task joint accuracy: {:.4f}".format(joint_all_accuracy))
 
             if len(y_activity_pred) > 0:
                 predicted_activity_labels = self.label_encoder.inverse_transform(
@@ -1107,14 +1287,15 @@ class GPTBiLSTMHierarchyHourExperiment2:
                 predicted_time_slot_labels = self.time_slot_label_encoder.inverse_transform(
                     y_time_slot_pred
                 )
-                target_hours = self._extract_target_hours(X_test_input)
+                predicted_hours = self.hour_label_encoder.inverse_transform(y_hour_pred)
+                predicted_days = self.day_label_encoder.inverse_transform(y_day_pred)
                 prediction_df = pd.DataFrame(
                     {
                         "date": "",
                         "predicted_service_activity_label": predicted_activity_labels,
                         "predicted_time_slot_label": predicted_time_slot_labels,
-                        "hour": target_hours,
-                        "day_of_week": "",
+                        "hour": predicted_hours,
+                        "day_of_week": predicted_days,
                     }
                 )
                 recommendation_df = add_appliance_recommendations(prediction_df)
@@ -1311,6 +1492,14 @@ class GPTBiLSTMHierarchyHourExperiment2:
                 self.experiment_result_path, time_slot_dict_name
             )
             self.__save_dict_to_json(time_slot_dict_path, self.timeSlotDict)
+            self.__save_dict_to_json(
+                os.path.join(self.experiment_result_path, "hourDict.json"),
+                self.hourDict,
+            )
+            self.__save_dict_to_json(
+                os.path.join(self.experiment_result_path, "dayOfWeekDict.json"),
+                self.dayOfWeekDict,
+            )
 
     def save_config(self):
         experiment_parameters_name = "experiment_parameters.json"
@@ -1374,8 +1563,43 @@ class GPTBiLSTMHierarchyHourExperiment2:
                 writer.writerow([np.std(self.global_time_slot_macro_f1)])
 
                 writer.writerow([])
-                writer.writerow(["joint accuracy score :"])
+                writer.writerow(["activity start hour accuracy score :"])
+                for val in self.global_hour_accuracy:
+                    writer.writerow([val * 100])
+                writer.writerow([np.mean(self.global_hour_accuracy) * 100])
+                writer.writerow([np.std(self.global_hour_accuracy)])
+
+                writer.writerow([])
+                writer.writerow(["activity start hour macro f1 :"])
+                for val in self.global_hour_macro_f1:
+                    writer.writerow([val])
+                writer.writerow([np.mean(self.global_hour_macro_f1)])
+                writer.writerow([np.std(self.global_hour_macro_f1)])
+
+                writer.writerow([])
+                writer.writerow(["day of week accuracy score :"])
+                for val in self.global_day_accuracy:
+                    writer.writerow([val * 100])
+                writer.writerow([np.mean(self.global_day_accuracy) * 100])
+                writer.writerow([np.std(self.global_day_accuracy)])
+
+                writer.writerow([])
+                writer.writerow(["day of week macro f1 :"])
+                for val in self.global_day_macro_f1:
+                    writer.writerow([val])
+                writer.writerow([np.mean(self.global_day_macro_f1)])
+                writer.writerow([np.std(self.global_day_macro_f1)])
+
+                writer.writerow([])
+                writer.writerow(["activity and time slot joint accuracy score :"])
                 for val in self.global_joint_accuracy:
                     writer.writerow([val * 100])
                 writer.writerow([np.mean(self.global_joint_accuracy) * 100])
                 writer.writerow([np.std(self.global_joint_accuracy)])
+
+                writer.writerow([])
+                writer.writerow(["all task joint accuracy score :"])
+                for val in self.global_joint_all_accuracy:
+                    writer.writerow([val * 100])
+                writer.writerow([np.mean(self.global_joint_all_accuracy) * 100])
+                writer.writerow([np.std(self.global_joint_all_accuracy)])
