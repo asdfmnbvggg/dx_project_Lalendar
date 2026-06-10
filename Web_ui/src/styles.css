@@ -5176,7 +5176,7 @@ body {
   border-left: 0;
   border-radius: 2px !important;
   color: #5661b8 !important;
-  background: #e0defb !important;
+  background: var(--task-bg, #e0defb) !important;
   font-size: 10px !important;
   font-weight: 800;
   line-height: 15px !important;
@@ -5186,7 +5186,7 @@ body {
 
 .calendar-month-view .date-cell i.fixed-event-task:nth-of-type(2) {
   color: #5661b8 !important;
-  background: #e0defb !important;
+  background: var(--task-bg, #e0defb) !important;
   border: 0;
 }
 
