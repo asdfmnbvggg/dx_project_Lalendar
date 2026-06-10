@@ -106,18 +106,20 @@ export default function CalendarPage({
   const [isDatePickerOpen, setDatePickerOpen] = useState(false);
   const [draftDate, setDraftDate] = useState(() => parseDateKey(selectedDate));
   const selectedDay = Number(selectedDate.slice(-2));
+  const isHouseCalendar = calendarTaskMode === "house";
   const displayDates = getDisplayDates(calendarView, selectedDate, month);
   const displayLabel = getDisplayLabel(calendarView, selectedDate, monthLabel);
-  const calendarTitle = calendarView === "month" ? monthLabel.replace(". ", ".") : displayLabel;
+  const calendarTitle = isHouseCalendar ? getTwoWeekCalendarTitle(selectedDate) : calendarView === "month" ? monthLabel.replace(". ", ".") : displayLabel;
   const leadingBlanks = calendarView === "month" ? monthLeadingBlanks : 0;
   const calendarCells =
-    calendarView === "month"
+    isHouseCalendar
+      ? getTwoWeekCells(selectedDate)
+      : calendarView === "month"
       ? getMonthCells(month, monthLeadingBlanks)
       : displayDates.map((key) => ({ key, day: Number(key.slice(-2)), isCurrentMonth: true }));
   const isExpanded = calendarScale >= 3;
   const selectedWeather = weatherByDate[selectedDate];
   const selectedRecommendations = getRecommendationsForDate(selectedDate, weatherByDate, routineRecommendations);
-  const isHouseCalendar = calendarTaskMode === "house";
   const filteredTasksByDate = filterTasksByCalendarMode(tasksByDate, calendarTaskMode);
   const selectedVisibleTasks = filteredTasksByDate[selectedDate] || [];
   const detailDate = selectedDetailDate || selectedDate;
@@ -131,6 +133,13 @@ export default function CalendarPage({
   const calendarOwnerTitle = isHouseCalendar ? "가사 캘린더" : selectedMemberName + "님의 캘린더";
 
   function moveCalendar(offset) {
+    if (isHouseCalendar) {
+      const nextDate = addDays(selectedDate, offset * 14);
+      const next = parseDateKey(nextDate);
+      onSelectCalendarDate?.(next.year, next.month, next.day);
+      return;
+    }
+
     if (calendarView === "month") {
       offset < 0 ? onPrevMonth() : onNextMonth();
       return;
@@ -425,21 +434,23 @@ export default function CalendarPage({
           </div>
         </div>
 
-        <div className="calendar-toolbar">
-          <div className="calendar-mode-controls" aria-label="캘린더 보기 방식">
-            {[
-              ["month", "월간"],
-              ["week", "주간"],
-              ["day", "일간"],
-            ].map(([view, label]) => (
-              <button key={view} className={calendarView === view ? "active" : ""} onClick={() => setCalendarView(view)}>
-                {label}
-              </button>
-            ))}
+        {!isHouseCalendar && (
+          <div className="calendar-toolbar">
+            <div className="calendar-mode-controls" aria-label="캘린더 보기 방식">
+              {[
+                ["month", "월간"],
+                ["week", "주간"],
+                ["day", "일간"],
+              ].map(([view, label]) => (
+                <button key={view} className={calendarView === view ? "active" : ""} onClick={() => setCalendarView(view)}>
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {calendarView === "week" ? (
+        {!isHouseCalendar && calendarView === "week" ? (
           <WeekTimetable
             dates={displayDates}
             tasksByDate={filteredTasksByDate}
@@ -454,20 +465,24 @@ export default function CalendarPage({
           />
         ) : (
           <>
-            {calendarView === "day" && (
+            {!isHouseCalendar && calendarView === "day" && (
               <DayTimelineHead selectedDate={selectedDate} onPrevDay={() => moveCalendar(-1)} onNextDay={() => moveCalendar(1)} />
             )}
-            <div className={["weekdays", calendarView === "day" ? "day-weekday" : ""].filter(Boolean).join(" ")}>
+            <div className={["weekdays", !isHouseCalendar && calendarView === "day" ? "day-weekday" : ""].filter(Boolean).join(" ")}>
               {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
                 <span key={day}>{day}</span>
               ))}
             </div>
 
             <div
-              className={["month-grid", "calendar-scale-" + calendarScale, "calendar-" + calendarView + "-view"].join(" ")}
-              style={{ "--calendar-row-count": calendarView === "month" ? calendarCells.length / 7 : 1 }}
+              className={[
+                "month-grid",
+                "calendar-scale-" + calendarScale,
+                isHouseCalendar ? "calendar-house-view" : "calendar-" + calendarView + "-view",
+              ].join(" ")}
+              style={{ "--calendar-row-count": isHouseCalendar ? 2 : calendarView === "month" ? calendarCells.length / 7 : 1 }}
             >
-              {calendarView !== "month" &&
+              {!isHouseCalendar && calendarView !== "month" &&
                 Array.from({ length: leadingBlanks }).map((_, index) => <span className="blank-day" key={index} />)}
               {calendarCells.map(({ key, day, isCurrentMonth }) => {
                 const tasks = filteredTasksByDate[key] || [];
@@ -481,11 +496,11 @@ export default function CalendarPage({
                     key={key}
                     className={["date-cell", selectedDate === key ? "selected" : "", isCurrentMonth ? "" : "outside-month"].filter(Boolean).join(" ")}
                     onClick={() => {
-                      if (!isCurrentMonth) return;
+                      if (!isHouseCalendar && !isCurrentMonth) return;
                       setSelectedDate(key);
                       setSelectedDetailDate(key);
                     }}
-                    disabled={!isCurrentMonth}
+                    disabled={!isHouseCalendar && !isCurrentMonth}
                   >
                     <strong>{day}</strong>
                     {hasWeatherData && (
@@ -522,15 +537,17 @@ export default function CalendarPage({
                                 )}
                               </i>
                             ))}
-                          {isHouseCalendar && houseTasks.length > 0 && (
-                            <span className="month-house-icons" aria-label="가사 일정">
-                              {houseTasks.map((task) => (
-                                <span className="month-house-icon" key={task.id} title={task.title}>
-                                  <img src={getMonthHouseImage(task)} alt="" aria-hidden="true" />
-                                </span>
-                              ))}
-                            </span>
-                          )}
+                          {isHouseCalendar &&
+                            houseTasks.map((task) => (
+                              <i className="auto-appliance-task" key={task.id} style={{ "--task-bg": task.color || "#e0defb" }}>
+                                <span>{getMonthTaskLabel(task.title)}</span>
+                                {isExpanded && (
+                                  <small>
+                                    {task.place} · {task.repeat}
+                                  </small>
+                                )}
+                              </i>
+                            ))}
                         </>
                           )}
                     </div>
@@ -542,7 +559,7 @@ export default function CalendarPage({
         )}
       </section>
 
-      {calendarView === "month" && (
+      {(isHouseCalendar || calendarView === "month") && (
         <section className="calendar-ai-report" aria-label="AI Report">
           <h3>AI Report</h3>
           <div>
@@ -1498,6 +1515,34 @@ function getDisplayLabel(view, selectedDate, monthLabel) {
   const start = dates[0].slice(5).replace("-", ".");
   const end = dates[6].slice(5).replace("-", ".");
   return selectedDate.slice(0, 4) + ". " + start + " - " + end;
+}
+
+function getTwoWeekCells(selectedDate) {
+  const start = getWeekStartDate(selectedDate);
+  return Array.from({ length: 14 }, (_, index) => {
+    const next = new Date(start);
+    next.setDate(start.getDate() + index);
+    return {
+      key: toDateKey(next),
+      day: next.getDate(),
+      isCurrentMonth: true,
+    };
+  });
+}
+
+function getTwoWeekCalendarTitle(selectedDate) {
+  const start = getWeekStartDate(selectedDate);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 13);
+  const startText = start.getFullYear() + "." + String(start.getMonth() + 1).padStart(2, "0");
+  const endText = end.getFullYear() + "." + String(end.getMonth() + 1).padStart(2, "0");
+  return startText === endText ? startText : startText + " ~ " + endText;
+}
+
+function getWeekStartDate(date) {
+  const start = new Date(date + "T00:00:00");
+  start.setDate(start.getDate() - start.getDay());
+  return start;
 }
 
 function getMonthCells(month, leadingBlanks) {

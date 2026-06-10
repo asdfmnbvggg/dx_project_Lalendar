@@ -5019,6 +5019,14 @@ body {
   grid-auto-rows: minmax(0, 1fr);
 }
 
+.calendar-house-view {
+  flex: 1;
+  min-height: 230px;
+  height: 100%;
+  grid-template-rows: repeat(2, minmax(104px, 1fr));
+  grid-auto-rows: minmax(104px, 1fr);
+}
+
 .calendar-month-view .date-cell {
   position: relative;
   min-height: 0 !important;
@@ -5029,6 +5037,64 @@ body {
   border-radius: 0 !important;
   background: transparent;
   box-shadow: none;
+}
+
+.calendar-house-view .date-cell {
+  position: relative;
+  min-height: 104px !important;
+  height: 100%;
+  grid-template-rows: 30px 0 1fr !important;
+  align-items: start;
+  padding: 0 3px 10px !important;
+  border-radius: 0 !important;
+  background: transparent;
+  box-shadow: none;
+}
+
+.calendar-house-view .date-cell:hover {
+  background: transparent;
+  transform: none;
+}
+
+.calendar-house-view .date-cell strong {
+  width: 28px !important;
+  height: 28px !important;
+  margin: 0 auto !important;
+  border-radius: 50%;
+  color: #090909;
+  background: transparent;
+  font-size: 16px !important;
+  font-weight: 650;
+  line-height: 1;
+}
+
+.calendar-house-view .date-cell:nth-child(7n + 1) strong {
+  color: #ef4c43;
+}
+
+.calendar-house-view .date-cell:nth-child(7n) strong {
+  color: #347fd6;
+}
+
+.calendar-house-view .date-cell.selected strong {
+  color: #fff;
+  background: #4a9df0;
+  animation: none;
+}
+
+.calendar-house-view .day-weather {
+  display: none;
+}
+
+.calendar-house-view .date-tasks {
+  position: relative;
+  height: 100%;
+  min-height: 72px;
+  align-content: end;
+  justify-items: center;
+  gap: 4px;
+  padding-top: 4px;
+  padding-bottom: 0;
 }
 
 .calendar-month-view .date-cell:hover {
@@ -5257,7 +5323,8 @@ body {
   pointer-events: none;
 }
 
-.calendar-month-view .month-house-icons {
+.calendar-month-view .month-house-icons,
+.calendar-house-view .month-house-icons {
   position: absolute;
   left: 0;
   right: 0;
@@ -5270,7 +5337,8 @@ body {
   pointer-events: none;
 }
 
-.calendar-month-view .month-house-icon {
+.calendar-month-view .month-house-icon,
+.calendar-house-view .month-house-icon {
   width: 24px;
   height: 24px;
   display: grid;
@@ -5282,7 +5350,8 @@ body {
   line-height: 1;
 }
 
-.calendar-month-view .month-house-icon img {
+.calendar-month-view .month-house-icon img,
+.calendar-house-view .month-house-icon img {
   width: 20px;
   height: 20px;
   object-fit: contain;
