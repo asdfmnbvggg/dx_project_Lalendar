@@ -1,6 +1,6 @@
-import { ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Search, Settings, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Search, Settings, Trash2, X } from "lucide-react";
 import { useState } from "react";
-import { members } from "../data.js";
+import { dateKey, members } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
 import airConditionerImage from "../assets/appliances/에어컨.png";
 import dryerImage from "../assets/appliances/건조기.png";
@@ -85,6 +85,7 @@ export default function CalendarPage({
   updateTask,
   postponeTask,
   onAddWeatherRecommendation,
+  onAddTask,
   openComposer,
   onOpenPanel,
   calendarView = "month",
@@ -95,6 +96,8 @@ export default function CalendarPage({
   const [isDeleteMode, setDeleteMode] = useState(false);
   const [selectedDeleteTaskIds, setSelectedDeleteTaskIds] = useState([]);
   const [activeAddColumn, setActiveAddColumn] = useState(null);
+  const [dailyContextTaskId, setDailyContextTaskId] = useState(null);
+  const [dailyContextAction, setDailyContextAction] = useState(null);
   const [isDatePickerOpen, setDatePickerOpen] = useState(false);
   const [draftDate, setDraftDate] = useState(() => parseDateKey(selectedDate));
   const selectedDay = Number(selectedDate.slice(-2));
@@ -154,6 +157,8 @@ export default function CalendarPage({
     setDeleteMode(false);
     setSelectedDeleteTaskIds([]);
     setActiveAddColumn(null);
+    setDailyContextTaskId(null);
+    setDailyContextAction(null);
   }
 
   function toggleDeleteMode() {
@@ -171,6 +176,29 @@ export default function CalendarPage({
     setDeleteMode(false);
   }
 
+  function openDailyContext(task) {
+    setDailyContextTaskId((current) => (current === task.id ? null : task.id));
+    setDailyContextAction(null);
+  }
+
+  function chooseDailyContextAction(action, task) {
+    if (action === "copy") return;
+
+    setDailyContextAction(action);
+    window.setTimeout(() => {
+      if (action === "delete") {
+        deleteTask(task.id);
+      }
+
+      if (action === "edit") {
+        onOpenPanel?.({ type: "task", task });
+      }
+
+      setDailyContextTaskId(null);
+      setDailyContextAction(null);
+    }, 140);
+  }
+
   function updateDraftDate(part, value) {
     setDraftDate((current) => {
       const next = { ...current, [part]: value };
@@ -179,10 +207,34 @@ export default function CalendarPage({
     });
   }
 
+  if (selectedDetailDate && activeAddColumn === "personal") {
+    return (
+      <DailyPersonalSchedulePage
+        selectedDate={detailDate}
+        selectedMember={selectedMember}
+        onClose={() => setActiveAddColumn(null)}
+        onSave={(task) => {
+          onAddTask?.(task);
+          setActiveAddColumn(null);
+          setSelectedDate(task.date);
+          setSelectedDetailDate(task.date);
+        }}
+      />
+    );
+  }
+
   if (selectedDetailDate) {
     return (
       <section className="page calendar-page daily-detail-page">
-        <section className="date-detail-card" aria-label="Daily schedule">
+        <section
+          className="date-detail-card"
+          aria-label="Daily schedule"
+          onPointerDown={(event) => {
+            if (event.target.closest(".daily-time-block") || event.target.closest(".daily-context-menu")) return;
+            setDailyContextTaskId(null);
+            setDailyContextAction(null);
+          }}
+        >
           <div className="date-detail-head">
             <button type="button" className="date-detail-back-button" aria-label="Back to calendar" onClick={closeDateDetail}>
               <ChevronLeft size={22} />
@@ -191,15 +243,7 @@ export default function CalendarPage({
               <span>{formatDateTitle(detailDate)} · {formatDDay(detailDate)}</span>
               <h3>{selectedMemberName}님의 캘린더</h3>
             </div>
-            <button
-              type="button"
-              className={`date-detail-delete-toggle ${isDeleteMode ? "active" : ""}`}
-              aria-label={isDeleteMode ? "Cancel delete selection" : "Delete schedule"}
-              disabled={detailTasks.length === 0}
-              onClick={toggleDeleteMode}
-            >
-              <Trash2 size={24} />
-            </button>
+            <span aria-hidden="true" />
           </div>
 
           <div className="date-detail-member-strip" aria-label="Members">
@@ -220,8 +264,28 @@ export default function CalendarPage({
               </div>
             </section>
 
-            <DailyTimetableColumn title="개인 일정" tasks={dailyFixedTasks} hours={dailyHours} memberColors={memberColors} variant="personal" />
-            <DailyTimetableColumn title="가사일 일정" tasks={dailyHouseTasks} hours={dailyHours} memberColors={memberColors} variant="housework" />
+            <DailyTimetableColumn
+              title="개인 일정"
+              tasks={dailyFixedTasks}
+              hours={dailyHours}
+              memberColors={memberColors}
+              variant="personal"
+              activeTaskId={dailyContextTaskId}
+              activeAction={dailyContextAction}
+              onOpenContext={openDailyContext}
+              onChooseContextAction={chooseDailyContextAction}
+            />
+            <DailyTimetableColumn
+              title="가사일 일정"
+              tasks={dailyHouseTasks}
+              hours={dailyHours}
+              memberColors={memberColors}
+              variant="housework"
+              activeTaskId={dailyContextTaskId}
+              activeAction={dailyContextAction}
+              onOpenContext={openDailyContext}
+              onChooseContextAction={chooseDailyContextAction}
+            />
 
             {detailTasks.length === 0 && <p className="date-detail-empty">이 날의 일정이 없어요.</p>}
           </div>
@@ -240,7 +304,6 @@ export default function CalendarPage({
                 onClick={() => {
                   setSelectedDate(detailDate);
                   setActiveAddColumn("personal");
-                  openComposer();
                 }}
               >
                 <Plus size={24} strokeWidth={2.4} />
@@ -654,7 +717,157 @@ function getRecommendationsForDate(date, weatherByDate, routineRecommendations) 
   return weatherByDate[date]?.applianceRecommendations || [];
 }
 
-function DailyTimetableColumn({ title, tasks, hours, memberColors, variant }) {
+function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSave }) {
+  const parsedDate = parseDateKey(selectedDate);
+  const initialOwner = selectedMember === "all" ? "me" : selectedMember;
+  const colorOptions = ["#ff9e9e", "#7bd3ff", "#d7a8ff", "#f7fda6"];
+  const [title, setTitle] = useState("");
+  const [color, setColor] = useState(colorOptions[1]);
+  const [isColorOpen, setColorOpen] = useState(false);
+  const [isAllDay, setAllDay] = useState(false);
+  const [startMonth, setStartMonth] = useState(parsedDate.month);
+  const [startDay, setStartDay] = useState(parsedDate.day);
+  const [endMonth, setEndMonth] = useState(parsedDate.month);
+  const [endDay, setEndDay] = useState(parsedDate.day);
+  const [startTime, setStartTime] = useState("07:00");
+  const [endTime, setEndTime] = useState("08:00");
+  const [error, setError] = useState("");
+
+  function saveSchedule() {
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      setError("필수 입력 필요");
+      return;
+    }
+
+    const date = dateKey(parsedDate.year, startMonth, startDay);
+    onSave({
+      date,
+      title: trimmedTitle,
+      place: "개인 일정",
+      tag: "plan",
+      owner: initialOwner,
+      done: false,
+      repeat: isAllDay ? "하루종일" : `${startTime} ~ ${endTime}`,
+      source: "manual",
+      color,
+      endDate: dateKey(parsedDate.year, endMonth, endDay),
+      displayType: "fixed",
+    });
+  }
+
+  const daysForStart = getDaysInMonth(parsedDate.year, startMonth);
+  const daysForEnd = getDaysInMonth(parsedDate.year, endMonth);
+
+  return (
+    <section className="page calendar-page daily-add-page">
+      <form
+        className="daily-add-card"
+        onSubmit={(event) => {
+          event.preventDefault();
+          saveSchedule();
+        }}
+      >
+        <div className="daily-add-head">
+          <button type="button" aria-label="닫기" onClick={onClose}>
+            <X size={28} />
+          </button>
+          <h2>일정 추가</h2>
+          <button type="button" onClick={saveSchedule}>저장</button>
+        </div>
+
+        <section className="daily-add-title-section">
+          <label htmlFor="daily-add-title">제목</label>
+          <div className={`daily-add-title-input ${error ? "invalid" : ""}`}>
+            <input
+              id="daily-add-title"
+              value={title}
+              onChange={(event) => {
+                setTitle(event.target.value);
+                setError("");
+              }}
+              placeholder="제목을 입력해 주세요."
+              autoFocus
+            />
+            <button type="button" className="daily-color-button" style={{ "--selected-color": color }} aria-label="색상 변경" onClick={() => setColorOpen((current) => !current)} />
+          </div>
+          {error && <p className="daily-add-error">{error}</p>}
+          {isColorOpen && (
+            <div className="daily-color-popover" aria-label="색상 변경">
+              {colorOptions.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={option === color ? "active" : ""}
+                  style={{ "--option-color": option }}
+                  aria-label={`${option} 선택`}
+                  onClick={() => {
+                    setColor(option);
+                    setColorOpen(false);
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="daily-add-time-card">
+          <label className="daily-all-day-row">
+            <span>하루종일</span>
+            <input type="checkbox" checked={isAllDay} onChange={(event) => setAllDay(event.target.checked)} />
+            <i aria-hidden="true" />
+          </label>
+
+          <div className="daily-date-row">
+            <strong>기간</strong>
+            <div className="daily-date-pair">
+              <select value={startMonth} onChange={(event) => setStartMonth(Number(event.target.value))}>
+                {monthOptions().map((month) => (
+                  <option key={month} value={month}>{`${month}월`}</option>
+                ))}
+              </select>
+              <select value={startDay} onChange={(event) => setStartDay(Number(event.target.value))}>
+                {dayOptions(daysForStart).map((day) => (
+                  <option key={day} value={day}>{`${day}일`}</option>
+                ))}
+              </select>
+            </div>
+            <span>~</span>
+            <div className="daily-date-pair">
+              <select value={endMonth} onChange={(event) => setEndMonth(Number(event.target.value))}>
+                {monthOptions().map((month) => (
+                  <option key={month} value={month}>{`${month}월`}</option>
+                ))}
+              </select>
+              <select value={endDay} onChange={(event) => setEndDay(Number(event.target.value))}>
+                {dayOptions(daysForEnd).map((day) => (
+                  <option key={day} value={day}>{`${day}일`}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className={`daily-time-row ${isAllDay ? "disabled" : ""}`}>
+            <strong>시간</strong>
+            <input type="time" value={startTime} disabled={isAllDay} onChange={(event) => setStartTime(event.target.value)} />
+            <span>~</span>
+            <input type="time" value={endTime} disabled={isAllDay} onChange={(event) => setEndTime(event.target.value)} />
+          </div>
+        </section>
+      </form>
+    </section>
+  );
+}
+
+function monthOptions() {
+  return Array.from({ length: 12 }, (_, index) => index + 1);
+}
+
+function dayOptions(daysInMonth) {
+  return Array.from({ length: daysInMonth }, (_, index) => index + 1);
+}
+
+function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, activeTaskId, activeAction, onOpenContext, onChooseContextAction }) {
   const startHour = hours[0] ?? 8;
   const endHour = hours[hours.length - 1] ?? 22;
   const totalMinutes = Math.max(60, (endHour - startHour + 1) * 60);
@@ -674,16 +887,67 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant }) {
 
           return (
             <article
-              className="daily-time-block"
+              className={`daily-time-block ${activeTaskId === task.id ? "context-open" : ""}`}
               key={task.id}
+              role="button"
+              tabIndex={0}
               style={{
                 "--block-top": `${Math.max(0, Math.min(96, top))}%`,
                 "--block-height": `${Math.min(96, height)}%`,
                 "--block-color": color,
               }}
+              onContextMenu={(event) => {
+                event.preventDefault();
+                onOpenContext?.(task);
+              }}
+              onPointerDown={(event) => {
+                if (event.target.closest(".daily-context-menu")) return;
+                onOpenContext?.(task);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onOpenContext?.(task);
+                }
+              }}
             >
               <strong>{getDailyBlockTitle(task, variant)}</strong>
               <span>{formatTaskRange(range)}</span>
+              {activeTaskId === task.id && (
+                <div
+                  className="daily-context-menu"
+                  role="menu"
+                  aria-label={`${task.title} options`}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    className={activeAction === "delete" ? "active" : ""}
+                    role="menuitem"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onChooseContextAction?.("delete", task);
+                    }}
+                  >
+                    삭제
+                  </button>
+                  <button
+                    type="button"
+                    className={activeAction === "edit" ? "active" : ""}
+                    role="menuitem"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onChooseContextAction?.("edit", task);
+                    }}
+                  >
+                    편집
+                  </button>
+                  <button type="button" className="disabled" role="menuitem" disabled aria-disabled="true">
+                    복사
+                  </button>
+                </div>
+              )}
             </article>
           );
         })}
@@ -765,6 +1029,7 @@ function getDailyBlockTitle(task, variant) {
 function getDailyBlockColor(task, memberColors, variant, index) {
   const personalPalette = ["#ef4444", "#2563eb", "#16a34a", "#9333ea", "#ea580c"];
   const housePalette = ["#0f766e", "#7c3aed", "#c2410c", "#0891b2", "#be123c"];
+  if (task.color) return task.color;
   if (variant === "personal" && memberColors[task.owner]) return memberColors[task.owner];
   return (variant === "housework" ? housePalette : personalPalette)[index % 5];
 }

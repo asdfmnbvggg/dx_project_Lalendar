@@ -499,6 +499,7 @@ export default function App() {
     updateTask,
     postponeTask,
     onAddWeatherRecommendation: addWeatherRecommendationTask,
+    onAddTask: addTask,
     openComposer: () => setComposerOpen(true),
     onOpenPanel: setPanel,
     calendarView,
