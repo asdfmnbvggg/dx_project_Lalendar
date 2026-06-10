@@ -487,7 +487,8 @@ export default function CalendarPage({
               {calendarCells.map(({ key, day, isCurrentMonth }) => {
                 const tasks = filteredTasksByDate[key] || [];
                 const personalTasks = tasks.filter((task) => getDailyTaskGroup(task) !== "housework").slice(0, MONTH_PERSONAL_TASK_LIMIT);
-                const houseTasks = tasks.filter((task) => getDailyTaskGroup(task) === "housework").slice(0, MONTH_HOUSE_TASK_LIMIT);
+                const houseTasks = tasks.filter((task) => getDailyTaskGroup(task) === "housework");
+                const visibleHouseTasks = isHouseCalendar ? houseTasks : houseTasks.slice(0, MONTH_HOUSE_TASK_LIMIT);
                 const weather = weatherByDate[key];
                 const hasWeatherData = Boolean(weather?.hasWeatherData);
 
@@ -538,9 +539,13 @@ export default function CalendarPage({
                               </i>
                             ))}
                           {isHouseCalendar &&
-                            houseTasks.map((task) => (
-                              <i className="auto-appliance-task" key={task.id} style={{ "--task-bg": task.color || "#e0defb" }}>
-                                <span>{getMonthTaskLabel(task.title)}</span>
+                            visibleHouseTasks.map((task) => (
+                              <i
+                                className={[task.tag, task.displayType === "fixed" ? "fixed-event-task" : ""].filter(Boolean).join(" ")}
+                                key={task.id}
+                                style={{ "--task-bg": task.color || memberColors[task.owner] || memberColors.all }}
+                              >
+                                <span>{getHouseTaskLabel(task.title)}</span>
                                 {isExpanded && (
                                   <small>
                                     {task.place} · {task.repeat}
@@ -1086,7 +1091,11 @@ function buildDailyHours(tasks) {
 }
 
 function getMonthTaskLabel(title) {
-  return String(title || "").trim().slice(0, 3);
+  return String(title || "").replace(/\s+/g, "").trim().slice(0, 3);
+}
+
+function getHouseTaskLabel(title) {
+  return String(title || "").replace(/\s+/g, "").trim().slice(0, 4);
 }
 
 function getMonthHouseImage(task) {

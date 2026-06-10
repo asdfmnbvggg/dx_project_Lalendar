@@ -5090,11 +5090,12 @@ body {
   position: relative;
   height: 100%;
   min-height: 72px;
-  align-content: end;
+  align-content: start;
   justify-items: center;
-  gap: 4px;
+  gap: 3px;
   padding-top: 4px;
   padding-bottom: 0;
+  overflow: hidden;
 }
 
 .calendar-month-view .date-cell:hover {
@@ -5170,6 +5171,7 @@ body {
 }
 
 .calendar-month-view .date-cell i,
+.calendar-house-view .date-cell i,
 .calendar-month-view .weather-recommendation-chip {
   width: fit-content !important;
   max-width: 68px;
@@ -5184,6 +5186,19 @@ body {
   line-height: 1.2 !important;
   text-align: left;
   box-shadow: none;
+}
+
+.calendar-house-view .date-cell i {
+  width: 48px !important;
+  max-width: 48px;
+  display: grid !important;
+  place-items: center;
+  text-align: center;
+}
+
+.calendar-house-view .date-cell i span {
+  width: 100%;
+  text-align: center;
 }
 
 .calendar-page-month .calendar-board {
@@ -5255,13 +5270,16 @@ body {
   word-break: keep-all;
 }
 
-.calendar-month-view .date-cell i:nth-of-type(2n) {
+.calendar-month-view .date-cell i:nth-of-type(2n),
+.calendar-house-view .date-cell i:nth-of-type(2n) {
   color: #5661b8 !important;
   background: #e0defb !important;
 }
 
 .calendar-month-view .date-cell i.auto-appliance-task,
-.calendar-month-view .date-cell i.auto-appliance-task:nth-of-type(2n) {
+.calendar-month-view .date-cell i.auto-appliance-task:nth-of-type(2n),
+.calendar-house-view .date-cell i.auto-appliance-task,
+.calendar-house-view .date-cell i.auto-appliance-task:nth-of-type(2n) {
   color: #5661b8 !important;
   background: #e0defb !important;
   border: 0;
@@ -5269,7 +5287,9 @@ body {
 
 .calendar-month-view .date-cell i,
 .calendar-month-view .date-cell i.fixed-event-task,
-.calendar-month-view .date-cell i.auto-appliance-task {
+.calendar-month-view .date-cell i.auto-appliance-task,
+.calendar-house-view .date-cell i,
+.calendar-house-view .date-cell i.auto-appliance-task {
   width: 48px !important;
   max-width: 48px;
   height: 15px;
@@ -5291,13 +5311,15 @@ body {
   box-shadow: none;
 }
 
-.calendar-month-view .date-cell i.fixed-event-task:nth-of-type(2) {
+.calendar-month-view .date-cell i.fixed-event-task:nth-of-type(2),
+.calendar-house-view .date-cell i.auto-appliance-task:nth-of-type(2) {
   color: #5661b8 !important;
   background: var(--task-bg, #e0defb) !important;
   border: 0;
 }
 
 .calendar-month-view .date-cell i span,
+.calendar-house-view .date-cell i span,
 .calendar-month-view .weather-recommendation-chip {
   display: block !important;
   max-width: 100%;
@@ -5310,7 +5332,8 @@ body {
   line-height: 15px !important;
 }
 
-.calendar-month-view .date-cell i small {
+.calendar-month-view .date-cell i small,
+.calendar-house-view .date-cell i small {
   display: none !important;
 }
 
