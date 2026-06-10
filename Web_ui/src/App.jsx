@@ -30,13 +30,14 @@ import {
   subscribeThinQDevicePush,
 } from "./services/thinqIntegrationService.js";
 
-const ENABLE_ONBOARDING_TASK_GENERATION = false;
+const ENABLE_ONBOARDING_TASK_GENERATION = true;
 
 export default function App() {
   const [tasks, setTasks] = useState(initialTasks);
   const [memberColors, setMemberColors] = useState(() => Object.fromEntries(members.map((member) => [member.id, member.color])));
   const [activeTab, setActiveTab] = useState("home");
   const [isOnboardingComplete, setOnboardingComplete] = useState(false);
+  const [hasGeneratedOnboardingTasks, setHasGeneratedOnboardingTasks] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState("intro");
   const [onboardingProfile, setOnboardingProfile] = useState({
     familyCount: 2,
@@ -257,13 +258,14 @@ export default function App() {
   }
 
   function completeOnboarding(onboardingSetup = {}) {
-    if (!ENABLE_ONBOARDING_TASK_GENERATION) {
+    if (!ENABLE_ONBOARDING_TASK_GENERATION || hasGeneratedOnboardingTasks) {
       setOnboardingComplete(true);
       return;
     }
 
     const generated = buildOnboardingTasks(onboardingProfile, selectedMember, onboardingSetup);
     setTasks((current) => [...generated, ...current]);
+    setHasGeneratedOnboardingTasks(true);
     setSelectedDate(generated[0]?.date || getTodayKey());
     const firstDate = generated[0]?.date?.split("-").map(Number);
     if (firstDate?.length === 3) {
@@ -275,8 +277,8 @@ export default function App() {
   function selectMainTab(id) {
     if (id === "devices") {
       setActiveTab("schedule");
-      setOnboardingComplete(true);
       setOnboardingStep("ready");
+      completeOnboarding();
       return;
     }
 

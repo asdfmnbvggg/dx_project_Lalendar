@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Search, Settings, Trash2, X } from "lucide-react";
+﻿import { ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Search, Settings, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { dateKey, members } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
@@ -13,11 +13,11 @@ import suhyunImage from "../assets/people/김수현.jpg";
 
 const weatherIcon = {
   sunny: "☀️",
-  partly_cloudy: "🌤️",
+  partly_cloudy: "⛅",
   cloudy: "☁️",
   rain: "🌧️",
   snow: "❄️",
-  unknown: "•",
+  unknown: "?",
 };
 
 const applianceTypeLabel = {
@@ -46,19 +46,19 @@ const memberImages = {
 const calendarMemberLabels = {
   me: "MY",
   minsu: "김철수",
-  theresa: "김영희",
+  theresa: "김수현",
 };
 
 const calendarProfileNames = {
   me: "최재혁",
   minsu: "김철수",
-  theresa: "김영희",
+  theresa: "김수현",
 };
 
 const calendarMemberIconText = {
   me: "MY",
   minsu: "김철수",
-  theresa: "김영희",
+  theresa: "김수현",
 };
 
 export default function CalendarPage({
@@ -121,7 +121,7 @@ export default function CalendarPage({
   const familyMembers = members.filter((member) => member.id !== "all");
   const selectedMemberProfile = familyMembers.find((member) => member.id === selectedMember) || familyMembers[0] || members[0];
   const selectedMemberName = calendarProfileNames[selectedMemberProfile.id] || selectedMemberProfile.name;
-  const calendarOwnerTitle = `${selectedMemberName}의 캘린더`;
+  const calendarOwnerTitle = selectedMemberName + "님의 캘린더";
 
   function moveCalendar(offset) {
     if (calendarView === "month") {
@@ -240,7 +240,7 @@ export default function CalendarPage({
               <ChevronLeft size={22} />
             </button>
             <div>
-              <span>{formatDateTitle(detailDate)} · {formatDDay(detailDate)}</span>
+              <span>{formatDateTitle(detailDate)} 쨌 {formatDDay(detailDate)}</span>
               <h3>{selectedMemberName}님의 캘린더</h3>
             </div>
             <span aria-hidden="true" />
@@ -256,7 +256,7 @@ export default function CalendarPage({
 
           <div className="daily-timetable-shell" aria-label="Daily timetable" style={{ "--hour-count": dailyHours.length }}>
             <section className="daily-time-rail" aria-label="Time">
-              <strong>시간</strong>
+              <strong>?쒓컙</strong>
               <div className="daily-time-scale" style={{ "--hour-count": dailyHours.length }}>
                 {dailyHours.map((hour) => (
                   <span key={hour}>{formatDailyHour(hour)}</span>
@@ -265,7 +265,7 @@ export default function CalendarPage({
             </section>
 
             <DailyTimetableColumn
-              title="개인 일정"
+              title="媛쒖씤 ?쇱젙"
               tasks={dailyFixedTasks}
               hours={dailyHours}
               memberColors={memberColors}
@@ -276,7 +276,7 @@ export default function CalendarPage({
               onChooseContextAction={chooseDailyContextAction}
             />
             <DailyTimetableColumn
-              title="가사일 일정"
+              title="媛?ъ씪 ?쇱젙"
               tasks={dailyHouseTasks}
               hours={dailyHours}
               memberColors={memberColors}
@@ -287,19 +287,19 @@ export default function CalendarPage({
               onChooseContextAction={chooseDailyContextAction}
             />
 
-            {detailTasks.length === 0 && <p className="date-detail-empty">이 날의 일정이 없어요.</p>}
+            {detailTasks.length === 0 && <p className="date-detail-empty">???좎쓽 ?쇱젙???놁뼱??</p>}
           </div>
 
           {isDeleteMode ? (
             <button type="button" className="date-detail-delete-action" onClick={deleteSelectedTasks} disabled={selectedDeleteTaskIds.length === 0}>
-              선택한 일정 삭제
+              ?좏깮???쇱젙 ??젣
             </button>
           ) : (
             <div className="daily-add-row" aria-label="일정 추가">
               <span aria-hidden="true" />
               <button
                 type="button"
-                className={`date-detail-add personal ${activeAddColumn === "personal" ? "active" : ""}`}
+                className={["date-detail-add", "personal", activeAddColumn === "personal" ? "active" : ""].filter(Boolean).join(" ")}
                 aria-label="개인 일정 추가"
                 onClick={() => {
                   setSelectedDate(detailDate);
@@ -310,7 +310,7 @@ export default function CalendarPage({
               </button>
               <button
                 type="button"
-                className={`date-detail-add housework ${activeAddColumn === "housework" ? "active" : ""}`}
+                className={["date-detail-add", "housework", activeAddColumn === "housework" ? "active" : ""].filter(Boolean).join(" ")}
                 aria-label="가사일 일정 추가"
                 onClick={() => {
                   setSelectedDate(detailDate);
@@ -327,10 +327,10 @@ export default function CalendarPage({
     );
   }
   return (
-    <section className={`page calendar-page calendar-page-${calendarView}`}>
+    <section className={["page", "calendar-page", "calendar-page-" + calendarView].join(" ")}>
       <div className="calendar-filter-block">
         <h1 className="calendar-family-title">{calendarOwnerTitle}</h1>
-        <button className="calendar-settings-button" type="button" aria-label="설정" onClick={() => onOpenPanel?.({ type: "settings" })}>
+        <button className="calendar-settings-button" type="button" aria-label="?ㅼ젙" onClick={() => onOpenPanel?.({ type: "settings" })}>
           <Settings size={22} strokeWidth={2.3} />
         </button>
         <p>일정 보기 필터</p>
@@ -339,7 +339,7 @@ export default function CalendarPage({
             <button
               key={member.id}
               className={selectedMember === member.id || (selectedMember === "all" && member.id === selectedMemberProfile.id) ? "active" : ""}
-              aria-label={`${calendarProfileNames[member.id] || member.name}의 캘린더 보기`}
+              aria-label={(calendarProfileNames[member.id] || member.name) + " 캘린더 보기"}
               onClick={() => setSelectedMember(member.id)}
             >
               <span style={{ background: memberImages[member.id] ? "#fff" : memberColors[member.id] || member.color }}>
@@ -353,7 +353,7 @@ export default function CalendarPage({
       <section className="calendar-board">
         <div className="calendar-header">
           <div className="month-switcher">
-            <button onClick={() => moveCalendar(-1)} aria-label="이전 기간">
+            <button onClick={() => moveCalendar(-1)} aria-label="?댁쟾 湲곌컙">
               <ChevronLeft size={18} />
             </button>
             <h2>
@@ -361,33 +361,33 @@ export default function CalendarPage({
                 {calendarTitle}
               </button>
             </h2>
-            <button onClick={() => moveCalendar(1)} aria-label="다음 기간">
+            <button onClick={() => moveCalendar(1)} aria-label="?ㅼ쓬 湲곌컙">
               <ChevronRight size={18} />
             </button>
           </div>
           <div className="calendar-header-actions">
             <button className="calendar-zoom-button" onClick={() => changeScale(-1)} disabled={calendarScale === 0}>
               <Minus size={15} />
-              축소
+              異뺤냼
             </button>
             <button className="calendar-zoom-button" onClick={() => changeScale(1)} disabled={calendarScale === 4}>
               <Plus size={15} />
-              확대
+              ?뺣?
             </button>
             <button className="calendar-add-button" onClick={openComposer}>
               <Plus size={18} />
-              할일 추가
+              ?좎씪 異붽?
             </button>
           </div>
           <img className="calendar-hanging-character" src={lgCharacterImage} alt="" aria-hidden="true" />
         </div>
 
         <div className="calendar-toolbar">
-          <div className="calendar-mode-controls" aria-label="캘린더 보기 방식">
+          <div className="calendar-mode-controls" aria-label="罹섎┛??蹂닿린 諛⑹떇">
             {[
-              ["month", "월간"],
-              ["week", "주간"],
-              ["day", "일간"],
+              ["month", "?붽컙"],
+              ["week", "二쇨컙"],
+              ["day", "?쇨컙"],
             ].map(([view, label]) => (
               <button key={view} className={calendarView === view ? "active" : ""} onClick={() => setCalendarView(view)}>
                 {label}
@@ -414,20 +414,22 @@ export default function CalendarPage({
             {calendarView === "day" && (
               <DayTimelineHead selectedDate={selectedDate} onPrevDay={() => moveCalendar(-1)} onNextDay={() => moveCalendar(1)} />
             )}
-            <div className={`weekdays ${calendarView === "day" ? "day-weekday" : ""}`}>
+            <div className={["weekdays", calendarView === "day" ? "day-weekday" : ""].filter(Boolean).join(" ")}>
               {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
                 <span key={day}>{day}</span>
               ))}
             </div>
 
             <div
-              className={`month-grid calendar-scale-${calendarScale} calendar-${calendarView}-view`}
+              className={["month-grid", "calendar-scale-" + calendarScale, "calendar-" + calendarView + "-view"].join(" ")}
               style={{ "--calendar-row-count": calendarView === "month" ? calendarCells.length / 7 : 1 }}
             >
               {calendarView !== "month" &&
                 Array.from({ length: leadingBlanks }).map((_, index) => <span className="blank-day" key={index} />)}
               {calendarCells.map(({ key, day, isCurrentMonth }) => {
                 const tasks = tasksByDate[key] || [];
+                const personalTasks = tasks.filter((task) => getDailyTaskGroup(task) !== "housework").slice(0, 2);
+                const houseTasks = tasks.filter((task) => getDailyTaskGroup(task) === "housework").slice(0, 2);
                 const weather = weatherByDate[key];
                 const recommendations = getRecommendationsForDate(key, weatherByDate, routineRecommendations);
                 const hasWeatherData = Boolean(weather?.hasWeatherData);
@@ -435,7 +437,7 @@ export default function CalendarPage({
                 return (
                   <button
                     key={key}
-                    className={`date-cell ${selectedDate === key ? "selected" : ""} ${isCurrentMonth ? "" : "outside-month"}`}
+                    className={["date-cell", selectedDate === key ? "selected" : "", isCurrentMonth ? "" : "outside-month"].filter(Boolean).join(" ")}
                     onClick={() => {
                       if (!isCurrentMonth) return;
                       setSelectedDate(key);
@@ -447,13 +449,13 @@ export default function CalendarPage({
                     {hasWeatherData && (
                       <span className="day-weather">
                         <>
-                          <span className="weather-icon" role="img" aria-label={weather.sky || weather.pty || "날씨"}>
+                          <span className="weather-icon" role="img" aria-label={weather.sky || weather.pty || "?좎뵪"}>
                             {weatherIcon[weather.icon] || weatherIcon.unknown}
                           </span>
                           <span className="weather-temps">
                             <b>{formatTemp(weather.maxTemp)}</b>
                             <small>{formatTemp(weather.minTemp)}</small>
-                            {Number.isFinite(weather.pop) && <small className="weather-pop">강수 {weather.pop}%</small>}
+                            {Number.isFinite(weather.pop) && <small className="weather-pop">媛뺤닔 {weather.pop}%</small>}
                             <small>{formatWeatherState(weather)}</small>
                           </span>
                         </>
@@ -463,12 +465,10 @@ export default function CalendarPage({
                     <div className="date-tasks">
                       {isCurrentMonth && (
                         <>
-                          {recommendations.length > 0 && <em className="weather-recommendation-chip">추천 {recommendations[0].title}</em>}
-                          {tasks.slice(0, taskLimit).map((task) => (
+                          {false && recommendations.length > 0 && <em className="weather-recommendation-chip">추천 {recommendations[0].title}</em>}
+                          {personalTasks.map((task) => (
                             <i
-                              className={`${task.tag} ${task.displayType === "fixed" ? "fixed-event-task" : ""} ${
-                                task.displayType === "appliance" ? "auto-appliance-task" : ""
-                              }`}
+                              className={[task.tag, task.displayType === "fixed" ? "fixed-event-task" : ""].filter(Boolean).join(" ")}
                               key={task.id}
                               style={
                                 task.displayType === "appliance"
@@ -482,12 +482,20 @@ export default function CalendarPage({
                               <span>{getMonthTaskLabel(task.title)}</span>
                               {isExpanded && (
                                 <small>
-                                  {task.place} · {task.repeat}
+                                  {task.place} 쨌 {task.repeat}
                                 </small>
                               )}
                             </i>
                           ))}
-                          {tasks.length > taskLimit && <em className="more-tasks">+{tasks.length - taskLimit}개</em>}
+                          {houseTasks.length > 0 && (
+                            <span className="month-house-icons" aria-label="가사 일정">
+                              {houseTasks.map((task) => (
+                                <span className="month-house-icon" key={task.id} title={task.title}>
+                                  {getMonthHouseIcon(task)}
+                                </span>
+                              ))}
+                            </span>
+                          )}
                         </>
                           )}
                     </div>
@@ -523,14 +531,14 @@ export default function CalendarPage({
                 label="연도"
                 values={getYearOptions(draftDate.year)}
                 value={draftDate.year}
-                formatter={(value) => `${value}년`}
+                formatter={(value) => value + "년"}
                 onChange={(value) => updateDraftDate("year", value)}
               />
               <DateWheel
                 label="월"
                 values={Array.from({ length: 12 }, (_, index) => index + 1)}
                 value={draftDate.month}
-                formatter={(value) => `${value}월`}
+                formatter={(value) => value + "월"}
                 onChange={(value) => updateDraftDate("month", value)}
                 loop
               />
@@ -538,7 +546,7 @@ export default function CalendarPage({
                 label="일"
                 values={Array.from({ length: getDaysInMonth(draftDate.year, draftDate.month) }, (_, index) => index + 1)}
                 value={draftDate.day}
-                formatter={(value) => `${value}일`}
+                formatter={(value) => value + "일"}
                 onChange={(value) => updateDraftDate("day", value)}
                 loop
               />
@@ -555,96 +563,10 @@ export default function CalendarPage({
         </div>
       )}
 
-      {selectedDetailDate && (
-        <div className="date-detail-backdrop" role="presentation" onClick={closeDateDetail}>
-          <section className="date-detail-card" role="dialog" aria-modal="true" aria-label={`${formatDateTitle(detailDate)} 하루일정`} onClick={(event) => event.stopPropagation()}>
-            <div className="date-detail-head">
-              <div>
-                <span>{formatDateTitle(detailDate)} · {formatDDay(detailDate)}</span>
-                <h3>{selectedMemberName}님의 하루일정</h3>
-              </div>
-              <button
-                type="button"
-                className={`date-detail-delete-toggle ${isDeleteMode ? "active" : ""}`}
-                aria-label={isDeleteMode ? "삭제 선택 취소" : "일정 삭제"}
-                disabled={detailTasks.length === 0}
-                onClick={toggleDeleteMode}
-              >
-                <Trash2 size={24} />
-              </button>
-            </div>
-
-            <div className="date-detail-member-strip" aria-label="등록된 구성원">
-              {familyMembers.slice(0, 3).map((member) => (
-                <span key={member.id} style={{ "--member-color": memberColors[member.id] || member.color }}>
-                  {memberImages[member.id] ? <img src={memberImages[member.id]} alt="" aria-hidden="true" /> : calendarMemberIconText[member.id] || member.short}
-                </span>
-              ))}
-            </div>
-
-            <div className="date-detail-tables" aria-label="하루 일정 편집 테이블">
-              <section className="date-detail-column time-column" aria-label="시간">
-                <strong>시간</strong>
-                <div>
-                  {dailyHours.map((hour) => (
-                    <span key={hour}>{formatDailyHour(hour)}</span>
-                  ))}
-                </div>
-              </section>
-
-              <DailyEditColumn
-                title="일정 타임테이블"
-                tasks={dailyFixedTasks}
-                hours={dailyHours}
-                isDeleteMode={isDeleteMode}
-                selectedDeleteTaskIds={selectedDeleteTaskIds}
-                members={familyMembers}
-                memberColors={memberColors}
-                onToggleTask={toggleTask}
-                onToggleDeleteSelection={toggleDeleteSelection}
-                onUpdateTask={updateTask}
-              />
-
-              <DailyEditColumn
-                title="가사일 테이블"
-                tasks={dailyHouseTasks}
-                hours={dailyHours}
-                isDeleteMode={isDeleteMode}
-                selectedDeleteTaskIds={selectedDeleteTaskIds}
-                members={familyMembers}
-                memberColors={memberColors}
-                onToggleTask={toggleTask}
-                onToggleDeleteSelection={toggleDeleteSelection}
-                onUpdateTask={updateTask}
-              />
-
-              {detailTasks.length === 0 && <p className="date-detail-empty">이 날의 일정이 없어요.</p>}
-            </div>
-
-            {isDeleteMode ? (
-              <button type="button" className="date-detail-delete-action" onClick={deleteSelectedTasks} disabled={selectedDeleteTaskIds.length === 0}>
-                선택한 일정 삭제
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="date-detail-add"
-                onClick={() => {
-                  setSelectedDate(detailDate);
-                  closeDateDetail();
-                  openComposer();
-                }}
-              >
-                + 하루 일정 추가
-              </button>
-            )}
-          </section>
-        </div>
-      )}
 
       <section className="task-sheet compact">
         <div className="sheet-head">
-          <h2>{selectedDay}일 작업</h2>
+          <h2>{selectedDay}???묒뾽</h2>
           <label className="search-field">
             <Search size={16} />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="검색" />
@@ -659,7 +581,7 @@ export default function CalendarPage({
             <strong>{formatWeatherState(selectedWeather)}</strong>
             <small>
               최고 {formatTemp(selectedWeather.maxTemp)} / 최저 {formatTemp(selectedWeather.minTemp)}
-              {Number.isFinite(selectedWeather.pop) ? ` · 강수 ${selectedWeather.pop}%` : ""}
+              {Number.isFinite(selectedWeather.pop) ? " · 강수 " + selectedWeather.pop + "%" : ""}
             </small>
           </div>
         )}
@@ -692,7 +614,7 @@ export default function CalendarPage({
                     <small>
                       {recommendation.recommendedStartTime || recommendation.startTime}-{recommendation.recommendedEndTime || recommendation.endTime} ·{" "}
                       {formatRecommendationSource(recommendation)}
-                      {Number.isFinite(recommendation.confidence) ? ` · 신뢰도 ${recommendation.confidence}%` : ""}
+                      {Number.isFinite(recommendation.confidence) ? " · 신뢰도 " + recommendation.confidence + "%" : ""}
                     </small>
                   </div>
                   <button type="button" onClick={() => onAddWeatherRecommendation(selectedDate, recommendation)}>
@@ -707,7 +629,7 @@ export default function CalendarPage({
         {selectedTasks.length === 0 && (
           <div className="empty-state">
             <ClipboardList size={24} />
-            <p>선택한 날짜에 작업이 없어요.</p>
+            <p>?좏깮???좎쭨???묒뾽???놁뼱??</p>
           </div>
         )}
       </section>
@@ -752,7 +674,7 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
       tag: "plan",
       owner: initialOwner,
       done: false,
-      repeat: isAllDay ? "하루종일" : `${startTime} ~ ${endTime}`,
+      repeat: isAllDay ? "하루종일" : startTime + " ~ " + endTime,
       source: "manual",
       color,
       endDate: dateKey(parsedDate.year, endMonth, endDay),
@@ -782,7 +704,7 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
 
         <section className="daily-add-title-section">
           <label htmlFor="daily-add-title">제목</label>
-          <div className={`daily-add-title-input ${error ? "invalid" : ""}`}>
+          <div className={["daily-add-title-input", error ? "invalid" : ""].filter(Boolean).join(" ")}>
             <input
               id="daily-add-title"
               value={title}
@@ -790,7 +712,7 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
                 setTitle(event.target.value);
                 setError("");
               }}
-              placeholder="제목을 입력해 주세요."
+              placeholder="?쒕ぉ???낅젰??二쇱꽭??"
               autoFocus
             />
             <button type="button" className="daily-color-button" style={{ "--selected-color": color }} aria-label="색상 변경" onClick={() => setColorOpen((current) => !current)} />
@@ -804,7 +726,7 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
                   type="button"
                   className={option === color ? "active" : ""}
                   style={{ "--option-color": option }}
-                  aria-label={`${option} 선택`}
+                  aria-label={option + " 선택"}
                   onClick={() => {
                     setColor(option);
                     setColorOpen(false);
@@ -827,12 +749,12 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
             <div className="daily-date-pair">
               <select value={startMonth} onChange={(event) => setStartMonth(Number(event.target.value))}>
                 {monthOptions().map((month) => (
-                  <option key={month} value={month}>{`${month}월`}</option>
+                  <option key={month} value={month}>{month + "월"}</option>
                 ))}
               </select>
               <select value={startDay} onChange={(event) => setStartDay(Number(event.target.value))}>
                 {dayOptions(daysForStart).map((day) => (
-                  <option key={day} value={day}>{`${day}일`}</option>
+                  <option key={day} value={day}>{day + "일"}</option>
                 ))}
               </select>
             </div>
@@ -840,19 +762,19 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
             <div className="daily-date-pair">
               <select value={endMonth} onChange={(event) => setEndMonth(Number(event.target.value))}>
                 {monthOptions().map((month) => (
-                  <option key={month} value={month}>{`${month}월`}</option>
+                  <option key={month} value={month}>{month + "월"}</option>
                 ))}
               </select>
               <select value={endDay} onChange={(event) => setEndDay(Number(event.target.value))}>
                 {dayOptions(daysForEnd).map((day) => (
-                  <option key={day} value={day}>{`${day}일`}</option>
+                  <option key={day} value={day}>{day + "일"}</option>
                 ))}
               </select>
             </div>
           </div>
 
-          <div className={`daily-time-row ${isAllDay ? "disabled" : ""}`}>
-            <strong>시간</strong>
+          <div className={["daily-time-row", isAllDay ? "disabled" : ""].filter(Boolean).join(" ")}>
+            <strong>?쒓컙</strong>
             <input type="time" value={startTime} disabled={isAllDay} onChange={(event) => setStartTime(event.target.value)} />
             <span>~</span>
             <input type="time" value={endTime} disabled={isAllDay} onChange={(event) => setEndTime(event.target.value)} />
@@ -877,7 +799,7 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
   const totalMinutes = Math.max(60, (endHour - startHour + 1) * 60);
 
   return (
-    <section className={`daily-timetable-column ${variant}`} aria-label={title}>
+    <section className={["daily-timetable-column", variant].filter(Boolean).join(" ")} aria-label={title}>
       <strong>{title}</strong>
       <div className="daily-timetable-track" style={{ "--hour-count": hours.length }}>
         {hours.map((hour) => (
@@ -891,13 +813,13 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
 
           return (
             <article
-              className={`daily-time-block ${activeTaskId === task.id ? "context-open" : ""}`}
+              className={["daily-time-block", activeTaskId === task.id ? "context-open" : ""].filter(Boolean).join(" ")}
               key={task.id}
               role="button"
               tabIndex={0}
               style={{
-                "--block-top": `${Math.max(0, Math.min(96, top))}%`,
-                "--block-height": `${Math.min(96, height)}%`,
+                "--block-top": Math.max(0, Math.min(96, top)) + "%",
+                "--block-height": Math.min(96, height) + "%",
                 "--block-color": color,
               }}
               onContextMenu={(event) => {
@@ -921,7 +843,7 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
                 <div
                   className="daily-context-menu"
                   role="menu"
-                  aria-label={`${task.title} options`}
+                  aria-label={task.title + " options"}
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={(event) => event.stopPropagation()}
                 >
@@ -934,7 +856,7 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
                       onChooseContextAction?.("delete", task);
                     }}
                   >
-                    삭제
+                    ??젣
                   </button>
                   <button
                     type="button"
@@ -945,10 +867,10 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
                       onChooseContextAction?.("edit", task);
                     }}
                   >
-                    편집
+                    ?몄쭛
                   </button>
                   <button type="button" className="disabled" role="menuitem" disabled aria-disabled="true">
-                    복사
+                    蹂듭궗
                   </button>
                 </div>
               )}
@@ -968,6 +890,17 @@ function getMonthTaskLabel(title) {
   return String(title || "").trim().slice(0, 3);
 }
 
+function getMonthHouseIcon(task) {
+  const type = String(task.applianceType || "").toLowerCase();
+  if (type.includes("washer")) return "🧺";
+  if (type.includes("dryer")) return "☀️";
+  if (type.includes("air")) return "❄️";
+  if (type.includes("fridge")) return "🧊";
+  if (type.includes("dehumidifier")) return "💧";
+  if (type.includes("robot")) return "🧹";
+  return "🧽";
+}
+
 function getDailyTaskGroup(task) {
   if (task.displayType === "appliance") return "housework";
   if (task.tag === "house" || task.source === "auto") return "housework";
@@ -976,7 +909,7 @@ function getDailyTaskGroup(task) {
 
 function getDailyTaskRange(task, index = 0) {
   const timeText = String(task.repeat || "");
-  const rangeMatch = timeText.match(/\b(\d{1,2}):(\d{2})\s*(?:~|-|–|—|to)\s*(\d{1,2}):(\d{2})\b/i);
+  const rangeMatch = timeText.match(/\b(\d{1,2}):(\d{2})\s*(?:~|-|????to)\s*(\d{1,2}):(\d{2})\b/i);
 
   if (rangeMatch) {
     const startMinutes = Number(rangeMatch[1]) * 60 + Number(rangeMatch[2]);
@@ -990,7 +923,7 @@ function getDailyTaskRange(task, index = 0) {
     return normalizeTimeRange(startMinutes, startMinutes + 60);
   }
 
-  const koreanTime = timeText.match(/(오전|오후)?\s*(\d{1,2})시/);
+  const koreanTime = timeText.match(/(오전|오후)?\s*(\d{1,2})시?/);
   if (koreanTime) {
     const period = koreanTime[1];
     const hour = Number(koreanTime[2]);
@@ -1011,17 +944,17 @@ function normalizeTimeRange(startMinutes, endMinutes) {
 }
 
 function formatDailyHour(hour) {
-  return `${String(hour).padStart(2, "0")}:00`;
+  return String(hour).padStart(2, "0") + ":00";
 }
 
 function formatTaskRange(range) {
-  return `${formatMinutes(range.startMinutes)} ~ ${formatMinutes(range.endMinutes)}`;
+  return formatMinutes(range.startMinutes) + " ~ " + formatMinutes(range.endMinutes);
 }
 
 function formatMinutes(minutes) {
   const hour = Math.floor(minutes / 60);
   const minute = minutes % 60;
-  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  return String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0");
 }
 
 function getDailyBlockTitle(task, variant) {
@@ -1039,7 +972,7 @@ function getDailyBlockColor(task, memberColors, variant, index) {
   return (variant === "housework" ? housePalette : personalPalette)[index % 5];
 }
 function buildAiReport(selectedDate, selectedTasks, tasksByDate = {}) {
-  const date = new Date(`${selectedDate}T00:00:00`);
+  const date = new Date(selectedDate + "T00:00:00");
   const month = date.getMonth() + 1;
   const day = date.getDate();
   const upcomingTasks = [0, 1, 2]
@@ -1048,98 +981,98 @@ function buildAiReport(selectedDate, selectedTasks, tasksByDate = {}) {
   const reportTasks = upcomingTasks.length > 0 ? upcomingTasks : selectedTasks;
   const fixedTasks = reportTasks.filter((task) => task.displayType === "fixed" || getDailyTaskGroup(task) === "schedule");
   const applianceTasks = reportTasks.filter((task) => getDailyTaskGroup(task) === "housework");
-  const fixedSummary = fixedTasks.length > 0 ? `${fixedTasks[0].repeat} ${fixedTasks[0].title}` : "등록된 개인 일정이 없습니다";
-  const applianceSummary = applianceTasks.length > 0 ? applianceTasks.slice(0, 3).map((task) => task.title).join(", ") : "추천 가사일이 없습니다";
+  const fixedSummary = fixedTasks.length > 0 ? fixedTasks[0].repeat + " " + fixedTasks[0].title : "등록된 개인 일정이 없습니다";
+  const applianceSummary = applianceTasks.length > 0 ? applianceTasks.slice(0, 3).map((task) => task.title).join(", ") : "異붿쿇 媛?ъ씪???놁뒿?덈떎";
 
-  return `${month}.${day} ${fixedSummary}. 오늘 진행할 가사일은 ${applianceSummary} 입니다.`;
+  return month + "." + day + " " + fixedSummary + ". 오늘 진행할 가사일은 " + applianceSummary + " 입니다";
 }
 
 function formatWeatherState(weather) {
-  if (!weather?.hasWeatherData) return "정보 없음";
-  const sky = weather.sky && weather.sky !== "정보 없음" ? weather.sky : "";
-  const pty = weather.pty && weather.pty !== "없음" && weather.pty !== "정보 없음" ? weather.pty : "";
-  return [sky, pty].filter(Boolean).join(" · ") || "정보 없음";
+  if (!weather?.hasWeatherData) return "?뺣낫 ?놁쓬";
+  const sky = weather.sky && weather.sky !== "?뺣낫 ?놁쓬" ? weather.sky : "";
+  const pty = weather.pty && weather.pty !== "?놁쓬" && weather.pty !== "?뺣낫 ?놁쓬" ? weather.pty : "";
+  return [sky, pty].filter(Boolean).join(" 쨌 ") || "?뺣낫 ?놁쓬";
 }
 
 function formatRecommendationSource(recommendation) {
   const labels = {
-    WEATHER_COMBINED: "날씨+ThinQ",
-    THINQ_LOG: "ThinQ 기록",
-    THINQ_STATE: "ThinQ 상태",
+    WEATHER_COMBINED: "?좎뵪+ThinQ",
+    THINQ_LOG: "ThinQ 湲곕줉",
+    THINQ_STATE: "ThinQ ?곹깭",
     THINQ_ENERGY: "전력량",
-    WEATHER_BASED: "날씨",
+    WEATHER_BASED: "?좎뵪",
   };
 
-  return labels[recommendation.source] || recommendation.automationType || "추천";
+  return labels[recommendation.source] || recommendation.automationType || "異붿쿇";
 }
 
 function formatRecommendationReason(reason) {
   return String(reason || "")
-    .replaceAll("날씨 정보 없음.", "")
-    .replaceAll("날씨 정보 없음", "")
+    .replaceAll("?좎뵪 ?뺣낫 ?놁쓬.", "")
+    .replaceAll("?좎뵪 ?뺣낫 ?놁쓬", "")
     .trim();
 }
 
 function formatDateTitle(date) {
-  const parsed = new Date(`${date}T00:00:00`);
+  const parsed = new Date(date + "T00:00:00");
   const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
-  return `${parsed.getMonth() + 1}월 ${parsed.getDate()}일 (${weekdays[parsed.getDay()]})`;
+  return (parsed.getMonth() + 1) + "월 " + parsed.getDate() + "일 (" + weekdays[parsed.getDay()] + ")";
 }
 
 function formatDDay(date) {
   const today = new Date();
-  const target = new Date(`${date}T00:00:00`);
+  const target = new Date(date + "T00:00:00");
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const diff = Math.round((target - todayStart) / 86400000);
 
   if (diff === 0) return "D-day";
-  return diff > 0 ? `D - ${diff}` : `D + ${Math.abs(diff)}`;
+  return diff > 0 ? "D - " + diff : "D + " + Math.abs(diff);
 }
 
 function DayTimelineHead({ selectedDate, onPrevDay, onNextDay }) {
   return (
     <div className="day-timeline-head">
       <button type="button" aria-label="이전 날" onClick={onPrevDay}>
-        ‹
+        ??
       </button>
       <strong>{formatDayTitle(selectedDate)}</strong>
       <button type="button" aria-label="다음 날" onClick={onNextDay}>
-        ›
+        ??
       </button>
     </div>
   );
 }
 
 function formatDayTitle(date) {
-  const parsed = new Date(`${date}T00:00:00`);
+  const parsed = new Date(date + "T00:00:00");
   const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
-  return `${parsed.getMonth() + 1}.${parsed.getDate()} (${weekdays[parsed.getDay()]})`;
+  return (parsed.getMonth() + 1) + "." + parsed.getDate() + " (" + weekdays[parsed.getDay()] + ")";
 }
 
 function WeekTimetable({ dates, tasksByDate, memberColors, selectedDate, onPrevWeek, onNextWeek, onSelectDate }) {
   const hours = Array.from({ length: 25 }, (_, index) => index);
-  const dayLabels = ["월", "화", "수", "목", "금", "토", "일"];
+  const dayLabels = ["일", "월", "화", "수", "목", "금", "토"];
 
   return (
     <section className="week-timetable-card" aria-label="주간 시간표">
       <div className="week-timetable-head">
         <button type="button" aria-label="이전 주" onClick={onPrevWeek}>
-          ‹
+          ??
         </button>
         <strong>{formatWeekTitle(dates)}</strong>
         <button type="button" aria-label="다음 주" onClick={onNextWeek}>
-          ›
+          ??
         </button>
       </div>
       <div className="week-timetable-scroll">
         <div className="week-timetable-grid" style={{ "--week-hour-count": hours.length }}>
           <span className="week-time-spacer" />
           {dates.map((date, dayIndex) => {
-            const parsed = new Date(`${date}T00:00:00`);
+            const parsed = new Date(date + "T00:00:00");
             return (
               <button
                 type="button"
-                className={`week-day-head ${date === selectedDate ? "active" : ""}`}
+                className={["week-day-head", date === selectedDate ? "active" : ""].filter(Boolean).join(" ")}
                 key={date}
                 onClick={() => onSelectDate(date)}
               >
@@ -1158,7 +1091,7 @@ function WeekTimetable({ dates, tasksByDate, memberColors, selectedDate, onPrevW
           ))}
 
           {hours.map((hour, rowIndex) =>
-            dates.map((date, dayIndex) => <span className="week-grid-line" style={{ gridColumn: dayIndex + 2, gridRow: rowIndex + 2 }} key={`${date}-${hour}`} />),
+            dates.map((date, dayIndex) => <span className="week-grid-line" style={{ gridColumn: dayIndex + 2, gridRow: rowIndex + 2 }} key={date + "-" + hour} />),
           )}
 
           {dates.flatMap((date, dayIndex) =>
@@ -1167,11 +1100,11 @@ function WeekTimetable({ dates, tasksByDate, memberColors, selectedDate, onPrevW
               return (
                 <button
                   type="button"
-                  className={`week-task-block ${task.tag}`}
-                  key={`${date}-${task.id}`}
+                  className={["week-task-block", task.tag].filter(Boolean).join(" ")}
+                  key={date + "-" + task.id}
                   style={{
                     gridColumn: dayIndex + 2,
-                    gridRow: `${placement.row} / span ${placement.span}`,
+                    gridRow: placement.row + " / span " + placement.span,
                     background: getWeekTaskColor(task, memberColors, taskIndex),
                   }}
                   onClick={() => onSelectDate(date)}
@@ -1189,30 +1122,30 @@ function WeekTimetable({ dates, tasksByDate, memberColors, selectedDate, onPrevW
 }
 
 function formatWeekTitle(dates) {
-  if (!dates.length) return "주간";
-  const start = new Date(`${dates[0]}T00:00:00`);
-  const end = new Date(`${dates[dates.length - 1]}T00:00:00`);
-  return `${start.getMonth() + 1}.${start.getDate()} - ${end.getMonth() + 1}.${end.getDate()}`;
+  if (!dates.length) return "二쇨컙";
+  const start = new Date(dates[0] + "T00:00:00");
+  const end = new Date(dates[dates.length - 1] + "T00:00:00");
+  return (start.getMonth() + 1) + "." + start.getDate() + " - " + (end.getMonth() + 1) + "." + end.getDate();
 }
 
 function formatWeekHour(hour) {
   if (hour === 0) {
-    return { period: "오전", hour: "12", time: "12시" };
+    return { period: "오전", hour: "12", time: "12:00" };
   }
 
   if (hour === 12) {
-    return { period: "", hour: "정오", time: "12시" };
+    return { period: "", hour: "정오", time: "12:00" };
   }
 
   if (hour === 24) {
-    return { period: "오후", hour: "12", time: "12시" };
+    return { period: "오후", hour: "12", time: "12:00" };
   }
 
   if (hour < 12) {
-    return { period: "오전", hour: String(hour), time: `${hour}시` };
+    return { period: "오전", hour: String(hour), time: hour + "시" };
   }
 
-  return { period: "오후", hour: String(hour - 12), time: `${hour - 12}시` };
+  return { period: "오후", hour: String(hour - 12), time: (hour - 12) + "시" };
 }
 
 function getWeekTaskPlacement(task, dayIndex, taskIndex, hours) {
@@ -1309,7 +1242,7 @@ function getDisplayDates(view, selectedDate, month) {
   if (view === "month") return month;
   if (view === "day") return [selectedDate];
 
-  const selected = new Date(`${selectedDate}T00:00:00`);
+  const selected = new Date(selectedDate + "T00:00:00");
   const monday = new Date(selected);
   const mondayOffset = (selected.getDay() + 6) % 7;
   monday.setDate(selected.getDate() - mondayOffset);
@@ -1324,14 +1257,14 @@ function getDisplayLabel(view, selectedDate, monthLabel) {
   if (view === "month") {
     const [year, month] = monthLabel.split(". ").map(Number);
     const currentYear = new Date().getFullYear();
-    return year === currentYear ? `${month}월` : `${year}년 ${month}월`;
+    return year === currentYear ? month + "월" : year + "년 " + month + "월";
   }
   if (view === "day") return selectedDate.replaceAll("-", ". ");
 
   const dates = getDisplayDates("week", selectedDate, []);
   const start = dates[0].slice(5).replace("-", ".");
   const end = dates[6].slice(5).replace("-", ".");
-  return `${selectedDate.slice(0, 4)}. ${start} - ${end}`;
+  return selectedDate.slice(0, 4) + ". " + start + " - " + end;
 }
 
 function getMonthCells(month, leadingBlanks) {
@@ -1356,7 +1289,7 @@ function getMonthCells(month, leadingBlanks) {
     }
 
     return {
-      key: `${year}-${String(monthNumber).padStart(2, "0")}-${String(currentDay).padStart(2, "0")}`,
+      key: year + "-" + String(monthNumber).padStart(2, "0") + "-" + String(currentDay).padStart(2, "0"),
       day: currentDay,
       isCurrentMonth: true,
     };
@@ -1364,15 +1297,15 @@ function getMonthCells(month, leadingBlanks) {
 }
 
 function addDays(date, amount) {
-  const next = new Date(`${date}T00:00:00`);
+  const next = new Date(date + "T00:00:00");
   next.setDate(next.getDate() + amount);
   return toDateKey(next);
 }
 
 function toDateKey(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
 }
 
 function formatTemp(value) {
-  return Number.isFinite(value) ? `${value}°` : "-";
+  return Number.isFinite(value) ? value + "°" : "-";
 }

@@ -5216,6 +5216,27 @@ body {
   pointer-events: none;
 }
 
+.calendar-month-view .month-house-icons {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  pointer-events: none;
+}
+
+.calendar-month-view .month-house-icon {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  line-height: 1;
+}
+
 .calendar-month-view .more-tasks {
   display: block !important;
   color: #9a9a9a;
