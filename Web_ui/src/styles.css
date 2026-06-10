@@ -1160,6 +1160,87 @@ button {
   scrollbar-width: none;
 }
 
+.calendar-filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.calendar-filter-row .profile-strip {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.house-calendar-toggle {
+  position: relative;
+  flex: 0 0 auto;
+  width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #d9d9d9;
+  color: #616161;
+  box-shadow: inset 0 0 0 1px rgba(97, 97, 97, 0.08);
+  transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.house-calendar-toggle:hover {
+  transform: translateY(-1px);
+}
+
+.house-calendar-toggle.active {
+  background: #a7a7a7;
+  color: #ffffff;
+  box-shadow: 0 9px 18px rgba(97, 97, 97, 0.22);
+}
+
+.vacuum-symbol {
+  position: relative;
+  width: 23px;
+  height: 23px;
+  display: block;
+}
+
+.vacuum-symbol::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  bottom: 4px;
+  width: 12px;
+  height: 11px;
+  border: 2px solid currentColor;
+  border-radius: 8px 8px 5px 5px;
+  background: transparent;
+}
+
+.vacuum-symbol::after {
+  content: "";
+  position: absolute;
+  right: 2px;
+  top: 4px;
+  width: 8px;
+  height: 13px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  border-radius: 0 8px 0 0;
+  transform: rotate(-12deg);
+  transform-origin: bottom left;
+}
+
+.vacuum-symbol i {
+  position: absolute;
+  left: 7px;
+  bottom: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 8px 0 0 currentColor;
+}
+
 .calendar-filter-block {
   display: grid;
   gap: 8px;

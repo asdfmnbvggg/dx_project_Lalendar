@@ -95,6 +95,7 @@ export default function CalendarPage({
   setCalendarView,
 }) {
   const [calendarScale, setCalendarScale] = useState(2);
+  const [calendarTaskMode, setCalendarTaskMode] = useState("personal");
   const [selectedDetailDate, setSelectedDetailDate] = useState(null);
   const [isDeleteMode, setDeleteMode] = useState(false);
   const [selectedDeleteTaskIds, setSelectedDeleteTaskIds] = useState([]);
@@ -115,15 +116,18 @@ export default function CalendarPage({
   const isExpanded = calendarScale >= 3;
   const selectedWeather = weatherByDate[selectedDate];
   const selectedRecommendations = getRecommendationsForDate(selectedDate, weatherByDate, routineRecommendations);
+  const isHouseCalendar = calendarTaskMode === "house";
+  const filteredTasksByDate = filterTasksByCalendarMode(tasksByDate, calendarTaskMode);
+  const selectedVisibleTasks = filteredTasksByDate[selectedDate] || [];
   const detailDate = selectedDetailDate || selectedDate;
-  const detailTasks = tasksByDate[detailDate] || [];
+  const detailTasks = filteredTasksByDate[detailDate] || [];
   const dailyFixedTasks = detailTasks.filter((task) => getDailyTaskGroup(task) === "schedule");
   const dailyHouseTasks = detailTasks.filter((task) => getDailyTaskGroup(task) === "housework");
   const dailyHours = buildDailyHours(detailTasks);
   const familyMembers = members.filter((member) => member.id !== "all");
   const selectedMemberProfile = familyMembers.find((member) => member.id === selectedMember) || familyMembers[0] || members[0];
   const selectedMemberName = calendarProfileNames[selectedMemberProfile.id] || selectedMemberProfile.name;
-  const calendarOwnerTitle = selectedMemberName + "님의 캘린더";
+  const calendarOwnerTitle = isHouseCalendar ? "가사 캘린더" : selectedMemberName + "님의 캘린더";
 
   function moveCalendar(offset) {
     if (calendarView === "month") {
@@ -336,19 +340,38 @@ export default function CalendarPage({
           <Settings size={22} strokeWidth={2.3} />
         </button>
         <p>일정 보기 필터</p>
-        <div className="profile-strip" aria-label="캘린더 일정 보기 필터">
-          {familyMembers.map((member) => (
-            <button
-              key={member.id}
-              className={selectedMember === member.id || (selectedMember === "all" && member.id === selectedMemberProfile.id) ? "active" : ""}
-              aria-label={(calendarProfileNames[member.id] || member.name) + " 캘린더 보기"}
-              onClick={() => setSelectedMember(member.id)}
-            >
-              <span style={{ background: memberImages[member.id] ? "#fff" : memberColors[member.id] || member.color }}>
-                {memberImages[member.id] ? <img src={memberImages[member.id]} alt="" aria-hidden="true" /> : calendarMemberIconText[member.id] || member.short}
-              </span>
-            </button>
-          ))}
+        <div className="calendar-filter-row">
+          <div className="profile-strip" aria-label="캘린더 일정 보기 필터">
+            {familyMembers.map((member) => (
+              <button
+                key={member.id}
+                className={selectedMember === member.id || (selectedMember === "all" && member.id === selectedMemberProfile.id) ? "active" : ""}
+                aria-label={(calendarProfileNames[member.id] || member.name) + " 캘린더 보기"}
+                onClick={() => {
+                  setSelectedMember(member.id);
+                  setCalendarTaskMode("personal");
+                }}
+              >
+                <span style={{ background: memberImages[member.id] ? "#fff" : memberColors[member.id] || member.color }}>
+                  {memberImages[member.id] ? <img src={memberImages[member.id]} alt="" aria-hidden="true" /> : calendarMemberIconText[member.id] || member.short}
+                </span>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className={["house-calendar-toggle", isHouseCalendar ? "active" : ""].filter(Boolean).join(" ")}
+            aria-label={isHouseCalendar ? "개인 캘린더 보기" : "가사 캘린더 보기"}
+            aria-pressed={isHouseCalendar}
+            onClick={() => {
+              setCalendarTaskMode((current) => (current === "house" ? "personal" : "house"));
+              closeDateDetail();
+            }}
+          >
+            <span className="vacuum-symbol" aria-hidden="true">
+              <i />
+            </span>
+          </button>
         </div>
       </div>
 
@@ -401,7 +424,7 @@ export default function CalendarPage({
         {calendarView === "week" ? (
           <WeekTimetable
             dates={displayDates}
-            tasksByDate={tasksByDate}
+            tasksByDate={filteredTasksByDate}
             memberColors={memberColors}
             selectedDate={selectedDate}
             onPrevWeek={() => moveCalendar(-1)}
@@ -429,7 +452,7 @@ export default function CalendarPage({
               {calendarView !== "month" &&
                 Array.from({ length: leadingBlanks }).map((_, index) => <span className="blank-day" key={index} />)}
               {calendarCells.map(({ key, day, isCurrentMonth }) => {
-                const tasks = tasksByDate[key] || [];
+                const tasks = filteredTasksByDate[key] || [];
                 const personalTasks = tasks.filter((task) => getDailyTaskGroup(task) !== "housework").slice(0, MONTH_PERSONAL_TASK_LIMIT);
                 const houseTasks = tasks.filter((task) => getDailyTaskGroup(task) === "housework").slice(0, MONTH_HOUSE_TASK_LIMIT);
                 const weather = weatherByDate[key];
@@ -466,28 +489,22 @@ export default function CalendarPage({
                     <div className="date-tasks">
                       {isCurrentMonth && (
                         <>
-                          {personalTasks.map((task) => (
-                            <i
-                              className={[task.tag, task.displayType === "fixed" ? "fixed-event-task" : ""].filter(Boolean).join(" ")}
-                              key={task.id}
-                              style={
-                                task.displayType === "appliance"
-                                  ? undefined
-                                  : { "--task-bg": task.color || memberColors[task.owner] || memberColors.all }
-                              }
-                            >
-                              {task.displayType === "appliance" && (
-                                <img className="task-appliance-image" src={applianceImages[task.applianceType] || washerImage} alt="" aria-hidden="true" />
-                              )}
-                              <span>{getMonthTaskLabel(task.title)}</span>
-                              {isExpanded && (
-                                <small>
-                                  {task.place} 쨌 {task.repeat}
-                                </small>
-                              )}
-                            </i>
-                          ))}
-                          {houseTasks.length > 0 && (
+                          {!isHouseCalendar &&
+                            personalTasks.map((task) => (
+                              <i
+                                className={[task.tag, task.displayType === "fixed" ? "fixed-event-task" : ""].filter(Boolean).join(" ")}
+                                key={task.id}
+                                style={{ "--task-bg": task.color || memberColors[task.owner] || memberColors.all }}
+                              >
+                                <span>{getMonthTaskLabel(task.title)}</span>
+                                {isExpanded && (
+                                  <small>
+                                    {task.place} 쨌 {task.repeat}
+                                  </small>
+                                )}
+                              </i>
+                            ))}
+                          {isHouseCalendar && houseTasks.length > 0 && (
                             <span className="month-house-icons" aria-label="가사 일정">
                               {houseTasks.map((task) => (
                                 <span className="month-house-icon" key={task.id} title={task.title}>
@@ -511,7 +528,7 @@ export default function CalendarPage({
         <section className="calendar-ai-report" aria-label="AI Report">
           <h3>AI Report</h3>
           <div>
-            <p>{buildAiReport(selectedDate, selectedTasks, tasksByDate)}</p>
+            <p>{buildAiReport(selectedDate, selectedVisibleTasks, filteredTasksByDate)}</p>
           </div>
         </section>
       )}
@@ -898,6 +915,15 @@ function getMonthHouseImage(task) {
   if (text.includes("fridge") || text.includes("냉장")) return fridgeImage;
   if (text.includes("air") || text.includes("에어컨") || text.includes("공기")) return airConditionerImage;
   return washerImage;
+}
+
+function filterTasksByCalendarMode(tasksByDate, mode) {
+  return Object.fromEntries(
+    Object.entries(tasksByDate).map(([date, tasks]) => [
+      date,
+      tasks.filter((task) => (mode === "house" ? getDailyTaskGroup(task) === "housework" : getDailyTaskGroup(task) !== "housework")),
+    ]),
+  );
 }
 
 function getDailyTaskGroup(task) {
