@@ -295,7 +295,7 @@ export default function App() {
     }
 
     setActiveTab(id);
-    if (id === "schedule") {
+    if (id === "schedule" && !isOnboardingComplete && !hasGeneratedOnboardingTasks) {
       setOnboardingComplete(false);
       setOnboardingStep("intro");
     }

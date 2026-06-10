@@ -5033,7 +5033,7 @@ body {
   height: 100%;
   grid-template-rows: 28px 0 1fr !important;
   align-items: start;
-  padding: 0 3px 8px !important;
+  padding: 0 0 8px !important;
   border-radius: 0 !important;
   background: transparent;
   box-shadow: none;
@@ -5045,7 +5045,7 @@ body {
   height: 100%;
   grid-template-rows: 30px 0 1fr !important;
   align-items: start;
-  padding: 0 3px 10px !important;
+  padding: 0 0 10px !important;
   border-radius: 0 !important;
   background: transparent;
   box-shadow: none;
@@ -5091,11 +5091,11 @@ body {
   height: 100%;
   min-height: 72px;
   align-content: start;
-  justify-items: center;
+  justify-items: stretch;
   gap: 3px;
   padding-top: 4px;
   padding-bottom: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .calendar-month-view .date-cell:hover {
@@ -5154,10 +5154,11 @@ body {
   height: 100%;
   min-height: 72px;
   align-content: start;
-  justify-items: center;
+  justify-items: stretch;
   gap: 3px;
   padding-top: 4px;
   padding-bottom: 26px;
+  overflow: visible;
 }
 
 .calendar-month-view .date-tasks:has(.fixed-event-task) {
@@ -5311,6 +5312,25 @@ body {
   box-shadow: none;
 }
 
+.calendar-month-view .date-cell i,
+.calendar-month-view .date-cell i.fixed-event-task,
+.calendar-month-view .date-cell i.auto-appliance-task,
+.calendar-house-view .date-cell i,
+.calendar-house-view .date-cell i.auto-appliance-task {
+  width: calc(100% + 2px) !important;
+  max-width: none;
+  min-width: calc(100% + 2px);
+  height: 18px;
+  min-height: 18px;
+  max-height: 18px;
+  margin-inline: -1px;
+  position: relative;
+  z-index: 1;
+  padding: 0 4px !important;
+  border-radius: 0 !important;
+  line-height: 18px !important;
+}
+
 .calendar-month-view .date-cell i.fixed-event-task:nth-of-type(2),
 .calendar-house-view .date-cell i.auto-appliance-task:nth-of-type(2) {
   color: #5661b8 !important;
@@ -5330,6 +5350,11 @@ body {
   text-align: center;
   font-size: 10px !important;
   line-height: 15px !important;
+}
+
+.calendar-month-view .date-cell i span,
+.calendar-house-view .date-cell i span {
+  line-height: 18px !important;
 }
 
 .calendar-month-view .date-cell i small,
@@ -6796,7 +6821,6 @@ body {
     padding-bottom: 24px;
   }
 
-  .calendar-month-view .date-cell i,
   .calendar-month-view .weather-recommendation-chip {
     max-width: 54px;
     min-height: 16px;
