@@ -91,6 +91,7 @@ export default function CalendarPage({
   monthLabel,
   monthLeadingBlanks,
   weatherByDate,
+  weatherApiStatus = "idle",
   routineRecommendations = [],
   onPrevMonth,
   onNextMonth,
@@ -145,6 +146,7 @@ export default function CalendarPage({
       : displayDates.map((key) => ({ key, day: Number(key.slice(-2)), isCurrentMonth: true }));
   const isExpanded = calendarScale >= 3;
   const selectedWeather = weatherByDate[selectedDate];
+  const shouldShowWeatherMissing = weatherApiStatus !== "loading" && !selectedWeather?.hasWeatherData;
   const selectedRecommendations = getRecommendationsForDate(selectedDate, weatherByDate, routineRecommendations);
   const filteredTasksByDate = filterTasksByCalendarMode(tasksByDate, calendarTaskMode, selectedMember);
   const selectedVisibleTasks = filteredTasksByDate[selectedDate] || [];
@@ -561,7 +563,7 @@ export default function CalendarPage({
                     disabled={!isHouseCalendar && !isCurrentMonth}
                   >
                     <strong>{day}</strong>
-                    {hasWeatherData && (
+                    {hasWeatherData ? (
                       <span className="day-weather">
                         <>
                           <span className="weather-icon" role="img" aria-label={weather.sky || weather.pty || "날씨"}>
@@ -575,7 +577,11 @@ export default function CalendarPage({
                           </span>
                         </>
                       </span>
-                    )}
+                    ) : weatherApiStatus !== "loading" ? (
+                      <span className="day-weather empty">
+                        <em>안 받아와짐.</em>
+                      </span>
+                    ) : null}
 
                     <div className="date-tasks">
                       {isCurrentMonth && (
@@ -677,7 +683,7 @@ export default function CalendarPage({
           </label>
         </div>
 
-        {selectedWeather?.hasWeatherData && (
+        {selectedWeather?.hasWeatherData ? (
           <div className="selected-weather-summary">
             <span className="weather-icon" role="img" aria-label={selectedWeather.sky || "날씨"}>
               {weatherIcon[selectedWeather.icon] || weatherIcon.unknown}
@@ -688,7 +694,11 @@ export default function CalendarPage({
               {Number.isFinite(selectedWeather.pop) ? " · 강수 " + selectedWeather.pop + "%" : ""}
             </small>
           </div>
-        )}
+        ) : shouldShowWeatherMissing ? (
+          <div className="selected-weather-summary empty">
+            <strong>안 받아와짐.</strong>
+          </div>
+        ) : null}
 
         {selectedTasks.map((task) => (
           <TaskItem

@@ -1,4 +1,4 @@
-import { Check, ClipboardList, Cpu, Refrigerator, Settings, Sparkles, X } from "lucide-react";
+﻿import { Check, ClipboardList, Cpu, Refrigerator, Settings, Sparkles, X } from "lucide-react";
 import { appliances, communityTips, members, tagLabel } from "../data.js";
 
 export default function DetailPanel({
@@ -17,17 +17,6 @@ export default function DetailPanel({
   selectedDate,
   selectedMember,
   onOpenComposer,
-  thinQDevices = [],
-  thinQDeviceStates = {},
-  thinQDeviceAux = {},
-  thinQError = "",
-  isThinQLoading = false,
-  onRefreshThinQDevices,
-  onLoadThinQDeviceState,
-  onRequestThinQControl,
-  onSubscribeThinQEvent,
-  onSubscribeThinQPush,
-  onLoadThinQDeviceEnergy,
   onLogout,
 }) {
   if (!panel) return null;
@@ -144,54 +133,6 @@ export default function DetailPanel({
             ))}
           </section>
         )}
-
-        {panel.type === "thinq" && (
-          <section className="detail-list">
-            <div className="thinq-panel-head">
-              <p>{isThinQLoading ? "ThinQ 기기를 불러오는 중입니다." : "등록된 ThinQ 기기를 내부 API로 조회합니다."}</p>
-              <button type="button" onClick={onRefreshThinQDevices}>
-                새로고침
-              </button>
-            </div>
-            {thinQError && <p className="panel-error">{thinQError}</p>}
-            {thinQDevices.map((device) => (
-              <article className="notice-row thinq-device-row" key={device.id}>
-                <Cpu size={18} />
-                <div>
-                  <strong>{device.name || device.alias || device.modelName || device.id}</strong>
-                  <p>
-                    {device.type || device.deviceType || "ThinQ"} · {device.id}
-                  </p>
-                  {thinQDeviceStates[device.id] && (
-                    <pre className="thinq-state-preview">{JSON.stringify(thinQDeviceStates[device.id], null, 2)}</pre>
-                  )}
-                  {thinQDeviceAux[device.id] && (
-                    <pre className="thinq-state-preview">{JSON.stringify(thinQDeviceAux[device.id], null, 2)}</pre>
-                  )}
-                  <div className="notice-actions thinq-actions">
-                    <button type="button" onClick={() => onLoadThinQDeviceState?.(device.id)}>
-                      상태 조회
-                    </button>
-                    <button type="button" onClick={() => onRequestThinQControl?.(device)}>
-                      제어 요청
-                    </button>
-                    <button type="button" onClick={() => onSubscribeThinQEvent?.(device.id)}>
-                      이벤트 구독
-                    </button>
-                    <button type="button" onClick={() => onSubscribeThinQPush?.(device.id)}>
-                      푸시 구독
-                    </button>
-                    <button type="button" onClick={() => onLoadThinQDeviceEnergy?.(device.id)}>
-                      전력량
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))}
-            {!isThinQLoading && thinQDevices.length === 0 && <p className="panel-empty">표시할 ThinQ 기기가 없습니다.</p>}
-          </section>
-        )}
-
         {panel.type === "community" && (
           <section className="detail-list">
             {communityTips.map((tip) => (
@@ -239,7 +180,7 @@ export default function DetailPanel({
           </section>
         )}
 
-        {!["summary", "settings", "notifications", "recommendation", "appliance", "appliances", "thinq", "community", "tip", "member", "rotation"].includes(panel.type) && (
+        {!["summary", "settings", "notifications", "recommendation", "appliance", "appliances", "community", "tip", "member", "rotation"].includes(panel.type) && (
           <section className="detail-list">
             {panelTasks.map((task) => (
               <article className="detail-task" key={task.id}>
@@ -292,7 +233,7 @@ function getPanelTasks(panel, tasks, doneTasks, pendingTasks) {
   if (panel.type === "room") return tasks.filter((task) => task.place === panel.room);
   if (panel.type === "task") return tasks.filter((task) => task.id === panel.task.id);
   if (panel.type === "pending") return pendingTasks;
-  if (panel.type === "appliances" || panel.type === "thinq" || panel.type === "community") return [];
+  if (panel.type === "appliances" || panel.type === "community") return [];
   return tasks;
 }
 
@@ -318,7 +259,6 @@ function getPanelKicker(panel) {
     recommendation: "AI 추천",
     appliance: "가전 상태",
     appliances: "가전 캘린더",
-    thinq: "LG ThinQ",
     community: "커뮤니티",
     tip: "생활 팁",
     member: "멤버 상세",
@@ -338,7 +278,6 @@ function getPanelTitle(panel) {
   if (panel.type === "community") return "우리 동네 집안일 팁";
   if (panel.type === "tip") return "커뮤니티 추천";
   if (panel.type === "appliances") return "LG ThinQ 연동 가전";
-  if (panel.type === "thinq") return "LG ThinQ 기기";
   if (panel.type === "member") return panel.member.name;
   if (panel.type === "rotation") return "담당 순서";
   return getPanelKicker(panel);

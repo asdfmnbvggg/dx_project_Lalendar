@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   Bell,
@@ -20,17 +20,11 @@ import TaskComposer from "./components/TaskComposer.jsx";
 import DetailPanel from "./components/DetailPanel.jsx";
 import lgCharacter from "./assets/lg-character.png";
 import { CURRENT_USER_STORAGE_KEY, USERS, findUserById } from "./constants/users.js";
-import { fetchCalendarWeather } from "./services/weatherService.js";
+import { fetchCalendarWeather, fetchShortWeather } from "./services/weatherService.js";
+import { fetchMidWeather } from "./services/midWeatherService.js";
+import { fetchAirQuality } from "./services/airQualityService.js";
 import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendationService.js";
-import { buildRoutineRecommendations, recordThinQUsageLog } from "./services/routinePredictionService.js";
-import {
-  controlThinQDevice,
-  fetchThinQDeviceEnergy,
-  fetchThinQDeviceState,
-  fetchThinQDevices,
-  subscribeThinQDeviceEvent,
-  subscribeThinQDevicePush,
-} from "./services/thinqIntegrationService.js";
+import { buildRoutineRecommendations } from "./services/routinePredictionService.js";
 
 const ENABLE_ONBOARDING_TASK_GENERATION = false;
 const USER_COLORS = {
@@ -46,21 +40,21 @@ const USER_TO_OWNER = {
 const OWNER_TO_USER = Object.fromEntries(Object.entries(USER_TO_OWNER).map(([userId, ownerId]) => [ownerId, userId]));
 
 export default function App() {
-  const [currentUser, setCurrentUser] = useState(readStoredCurrentUser);
-  const [activeCalendarUser, setActiveCalendarUser] = useState(readStoredCurrentUser);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [activeCalendarUser, setActiveCalendarUser] = useState(null);
   const [tasks, setTasks] = useState(() => normalizeTasksForUsers(normalizeGeneratedTaskTitles(initialTasks)));
   const [memberColors, setMemberColors] = useState(() => ({
     ...Object.fromEntries(members.map((member) => [member.id, member.color])),
     ...USER_COLORS,
   }));
-  const [activeTab, setActiveTab] = useState(() => (readStoredCurrentUser() ? "schedule" : "home"));
-  const [isOnboardingComplete, setOnboardingComplete] = useState(() => Boolean(readStoredCurrentUser()));
+  const [activeTab, setActiveTab] = useState("schedule");
+  const [isOnboardingComplete, setOnboardingComplete] = useState(false);
   const [hasGeneratedOnboardingTasks, setHasGeneratedOnboardingTasks] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState("intro");
   const [onboardingProfile, setOnboardingProfile] = useState({
     familyCount: 2,
     laundryDays: "월, 목",
-    cleaningDay: "토요일",
+    cleaningDay: "일요일",
     returnHomeTime: "19:30",
   });
   const [selectedDate, setSelectedDate] = useState(getTodayKey);
@@ -82,12 +76,7 @@ export default function App() {
   const [notificationPosition, setNotificationPosition] = useState({ x: 0, y: 0 });
   const [calendarView, setCalendarView] = useState("month");
   const [calendarWeatherByDate, setCalendarWeatherByDate] = useState({});
-  const [thinQDevices, setThinQDevices] = useState([]);
-  const [thinQDeviceStates, setThinQDeviceStates] = useState({});
-  const [thinQDeviceAux, setThinQDeviceAux] = useState({});
-  const [thinQError, setThinQError] = useState("");
-  const [isThinQLoading, setThinQLoading] = useState(false);
-  const [pendingThinQControl, setPendingThinQControl] = useState(null);
+  const [weatherApiStatus, setWeatherApiStatus] = useState("loading");
 
   useEffect(() => {
     setTasks((current) => {
@@ -114,17 +103,20 @@ export default function App() {
 
   useEffect(() => {
     let isActive = true;
+    setWeatherApiStatus("loading");
 
     fetchCalendarWeather()
       .then((forecastByDate) => {
         if (isActive) {
           setCalendarWeatherByDate(buildWeatherRecommendationsByDate(forecastByDate));
+          setWeatherApiStatus(Object.keys(forecastByDate || {}).length > 0 ? "success" : "empty");
         }
       })
       .catch((error) => {
         console.warn(error);
         if (isActive) {
           setCalendarWeatherByDate({});
+          setWeatherApiStatus("error");
         }
       });
 
@@ -132,12 +124,6 @@ export default function App() {
       isActive = false;
     };
   }, []);
-
-  useEffect(() => {
-    if (panel?.type === "thinq") {
-      loadThinQDevices();
-    }
-  }, [panel?.type]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -192,13 +178,13 @@ export default function App() {
   const routineRecommendations = useMemo(
     () =>
       buildRoutineRecommendations({
-        devices: thinQDevices,
-        deviceStates: thinQDeviceStates,
-        deviceAux: thinQDeviceAux,
+        devices: [],
+        deviceStates: {},
+        deviceAux: {},
         weatherByDate: calendarWeatherByDate,
         selectedDate,
       }),
-    [thinQDevices, thinQDeviceStates, thinQDeviceAux, calendarWeatherByDate, selectedDate],
+    [calendarWeatherByDate, selectedDate],
   );
 
   function changeVisibleMonth(offset) {
@@ -339,7 +325,9 @@ export default function App() {
     setActiveCalendarUser(user);
     setSelectedMember(user.id);
     setActiveTab("schedule");
-    setOnboardingComplete(true);
+    setOnboardingComplete(false);
+    setOnboardingStep("intro");
+    setHasGeneratedOnboardingTasks(false);
     setPanel(null);
     setMenuOpen(false);
     setCalendarMenuOpen(false);
@@ -352,7 +340,9 @@ export default function App() {
     setCurrentUser(null);
     setActiveCalendarUser(null);
     setSelectedMember("jea");
-    setActiveTab("home");
+    setActiveTab("schedule");
+    setOnboardingComplete(false);
+    setOnboardingStep("intro");
     setPanel(null);
     setMenuOpen(false);
     setCalendarMenuOpen(false);
@@ -386,105 +376,6 @@ export default function App() {
       confidence: recommendation.confidence,
     });
     setSelectedDate(date);
-  }
-
-  async function loadThinQDevices() {
-    setThinQLoading(true);
-    setThinQError("");
-
-    try {
-      const result = await fetchThinQDevices();
-      setThinQDevices(normalizeThinQDevices(result));
-    } catch (error) {
-      setThinQError(error instanceof Error ? error.message : "ThinQ 기기 목록을 불러오지 못했습니다.");
-    } finally {
-      setThinQLoading(false);
-    }
-  }
-
-  async function loadThinQDeviceState(deviceId) {
-    setThinQError("");
-
-    try {
-      const state = await fetchThinQDeviceState(deviceId);
-      setThinQDeviceStates((current) => ({ ...current, [deviceId]: state }));
-      recordThinQUsageLog({
-        deviceId,
-        applianceType: thinQDevices.find((device) => device.id === deviceId)?.type,
-        eventType: "STATE",
-        stateSummary: state,
-      });
-    } catch (error) {
-      setThinQError(error instanceof Error ? error.message : "ThinQ 기기 상태를 불러오지 못했습니다.");
-    }
-  }
-
-  async function subscribeThinQEvent(deviceId) {
-    setThinQError("");
-
-    try {
-      const result = await subscribeThinQDeviceEvent(deviceId);
-      setThinQDeviceAux((current) => ({ ...current, [deviceId]: { ...current[deviceId], eventSubscription: result } }));
-      recordThinQUsageLog({ deviceId, eventType: "EVENT_SUBSCRIBE", result });
-    } catch (error) {
-      setThinQError(error instanceof Error ? error.message : "ThinQ 이벤트 구독에 실패했습니다.");
-    }
-  }
-
-  async function subscribeThinQPush(deviceId) {
-    setThinQError("");
-
-    try {
-      const result = await subscribeThinQDevicePush(deviceId);
-      setThinQDeviceAux((current) => ({ ...current, [deviceId]: { ...current[deviceId], pushSubscription: result } }));
-      recordThinQUsageLog({ deviceId, eventType: "PUSH_SUBSCRIBE", result });
-    } catch (error) {
-      setThinQError(error instanceof Error ? error.message : "ThinQ 푸시 구독에 실패했습니다.");
-    }
-  }
-
-  async function loadThinQDeviceEnergy(deviceId) {
-    setThinQError("");
-
-    try {
-      const result = await fetchThinQDeviceEnergy(deviceId);
-      setThinQDeviceAux((current) => ({ ...current, [deviceId]: { ...current[deviceId], energy: result } }));
-      recordThinQUsageLog({
-        deviceId,
-        applianceType: thinQDevices.find((device) => device.id === deviceId)?.type,
-        eventType: "ENERGY",
-        energySummary: result,
-      });
-    } catch (error) {
-      setThinQError(error instanceof Error ? error.message : "ThinQ 전력량 조회에 실패했습니다.");
-    }
-  }
-
-  function requestThinQControl(device) {
-    setPendingThinQControl({
-      device,
-      payload: { operation: "POWER_ON" },
-    });
-  }
-
-  async function executeThinQControl() {
-    if (!pendingThinQControl) return;
-    setThinQError("");
-
-    try {
-      await controlThinQDevice(pendingThinQControl.device.id, pendingThinQControl.payload);
-      recordThinQUsageLog({
-        deviceId: pendingThinQControl.device.id,
-        applianceType: pendingThinQControl.device.type,
-        eventType: "CONTROL",
-        payload: pendingThinQControl.payload,
-      });
-      await loadThinQDeviceState(pendingThinQControl.device.id);
-    } catch (error) {
-      setThinQError(error instanceof Error ? error.message : "ThinQ 제어 요청에 실패했습니다.");
-    } finally {
-      setPendingThinQControl(null);
-    }
   }
 
   function executeNotification(item) {
@@ -544,7 +435,7 @@ export default function App() {
       id: Date.now() + index + 1,
       date: task.date,
       title,
-      place: index === 0 ? "세탁실" : "LG ThinQ",
+      place: index === 0 ? "세탁실" : "가전 자동화",
       tag: "house",
       owner,
       done: false,
@@ -574,6 +465,7 @@ export default function App() {
     monthLabel,
     monthLeadingBlanks,
     weatherByDate: calendarWeatherByDate,
+    weatherApiStatus,
     routineRecommendations,
     onPrevMonth: () => changeVisibleMonth(-1),
     onNextMonth: () => changeVisibleMonth(1),
@@ -673,7 +565,6 @@ export default function App() {
                 <div className="menu-popover" role="menu">
                   <button type="button" onClick={() => setMenuOpen(false)}>가족 초대</button>
                   <button type="button" onClick={() => { setPanel({ type: "notifications" }); setMenuOpen(false); }}>알림 설정</button>
-                  <button type="button" onClick={() => { setPanel({ type: "thinq" }); setMenuOpen(false); }}>LG ThinQ 연동</button>
                   <button type="button" onClick={() => { setPanel({ type: "settings" }); setMenuOpen(false); }}>테마 설정</button>
                   <button type="button" onClick={() => setMenuOpen(false)}>데이터 내보내기</button>
                   <button type="button" onClick={() => { setComposerOpen(true); setMenuOpen(false); }}>작업 추가</button>
@@ -685,7 +576,7 @@ export default function App() {
         </header>
         )}
 
-        {activeTab === "home" && <HomePage onOpenNotifications={() => setNotificationOpen(true)} onOpenThinQ={() => setPanel({ type: "thinq" })} />}
+        {activeTab === "home" && <HomePage onOpenNotifications={() => setNotificationOpen(true)} />}
         {activeTab === "schedule" && !isOnboardingComplete && (
           <div className="onboarding-live-stage">
             <div className="onboarding-calendar-backdrop" aria-hidden="true">
@@ -800,17 +691,6 @@ export default function App() {
         selectedDate={selectedDate}
         selectedMember={selectedMember}
         onOpenComposer={() => setComposerOpen(true)}
-        thinQDevices={thinQDevices}
-        thinQDeviceStates={thinQDeviceStates}
-        thinQDeviceAux={thinQDeviceAux}
-        thinQError={thinQError}
-        isThinQLoading={isThinQLoading}
-        onRefreshThinQDevices={loadThinQDevices}
-        onLoadThinQDeviceState={loadThinQDeviceState}
-        onRequestThinQControl={requestThinQControl}
-        onSubscribeThinQEvent={subscribeThinQEvent}
-        onSubscribeThinQPush={subscribeThinQPush}
-        onLoadThinQDeviceEnergy={loadThinQDeviceEnergy}
         onLogout={handleLogout}
       />
 
@@ -891,24 +771,6 @@ export default function App() {
           </section>
         </div>
       )}
-
-      {pendingThinQControl && (
-        <div className="confirm-backdrop" role="presentation">
-          <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="thinq-control-title">
-            <p>LG ThinQ 제어 확인</p>
-            <h2 id="thinq-control-title">{pendingThinQControl.device.name || pendingThinQControl.device.id} 제어를 실행할까요?</h2>
-            <span>실제 가전 제어 요청은 확인 후에만 전송됩니다.</span>
-            <div className="confirm-actions">
-              <button type="button" onClick={() => setPendingThinQControl(null)}>
-                취소
-              </button>
-              <button type="button" onClick={executeThinQControl}>
-                실행하기
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
     </main>
   );
 }
@@ -940,12 +802,12 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
   const [fixedStartMinute, setFixedStartMinute] = useState("");
   const [fixedEndHour, setFixedEndHour] = useState("");
   const [fixedEndMinute, setFixedEndMinute] = useState("");
-  const introMessage = "어서오세요!\n당신을 위한 최적의 가사일 계획을\n자동으로 짜주는 AI 가사일 플래너\n현우입니다.";
+  const introMessage = "어서오세요!\n당신을 위한 최적의 가사일 계획을\n자동으로 짜주는 AI 가사일 플래너\n현우입니다!";
   const scheduleInfoMessage = "AI가 최적의 가사일을\n자동으로 계획하려면\n00님의 일정 정보가 필요해요!";
   const [introTextLength, setIntroTextLength] = useState(0);
   const [scheduleInfoTextLength, setScheduleInfoTextLength] = useState(0);
   const guideByStep = {
-    intro: "어서오세요!",
+    intro: "어서오세요",
     scheduleInfo: "일정 정보가 필요해요",
     ready: "추천 준비 완료",
   };
@@ -967,7 +829,7 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
   const isIntroComplete = introTextLength >= introMessage.length;
   const scheduleInfoText = scheduleInfoMessage.slice(0, scheduleInfoTextLength);
   const isScheduleInfoComplete = scheduleInfoTextLength >= scheduleInfoMessage.length;
-  const fixedDays = ["월", "화", "수", "목", "금", "토", "일"];
+  const fixedDays = ["일", "월", "화", "수", "목", "금", "토"];
   const fixedHours = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
   const fixedMinutes = ["00", "10", "20", "30", "40", "50"];
   const fixedTimelineStartHour = 6;
@@ -1096,7 +958,7 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
           <div>
             <p className="onboarding-kicker">기본 정보</p>
             <h1>생활 패턴을 알려주세요</h1>
-            <p>입력한 값은 첫 10일 추천 일정과 가족별 담당 배분에만 사용됩니다.</p>
+            <p>입력한 값은 첫 10일 추천 일정과 가족별 담당 배분에만 사용합니다.</p>
           </div>
 
           <label className="onboarding-field">
@@ -1284,7 +1146,7 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
           <div className="onboarding-card onboarding-appliance-card onboarding-combined-appliance-card">
             <div>
               <h1>자동화할 가전을 알려주세요.</h1>
-              <p>ThinQ가 자동 작동시킬 가전을 선택해 주세요.</p>
+              <p>자동 작동시킬 가전을 선택해 주세요.</p>
             </div>
 
             <div className="onboarding-assignee-list" aria-label="가전별 담당자 지정">
@@ -1414,7 +1276,61 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
   );
 }
 
-function HomePage({ onOpenNotifications, onOpenThinQ }) {
+function HomePage({ onOpenNotifications }) {
+  const [environmentData, setEnvironmentData] = useState(() => ({
+    short: { status: "idle", data: null, error: "" },
+    mid: { status: "idle", data: null, error: "" },
+    air: { status: "idle", data: null, error: "" },
+  }));
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadEnvironmentData() {
+      setEnvironmentData({
+        short: { status: "loading", data: null, error: "" },
+        mid: { status: "loading", data: null, error: "" },
+        air: { status: "loading", data: null, error: "" },
+      });
+
+      const [shortResult, midResult, airResult] = await Promise.allSettled([
+        fetchShortWeather(),
+        fetchMidWeather(),
+        fetchAirQuality(),
+      ]);
+
+      if (!isActive) return;
+
+      setEnvironmentData({
+        short: resultToApiState(shortResult),
+        mid: resultToApiState(midResult),
+        air: resultToApiState(airResult),
+      });
+    }
+
+    loadEnvironmentData();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  function refreshEnvironmentData() {
+    setEnvironmentData((current) => ({
+      short: { ...current.short, status: "loading", error: "" },
+      mid: { ...current.mid, status: "loading", error: "" },
+      air: { ...current.air, status: "loading", error: "" },
+    }));
+
+    Promise.allSettled([fetchShortWeather(), fetchMidWeather(), fetchAirQuality()]).then(([shortResult, midResult, airResult]) => {
+      setEnvironmentData({
+        short: resultToApiState(shortResult),
+        mid: resultToApiState(midResult),
+        air: resultToApiState(airResult),
+      });
+    });
+  }
+
   return (
     <section className="thinq-home-page" aria-label="홈">
       <header className="thinq-statusbar" aria-label="상태 표시줄">
@@ -1424,7 +1340,7 @@ function HomePage({ onOpenNotifications, onOpenThinQ }) {
 
       <div className="thinq-home-top">
         <button className="thinq-home-selector" type="button">
-          <strong>엘린이의 홈</strong>
+          <strong>우리 집</strong>
           <ChevronDown size={24} />
         </button>
         <div className="thinq-home-actions">
@@ -1479,7 +1395,7 @@ function HomePage({ onOpenNotifications, onOpenThinQ }) {
         </div>
       </section>
 
-      <button className="thinq-play-banner" type="button" onClick={onOpenThinQ}>
+      <button className="thinq-play-banner" type="button">
         <span className="thinq-play-icon" aria-hidden="true" />
         <span>
           <strong>ThinQ PLAY</strong>
@@ -1488,10 +1404,93 @@ function HomePage({ onOpenNotifications, onOpenThinQ }) {
         <i aria-hidden="true">∞</i>
       </button>
 
+      <EnvironmentDataPanel data={environmentData} onRefresh={refreshEnvironmentData} />
+
       <section className="thinq-smart-routine">
         <h2>스마트 루틴</h2>
       </section>
     </section>
+  );
+}
+
+function EnvironmentDataPanel({ data, onRefresh }) {
+  const isLoading = Object.values(data).some((item) => item.status === "loading");
+  const shortItems = normalizePayloadList(data.short.data);
+  const midItems = normalizePayloadList(data.mid.data);
+  const airItems = normalizePayloadList(data.air.data);
+  const airNow = airItems[0] || (data.air.data && typeof data.air.data === "object" ? data.air.data : null);
+
+  return (
+    <section className="environment-panel" aria-label="날씨와 미세먼지">
+      <div className="environment-panel-head">
+        <div>
+          <h2>오늘의 환경</h2>
+          <p>단기예보, 중기예보, 미세먼지 데이터를 API에서 불러와요.</p>
+        </div>
+        <button type="button" onClick={onRefresh} disabled={isLoading}>
+          {isLoading ? "불러오는 중" : "새로고침"}
+        </button>
+      </div>
+
+      <div className="environment-grid">
+        <ForecastSummaryCard title="단기예보" state={data.short} items={shortItems} emptyText="단기예보 데이터가 없습니다." />
+        <ForecastSummaryCard title="중기예보" state={data.mid} items={midItems} emptyText="중기예보 데이터가 없습니다." />
+        <AirQualityCard state={data.air} item={airNow} />
+      </div>
+    </section>
+  );
+}
+
+function ForecastSummaryCard({ title, state, items, emptyText }) {
+  return (
+    <article className="environment-card">
+      <span>{title}</span>
+      {state.status === "loading" ? (
+        <p className="environment-message">데이터를 불러오고 있어요.</p>
+      ) : state.status === "error" ? (
+        <p className="environment-error">{state.error}</p>
+      ) : items.length === 0 ? (
+        <p className="environment-message">{emptyText}</p>
+      ) : (
+        <div className="environment-forecast-list">
+          {items.slice(0, 3).map((item, index) => (
+            <div className="environment-forecast-row" key={`${title}-${item.date || index}`}>
+              <strong>{formatWeatherDate(item.date) || `${index + 1}번째 예보`}</strong>
+              <p>
+                {formatWeatherIcon(item.icon)}
+                {formatWeatherTemperatures(item)}
+              </p>
+              <small>{formatWeatherDetail(item)}</small>
+            </div>
+          ))}
+        </div>
+      )}
+    </article>
+  );
+}
+
+function AirQualityCard({ state, item }) {
+  const grade = item ? item.khaiGrade || item.pm10Grade || item.pm25Grade || item.grade || item.status : "";
+
+  return (
+    <article className="environment-card air">
+      <span>미세먼지</span>
+      {state.status === "loading" ? (
+        <p className="environment-message">데이터를 불러오고 있어요.</p>
+      ) : state.status === "error" ? (
+        <p className="environment-error">{state.error}</p>
+      ) : !item ? (
+        <p className="environment-message">미세먼지 데이터가 없습니다.</p>
+      ) : (
+        <div className="environment-air-body">
+          <strong>{formatAirQualityGrade(grade)}</strong>
+          <p>
+            PM10 {formatNullableValue(item.pm10Value || item.pm10, "ug/m3")} · PM2.5 {formatNullableValue(item.pm25Value || item.pm25, "ug/m3")}
+          </p>
+          <small>{item.stationName || item.sidoName || item.dataTime || "측정소 정보 없음"}</small>
+        </div>
+      )}
+    </article>
   );
 }
 
@@ -1544,6 +1543,100 @@ function SimpleTabPage({ icon, title, text }) {
       <p>{text}</p>
     </section>
   );
+}
+
+function resultToApiState(result) {
+  if (result.status === "fulfilled") {
+    return { status: "success", data: result.value, error: "" };
+  }
+
+  return {
+    status: "error",
+    data: null,
+    error: result.reason instanceof Error ? result.reason.message : "API 호출에 실패했습니다.",
+  };
+}
+
+function normalizePayloadList(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (!payload || typeof payload !== "object") return [];
+
+  const candidates = [
+    payload.data,
+    payload.items,
+    payload.list,
+    payload.results,
+    payload.response?.body?.items?.item,
+    payload.response?.body?.items,
+    payload.body?.items?.item,
+    payload.body?.items,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+    if (candidate && typeof candidate === "object") return [candidate];
+  }
+
+  return [payload];
+}
+
+function formatWeatherDate(date) {
+  if (!date) return "";
+  const text = String(date);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+
+  const [, month, day] = text.split("-");
+  return `${Number(month)}월 ${Number(day)}일`;
+}
+
+function formatWeatherTemperatures(item) {
+  const minTemp = item.minTemp ?? item.minTemperature ?? item.tmn;
+  const maxTemp = item.maxTemp ?? item.maxTemperature ?? item.tmx;
+  const currentTemp = item.temp ?? item.temperature ?? item.tmp;
+
+  if (Number.isFinite(Number(minTemp)) || Number.isFinite(Number(maxTemp))) {
+    return `${formatNullableValue(minTemp, "C")} / ${formatNullableValue(maxTemp, "C")}`;
+  }
+
+  return Number.isFinite(Number(currentTemp)) ? `${currentTemp}C` : "기온 정보 없음";
+}
+
+function formatWeatherIcon(icon) {
+  const iconMap = {
+    sunny: "☀️ ",
+    partly_cloudy: "⛅ ",
+    cloudy: "☁️ ",
+    rain: "🌧️ ",
+    snow: "❄️ ",
+  };
+
+  return iconMap[icon] || "";
+}
+
+function formatWeatherDetail(item) {
+  const parts = [
+    item.sky,
+    item.pty,
+    Number.isFinite(Number(item.pop)) ? `강수확률 ${item.pop}%` : "",
+    Number.isFinite(Number(item.humidity)) ? `습도 ${item.humidity}%` : "",
+  ].filter(Boolean);
+
+  return parts.length ? parts.join(" · ") : item.source || "상세 정보 없음";
+}
+
+function formatAirQualityGrade(grade) {
+  const gradeMap = {
+    1: "좋음",
+    2: "보통",
+    3: "나쁨",
+    4: "매우 나쁨",
+  };
+
+  return gradeMap[grade] || grade || "등급 정보 없음";
+}
+
+function formatNullableValue(value, suffix = "") {
+  return value === null || value === undefined || value === "" || value === "-" ? "정보 없음" : `${value}${suffix}`;
 }
 
 function sortTasks(tasks) {
@@ -1718,18 +1811,6 @@ function isLaundryTask(task) {
 
 function isCalendarHouseworkTask(task) {
   return task.displayType === "appliance" || task.tag === "house" || task.source === "auto";
-}
-
-function normalizeThinQDevices(result) {
-  const devices = result?.devices || result?.items || result?.response?.devices || result?.result?.devices || result;
-  if (!Array.isArray(devices)) return [];
-
-  return devices.map((device) => ({
-    ...device,
-    id: device.deviceId || device.id || device.device_id,
-    name: device.alias || device.name || device.deviceName || device.modelName || device.deviceId || device.id,
-    type: device.deviceType || device.type || device.category || "ThinQ",
-  }));
 }
 
 function shouldSuggestAutomation(task) {
