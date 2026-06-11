@@ -122,7 +122,7 @@ export default function CalendarPage({
   const isExpanded = calendarScale >= 3;
   const selectedWeather = weatherByDate[selectedDate];
   const selectedRecommendations = getRecommendationsForDate(selectedDate, weatherByDate, routineRecommendations);
-  const filteredTasksByDate = filterTasksByCalendarMode(tasksByDate, calendarTaskMode);
+  const filteredTasksByDate = filterTasksByCalendarMode(tasksByDate, calendarTaskMode, selectedMember);
   const selectedVisibleTasks = filteredTasksByDate[selectedDate] || [];
   const detailDate = selectedDetailDate || selectedDate;
   const detailTasks = filteredTasksByDate[detailDate] || [];
@@ -567,21 +567,20 @@ export default function CalendarPage({
                                 )}
                               </i>
                             ))}
-                          {isHouseCalendar &&
-                            visibleHouseTasks.map((task) => (
-                              <i
-                                className={[task.tag, task.displayType === "fixed" ? "fixed-event-task" : ""].filter(Boolean).join(" ")}
-                                key={task.id}
-                                style={{ "--task-bg": task.color || memberColors[task.owner] || memberColors.all }}
-                              >
-                                <span>{getHouseTaskLabel(task.title)}</span>
-                                {isExpanded && (
-                                  <small>
-                                    {task.place} · {task.repeat}
-                                  </small>
-                                )}
-                              </i>
-                            ))}
+                          {visibleHouseTasks.map((task) => (
+                            <i
+                              className={[task.tag, task.displayType === "fixed" ? "fixed-event-task" : ""].filter(Boolean).join(" ")}
+                              key={task.id}
+                              style={{ "--task-bg": task.color || memberColors[task.owner] || memberColors.all }}
+                            >
+                              <span>{getHouseTaskLabel(task.title)}</span>
+                              {isExpanded && (
+                                <small>
+                                  {task.place} · {task.repeat}
+                                </small>
+                              )}
+                            </i>
+                          ))}
                         </>
                           )}
                     </div>
@@ -1187,11 +1186,15 @@ function getMonthHouseImage(task) {
   return washerImage;
 }
 
-function filterTasksByCalendarMode(tasksByDate, mode) {
+function filterTasksByCalendarMode(tasksByDate, mode, selectedMember) {
   return Object.fromEntries(
     Object.entries(tasksByDate).map(([date, tasks]) => [
       date,
-      tasks.filter((task) => (mode === "house" ? getDailyTaskGroup(task) === "housework" : getDailyTaskGroup(task) !== "housework")),
+      tasks.filter((task) => {
+        const isHousework = getDailyTaskGroup(task) === "housework";
+        if (mode === "house") return isHousework;
+        return !isHousework || selectedMember === "all" || task.owner === selectedMember;
+      }),
     ]),
   );
 }
