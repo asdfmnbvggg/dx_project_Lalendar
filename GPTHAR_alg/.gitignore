@@ -1,0 +1,5 @@
+Code/results/*
+Code/datasets/*
+Code/pretrain_embedding/*
+Code/pretrain_embedding_with_sep/*
+*.pyc

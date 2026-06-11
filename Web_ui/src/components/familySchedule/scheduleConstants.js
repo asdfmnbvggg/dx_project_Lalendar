@@ -1,7 +1,7 @@
 export const DAYS = ["월", "화", "수", "목", "금", "토", "일"];
 export const WEEKDAY_DAYS = DAYS.slice(0, 5);
-export const START_HOUR = 7;
-export const END_HOUR = 22;
+export const START_HOUR = 0;
+export const END_HOUR = 24;
 export const HOUR_HEIGHT = 64;
 
 export const CATEGORY_COLORS = {
@@ -17,19 +17,19 @@ export const CATEGORY_LABELS = {
   weather: "날씨 기반 추천",
   appliance: "가전 상태 기반 추천",
   routine: "가족 루틴 기반 추천",
-  housework: "생활/가사 추천",
+  housework: "생활/집안일 추천",
 };
 
 export const REPEAT_OPTIONS = [
-  { value: "none", label: "없음" },
+  { value: "none", label: "반복 없음" },
   { value: "daily", label: "매일" },
   { value: "weekly", label: "매주" },
   { value: "monthly", label: "매월" },
-  { value: "custom", label: "사용자 지정" },
+  { value: "custom", label: "요일 직접 지정" },
 ];
 
 export const REMINDER_OPTIONS = [
-  { value: "off", label: "OFF" },
+  { value: "off", label: "알림 없음" },
   { value: "at-time", label: "정시" },
   { value: "10m", label: "10분 전" },
   { value: "30m", label: "30분 전" },
@@ -69,7 +69,7 @@ export const TEMPLATE_GROUPS = [
   {
     id: "school-grade-1",
     title: "초등학교 시간표",
-    description: "평일 09:00부터 점심 이후까지",
+    description: "평일 오전 수업 중심의 기본 시간표",
     schedules: [
       ["월", "09:00", "09:40", "국어", "1-3반", "custom"],
       ["월", "09:50", "10:30", "수학", "1-3반", "custom"],

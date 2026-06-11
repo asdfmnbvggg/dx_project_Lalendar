@@ -5,9 +5,17 @@ import MemberFilter from "./MemberFilter.jsx";
 import ScheduleModal from "./ScheduleModal.jsx";
 import TemplateSelector from "./TemplateSelector.jsx";
 import WeeklyTimetable from "./WeeklyTimetable.jsx";
-import { buildTemplateSchedules, CATEGORY_COLORS, DAYS } from "./scheduleConstants.js";
+import { buildTemplateSchedules, CATEGORY_COLORS, DAYS, END_HOUR } from "./scheduleConstants.js";
 
-export default function FamilySchedulePage({ tasks = [], selectedDate, members = [], selectedMember = "all", onSelectedMemberChange }) {
+export default function FamilySchedulePage({
+  tasks = [],
+  selectedDate,
+  members = [],
+  memberColors = {},
+  selectedMember = "all",
+  onSelectedDateChange,
+  onSelectedMemberChange,
+}) {
   const [schedules, setSchedules] = useState([]);
   const [filter, setFilter] = useState(selectedMember || "all");
   const [showWeekend, setShowWeekend] = useState(false);
@@ -26,9 +34,11 @@ export default function FamilySchedulePage({ tasks = [], selectedDate, members =
   const filterMembers = useMemo(() => (members.length > 0 ? members : [{ id: "all", name: "전체" }]), [members]);
   const schedulableMembers = filterMembers.filter((member) => member.id !== "all");
   const defaultMemberId = selectedMember !== "all" ? selectedMember : schedulableMembers[0]?.id || "all";
-  const memberNameById = useMemo(() => Object.fromEntries(filterMembers.map((member) => [member.id, member.name])), [filterMembers]);
+  const memberNameById = useMemo(
+    () => Object.fromEntries(filterMembers.map((member) => [member.id, member.id === "all" ? "전체" : member.name])),
+    [filterMembers],
+  );
   const weekRange = useMemo(() => getMondayWeekRange(viewDate), [viewDate]);
-  const weekLabel = `${formatShortDate(weekRange.start)} ~ ${formatShortDate(weekRange.end)}`;
 
   useEffect(() => {
     const validMemberIds = new Set(filterMembers.map((member) => member.id));
@@ -55,16 +65,23 @@ export default function FamilySchedulePage({ tasks = [], selectedDate, members =
     onSelectedMemberChange?.(memberId);
   }
 
+  function changeViewDate(date) {
+    setViewDate(date);
+    onSelectedDateChange?.(date);
+  }
+
   function openNewSchedule(defaults = {}) {
     const date = defaults.date || viewDate;
     const day = defaults.day || dayFromDate(date) || "월";
+    const owner = filter === "all" ? defaultMemberId : filter;
+
     setModalState({
       mode: "create",
       schedule: {
         id: createScheduleId(),
         title: "",
-        member: filter === "all" ? defaultMemberId : filter,
-        members: [filter === "all" ? defaultMemberId : filter],
+        member: owner,
+        members: [owner],
         date,
         day,
         days: [day],
@@ -132,19 +149,22 @@ export default function FamilySchedulePage({ tasks = [], selectedDate, members =
   return (
     <section className="family-schedule-panel">
       <div className="family-schedule-head">
-        <div>
-          <p>일정 보기 필터</p>
-          <h2>이번 주 일정</h2>
-          <span>{weekLabel}</span>
+        <div className="family-schedule-title">
+          <p>멤버 일정</p>
+          <div className="family-schedule-title-row">
+            <h2>이번 주 일정</h2>
+            <div className="week-inline-controls">
+              <button type="button" onClick={() => changeViewDate(addDays(viewDate, -7))} aria-label="이전 주">
+                <ChevronLeft size={17} />
+              </button>
+              <input type="date" value={viewDate} onChange={(event) => changeViewDate(event.target.value)} aria-label="기준 날짜 선택" />
+              <button type="button" onClick={() => changeViewDate(addDays(viewDate, 7))} aria-label="다음 주">
+                <ChevronRight size={17} />
+              </button>
+            </div>
+          </div>
         </div>
         <div className="family-schedule-actions">
-          <button type="button" onClick={() => setViewDate(addDays(viewDate, -7))} aria-label="이전 주">
-            <ChevronLeft size={17} />
-          </button>
-          <input type="date" value={viewDate} onChange={(event) => setViewDate(event.target.value)} aria-label="기준 날짜 선택" />
-          <button type="button" onClick={() => setViewDate(addDays(viewDate, 7))} aria-label="다음 주">
-            <ChevronRight size={17} />
-          </button>
           <button type="button" onClick={() => setShowWeekend((current) => !current)} className={showWeekend ? "active" : ""}>
             {showWeekend ? "평일만" : "주말 포함"}
           </button>
@@ -159,11 +179,12 @@ export default function FamilySchedulePage({ tasks = [], selectedDate, members =
         </div>
       </div>
 
-      <MemberFilter value={filter} onChange={changeFilter} members={filterMembers} />
+      <MemberFilter value={filter} onChange={changeFilter} members={filterMembers} memberColors={memberColors} />
 
       <WeeklyTimetable
         schedules={visibleSchedules}
         showWeekend={showWeekend}
+        weekStart={weekRange.start}
         getMemberName={(memberIds) => formatMemberNames(memberIds, memberNameById)}
         onEmptyClick={(day, startTime) => openNewSchedule({ day, days: [day], date: dateForDayInWeek(day, weekRange.start), startTime, endTime: addOneHour(startTime) })}
         onScheduleClick={handleScheduleClick}
@@ -188,13 +209,16 @@ export default function FamilySchedulePage({ tasks = [], selectedDate, members =
 function normalizeStoredSchedule(schedule, validMemberIds, defaultMemberId) {
   const members = (schedule.members?.length ? schedule.members : [schedule.member || defaultMemberId]).filter((memberId) => validMemberIds.has(memberId));
   const nextMembers = members.length ? members : [defaultMemberId];
-  const days = schedule.days?.length ? schedule.days : [schedule.day || dayFromDate(schedule.date) || "월"];
+  const day = normalizeDay(schedule.day) || dayFromDate(schedule.date) || "월";
+  const days = schedule.days?.map(normalizeDay).filter(Boolean);
+  const nextDays = days?.length ? days : [day];
+
   return {
     ...schedule,
     members: nextMembers,
     member: nextMembers[0],
-    days,
-    day: days[0],
+    days: nextDays,
+    day: nextDays[0],
     repeat: schedule.repeat || (schedule.repeatWeekly ? "weekly" : "none"),
   };
 }
@@ -254,7 +278,7 @@ function scheduleIncludesMember(schedule, filter) {
 
 function formatMemberNames(memberIds, memberNameById) {
   const ids = Array.isArray(memberIds) ? memberIds : [memberIds];
-  if (ids.includes("all")) return "가족 전체";
+  if (ids.includes("all")) return "전체";
   if (ids.length <= 1) return memberNameById[ids[0]] || "미정";
   return `${memberNameById[ids[0]] || ids[0]} 외 ${ids.length - 1}명`;
 }
@@ -282,7 +306,21 @@ function rotatingTaskSlot(task, index) {
 
 function dayFromDate(date) {
   if (!date) return "";
-  return ["일", "월", "화", "수", "목", "금", "토"][new Date(`${date}T00:00:00`).getDay()];
+  return DAYS[new Date(`${date}T00:00:00`).getDay() === 0 ? 6 : new Date(`${date}T00:00:00`).getDay() - 1];
+}
+
+function normalizeDay(day) {
+  if (DAYS.includes(day)) return day;
+  const dayMap = {
+    Mon: "월",
+    Tue: "화",
+    Wed: "수",
+    Thu: "목",
+    Fri: "금",
+    Sat: "토",
+    Sun: "일",
+  };
+  return dayMap[day] || "";
 }
 
 function getMondayWeekRange(date) {
@@ -313,16 +351,12 @@ function addDays(date, amount) {
 
 function addOneHour(time) {
   const [hour, minute] = time.split(":").map(Number);
-  return `${String(Math.min(hour + 1, 22)).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  return `${String(Math.min(hour + 1, END_HOUR)).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
 function normalizeTime(time) {
   const [hour, minute] = time.split(":");
   return `${String(Number(hour)).padStart(2, "0")}:${minute}`;
-}
-
-function formatShortDate(date) {
-  return `${Number(date.slice(5, 7))}월 ${Number(date.slice(8, 10))}일`;
 }
 
 function presetForLocation(location) {

@@ -27,7 +27,7 @@ export default function TemplateSelector({ onClose, onApply }) {
                   유지하고 추가
                 </button>
                 <button type="button" onClick={() => onApply(template, "replace")}>
-                  지우고 적용
+                  비우고 적용
                 </button>
               </div>
             </article>

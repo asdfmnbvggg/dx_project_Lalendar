@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bell, Cpu, Menu } from "lucide-react";
-import { automationAlerts, dateKey, initialTasks, isRainyDate, members, navItems, tagLabel } from "./data.js";
+import { Bell, CalendarDays, Menu } from "lucide-react";
+import { automationAlerts, dateKey, initialTasks, isRainyDate, members, tagLabel } from "./data.js";
+import CarePage from "./pages/CarePage.jsx";
 import CalendarPage from "./pages/CalendarPage.jsx";
 import CrewPage from "./pages/CrewPage.jsx";
+import DevicesPage from "./pages/DevicesPage.jsx";
+import HomePage from "./pages/HomePage.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
+import OnboardingPage from "./pages/OnboardingPage.jsx";
 import TaskComposer from "./components/TaskComposer.jsx";
 import DetailPanel from "./components/DetailPanel.jsx";
+import { CURRENT_USER_STORAGE_KEY, USERS, findUserById } from "./constants/users.js";
 import { fetchCalendarWeather } from "./services/weatherService.js";
 import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendationService.js";
 import { buildRoutineRecommendations, recordThinQUsageLog } from "./services/routinePredictionService.js";
@@ -16,20 +22,57 @@ import {
   subscribeThinQDeviceEvent,
   subscribeThinQDevicePush,
 } from "./services/thinqIntegrationService.js";
+import { mainNavItems } from "./navigation.js";
+import {
+  buildOnboardingTasks,
+  getTodayKey,
+  isLaundryTask,
+  isTaskVisibleOnDate,
+  normalizeGeneratedTaskTitle,
+  normalizeGeneratedTaskTitles,
+  normalizeThinQDevices,
+  pendingTasksForNotification,
+  shouldSuggestAutomation,
+  sortTasks,
+} from "./utils/taskUtils.js";
+
+const ENABLE_ONBOARDING_TASK_GENERATION = false;
+const USER_COLORS = {
+  sumin: "#8b5cf6",
+  jea: "#fb4b6f",
+  dada: "#14b8a6",
+};
+const USER_TO_OWNER = {
+  sumin: "theresa",
+  jea: "me",
+  dada: "minsu",
+};
+const OWNER_TO_USER = Object.fromEntries(Object.entries(USER_TO_OWNER).map(([userId, ownerId]) => [ownerId, userId]));
 
 export default function App() {
-  const [tasks, setTasks] = useState(initialTasks);
-  const [memberColors, setMemberColors] = useState(() => Object.fromEntries(members.map((member) => [member.id, member.color])));
-  const [activeTab, setActiveTab] = useState(() => {
-    const savedTab = window.localStorage.getItem("lalendar-active-tab");
-    return navItems.some((item) => item.id === savedTab) ? savedTab : "calendar";
+  const [currentUser, setCurrentUser] = useState(readStoredCurrentUser);
+  const [activeCalendarUser, setActiveCalendarUser] = useState(readStoredCurrentUser);
+  const [tasks, setTasks] = useState(() => normalizeTasksForUsers(normalizeGeneratedTaskTitles(initialTasks)));
+  const [memberColors, setMemberColors] = useState(() => ({
+    ...Object.fromEntries(members.map((member) => [member.id, member.color])),
+    ...USER_COLORS,
+  }));
+  const [activeTab, setActiveTab] = useState(() => (readStoredCurrentUser() ? "schedule" : "home"));
+  const [isOnboardingComplete, setOnboardingComplete] = useState(() => Boolean(readStoredCurrentUser()));
+  const [hasGeneratedOnboardingTasks, setHasGeneratedOnboardingTasks] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState("intro");
+  const [onboardingProfile, setOnboardingProfile] = useState({
+    familyCount: 2,
+    laundryDays: "월, 목",
+    cleaningDay: "토요일",
+    returnHomeTime: "19:30",
   });
   const [selectedDate, setSelectedDate] = useState(getTodayKey);
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const today = new Date();
     return { year: today.getFullYear(), month: today.getMonth() + 1 };
   });
-  const [selectedMember, setSelectedMember] = useState("all");
+  const [selectedMember, setSelectedMember] = useState(() => readStoredCurrentUser()?.id || "jea");
   const [query, setQuery] = useState("");
   const [isComposerOpen, setComposerOpen] = useState(false);
   const [pendingPostpone, setPendingPostpone] = useState(null);
@@ -38,6 +81,10 @@ export default function App() {
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
   const [panel, setPanel] = useState(null);
   const [isMenuOpen, setMenuOpen] = useState(false);
+  const [isCalendarMenuOpen, setCalendarMenuOpen] = useState(false);
+  const [isNotificationOpen, setNotificationOpen] = useState(false);
+  const [notificationPosition, setNotificationPosition] = useState({ x: 0, y: 0 });
+  const [calendarView, setCalendarView] = useState("month");
   const [calendarWeatherByDate, setCalendarWeatherByDate] = useState({});
   const [thinQDevices, setThinQDevices] = useState([]);
   const [thinQDeviceStates, setThinQDeviceStates] = useState({});
@@ -47,8 +94,11 @@ export default function App() {
   const [pendingThinQControl, setPendingThinQControl] = useState(null);
 
   useEffect(() => {
-    window.localStorage.setItem("lalendar-active-tab", activeTab);
-  }, [activeTab]);
+    setTasks((current) => {
+      const normalized = normalizeGeneratedTaskTitles(current);
+      return normalized.some((task, index) => task !== current[index]) ? normalized : current;
+    });
+  }, []);
 
   useEffect(() => {
     const selectors = [
@@ -93,10 +143,21 @@ export default function App() {
     }
   }, [panel?.type]);
 
-  const scopedTasks = tasks.filter((task) => selectedMember === "all" || task.owner === selectedMember);
+  useEffect(() => {
+    if (!currentUser) return;
+    setActiveCalendarUser((current) => current || currentUser);
+    setSelectedMember((current) => current || currentUser.id);
+  }, [currentUser]);
+
+  const sortedCalendarUsers = useMemo(() => {
+    if (!currentUser) return USERS;
+    return [currentUser, ...USERS.filter((user) => user.id !== currentUser.id)];
+  }, [currentUser]);
+  const activeCalendarUserId = activeCalendarUser?.id || currentUser?.id || "";
+  const scopedTasks = tasks.filter((task) => !activeCalendarUserId || getTaskUserId(task) === activeCalendarUserId);
   const selectedTasks = sortTasks(
     scopedTasks
-      .filter((task) => task.date === selectedDate)
+      .filter((task) => isTaskVisibleOnDate(task, selectedDate))
       .filter((task) => `${task.title} ${task.place} ${tagLabel[task.tag]}`.includes(query)),
   );
   const completed = scopedTasks.filter((task) => task.done).length;
@@ -108,11 +169,16 @@ export default function App() {
   const monthLeadingBlanks = useMemo(() => new Date(visibleMonth.year, visibleMonth.month - 1, 1).getDay(), [visibleMonth]);
   const monthLabel = `${visibleMonth.year}. ${String(visibleMonth.month).padStart(2, "0")}`;
   const tasksByDate = useMemo(() => {
-    return scopedTasks.reduce((map, task) => {
-      map[task.date] = sortTasks([...(map[task.date] || []), task]);
+    return tasks.reduce((map, task) => {
+      const shouldShowTask = !activeCalendarUserId || getTaskUserId(task) === activeCalendarUserId;
+      if (!shouldShowTask) return map;
+
+      getTaskDateKeys(task).forEach((date) => {
+        map[date] = sortTasks([...(map[date] || []), task]);
+      });
       return map;
     }, {});
-  }, [scopedTasks]);
+  }, [tasks, activeCalendarUserId]);
   const notificationItems = useMemo(() => {
     const automationItems = automationAlerts
       .filter((alert) => !dismissedAlerts.includes(alert.id))
@@ -149,6 +215,34 @@ export default function App() {
     });
   }
 
+  function selectCalendarDate(year, month, day) {
+    setVisibleMonth({ year, month });
+    setSelectedDate(dateKey(year, month, day));
+  }
+
+  function startNotificationDrag(event) {
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const origin = notificationPosition;
+
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+
+    const moveNotification = (moveEvent) => {
+      setNotificationPosition({
+        x: origin.x + moveEvent.clientX - startX,
+        y: origin.y + moveEvent.clientY - startY,
+      });
+    };
+
+    const stopNotificationDrag = () => {
+      window.removeEventListener("pointermove", moveNotification);
+      window.removeEventListener("pointerup", stopNotificationDrag);
+    };
+
+    window.addEventListener("pointermove", moveNotification);
+    window.addEventListener("pointerup", stopNotificationDrag);
+  }
+
   function toggleTask(id) {
     setTasks((current) => current.map((task) => (task.id === id ? { ...task, done: !task.done } : task)));
   }
@@ -158,7 +252,13 @@ export default function App() {
   }
 
   function changeTaskOwner(id, owner) {
-    setTasks((current) => current.map((task) => (task.id === id ? { ...task, owner } : task)));
+    setTasks((current) => current.map((task) => (task.id === id ? normalizeTaskForUser({ ...task, owner }, OWNER_TO_USER[owner] || task.userId) : task)));
+  }
+
+  function updateTask(id, updates) {
+    setTasks((current) =>
+      current.map((task) => (task.id === id ? normalizeTaskForUser({ ...task, ...updates }, getTaskUserId(task) || activeCalendarUserId) : task)),
+    );
   }
 
   function changeMemberColor(memberId, color) {
@@ -186,11 +286,89 @@ export default function App() {
   }
 
   function addTask(task) {
-    const nextTask = { id: task.id || Date.now() + (task.copyIndex || 0), source: "manual", ...task };
+    const nextTask = normalizeTaskForUser(
+      normalizeGeneratedTaskTitle({ id: task.id || Date.now() + (task.copyIndex || 0), source: "manual", ...task }),
+      activeCalendarUserId,
+    );
     setTasks((current) => [nextTask, ...current]);
+    if (nextTask.date) {
+      const [year, month] = nextTask.date.split("-").map(Number);
+      if (Number.isFinite(year) && Number.isFinite(month)) {
+        setVisibleMonth({ year, month });
+        setSelectedDate(nextTask.date);
+      }
+    }
     if (shouldSuggestAutomation(nextTask)) {
       setAutomationPrompt(nextTask);
     }
+  }
+
+  function updateOnboardingProfile(field, value) {
+    setOnboardingProfile((current) => ({ ...current, [field]: value }));
+  }
+
+  function completeOnboarding(onboardingSetup = {}) {
+    if (onboardingSetup.skipGeneration) {
+      setOnboardingComplete(true);
+      return;
+    }
+
+    if (!ENABLE_ONBOARDING_TASK_GENERATION || hasGeneratedOnboardingTasks) {
+      setOnboardingComplete(true);
+      return;
+    }
+
+    const generated = normalizeTasksForUsers(buildOnboardingTasks(onboardingProfile, selectedMember, onboardingSetup), activeCalendarUserId);
+    setTasks((current) => [...generated, ...current]);
+    setHasGeneratedOnboardingTasks(true);
+    setSelectedDate(generated[0]?.date || getTodayKey());
+    const firstDate = generated[0]?.date?.split("-").map(Number);
+    if (firstDate?.length === 3) {
+      setVisibleMonth({ year: firstDate[0], month: firstDate[1] });
+    }
+    setOnboardingComplete(true);
+  }
+
+  function selectMainTab(id) {
+    setActiveTab(id);
+    if (id === "schedule" && !isOnboardingComplete && !hasGeneratedOnboardingTasks) {
+      setOnboardingComplete(false);
+      setOnboardingStep("intro");
+    }
+  }
+
+  function handleLogin(user) {
+    localStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(user));
+    setCurrentUser(user);
+    setActiveCalendarUser(user);
+    setSelectedMember(user.id);
+    setActiveTab("schedule");
+    setOnboardingComplete(true);
+    setPanel(null);
+    setMenuOpen(false);
+    setCalendarMenuOpen(false);
+    setNotificationOpen(false);
+    setComposerOpen(false);
+  }
+
+  function handleLogout() {
+    localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+    setCurrentUser(null);
+    setActiveCalendarUser(null);
+    setSelectedMember("jea");
+    setActiveTab("home");
+    setPanel(null);
+    setMenuOpen(false);
+    setCalendarMenuOpen(false);
+    setNotificationOpen(false);
+    setComposerOpen(false);
+  }
+
+  function selectActiveCalendarUser(userOrId) {
+    const user = typeof userOrId === "string" ? findUserById(userOrId) : userOrId;
+    if (!user) return;
+    setActiveCalendarUser(user);
+    setSelectedMember(user.id);
   }
 
   function addWeatherRecommendationTask(date, recommendation) {
@@ -202,7 +380,7 @@ export default function App() {
       title: recommendation.title,
       place: appliancePlaceLabel[recommendation.applianceType] || "우리 집",
       tag: "routine",
-      owner: selectedMember === "all" ? "me" : selectedMember,
+      owner: userIdToOwner(activeCalendarUserId),
       done: false,
       repeat: `${startTime}-${endTime}`,
       source: "auto",
@@ -338,25 +516,29 @@ export default function App() {
   }
 
   function addAutomationTask(item, date) {
-    setTasks((current) => [
+    const task = normalizeTaskForUser(
       {
         id: Date.now(),
         date,
         title: item.taskTitle,
         place: item.place,
         tag: "house",
-        owner: selectedMember === "all" ? "all" : selectedMember,
+        owner: userIdToOwner(activeCalendarUserId),
         done: false,
         repeat: "자동화",
         source: "auto",
       },
+      activeCalendarUserId,
+    );
+    setTasks((current) => [
+      task,
       ...current,
     ]);
     setSelectedDate(date);
   }
 
   function applyScheduleAutomation(task) {
-    const owner = selectedMember === "all" ? "all" : selectedMember;
+    const owner = userIdToOwner(activeCalendarUserId);
     const generated = [
       "귀가 전 세탁 완료 예약",
       "제습기 미리 켜기",
@@ -373,7 +555,7 @@ export default function App() {
       repeat: "일정 연동",
       source: "auto",
     }));
-    setTasks((current) => [...generated, ...current]);
+    setTasks((current) => [...normalizeTasksForUsers(generated, activeCalendarUserId), ...current]);
     setAutomationPrompt(null);
   }
 
@@ -383,10 +565,13 @@ export default function App() {
     selectedTasks,
     selectedDate,
     selectedMember,
+    activeCalendarUser,
+    calendarUsers: sortedCalendarUsers,
     memberColors,
     changeMemberColor,
     setSelectedDate,
-    setSelectedMember,
+    setSelectedMember: selectActiveCalendarUser,
+    onActiveCalendarUserChange: selectActiveCalendarUser,
     query,
     setQuery,
     month,
@@ -396,20 +581,30 @@ export default function App() {
     routineRecommendations,
     onPrevMonth: () => changeVisibleMonth(-1),
     onNextMonth: () => changeVisibleMonth(1),
+    onSelectCalendarDate: selectCalendarDate,
     tasksByDate,
     completion,
     toggleTask,
     deleteTask,
     changeTaskOwner,
+    updateTask,
     postponeTask,
     onAddWeatherRecommendation: addWeatherRecommendationTask,
+    onAddTask: addTask,
     openComposer: () => setComposerOpen(true),
     onOpenPanel: setPanel,
+    calendarView,
+    setCalendarView,
   };
+
+  if (!currentUser) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
 
   return (
     <main className="app-shell">
-      <section className="app-frame">
+      <section className={`app-frame ${activeTab === "home" ? "thinq-home-frame" : ""} ${activeTab === "schedule" && !isOnboardingComplete ? "onboarding-frame" : ""}`}>
+        {activeTab !== "home" && (
         <header className="topbar">
           <div className="brand">
             <span>L</span>
@@ -419,40 +614,160 @@ export default function App() {
             </div>
           </div>
           <div className="top-actions">
-            <button className="icon-button" aria-label="알림" onClick={() => setPanel({ type: "notifications" })}>
+            <button
+              className="icon-button"
+              aria-label="알림"
+              onClick={() => {
+                setNotificationOpen((current) => !current);
+                setCalendarMenuOpen(false);
+                setMenuOpen(false);
+              }}
+              aria-expanded={isNotificationOpen}
+            >
               <Bell size={20} />
             </button>
             <div className="menu-popover-wrap">
-              <button className="icon-button" aria-label="메뉴" onClick={() => setMenuOpen((current) => !current)} aria-expanded={isMenuOpen}>
+              <button
+                className="icon-button"
+                aria-label="캘린더 보기"
+                onClick={() => {
+                  setCalendarMenuOpen((current) => !current);
+                  setMenuOpen(false);
+                }}
+                aria-expanded={isCalendarMenuOpen}
+              >
+                <CalendarDays size={21} />
+              </button>
+              {isCalendarMenuOpen && (
+                <div className="menu-popover calendar-view-popover" role="menu">
+                  {[
+                    ["day", "일간"],
+                    ["week", "주간"],
+                    ["month", "월간"],
+                  ].map(([view, label]) => (
+                    <button
+                      key={view}
+                      type="button"
+                      className={calendarView === view ? "active" : ""}
+                      onClick={() => {
+                        setCalendarView(view);
+                        setCalendarMenuOpen(false);
+                        setActiveTab("schedule");
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="menu-popover-wrap">
+              <button
+                className="icon-button"
+                aria-label="메뉴"
+                onClick={() => {
+                  setMenuOpen((current) => !current);
+                  setCalendarMenuOpen(false);
+                }}
+                aria-expanded={isMenuOpen}
+              >
                 <Menu size={22} />
               </button>
               {isMenuOpen && (
                 <div className="menu-popover" role="menu">
                   <button type="button" onClick={() => setMenuOpen(false)}>가족 초대</button>
                   <button type="button" onClick={() => { setPanel({ type: "notifications" }); setMenuOpen(false); }}>알림 설정</button>
+                  <button type="button" onClick={() => { setPanel({ type: "thinq" }); setMenuOpen(false); }}>LG ThinQ 연동</button>
                   <button type="button" onClick={() => { setPanel({ type: "settings" }); setMenuOpen(false); }}>테마 설정</button>
                   <button type="button" onClick={() => setMenuOpen(false)}>데이터 내보내기</button>
                   <button type="button" onClick={() => { setComposerOpen(true); setMenuOpen(false); }}>작업 추가</button>
+                  <button type="button" onClick={handleLogout}>로그아웃</button>
                 </div>
               )}
             </div>
-            <button className="icon-button" aria-label="LG ThinQ" onClick={() => setPanel({ type: "thinq" })}>
-              <Cpu size={20} />
-            </button>
           </div>
         </header>
+        )}
 
-        {activeTab === "calendar" && <CalendarPage {...pageProps} />}
-        {activeTab === "crew" && <CrewPage {...pageProps} />}
+        {activeTab === "home" && <HomePage onOpenNotifications={() => setNotificationOpen(true)} onOpenThinQ={() => setPanel({ type: "thinq" })} />}
+        {activeTab === "schedule" && !isOnboardingComplete && (
+          <div className="onboarding-live-stage">
+            <div className="onboarding-calendar-backdrop" aria-hidden="true">
+              <CalendarPage {...pageProps} />
+            </div>
+            <OnboardingPage
+              step={onboardingStep}
+              onNext={() => setOnboardingStep("profile")}
+              onPreview={() => setOnboardingStep("appliance")}
+              onApplianceNext={() => setOnboardingStep("ready")}
+              onAssigneeNext={() => setOnboardingStep("ready")}
+              onSkip={() => completeOnboarding({ skipGeneration: true })}
+              onBack={() =>
+                setOnboardingStep(
+                  onboardingStep === "ready"
+                    ? "appliance"
+                    : onboardingStep === "assignee"
+                      ? "appliance"
+                      : onboardingStep === "appliance"
+                        ? "profile"
+                        : "intro",
+                )
+              }
+              onComplete={completeOnboarding}
+            />
+          </div>
+        )}
+        {activeTab === "schedule" && isOnboardingComplete && <CalendarPage {...pageProps} />}
+        {activeTab === "devices" && <DevicesPage />}
+        {activeTab === "care" && <CarePage />}
+        {activeTab === "menu" && <CrewPage {...pageProps} />}
 
-        <nav className="tabbar" aria-label="하단 탭">
-          {navItems.map(({ id, label, icon: Icon }) => (
-            <button key={id} className={activeTab === id ? "active" : ""} onClick={() => setActiveTab(id)}>
+        <nav className="tabbar thinq-main-tabbar" aria-label="하단 탭">
+          {mainNavItems.map(({ id, label, icon: Icon }) => (
+            <button key={id} className={activeTab === id ? "active" : ""} onClick={() => selectMainTab(id)}>
               <Icon size={22} />
               <span>{label}</span>
             </button>
           ))}
         </nav>
+
+        {isNotificationOpen && (
+          <section
+            className="notification-popover"
+            style={{
+              "--notification-x": `${notificationPosition.x}px`,
+              "--notification-y": `${notificationPosition.y}px`,
+            }}
+            aria-label="알림"
+          >
+            <div className="notification-popover-head" onPointerDown={startNotificationDrag}>
+              <div>
+                <strong>알림</strong>
+                <span>{notificationItems.length}개</span>
+              </div>
+              <button type="button" aria-label="알림 닫기" onClick={() => setNotificationOpen(false)}>
+                닫기
+              </button>
+            </div>
+            <div className="notification-popover-list">
+              {notificationItems.map((item) => (
+                <article className="notification-popover-item" key={item.id}>
+                  <strong>{item.title}</strong>
+                  <p>{item.detail}</p>
+                  <div>
+                    <button type="button" onClick={() => postponeNotification(item)}>
+                      미루기
+                    </button>
+                    <button type="button" onClick={() => executeNotification(item)}>
+                      실행
+                    </button>
+                  </div>
+                </article>
+              ))}
+              {notificationItems.length === 0 && <p className="notification-popover-empty">표시할 알림이 없습니다.</p>}
+            </div>
+          </section>
+        )}
       </section>
 
       {isComposerOpen && (
@@ -494,6 +809,7 @@ export default function App() {
         onSubscribeThinQEvent={subscribeThinQEvent}
         onSubscribeThinQPush={subscribeThinQPush}
         onLoadThinQDeviceEnergy={loadThinQDeviceEnergy}
+        onLogout={handleLogout}
       />
 
       {automationPrompt && (
@@ -595,59 +911,39 @@ export default function App() {
   );
 }
 
-function sortTasks(tasks) {
-  return [...tasks].sort(taskSorter);
+function readStoredCurrentUser() {
+  if (typeof localStorage === "undefined") return null;
+
+  try {
+    const savedUser = JSON.parse(localStorage.getItem(CURRENT_USER_STORAGE_KEY) || "null");
+    return findUserById(savedUser?.id);
+  } catch {
+    localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+    return null;
+  }
 }
 
-function taskSorter(a, b) {
-  if (a.done !== b.done) return Number(a.done) - Number(b.done);
-  return b.id - a.id;
+function normalizeTasksForUsers(tasks, fallbackUserId) {
+  return tasks.map((task) => normalizeTaskForUser(task, fallbackUserId));
 }
 
-function addDays(date, amount) {
-  const next = new Date(`${date}T00:00:00`);
-  next.setDate(next.getDate() + amount);
-  return dateKey(next.getFullYear(), next.getMonth() + 1, next.getDate());
+function normalizeTaskForUser(task, fallbackUserId) {
+  const userId = getTaskUserId(task) || fallbackUserId || "jea";
+  const owner = USERS.some((user) => user.id === task.owner) ? userIdToOwner(task.owner) : task.owner || userIdToOwner(userId);
+
+  return {
+    ...task,
+    owner,
+    userId,
+  };
 }
 
-function getTodayKey() {
-  const today = new Date();
-  return dateKey(today.getFullYear(), today.getMonth() + 1, today.getDate());
+function getTaskUserId(task) {
+  if (USERS.some((user) => user.id === task.userId)) return task.userId;
+  if (USERS.some((user) => user.id === task.owner)) return task.owner;
+  return OWNER_TO_USER[task.owner] || "";
 }
 
-const appliancePlaceLabel = {
-  WASHER: "세탁실",
-  DRYER: "세탁실",
-  NATURAL_DRY: "세탁실",
-  DEHUMIDIFIER: "거실",
-  AIR_CONDITIONER: "거실",
-  AIR_PURIFIER: "거실",
-  ROBOT_CLEANER: "현관",
-};
-
-function isLaundryTask(task) {
-  return /세탁|빨래/.test(task.title);
-}
-
-function normalizeThinQDevices(result) {
-  const devices = result?.devices || result?.items || result?.response?.devices || result?.result?.devices || result;
-  if (!Array.isArray(devices)) return [];
-
-  return devices.map((device) => ({
-    ...device,
-    id: device.deviceId || device.id || device.device_id,
-    name: device.alias || device.name || device.deviceName || device.modelName || device.deviceId || device.id,
-    type: device.deviceType || device.type || device.category || "ThinQ",
-  }));
-}
-
-function shouldSuggestAutomation(task) {
-  return task.source !== "auto" && /(회식|약속|여행|출근|수업|퇴근|귀가)/.test(`${task.title} ${task.place} ${task.repeat}`);
-}
-
-function pendingTasksForNotification(tasks) {
-  return tasks
-    .filter((task) => !task.done)
-    .sort(taskSorter)
-    .slice(0, 4);
+function userIdToOwner(userId) {
+  return USER_TO_OWNER[userId] || "me";
 }
