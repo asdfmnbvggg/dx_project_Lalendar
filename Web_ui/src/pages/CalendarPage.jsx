@@ -1,5 +1,5 @@
 ﻿import { ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Search, Settings, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { dateKey, members } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
 import airConditionerImage from "../assets/appliances/에어컨.png";
@@ -40,6 +40,7 @@ const applianceImages = {
 
 const MONTH_PERSONAL_TASK_LIMIT = 2;
 const MONTH_HOUSE_TASK_LIMIT = 2;
+const SCHEDULE_PLANNING_DELAY = 3000;
 
 const memberImages = {
   me: jaehyeokImage,
@@ -104,6 +105,7 @@ export default function CalendarPage({
   const [dailyContextTaskId, setDailyContextTaskId] = useState(null);
   const [dailyContextAction, setDailyContextAction] = useState(null);
   const [isDatePickerOpen, setDatePickerOpen] = useState(false);
+  const [pendingScheduleSave, setPendingScheduleSave] = useState(null);
   const [draftDate, setDraftDate] = useState(() => parseDateKey(selectedDate));
   const selectedDay = Number(selectedDate.slice(-2));
   const isHouseCalendar = calendarTaskMode === "house";
@@ -225,6 +227,41 @@ export default function CalendarPage({
     });
   }
 
+  function startSchedulePlanning(nextSave) {
+    setPendingScheduleSave({ ...nextSave, startedAt: Date.now() });
+  }
+
+  function completeSchedulePlanning(nextSave) {
+    setPendingScheduleSave(null);
+
+    if (nextSave.type === "edit") {
+      const updatedTask = { ...nextSave.task, ...nextSave.updates };
+      updateTask?.(nextSave.task.id, nextSave.updates);
+      const generatedPlan = buildAiHousePlanTask(updatedTask);
+      if (generatedPlan) {
+        onAddTask?.(generatedPlan);
+      }
+      setEditingTask(null);
+      const nextDate = updatedTask.date || detailDate;
+      setSelectedDate(nextDate);
+      setSelectedDetailDate(nextDate);
+      return;
+    }
+
+    onAddTask?.(nextSave.task);
+    const generatedPlan = buildAiHousePlanTask(nextSave.task);
+    if (generatedPlan) {
+      onAddTask?.(generatedPlan);
+    }
+    setActiveAddColumn(null);
+    setSelectedDate(nextSave.task.date);
+    setSelectedDetailDate(nextSave.task.date);
+  }
+
+  if (pendingScheduleSave) {
+    return <SchedulePlanningLoadingPage pendingSave={pendingScheduleSave} onComplete={completeSchedulePlanning} />;
+  }
+
   if (selectedDetailDate && editingTask) {
     return (
       <DailyScheduleEditPage
@@ -232,12 +269,7 @@ export default function CalendarPage({
         selectedDate={detailDate}
         onClose={() => setEditingTask(null)}
         onSave={(updates) => {
-          updateTask?.(editingTask.id, updates);
-          setEditingTask(null);
-          if (updates.date) {
-            setSelectedDate(updates.date);
-            setSelectedDetailDate(updates.date);
-          }
+          startSchedulePlanning({ type: "edit", task: editingTask, updates });
         }}
       />
     );
@@ -250,10 +282,7 @@ export default function CalendarPage({
         selectedMember={selectedMember}
         onClose={() => setActiveAddColumn(null)}
         onSave={(task) => {
-          onAddTask?.(task);
-          setActiveAddColumn(null);
-          setSelectedDate(task.date);
-          setSelectedDetailDate(task.date);
+          startSchedulePlanning({ type: "add", task });
         }}
       />
     );
@@ -700,6 +729,31 @@ function getRecommendationsForDate(date, weatherByDate, routineRecommendations) 
   return weatherByDate[date]?.applianceRecommendations || [];
 }
 
+function SchedulePlanningLoadingPage({ pendingSave, onComplete }) {
+  useEffect(() => {
+    const timer = window.setTimeout(() => onComplete(pendingSave), SCHEDULE_PLANNING_DELAY);
+    return () => window.clearTimeout(timer);
+  }, [pendingSave, onComplete]);
+
+  return (
+    <section className="page calendar-page schedule-loading-page" aria-live="polite" aria-label="AI 일정 생성 중">
+      <div className="schedule-loading-stage" aria-hidden="true">
+        <div className="schedule-loading-orbit">
+          <span />
+          <span />
+          <span />
+        </div>
+        <img className="schedule-loading-character" src={lgCharacterImage} alt="" />
+      </div>
+
+      <div className="schedule-loading-copy">
+        <strong>새로운 하루 계획을 만드는 중</strong>
+        <p>입력한 일정을 반영해 AI가 가사 계획을 다시 정리하고 있어요</p>
+      </div>
+    </section>
+  );
+}
+
 function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSave }) {
   const parsedDate = parseDateKey(selectedDate);
   const initialOwner = selectedMember === "all" ? "me" : selectedMember;
@@ -1088,6 +1142,31 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
 
 function buildDailyHours(tasks) {
   return Array.from({ length: 24 }, (_, index) => index);
+}
+
+function buildAiHousePlanTask(task) {
+  if (!task || getDailyTaskGroup(task) === "housework") return null;
+
+  const range = getDailyTaskRange(task);
+  const startsEarly = range.startMinutes < 9 * 60;
+  const startMinutes = startsEarly ? Math.min(22 * 60, range.endMinutes + 30) : Math.max(7 * 60, range.startMinutes - 90);
+  const endMinutes = Math.min(24 * 60, startMinutes + 45);
+
+  return {
+    id: Date.now() + 17,
+    date: task.date,
+    title: "AI 가사 계획",
+    place: "LG ThinQ",
+    tag: "house",
+    owner: task.owner || "me",
+    done: false,
+    repeat: formatMinutes(startMinutes) + " ~ " + formatMinutes(endMinutes),
+    source: "auto",
+    displayType: "appliance",
+    applianceType: "AIR_PURIFIER",
+    description: "새로 입력된 개인 일정을 기준으로 자동 재배치된 가사 계획입니다.",
+    automationType: "AI_SCHEDULE_REPLAN",
+  };
 }
 
 function getMonthTaskLabel(title) {

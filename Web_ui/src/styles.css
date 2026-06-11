@@ -104,6 +104,40 @@ body {
   }
 }
 
+@keyframes schedule-loading-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes schedule-character-move {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg) scale(1);
+  }
+
+  45% {
+    transform: translateY(-14px) rotate(2deg) scale(1.03);
+  }
+
+  70% {
+    transform: translateY(-4px) rotate(-1deg) scale(0.99);
+  }
+}
+
+@keyframes schedule-loading-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.86);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 button,
 input {
   font: inherit;
@@ -6538,6 +6572,97 @@ body {
 
 .daily-edit-page .daily-add-card {
   min-height: min(530px, calc(100svh - 142px));
+}
+
+.schedule-loading-page {
+  min-height: calc(100svh - 124px);
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: center;
+  justify-items: center;
+  gap: 24px;
+  padding: 22px 18px 34px;
+  overflow: hidden;
+  background: #f8f8f8;
+}
+
+.schedule-loading-stage {
+  position: relative;
+  width: min(100%, 310px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+
+.schedule-loading-orbit {
+  position: absolute;
+  inset: 34px;
+  border: 2px solid rgba(17, 17, 17, 0.12);
+  border-top-color: #111;
+  border-right-color: #fb4b6f;
+  border-radius: 50%;
+  animation: schedule-loading-spin 5s linear infinite;
+}
+
+.schedule-loading-orbit span {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #111;
+  animation: schedule-loading-pulse 1.35s ease-in-out infinite;
+}
+
+.schedule-loading-orbit span:nth-child(1) {
+  top: 18px;
+  right: 34px;
+}
+
+.schedule-loading-orbit span:nth-child(2) {
+  right: 18px;
+  bottom: 48px;
+  background: #fb4b6f;
+  animation-delay: 180ms;
+}
+
+.schedule-loading-orbit span:nth-child(3) {
+  left: 40px;
+  bottom: 20px;
+  background: #fbbf24;
+  animation-delay: 360ms;
+}
+
+.schedule-loading-character {
+  position: relative;
+  z-index: 1;
+  width: min(72%, 210px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 22px 28px rgba(17, 17, 17, 0.16));
+  animation: schedule-character-move 1.65s ease-in-out infinite;
+}
+
+.schedule-loading-copy {
+  width: 100%;
+  display: grid;
+  gap: 8px;
+  padding-bottom: 12px;
+  text-align: center;
+}
+
+.schedule-loading-copy strong {
+  color: #111;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.schedule-loading-copy p {
+  max-width: 290px;
+  margin: 0 auto;
+  color: #616161;
+  font-size: 14px;
+  font-weight: 850;
+  line-height: 1.45;
 }
 
 .daily-date-row,
