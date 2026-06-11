@@ -330,7 +330,7 @@ export default function CalendarPage({
             </button>
             <div>
               <span>{formatDateTitle(detailDate)} · {formatDDay(detailDate)}</span>
-              <h3>{selectedMemberName}님의 캘린더</h3>
+              <h3>{calendarOwnerTitle}</h3>
             </div>
             <span aria-hidden="true" />
           </div>
@@ -338,7 +338,7 @@ export default function CalendarPage({
           <div className="date-detail-member-strip" aria-label="Members">
             {familyMembers.slice(0, 3).map((member) => (
               <span key={member.id} style={{ "--member-color": memberColors[member.id] || member.color }}>
-                {memberImages[member.id] ? <img src={memberImages[member.id]} alt="" aria-hidden="true" /> : calendarMemberIconText[member.id] || member.short}
+                {memberImages[member.id] ? <img src={memberImages[member.id]} alt="" aria-hidden="true" /> : calendarMemberIconText[member.id] || member.short || member.name?.slice(0, 1)}
               </span>
             ))}
           </div>
@@ -431,12 +431,13 @@ export default function CalendarPage({
                 className={selectedMember === member.id || (selectedMember === "all" && member.id === selectedMemberProfile.id) ? "active" : ""}
                 aria-label={(calendarProfileNames[member.id] || member.name) + " 캘린더 보기"}
                 onClick={() => {
+                  onActiveCalendarUserChange?.(member);
                   setSelectedMember(member.id);
                   setCalendarTaskMode("personal");
                 }}
               >
                 <span style={{ background: memberImages[member.id] ? "#fff" : memberColors[member.id] || member.color }}>
-                  {memberImages[member.id] ? <img src={memberImages[member.id]} alt="" aria-hidden="true" /> : calendarMemberIconText[member.id] || member.short}
+                  {memberImages[member.id] ? <img src={memberImages[member.id]} alt="" aria-hidden="true" /> : calendarMemberIconText[member.id] || member.short || member.name?.slice(0, 1)}
                 </span>
               </button>
             ))}
@@ -1226,7 +1227,7 @@ function filterTasksByCalendarMode(tasksByDate, mode, selectedMember) {
       tasks.filter((task) => {
         const isHousework = getDailyTaskGroup(task) === "housework";
         if (mode === "house") return isHousework;
-        return !isHousework || selectedMember === "all" || task.owner === selectedMember;
+        return !isHousework || selectedMember === "all" || task.userId === selectedMember || task.owner === selectedMember;
       }),
     ]),
   );
@@ -1331,7 +1332,7 @@ function getTaskDisplayColor(task, memberColors, variant) {
   if (variant === "housework" && task.applianceType && applianceTypeColor[task.applianceType]) {
     return applianceTypeColor[task.applianceType];
   }
-  return memberColors[task.owner] || memberColors.all;
+  return memberColors[task.userId] || memberColors[task.owner] || memberColors.all;
 }
 
 function getReadableTextColor(backgroundColor) {
