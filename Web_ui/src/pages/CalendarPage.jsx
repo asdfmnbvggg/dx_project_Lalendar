@@ -1553,6 +1553,7 @@ function getWeekTaskPlacement(task, dayIndex, taskIndex, hours) {
 
 function getWeekTaskColor(task, memberColors, index) {
   const palette = ["#fb7185", "#fbbf24", "#60a5fa", "#a78bfa", "#fb8a6b", "#34d399"];
+  if (task.userId && memberColors[task.userId]) return colorMix(memberColors[task.userId], palette[index % palette.length]);
   if (task.owner && memberColors[task.owner]) return colorMix(memberColors[task.owner], palette[index % palette.length]);
   return palette[index % palette.length];
 }
