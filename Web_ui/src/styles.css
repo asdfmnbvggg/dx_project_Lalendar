@@ -6277,6 +6277,14 @@ body {
   color: #555b66;
 }
 
+.date-detail-view-toggle {
+  color: #111827;
+}
+
+.date-detail-view-toggle svg {
+  display: block;
+}
+
 .daily-detail-page .date-detail-head > div {
   min-width: 0;
 }
@@ -6303,6 +6311,106 @@ body {
   overflow-x: visible;
   scrollbar-width: thin;
   scrollbar-color: #d7dbe0 transparent;
+}
+
+.daily-list-shell {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  overflow: hidden;
+}
+
+.daily-list-column {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 38px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.daily-list-column > strong {
+  display: grid;
+  place-items: center;
+  padding: 0 6px;
+  border-bottom: 1px solid #eef0f4;
+  color: #30333a;
+  font-size: 12px;
+  font-weight: 950;
+  text-align: center;
+}
+
+.daily-list-column > div {
+  min-height: 0;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  overflow: auto;
+  padding: 8px;
+}
+
+.daily-list-column p {
+  margin: 12px 0 0;
+  color: #a0a5ae;
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.35;
+  text-align: center;
+  word-break: keep-all;
+}
+
+.daily-list-task {
+  position: relative;
+  min-height: 72px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  padding: 10px 9px 10px 12px;
+  overflow: visible;
+  border-left: 4px solid var(--block-color, #60a5fa);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--block-color, #60a5fa) 18%, #ffffff);
+  color: #1f2937;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+
+.daily-list-task.context-open {
+  z-index: 200;
+  outline: 3px solid rgba(17, 24, 39, 0.12);
+}
+
+.daily-list-task > span {
+  color: #4b5563;
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.daily-list-task > strong {
+  overflow: hidden;
+  color: #111827;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.18;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.daily-list-task > small {
+  overflow: hidden;
+  color: #667085;
+  font-size: 10px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.daily-list-column.housework .daily-list-task {
+  background: color-mix(in srgb, var(--block-color, #0f766e) 16%, #ffffff);
 }
 
 .daily-time-rail,
@@ -6509,6 +6617,351 @@ body {
   box-shadow: 0 16px 30px rgba(15, 118, 110, 0.24);
 }
 
+.appliance-mode-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  display: grid;
+  place-items: end center;
+  padding: 10px;
+  border-radius: inherit;
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(4px);
+}
+
+.appliance-mode-sheet {
+  width: min(100%, 340px);
+  max-height: min(94%, 724px);
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto auto auto;
+  gap: 10px;
+  overflow: auto;
+  padding: 14px 12px 12px;
+  border-radius: 24px 24px 18px 18px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.92), transparent 30%),
+    linear-gradient(180deg, #f3f6fb 0%, #eef3fa 100%);
+  box-shadow: 0 24px 54px rgba(15, 23, 42, 0.26);
+}
+
+.appliance-mode-head {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 58px;
+  align-items: center;
+  gap: 8px;
+}
+
+.appliance-mode-head button,
+.appliance-mode-power {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: transparent;
+  color: #425066;
+}
+
+.appliance-mode-head h2 {
+  overflow: hidden;
+  color: #151922;
+  font-size: 14px;
+  font-weight: 950;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.appliance-mode-head-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  color: #7b8494;
+}
+
+.appliance-mode-hero {
+  position: relative;
+  min-height: 134px;
+  display: grid;
+  place-items: center;
+}
+
+.appliance-mode-visual {
+  width: 124px;
+  height: 112px;
+  display: grid;
+  place-items: center;
+  border-radius: 28px;
+  background: radial-gradient(circle at 50% 30%, #ffffff 0%, #edf3fb 66%);
+  box-shadow: 0 18px 34px rgba(89, 102, 122, 0.13);
+}
+
+.appliance-mode-visual img {
+  max-width: 92px;
+  max-height: 98px;
+  object-fit: contain;
+}
+
+.appliance-mode-state-pill {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(226, 232, 240, 0.78);
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 850;
+  transform: translateX(-50%);
+}
+
+.appliance-mode-power {
+  position: absolute;
+  right: 14px;
+  bottom: 28px;
+  background: #ffffff;
+  color: #6689d8;
+  box-shadow: 0 8px 18px rgba(51, 79, 117, 0.12);
+}
+
+.appliance-current-card,
+.appliance-mode-section,
+.appliance-mode-message,
+.appliance-mode-option-list {
+  border: 1px solid rgba(226, 232, 240, 0.82);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 20px rgba(51, 65, 85, 0.06);
+}
+
+.appliance-current-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px 12px;
+  padding: 11px 13px;
+}
+
+.appliance-current-card::after {
+  content: "켜짐";
+  align-self: start;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef6ff;
+  color: #4774ba;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.appliance-current-card span,
+.appliance-mode-title-row span {
+  color: #7a8494;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.appliance-current-card strong,
+.appliance-mode-title-row strong {
+  display: block;
+  margin-top: 2px;
+  color: #172033;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.appliance-current-card p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #697386;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.appliance-mode-section {
+  min-height: 0;
+  display: grid;
+  gap: 10px;
+  overflow: visible;
+  padding: 12px;
+}
+
+.appliance-mode-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #64748b;
+}
+
+.appliance-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.appliance-mode-grid button {
+  min-height: 74px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  padding: 9px 8px;
+  border: 1px solid #e7eef8;
+  border-radius: 10px;
+  background: #eef7ff;
+  color: #334155;
+  text-align: center;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.appliance-mode-grid button.selected {
+  border-color: #ccd9ff;
+  background: #e9edff;
+  color: #315fba;
+  box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.16);
+}
+
+.appliance-mode-grid button:active {
+  transform: scale(0.98);
+}
+
+.appliance-mode-symbol {
+  width: 30px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: #d8f0ff;
+  color: #1981d8;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.appliance-mode-grid strong {
+  font-size: 13px;
+  font-weight: 950;
+  line-height: 1.15;
+}
+
+.appliance-mode-grid small {
+  color: #748197;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.appliance-mode-run-button {
+  min-height: 38px;
+  border-radius: 999px;
+  background: #334f75;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 950;
+  box-shadow: 0 12px 22px rgba(51, 79, 117, 0.2);
+}
+
+.appliance-mode-option-list {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+}
+
+.appliance-mode-option-row {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 12px;
+  border-bottom: 1px solid #edf1f6;
+}
+
+.appliance-mode-option-row:last-child {
+  border-bottom: 0;
+}
+
+.appliance-mode-option-row div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.appliance-mode-option-row span {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: #eef6ff;
+  color: #3776c7;
+  font-size: 9px;
+  font-weight: 950;
+}
+
+.appliance-mode-option-row strong {
+  color: #344054;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.appliance-mode-option-row i {
+  position: relative;
+  width: 34px;
+  height: 19px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #aeb7c4;
+}
+
+.appliance-mode-option-row i::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #ffffff;
+  transition: transform 160ms ease;
+}
+
+.appliance-mode-option-row i.active {
+  background: #6478ff;
+}
+
+.appliance-mode-option-row i.active::after {
+  transform: translateX(15px);
+}
+
+.appliance-mode-message {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  color: #0f766e;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.appliance-mode-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 8px;
+}
+
+.appliance-mode-actions button {
+  min-height: 42px;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.appliance-mode-actions button.primary {
+  background: #334f75;
+  color: #fff;
+  box-shadow: 0 12px 22px rgba(51, 79, 117, 0.24);
+}
+
 .daily-add-page {
   min-height: calc(100svh - 124px);
   display: grid;
@@ -6621,24 +7074,21 @@ body {
   right: 4px;
   top: -10px;
   z-index: 20;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 22px);
   align-items: center;
-  gap: 14px;
-  min-width: 224px;
-  height: 42px;
-  padding: 0 12px;
+  gap: 8px 10px;
+  min-width: 0;
+  min-height: 42px;
+  padding: 8px 12px;
   border: 1px solid #111;
-  border-radius: 999px;
+  border-radius: 18px;
   background: #fff;
   box-shadow: 0 12px 24px rgba(15, 23, 42, 0.14);
 }
 
 .daily-color-popover::after {
-  content: "색상 변경";
-  margin-left: auto;
-  color: #111;
-  font-size: 14px;
-  font-weight: 850;
+  content: none;
 }
 
 .daily-color-popover button {
@@ -6659,6 +7109,7 @@ body {
   color: var(--red);
   font-size: 12px;
   font-weight: 900;
+  line-height: 1.35;
 }
 
 .daily-add-time-card {
@@ -6852,6 +7303,10 @@ body {
 
 .daily-time-row.disabled {
   opacity: 0.45;
+}
+
+.daily-time-row.disabled input {
+  cursor: not-allowed;
 }
 
 @media (max-width: 390px) {
