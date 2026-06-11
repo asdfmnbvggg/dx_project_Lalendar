@@ -567,10 +567,13 @@ export default function CalendarPage({
                       {isCurrentMonth && (
                         <>
                           {visibleTasks.map((task) => (
+                            (() => {
+                              const taskColor = getTaskDisplayColor(task, memberColors, getDailyTaskGroup(task) === "housework" ? "housework" : "personal");
+                              return (
                             <i
                               className={[task.tag, task.displayType === "fixed" ? "fixed-event-task" : ""].filter(Boolean).join(" ")}
                               key={task.id}
-                              style={{ "--task-bg": getTaskDisplayColor(task, memberColors, getDailyTaskGroup(task) === "housework" ? "housework" : "personal") }}
+                              style={{ "--task-bg": taskColor, "--task-fg": getReadableTextColor(taskColor) }}
                             >
                               <span>{getCalendarCellTaskLabel(task)}</span>
                               {isExpanded && (
@@ -579,6 +582,8 @@ export default function CalendarPage({
                                 </small>
                               )}
                             </i>
+                              );
+                            })()
                           ))}
                           {hiddenTaskCount > 0 && <span className="more-tasks">+{hiddenTaskCount}</span>}
                         </>
@@ -1314,6 +1319,17 @@ function getTaskDisplayColor(task, memberColors, variant) {
     return applianceTypeColor[task.applianceType];
   }
   return memberColors[task.owner] || memberColors.all;
+}
+
+function getReadableTextColor(backgroundColor) {
+  const hex = String(backgroundColor || "").replace("#", "");
+  if (!/^[0-9a-f]{6}$/i.test(hex)) return "#ffffff";
+
+  const red = parseInt(hex.slice(0, 2), 16);
+  const green = parseInt(hex.slice(2, 4), 16);
+  const blue = parseInt(hex.slice(4, 6), 16);
+  const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
+  return luminance > 0.62 ? "#243047" : "#ffffff";
 }
 function buildAiReport(selectedDate, selectedTasks, tasksByDate = {}) {
   const date = new Date(selectedDate + "T00:00:00");
