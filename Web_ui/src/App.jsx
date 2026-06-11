@@ -270,6 +270,11 @@ export default function App() {
   }
 
   function completeOnboarding(onboardingSetup = {}) {
+    if (onboardingSetup.skipGeneration) {
+      setOnboardingComplete(true);
+      return;
+    }
+
     if (!ENABLE_ONBOARDING_TASK_GENERATION || hasGeneratedOnboardingTasks) {
       setOnboardingComplete(true);
       return;
@@ -287,13 +292,6 @@ export default function App() {
   }
 
   function selectMainTab(id) {
-    if (id === "devices") {
-      setActiveTab("schedule");
-      setOnboardingStep("ready");
-      completeOnboarding();
-      return;
-    }
-
     setActiveTab(id);
     if (id === "schedule" && !isOnboardingComplete && !hasGeneratedOnboardingTasks) {
       setOnboardingComplete(false);
@@ -619,6 +617,7 @@ export default function App() {
               onPreview={() => setOnboardingStep("appliance")}
               onApplianceNext={() => setOnboardingStep("ready")}
               onAssigneeNext={() => setOnboardingStep("ready")}
+              onSkip={() => completeOnboarding({ skipGeneration: true })}
               onBack={() =>
                 setOnboardingStep(
                   onboardingStep === "ready"
@@ -835,7 +834,7 @@ const mainNavItems = [
   { id: "menu", label: "메뉴", icon: Menu },
 ];
 
-function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNext, onBack, onComplete }) {
+function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNext, onBack, onComplete, onSkip }) {
   const isIntro = step === "intro";
   const isProfile = step === "profile";
   const isAppliance = step === "appliance";
@@ -993,6 +992,9 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
             <button className="onboarding-next-button" type="button" onClick={onNext} disabled={!isIntroComplete} aria-label="다음 단계로 이동">
               <span>NEXT</span>
               <ArrowRight size={18} strokeWidth={2.6} />
+            </button>
+            <button className="onboarding-skip-button" type="button" onClick={onSkip}>
+              온보딩 건너뛰기
             </button>
           </section>
         ) : isProfile ? (

@@ -8708,3 +8708,162 @@ body {
     width: min(430px, 100%);
   }
 }
+
+/* Final responsive tuning */
+.app-shell {
+  min-height: 100svh;
+  padding: clamp(0px, 2vw, 18px);
+}
+
+.app-frame:not(.thinq-home-frame) {
+  width: min(100%, 1180px);
+  min-height: min(900px, calc(100svh - clamp(0px, 4vw, 36px)));
+  max-height: calc(100svh - clamp(0px, 4vw, 36px));
+  padding-inline: clamp(12px, 2.4vw, 28px);
+}
+
+.app-frame:not(.thinq-home-frame) .page,
+.app-frame:not(.thinq-home-frame) .calendar-page,
+.app-frame:not(.thinq-home-frame) .crew-page {
+  max-width: 100%;
+}
+
+.thinq-main-tabbar {
+  left: 50% !important;
+  right: auto !important;
+  width: min(680px, 100%) !important;
+  transform: translateX(-50%);
+}
+
+.notification-popover {
+  right: max(18px, calc((100vw - min(1180px, 100vw)) / 2 + 18px));
+}
+
+.onboarding-live-stage,
+.onboarding-calendar-backdrop,
+.onboarding-calendar-backdrop .calendar-page {
+  min-height: min(760px, calc(100svh - 150px));
+}
+
+.onboarding-character-scene {
+  top: clamp(156px, 24svh, 236px);
+  width: min(420px, calc(100vw - 28px));
+}
+
+.onboarding-character-scene.intro {
+  top: clamp(164px, 25svh, 236px);
+}
+
+.onboarding-character-scene.profile {
+  top: clamp(96px, 18svh, 172px);
+}
+
+.onboarding-character-scene.appliance,
+.onboarding-character-scene.assignee {
+  top: clamp(62px, 12svh, 104px);
+}
+
+.onboarding-intro-panel,
+.onboarding-ai-wait-card {
+  width: clamp(280px, 48vw, 360px);
+  max-width: calc(100vw - 32px);
+}
+
+.onboarding-skip-button {
+  position: absolute;
+  left: 13px;
+  bottom: 15px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: #616161;
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  font-weight: 900;
+  box-shadow: inset 0 0 0 1px rgba(97, 97, 97, 0.12);
+}
+
+.onboarding-skip-button:active {
+  color: #fff;
+  background: #111;
+}
+
+@media (min-width: 900px) {
+  .app-frame:not(.thinq-home-frame) {
+    border-radius: 28px;
+  }
+
+  .calendar-page {
+    height: calc(100svh - 148px);
+  }
+
+  .simple-tab-page {
+    min-height: min(680px, calc(100svh - 180px));
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    display: block;
+    padding: 0;
+  }
+
+  .app-frame:not(.thinq-home-frame),
+  .app-frame.thinq-home-frame {
+    width: 100%;
+    min-height: 100svh;
+    max-height: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .app-frame:not(.thinq-home-frame) {
+    padding: 14px 8px 92px;
+    overflow-y: auto;
+  }
+
+  .thinq-main-tabbar {
+    width: 100% !important;
+  }
+
+  .onboarding-page {
+    padding: 12px 8px 104px;
+  }
+
+  .onboarding-live-stage,
+  .onboarding-calendar-backdrop,
+  .onboarding-calendar-backdrop .calendar-page {
+    min-height: calc(100svh - 128px);
+  }
+}
+
+@media (max-width: 360px), (max-height: 700px) {
+  .onboarding-character-scene.intro {
+    top: 132px;
+    gap: 18px;
+  }
+
+  .onboarding-intro-panel,
+  .onboarding-ai-wait-card {
+    height: 214px;
+  }
+
+  .onboarding-intro-type {
+    top: 64px;
+    font-size: 14px;
+  }
+
+  .onboarding-character-scene.intro .onboarding-character-image {
+    width: 128px;
+  }
+
+  .onboarding-skip-button {
+    left: 10px;
+    bottom: 12px;
+  }
+
+  .onboarding-next-button {
+    right: 10px;
+    bottom: 12px;
+  }
+}
