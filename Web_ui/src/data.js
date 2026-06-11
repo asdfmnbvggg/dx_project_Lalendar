@@ -201,7 +201,7 @@ export const weatherByDate = {
   "2026-06-30": { high: 26, low: 19, condition: "rain", label: "비" },
 };
 
-export const initialTasks = [...baseTasks, ...buildWeatherRoutineTasks()];
+export const initialTasks = [];
 
 export const navItems = [
   { id: "calendar", label: "캘린더", icon: CalendarDays },

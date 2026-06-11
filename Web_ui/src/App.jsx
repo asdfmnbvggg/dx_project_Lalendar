@@ -30,7 +30,7 @@ import {
   subscribeThinQDevicePush,
 } from "./services/thinqIntegrationService.js";
 
-const ENABLE_ONBOARDING_TASK_GENERATION = true;
+const ENABLE_ONBOARDING_TASK_GENERATION = false;
 
 export default function App() {
   const [tasks, setTasks] = useState(() => normalizeGeneratedTaskTitles(initialTasks));

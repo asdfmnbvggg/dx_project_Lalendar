@@ -5193,22 +5193,24 @@ body {
   position: relative;
   height: 100%;
   min-height: 72px;
+  grid-auto-rows: 18px;
   align-content: start;
-  justify-items: stretch;
+  justify-items: center;
   gap: 3px;
-  padding-top: 4px;
+  padding-top: 0;
   padding-bottom: 26px;
   overflow: visible;
 }
 
 .calendar-month-view .date-tasks:has(.fixed-event-task) {
   grid-template-columns: 1fr;
-  grid-template-rows: auto auto 1fr;
-  justify-content: center;
+  grid-auto-rows: 18px;
+  align-content: start;
+  justify-items: center;
   gap: 3px;
   height: 100%;
-  padding-top: 1px;
-  padding-bottom: 22px;
+  padding-top: 0;
+  padding-bottom: 26px;
 }
 
 .calendar-month-view .date-cell i,
@@ -5241,7 +5243,8 @@ body {
   background: transparent !important;
   font-size: 9px !important;
   line-height: 1 !important;
-  text-align: left;
+  text-align: center;
+  justify-self: center;
 }
 
 .calendar-house-view .date-cell i {
@@ -6969,7 +6972,7 @@ body {
   .calendar-month-view .date-tasks {
     min-height: 44px;
     gap: 3px;
-    padding-top: 4px;
+    padding-top: 0;
     padding-bottom: 24px;
   }
 
