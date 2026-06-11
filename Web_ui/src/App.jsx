@@ -913,42 +913,6 @@ export default function App() {
   );
 }
 
-function readStoredCurrentUser() {
-  if (typeof localStorage === "undefined") return null;
-
-  try {
-    const savedUser = JSON.parse(localStorage.getItem(CURRENT_USER_STORAGE_KEY) || "null");
-    return findUserById(savedUser?.id);
-  } catch {
-    localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
-    return null;
-  }
-}
-
-function normalizeTasksForUsers(tasks, fallbackUserId) {
-  return tasks.map((task) => normalizeTaskForUser(task, fallbackUserId));
-}
-
-function normalizeTaskForUser(task, fallbackUserId) {
-  const userId = getTaskUserId(task) || fallbackUserId || "jea";
-  const owner = USERS.some((user) => user.id === task.owner) ? userIdToOwner(task.owner) : task.owner || userIdToOwner(userId);
-
-  return {
-    ...task,
-    owner,
-    userId,
-  };
-}
-
-function getTaskUserId(task) {
-  if (USERS.some((user) => user.id === task.userId)) return task.userId;
-  if (USERS.some((user) => user.id === task.owner)) return task.owner;
-  return OWNER_TO_USER[task.owner] || "";
-}
-
-function userIdToOwner(userId) {
-  return USER_TO_OWNER[userId] || "me";
-}
 
 const mainNavItems = [
   { id: "devices", label: "디바이스", icon: Grid2X2 },
