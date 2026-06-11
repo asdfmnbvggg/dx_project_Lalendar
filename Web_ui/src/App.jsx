@@ -888,6 +888,10 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
   const fixedDays = ["월", "화", "수", "목", "금", "토", "일"];
   const fixedHours = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
   const fixedMinutes = ["00", "10", "20", "30", "40", "50"];
+  const fixedTimelineStartHour = 6;
+  const fixedTimelineEndHour = 24;
+  const fixedTimelineRowHeight = 34;
+  const fixedTimelineHours = Array.from({ length: fixedTimelineEndHour - fixedTimelineStartHour }, (_, index) => fixedTimelineStartHour + index);
   const isFixedScheduleReady = Boolean(fixedTitle.trim() && fixedDay && fixedStartHour && fixedStartMinute && fixedEndHour && fixedEndMinute);
 
   useEffect(() => {
@@ -983,6 +987,15 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
     setFixedStartMinute("");
     setFixedEndHour("");
     setFixedEndMinute("");
+  }
+
+  function getFixedScheduleBlockStyle(schedule) {
+    const startMinutes = toFixedScheduleMinutes(schedule.startTime);
+    const endMinutes = toFixedScheduleMinutes(schedule.endTime);
+    const timelineStart = fixedTimelineStartHour * 60;
+    const top = Math.max(0, ((startMinutes - timelineStart) / 60) * fixedTimelineRowHeight);
+    const height = Math.max(24, ((Math.max(endMinutes, startMinutes + 30) - startMinutes) / 60) * fixedTimelineRowHeight);
+    return { top: `${top}px`, height: `${height}px` };
   }
 
   return (
@@ -1088,31 +1101,53 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
 
             <div className="onboarding-fixed-timetable" aria-label="입력된 고정 일정 타임테이블">
               <div className="onboarding-fixed-days" aria-hidden="true">
+                <span />
                 {fixedDays.map((day) => (
                   <span key={day}>{day}</span>
                 ))}
               </div>
-              <div className="onboarding-fixed-grid">
-                {fixedDays.map((day) => (
-                  <div key={day}>
-                    {fixedSchedules
-                      .filter((schedule) => schedule.day === day)
-                      .map((schedule) => (
-                        <span key={schedule.id} className="onboarding-fixed-block">
-                          <strong>{schedule.title}</strong>
-                          <small>
-                            {schedule.startTime} - {schedule.endTime}
-                          </small>
-                        </span>
-                      ))}
+              <div className="onboarding-fixed-scroll">
+                <div
+                  className="onboarding-fixed-grid"
+                  style={{
+                    "--fixed-hour-count": fixedTimelineHours.length,
+                    "--fixed-hour-height": `${fixedTimelineRowHeight}px`,
+                  }}
+                >
+                  <div className="onboarding-fixed-time-axis" aria-hidden="true">
+                    {fixedTimelineHours.map((hour) => (
+                      <span key={hour}>{String(hour).padStart(2, "0")}:00</span>
+                    ))}
                   </div>
-                ))}
+                  {fixedDays.map((day) => (
+                    <div className="onboarding-fixed-day-column" key={day}>
+                      {fixedTimelineHours.map((hour) => (
+                        <span className="onboarding-fixed-hour-line" key={hour} aria-hidden="true" />
+                      ))}
+                      {fixedSchedules
+                        .filter((schedule) => schedule.day === day)
+                        .map((schedule) => (
+                          <span key={schedule.id} className="onboarding-fixed-block" style={getFixedScheduleBlockStyle(schedule)}>
+                            <strong>{schedule.title}</strong>
+                            <small>
+                              {schedule.startTime} - {schedule.endTime}
+                            </small>
+                          </span>
+                        ))}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
             <form className="onboarding-fixed-form" onSubmit={registerFixedSchedule}>
               <label>
-                <strong>일정명</strong>
+                <span className="onboarding-fixed-title-row">
+                  <strong>일정명</strong>
+                  <button className={`onboarding-fixed-register ${isFixedScheduleReady ? "active" : ""}`} type="submit" disabled={!isFixedScheduleReady}>
+                    등록
+                  </button>
+                </span>
                 <input value={fixedTitle} onChange={(event) => setFixedTitle(event.target.value)} placeholder="일정명을 입력해 주세요" />
               </label>
 
@@ -1138,10 +1173,6 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
                   <span>끝</span>
                 </div>
               </fieldset>
-
-              <button className={`onboarding-fixed-register ${isFixedScheduleReady ? "active" : ""}`} type="submit" disabled={!isFixedScheduleReady}>
-                등록
-              </button>
             </form>
 
             <button className="onboarding-next-button onboarding-fixed-next-button" type="button" onClick={onFixedNext} aria-label="구글 캘린더 연동 확인으로 이동">
@@ -1295,7 +1326,7 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
             </section>
           </div>
         )}
-        {!isReady && <img className="onboarding-character-image" src={lgCharacter} alt="" />}
+        {!isReady && !isFixedSchedule && <img className="onboarding-character-image" src={lgCharacter} alt="" />}
       </div>
     </section>
   );
@@ -1383,18 +1414,44 @@ function HomePage({ onOpenNotifications, onOpenThinQ }) {
 }
 
 function TimeSelect({ label, value, options, onChange }) {
+  const [isOpen, setOpen] = useState(false);
+
+  function chooseOption(option) {
+    onChange(option);
+    setOpen(false);
+  }
+
   return (
-    <select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}>
-      <option value="" disabled>
-        --
-      </option>
-      {options.map((option) => (
-        <option key={option} value={option}>
-          {option}
-        </option>
-      ))}
-    </select>
+    <div className="onboarding-time-select" onBlur={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+    }}>
+      <button type="button" aria-label={label} aria-haspopup="listbox" aria-expanded={isOpen} onClick={() => setOpen((current) => !current)}>
+        {value || "--"}
+        <i aria-hidden="true" />
+      </button>
+      {isOpen && (
+        <div className="onboarding-time-options" role="listbox" aria-label={label}>
+          {options.map((option) => (
+            <button
+              key={option}
+              type="button"
+              role="option"
+              aria-selected={value === option}
+              className={value === option ? "selected" : ""}
+              onClick={() => chooseOption(option)}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
+}
+
+function toFixedScheduleMinutes(time) {
+  const [hour, minute] = String(time || "00:00").split(":").map(Number);
+  return (Number.isFinite(hour) ? hour : 0) * 60 + (Number.isFinite(minute) ? minute : 0);
 }
 
 function SimpleTabPage({ icon, title, text }) {
