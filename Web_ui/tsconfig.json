@@ -13,5 +13,5 @@
     "skipLibCheck": true,
     "isolatedModules": true
   },
-  "include": ["api", "server", "src", "vite.config.js"]
+  "include": ["../api", "../server", "src", "vite.config.js"]
 }

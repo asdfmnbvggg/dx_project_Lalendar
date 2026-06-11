@@ -1,0 +1,6 @@
+{
+  "installCommand": "cd Web_ui && npm install",
+  "buildCommand": "cd Web_ui && npm run build",
+  "outputDirectory": "Web_ui/dist",
+  "devCommand": "cd Web_ui && npm run dev -- --host 127.0.0.1"
+}

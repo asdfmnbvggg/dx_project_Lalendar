@@ -4,7 +4,7 @@
   "description": "Calendar-first shared task app prototype",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "dev:vercel": "vercel dev --listen 127.0.0.1:3000",
+    "dev:vercel": "npm --prefix .. run dev:vercel",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1"
   },

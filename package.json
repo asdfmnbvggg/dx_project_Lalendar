@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npm --prefix Web_ui run dev",
+    "dev:vercel": "vercel dev --listen 127.0.0.1:3000",
+    "build": "npm --prefix Web_ui run build",
+    "preview": "npm --prefix Web_ui run preview"
+  }
+}
