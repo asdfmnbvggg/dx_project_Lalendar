@@ -109,29 +109,6 @@
   cursor: pointer;
 }
 
-.session-logout-button {
-  position: absolute;
-  top: 14px;
-  right: 16px;
-  z-index: 30;
-  max-width: 132px;
-  padding: 7px 10px;
-  border: 1px solid rgba(148, 163, 184, 0.45);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #475569;
-  font-size: 12px;
-  font-weight: 800;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: pointer;
-}
-
-.session-logout-button:hover {
-  color: #d4144b;
-  border-color: rgba(212, 20, 75, 0.35);
-}
 
 * {
   box-sizing: border-box;

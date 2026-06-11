@@ -28,6 +28,7 @@ export default function DetailPanel({
   onSubscribeThinQEvent,
   onSubscribeThinQPush,
   onLoadThinQDeviceEnergy,
+  onLogout,
 }) {
   if (!panel) return null;
 
@@ -62,8 +63,8 @@ export default function DetailPanel({
 
         {panel.type === "settings" && (
           <section className="detail-list">
-            {["가족 초대", "알림 설정", "테마 설정", "데이터 내보내기"].map((item) => (
-              <button className="setting-row" key={item}>
+            {["가족 초대", "알림 설정", "테마 설정", "데이터 내보내기", "로그아웃"].map((item) => (
+              <button className="setting-row" key={item} onClick={item === "로그아웃" ? onLogout : undefined}>
                 <Settings size={18} />
                 {item}
               </button>
