@@ -613,7 +613,9 @@ export default function App() {
             </div>
             <OnboardingPage
               step={onboardingStep}
-              onNext={() => setOnboardingStep("profile")}
+              onNext={() => setOnboardingStep("scheduleInfo")}
+              onInfoNext={() => setOnboardingStep("fixedSchedule")}
+              onFixedNext={() => setOnboardingStep("googleConfirm")}
               onPreview={() => setOnboardingStep("appliance")}
               onApplianceNext={() => setOnboardingStep("ready")}
               onAssigneeNext={() => setOnboardingStep("ready")}
@@ -623,10 +625,14 @@ export default function App() {
                   onboardingStep === "ready"
                     ? "appliance"
                     : onboardingStep === "assignee"
-                      ? "appliance"
-                      : onboardingStep === "appliance"
-                        ? "profile"
-                        : "intro",
+                    ? "appliance"
+                    : onboardingStep === "appliance"
+                      ? "fixedSchedule"
+                      : onboardingStep === "googleConfirm"
+                        ? "fixedSchedule"
+                      : onboardingStep === "fixedSchedule"
+                        ? "scheduleInfo"
+                      : "intro",
                 )
               }
               onComplete={completeOnboarding}
@@ -834,19 +840,31 @@ const mainNavItems = [
   { id: "menu", label: "메뉴", icon: Menu },
 ];
 
-function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNext, onBack, onComplete, onSkip }) {
+function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onApplianceNext, onAssigneeNext, onBack, onComplete, onSkip }) {
   const isIntro = step === "intro";
-  const isProfile = step === "profile";
+  const isScheduleInfo = step === "scheduleInfo";
+  const isFixedSchedule = step === "fixedSchedule";
+  const isGoogleConfirm = step === "googleConfirm";
   const isAppliance = step === "appliance";
   const isAssignee = step === "assignee";
   const isReady = step === "ready";
   const [selectedApplianceTypes, setSelectedApplianceTypes] = useState([]);
   const [applianceAssignees, setApplianceAssignees] = useState({});
   const [selectedImportMethod, setSelectedImportMethod] = useState("");
+  const [fixedSchedules, setFixedSchedules] = useState([]);
+  const [fixedTitle, setFixedTitle] = useState("");
+  const [fixedDay, setFixedDay] = useState("");
+  const [fixedStartHour, setFixedStartHour] = useState("");
+  const [fixedStartMinute, setFixedStartMinute] = useState("");
+  const [fixedEndHour, setFixedEndHour] = useState("");
+  const [fixedEndMinute, setFixedEndMinute] = useState("");
   const introMessage = "어서오세요!\n당신을 위한 최적의 가사일 계획을\n자동으로 짜주는 AI 가사일 플래너\n현우입니다.";
+  const scheduleInfoMessage = "AI가 최적의 가사일을\n자동으로 계획하려면\n00님의 일정 정보가 필요해요!";
   const [introTextLength, setIntroTextLength] = useState(0);
+  const [scheduleInfoTextLength, setScheduleInfoTextLength] = useState(0);
   const guideByStep = {
     intro: "어서오세요!",
+    scheduleInfo: "일정 정보가 필요해요",
     ready: "추천 준비 완료",
   };
   const onboardingApplianceOptions = [
@@ -865,6 +883,12 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
   const hasAssignedAppliance = selectedAppliances.length > 0 && selectedAppliances.every(([, type]) => Boolean(applianceAssignees[type]));
   const introText = introMessage.slice(0, introTextLength);
   const isIntroComplete = introTextLength >= introMessage.length;
+  const scheduleInfoText = scheduleInfoMessage.slice(0, scheduleInfoTextLength);
+  const isScheduleInfoComplete = scheduleInfoTextLength >= scheduleInfoMessage.length;
+  const fixedDays = ["월", "화", "수", "목", "금", "토", "일"];
+  const fixedHours = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
+  const fixedMinutes = ["00", "10", "20", "30", "40", "50"];
+  const isFixedScheduleReady = Boolean(fixedTitle.trim() && fixedDay && fixedStartHour && fixedStartMinute && fixedEndHour && fixedEndMinute);
 
   useEffect(() => {
     if (!isIntro) return undefined;
@@ -883,6 +907,24 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
 
     return () => window.clearInterval(interval);
   }, [isIntro, introMessage.length]);
+
+  useEffect(() => {
+    if (!isScheduleInfo) return undefined;
+
+    setScheduleInfoTextLength(0);
+    const interval = window.setInterval(() => {
+      setScheduleInfoTextLength((current) => {
+        if (current >= scheduleInfoMessage.length) {
+          window.clearInterval(interval);
+          return current;
+        }
+
+        return current + 1;
+      });
+    }, 34);
+
+    return () => window.clearInterval(interval);
+  }, [isScheduleInfo, scheduleInfoMessage.length]);
 
   useEffect(() => {
     if (!isReady) return undefined;
@@ -921,18 +963,40 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
     window.setTimeout(onPreview, 180);
   }
 
+  function registerFixedSchedule(event) {
+    event.preventDefault();
+    if (!isFixedScheduleReady) return;
+
+    setFixedSchedules((current) => [
+      ...current,
+      {
+        id: Date.now(),
+        title: fixedTitle.trim(),
+        day: fixedDay,
+        startTime: `${fixedStartHour}:${fixedStartMinute}`,
+        endTime: `${fixedEndHour}:${fixedEndMinute}`,
+      },
+    ]);
+    setFixedTitle("");
+    setFixedDay("");
+    setFixedStartHour("");
+    setFixedStartMinute("");
+    setFixedEndHour("");
+    setFixedEndMinute("");
+  }
+
   return (
     <section className="onboarding-page" aria-label="온보딩">
-      {!isIntro && !isReady && <button className="onboarding-back-zone" type="button" onClick={onBack} aria-label="이전 단계로 이동" />}
-      {!isIntro && !isReady && (
+      {!isIntro && !isScheduleInfo && !isReady && <button className="onboarding-back-zone" type="button" onClick={onBack} aria-label="이전 단계로 이동" />}
+      {!isIntro && !isScheduleInfo && !isGoogleConfirm && !isReady && (
         <div className="onboarding-progress" aria-hidden="true">
-          {["intro", "profile", "appliance", "ready"].map((item) => (
+          {["fixedSchedule", "appliance", "ready"].map((item) => (
             <span key={item} className={step === item ? "active" : ""} />
           ))}
         </div>
       )}
 
-      {isProfile && false && (
+      {isFixedSchedule && false && (
         <div className="onboarding-card">
           <div>
             <p className="onboarding-kicker">기본 정보</p>
@@ -974,7 +1038,7 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
       )}
 
       <div
-        className={`onboarding-character-scene ${isIntro ? "intro" : ""} ${isProfile ? "profile" : ""} ${isAppliance ? "appliance" : ""} ${
+        className={`onboarding-character-scene ${isIntro ? "intro" : ""} ${isScheduleInfo ? "info" : ""} ${isFixedSchedule ? "profile fixed" : ""} ${isGoogleConfirm ? "google-confirm" : ""} ${isAppliance ? "appliance" : ""} ${
           isAssignee ? "assignee" : ""
         } ${isReady ? "ready" : ""}`}
       >
@@ -997,28 +1061,112 @@ function OnboardingPage({ step, onNext, onPreview, onApplianceNext, onAssigneeNe
               온보딩 건너뛰기
             </button>
           </section>
-        ) : isProfile ? (
-          <div className="onboarding-card onboarding-method-card">
+        ) : isScheduleInfo ? (
+          <section className="onboarding-intro-panel onboarding-info-panel" aria-label="일정 정보 안내">
+            <p className="onboarding-intro-type onboarding-info-type">
+              {scheduleInfoText.split("\n").map((line, index) => (
+                <span key={index}>
+                  {line}
+                  {index < scheduleInfoText.split("\n").length - 1 && <br />}
+                </span>
+              ))}
+              {!isScheduleInfoComplete && <i aria-hidden="true" />}
+            </p>
+            <button className="onboarding-next-button onboarding-info-next-button" type="button" onClick={onInfoNext} disabled={!isScheduleInfoComplete} aria-label="고정 일정 입력으로 이동">
+              <ArrowRight size={18} strokeWidth={2.6} />
+            </button>
+            <button className="onboarding-skip-button" type="button" onClick={onSkip}>
+              온보딩 건너뛰기
+            </button>
+          </section>
+        ) : isFixedSchedule ? (
+          <div className="onboarding-card onboarding-method-card onboarding-fixed-card">
             <div>
-              <p className="onboarding-kicker">고정 일정</p>
               <h1>고정 일정을 알려주세요.</h1>
+              <p>일상에서 반복되는 고정 일정을 입력해 주세요.</p>
             </div>
 
-            <div className="onboarding-method-list">
-              <button className="onboarding-method-button direct" type="button" disabled aria-disabled="true">
-                <span className="onboarding-method-icon direct" aria-hidden="true" />
-                직접 입력하기
+            <div className="onboarding-fixed-timetable" aria-label="입력된 고정 일정 타임테이블">
+              <div className="onboarding-fixed-days" aria-hidden="true">
+                {fixedDays.map((day) => (
+                  <span key={day}>{day}</span>
+                ))}
+              </div>
+              <div className="onboarding-fixed-grid">
+                {fixedDays.map((day) => (
+                  <div key={day}>
+                    {fixedSchedules
+                      .filter((schedule) => schedule.day === day)
+                      .map((schedule) => (
+                        <span key={schedule.id} className="onboarding-fixed-block">
+                          <strong>{schedule.title}</strong>
+                          <small>
+                            {schedule.startTime} - {schedule.endTime}
+                          </small>
+                        </span>
+                      ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <form className="onboarding-fixed-form" onSubmit={registerFixedSchedule}>
+              <label>
+                <strong>일정명</strong>
+                <input value={fixedTitle} onChange={(event) => setFixedTitle(event.target.value)} placeholder="일정명을 입력해 주세요" />
+              </label>
+
+              <fieldset>
+                <legend>요일</legend>
+                <div className="onboarding-fixed-day-row">
+                  {fixedDays.map((day) => (
+                    <button key={day} type="button" className={fixedDay === day ? "selected" : ""} onClick={() => setFixedDay(day)}>
+                      {day}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend>일정 시간</legend>
+                <div className="onboarding-fixed-time-row">
+                  <TimeSelect label="시작 시" value={fixedStartHour} options={fixedHours} onChange={setFixedStartHour} />
+                  <TimeSelect label="시작 분" value={fixedStartMinute} options={fixedMinutes} onChange={setFixedStartMinute} />
+                  <span>시작</span>
+                  <TimeSelect label="끝 시" value={fixedEndHour} options={fixedHours} onChange={setFixedEndHour} />
+                  <TimeSelect label="끝 분" value={fixedEndMinute} options={fixedMinutes} onChange={setFixedEndMinute} />
+                  <span>끝</span>
+                </div>
+              </fieldset>
+
+              <button className={`onboarding-fixed-register ${isFixedScheduleReady ? "active" : ""}`} type="submit" disabled={!isFixedScheduleReady}>
+                등록
               </button>
-              <button
-                className={`onboarding-method-button google ${selectedImportMethod === "google" ? "active" : ""}`}
-                type="button"
-                onClick={importGoogleCalendar}
-              >
-                <span className="onboarding-method-icon google" aria-hidden="true" />
-                구글 캘린더 불러오기
+            </form>
+
+            <button className="onboarding-next-button onboarding-fixed-next-button" type="button" onClick={onFixedNext} aria-label="구글 캘린더 연동 확인으로 이동">
+              <ArrowRight size={18} strokeWidth={2.6} />
+            </button>
+          </div>
+        ) : isGoogleConfirm ? (
+          <section className="onboarding-intro-panel onboarding-google-confirm" aria-label="구글 캘린더 연동 확인">
+            <p className="onboarding-intro-type onboarding-info-type">
+              구글 캘린더에 등록된 일정도
+              <br />
+              함께 불러올까요?
+            </p>
+            <div className="onboarding-google-actions">
+              <button type="button" onClick={onPreview}>
+                나중에
+              </button>
+              <button className={selectedImportMethod === "google" ? "active" : ""} type="button" onClick={importGoogleCalendar}>
+                연동하기
               </button>
             </div>
-          </div>
+            <button className="onboarding-skip-button" type="button" onClick={onSkip}>
+              온보딩 건너뛰기
+            </button>
+          </section>
         ) : isAppliance ? (
           <div className="onboarding-card onboarding-appliance-card onboarding-combined-appliance-card">
             <div>
@@ -1231,6 +1379,21 @@ function HomePage({ onOpenNotifications, onOpenThinQ }) {
         <h2>스마트 루틴</h2>
       </section>
     </section>
+  );
+}
+
+function TimeSelect({ label, value, options, onChange }) {
+  return (
+    <select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}>
+      <option value="" disabled>
+        --
+      </option>
+      {options.map((option) => (
+        <option key={option} value={option}>
+          {option}
+        </option>
+      ))}
+    </select>
   );
 }
 
