@@ -38,8 +38,8 @@ const applianceImages = {
   washer: washerImage,
 };
 
-const MONTH_PERSONAL_TASK_LIMIT = 2;
-const MONTH_HOUSE_TASK_LIMIT = 2;
+const CALENDAR_CELL_TASK_LIMIT = 3;
+const CALENDAR_CELL_COLLAPSED_TASK_LIMIT = 2;
 const SCHEDULE_PLANNING_DELAY = 3000;
 
 const memberImages = {
@@ -515,9 +515,12 @@ export default function CalendarPage({
                 Array.from({ length: leadingBlanks }).map((_, index) => <span className="blank-day" key={index} />)}
               {calendarCells.map(({ key, day, isCurrentMonth }) => {
                 const tasks = filteredTasksByDate[key] || [];
-                const personalTasks = tasks.filter((task) => getDailyTaskGroup(task) !== "housework").slice(0, MONTH_PERSONAL_TASK_LIMIT);
-                const houseTasks = tasks.filter((task) => getDailyTaskGroup(task) === "housework");
-                const visibleHouseTasks = isHouseCalendar ? houseTasks : houseTasks.slice(0, MONTH_HOUSE_TASK_LIMIT);
+                const cellTasks = getCalendarCellTasks(tasks, isHouseCalendar);
+                const visibleTasks =
+                  !isHouseCalendar && cellTasks.length >= CALENDAR_CELL_TASK_LIMIT
+                    ? cellTasks.slice(0, CALENDAR_CELL_COLLAPSED_TASK_LIMIT)
+                    : cellTasks;
+                const hiddenTaskCount = cellTasks.length - visibleTasks.length;
                 const weather = weatherByDate[key];
                 const hasWeatherData = Boolean(weather?.hasWeatherData);
 
@@ -552,28 +555,13 @@ export default function CalendarPage({
                     <div className="date-tasks">
                       {isCurrentMonth && (
                         <>
-                          {!isHouseCalendar &&
-                            personalTasks.map((task) => (
-                              <i
-                                className={[task.tag, task.displayType === "fixed" ? "fixed-event-task" : ""].filter(Boolean).join(" ")}
-                                key={task.id}
-                                style={{ "--task-bg": task.color || memberColors[task.owner] || memberColors.all }}
-                              >
-                                <span>{getMonthTaskLabel(task.title)}</span>
-                                {isExpanded && (
-                                  <small>
-                                    {task.place} · {task.repeat}
-                                  </small>
-                                )}
-                              </i>
-                            ))}
-                          {visibleHouseTasks.map((task) => (
+                          {visibleTasks.map((task) => (
                             <i
                               className={[task.tag, task.displayType === "fixed" ? "fixed-event-task" : ""].filter(Boolean).join(" ")}
                               key={task.id}
                               style={{ "--task-bg": task.color || memberColors[task.owner] || memberColors.all }}
                             >
-                              <span>{getHouseTaskLabel(task.title)}</span>
+                              <span>{getCalendarCellTaskLabel(task)}</span>
                               {isExpanded && (
                                 <small>
                                   {task.place} · {task.repeat}
@@ -581,6 +569,7 @@ export default function CalendarPage({
                               )}
                             </i>
                           ))}
+                          {hiddenTaskCount > 0 && <span className="more-tasks">+{hiddenTaskCount}</span>}
                         </>
                           )}
                     </div>
@@ -1174,6 +1163,15 @@ function getMonthTaskLabel(title) {
 
 function getHouseTaskLabel(title) {
   return String(title || "").replace(/\s+/g, "").trim().slice(0, 4);
+}
+
+function getCalendarCellTasks(tasks, isHouseCalendar) {
+  if (isHouseCalendar) return tasks.filter((task) => getDailyTaskGroup(task) === "housework");
+  return tasks;
+}
+
+function getCalendarCellTaskLabel(task) {
+  return getDailyTaskGroup(task) === "housework" ? getHouseTaskLabel(task.title) : getMonthTaskLabel(task.title);
 }
 
 function getMonthHouseImage(task) {

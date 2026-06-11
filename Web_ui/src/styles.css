@@ -1873,10 +1873,16 @@ button {
 }
 
 .more-tasks {
-  color: var(--muted);
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #6f7fa0 !important;
   font-size: 11px;
   font-style: normal;
   font-weight: 850;
+  min-height: 0 !important;
+  padding: 0 !important;
+  width: auto !important;
 }
 
 .weather-recommendation-chip {
@@ -5223,6 +5229,21 @@ body {
   box-shadow: none;
 }
 
+.calendar-month-view .date-cell .more-tasks {
+  display: inline-block !important;
+  width: auto !important;
+  max-width: none;
+  min-height: 0;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: #6f7fa0 !important;
+  background: transparent !important;
+  font-size: 9px !important;
+  line-height: 1 !important;
+  text-align: left;
+}
+
 .calendar-house-view .date-cell i {
   width: 48px !important;
   max-width: 48px;
@@ -5441,12 +5462,18 @@ body {
 }
 
 .calendar-month-view .more-tasks {
-  display: none !important;
-  color: #9a9a9a;
+  display: inline-block !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #6f7fa0 !important;
   font-size: 9px;
   font-style: normal;
   font-weight: 850;
   line-height: 1;
+  min-height: 0 !important;
+  padding: 0 !important;
+  width: auto !important;
 }
 
 .week-timetable-card {
