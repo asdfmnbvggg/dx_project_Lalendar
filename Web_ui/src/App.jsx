@@ -344,6 +344,11 @@ export default function App() {
     setSelectedMember(user.id);
     setActiveTab("schedule");
     setOnboardingComplete(true);
+    setPanel(null);
+    setMenuOpen(false);
+    setCalendarMenuOpen(false);
+    setNotificationOpen(false);
+    setComposerOpen(false);
   }
 
   function handleLogout() {
@@ -352,9 +357,11 @@ export default function App() {
     setActiveCalendarUser(null);
     setSelectedMember("jea");
     setActiveTab("home");
+    setPanel(null);
     setMenuOpen(false);
     setCalendarMenuOpen(false);
     setNotificationOpen(false);
+    setComposerOpen(false);
   }
 
   function selectActiveCalendarUser(userOrId) {
