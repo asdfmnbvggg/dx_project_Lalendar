@@ -5329,7 +5329,7 @@ body {
 .calendar-month-view .date-cell i:nth-of-type(2n),
 .calendar-house-view .date-cell i:nth-of-type(2n) {
   color: #5661b8 !important;
-  background: #e0defb !important;
+  background: var(--task-bg, #e0defb) !important;
 }
 
 .calendar-month-view .date-cell i.auto-appliance-task,
@@ -5337,7 +5337,7 @@ body {
 .calendar-house-view .date-cell i.auto-appliance-task,
 .calendar-house-view .date-cell i.auto-appliance-task:nth-of-type(2n) {
   color: #5661b8 !important;
-  background: #e0defb !important;
+  background: var(--task-bg, #e0defb) !important;
   border: 0;
 }
 
