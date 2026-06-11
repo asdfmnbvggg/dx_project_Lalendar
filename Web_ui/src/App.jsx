@@ -598,6 +598,7 @@ export default function App() {
                   <button type="button" onClick={() => { setPanel({ type: "settings" }); setMenuOpen(false); }}>테마 설정</button>
                   <button type="button" onClick={() => setMenuOpen(false)}>데이터 내보내기</button>
                   <button type="button" onClick={() => { setComposerOpen(true); setMenuOpen(false); }}>작업 추가</button>
+                  <button type="button" onClick={handleLogout}>로그아웃</button>
                 </div>
               )}
             </div>
@@ -731,6 +732,7 @@ export default function App() {
         onSubscribeThinQEvent={subscribeThinQEvent}
         onSubscribeThinQPush={subscribeThinQPush}
         onLoadThinQDeviceEnergy={loadThinQDeviceEnergy}
+        onLogout={handleLogout}
       />
 
       {automationPrompt && (
