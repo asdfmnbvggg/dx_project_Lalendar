@@ -54,23 +54,33 @@ const CALENDAR_CELL_COLLAPSED_TASK_LIMIT = 2;
 const SCHEDULE_PLANNING_DELAY = 3000;
 
 const memberImages = {
+  jea: jaehyeokImage,
   me: jaehyeokImage,
   theresa: suhyunImage,
 };
 
 const calendarMemberLabels = {
+  sumin: "수민",
+  jea: "재혁",
+  dada: "다빈",
   me: "MY",
   minsu: "김철수",
   theresa: "김수현",
 };
 
 const calendarProfileNames = {
+  sumin: "수민",
+  jea: "최재혁",
+  dada: "다빈",
   me: "최재혁",
   minsu: "김철수",
   theresa: "김수현",
 };
 
 const calendarMemberIconText = {
+  sumin: "수",
+  jea: "최",
+  dada: "다",
   me: "MY",
   minsu: "김철수",
   theresa: "김수현",
@@ -89,8 +99,11 @@ export default function CalendarPage({
   selectedDate,
   setSelectedDate,
   selectedMember,
+  activeCalendarUser,
+  calendarUsers = [],
   memberColors,
   setSelectedMember,
+  onActiveCalendarUserChange,
   selectedTasks,
   query,
   setQuery,
@@ -140,10 +153,10 @@ export default function CalendarPage({
   const dailyFixedTasks = detailTasks.filter((task) => getDailyTaskGroup(task) === "schedule");
   const dailyHouseTasks = detailTasks.filter((task) => getDailyTaskGroup(task) === "housework");
   const dailyHours = buildDailyHours(detailTasks);
-  const familyMembers = members.filter((member) => member.id !== "all");
-  const selectedMemberProfile = familyMembers.find((member) => member.id === selectedMember) || familyMembers[0] || members[0];
+  const familyMembers = calendarUsers.length > 0 ? calendarUsers : members.filter((member) => member.id !== "all");
+  const selectedMemberProfile = activeCalendarUser || familyMembers.find((member) => member.id === selectedMember) || familyMembers[0] || members[0];
   const selectedMemberName = calendarProfileNames[selectedMemberProfile.id] || selectedMemberProfile.name;
-  const calendarOwnerTitle = isHouseCalendar ? "가사 캘린더" : selectedMemberName + "님의 캘린더";
+  const calendarOwnerTitle = isHouseCalendar ? "가사 캘린더" : `${activeCalendarUser?.displayName || selectedMemberName + "님"}의 캘린더`;
 
   function moveCalendar(offset) {
     if (isHouseCalendar) {
