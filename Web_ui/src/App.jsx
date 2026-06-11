@@ -299,6 +299,33 @@ export default function App() {
     }
   }
 
+  function handleLogin(user) {
+    localStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(user));
+    setCurrentUser(user);
+    setActiveCalendarUser(user);
+    setSelectedMember(user.id);
+    setActiveTab("schedule");
+    setOnboardingComplete(true);
+  }
+
+  function handleLogout() {
+    localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+    setCurrentUser(null);
+    setActiveCalendarUser(null);
+    setSelectedMember("jea");
+    setActiveTab("home");
+    setMenuOpen(false);
+    setCalendarMenuOpen(false);
+    setNotificationOpen(false);
+  }
+
+  function selectActiveCalendarUser(userOrId) {
+    const user = typeof userOrId === "string" ? findUserById(userOrId) : userOrId;
+    if (!user) return;
+    setActiveCalendarUser(user);
+    setSelectedMember(user.id);
+  }
+
   function addWeatherRecommendationTask(date, recommendation) {
     const startTime = recommendation.recommendedStartTime || recommendation.startTime || "19:00";
     const endTime = recommendation.recommendedEndTime || recommendation.endTime || "20:00";
