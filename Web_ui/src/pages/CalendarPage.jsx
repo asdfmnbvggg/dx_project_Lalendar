@@ -31,6 +31,17 @@ const applianceTypeLabel = {
   ETC: "가전",
 };
 
+const applianceTypeColor = {
+  WASHER: "#60a5fa",
+  DRYER: "#c084fc",
+  NATURAL_DRY: "#38bdf8",
+  DEHUMIDIFIER: "#34d399",
+  AIR_CONDITIONER: "#22d3ee",
+  AIR_PURIFIER: "#7c3aed",
+  ROBOT_CLEANER: "#f59e0b",
+  ETC: "#64748b",
+};
+
 const applianceImages = {
   air: airConditionerImage,
   dryer: dryerImage,
@@ -559,7 +570,7 @@ export default function CalendarPage({
                             <i
                               className={[task.tag, task.displayType === "fixed" ? "fixed-event-task" : ""].filter(Boolean).join(" ")}
                               key={task.id}
-                              style={{ "--task-bg": task.color || memberColors[task.owner] || memberColors.all }}
+                              style={{ "--task-bg": getTaskDisplayColor(task, memberColors, getDailyTaskGroup(task) === "housework" ? "housework" : "personal") }}
                             >
                               <span>{getCalendarCellTaskLabel(task)}</span>
                               {isExpanded && (
@@ -1139,11 +1150,12 @@ function buildAiHousePlanTask(task) {
   const startsEarly = range.startMinutes < 9 * 60;
   const startMinutes = startsEarly ? Math.min(22 * 60, range.endMinutes + 30) : Math.max(7 * 60, range.startMinutes - 90);
   const endMinutes = Math.min(24 * 60, startMinutes + 45);
+  const applianceType = "AIR_PURIFIER";
 
   return {
     id: Date.now() + 17,
     date: task.date,
-    title: "AI 가사 계획",
+    title: applianceTypeLabel[applianceType],
     place: "LG ThinQ",
     tag: "house",
     owner: task.owner || "me",
@@ -1151,7 +1163,8 @@ function buildAiHousePlanTask(task) {
     repeat: formatMinutes(startMinutes) + " ~ " + formatMinutes(endMinutes),
     source: "auto",
     displayType: "appliance",
-    applianceType: "AIR_PURIFIER",
+    applianceType,
+    color: applianceTypeColor[applianceType],
     description: "새로 입력된 개인 일정을 기준으로 자동 재배치된 가사 계획입니다.",
     automationType: "AI_SCHEDULE_REPLAN",
   };
@@ -1171,6 +1184,10 @@ function getCalendarCellTasks(tasks, isHouseCalendar) {
 }
 
 function getCalendarCellTaskLabel(task) {
+  if (task.displayType === "appliance" && task.applianceType) {
+    return getHouseTaskLabel(applianceTypeLabel[task.applianceType] || task.title);
+  }
+
   return getDailyTaskGroup(task) === "housework" ? getHouseTaskLabel(task.title) : getMonthTaskLabel(task.title);
 }
 
@@ -1286,9 +1303,17 @@ function getDailyBlockTitle(task, variant) {
 function getDailyBlockColor(task, memberColors, variant, index) {
   const personalPalette = ["#ef4444", "#2563eb", "#16a34a", "#9333ea", "#ea580c"];
   const housePalette = ["#0f766e", "#7c3aed", "#c2410c", "#0891b2", "#be123c"];
-  if (task.color) return task.color;
-  if (variant === "personal" && memberColors[task.owner]) return memberColors[task.owner];
+  const taskColor = getTaskDisplayColor(task, memberColors, variant);
+  if (taskColor) return taskColor;
   return (variant === "housework" ? housePalette : personalPalette)[index % 5];
+}
+
+function getTaskDisplayColor(task, memberColors, variant) {
+  if (task.color) return task.color;
+  if (variant === "housework" && task.applianceType && applianceTypeColor[task.applianceType]) {
+    return applianceTypeColor[task.applianceType];
+  }
+  return memberColors[task.owner] || memberColors.all;
 }
 function buildAiReport(selectedDate, selectedTasks, tasksByDate = {}) {
   const date = new Date(selectedDate + "T00:00:00");
