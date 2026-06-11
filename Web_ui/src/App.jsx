@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bell, CalendarDays, ChartColumnIncreasing, Grid2X2, Menu } from "lucide-react";
+import { Bell, CalendarDays, Menu } from "lucide-react";
 import { automationAlerts, dateKey, initialTasks, isRainyDate, members, tagLabel } from "./data.js";
+import CarePage from "./pages/CarePage.jsx";
 import CalendarPage from "./pages/CalendarPage.jsx";
 import CrewPage from "./pages/CrewPage.jsx";
+import DevicesPage from "./pages/DevicesPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
 import OnboardingPage from "./pages/OnboardingPage.jsx";
-import SimpleTabPage from "./pages/SimpleTabPage.jsx";
 import TaskComposer from "./components/TaskComposer.jsx";
 import DetailPanel from "./components/DetailPanel.jsx";
+import { CURRENT_USER_STORAGE_KEY, USERS, findUserById } from "./constants/users.js";
 import { fetchCalendarWeather } from "./services/weatherService.js";
 import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendationService.js";
 import { buildRoutineRecommendations, recordThinQUsageLog } from "./services/routinePredictionService.js";
@@ -23,9 +26,9 @@ import { mainNavItems } from "./navigation.js";
 import {
   buildOnboardingTasks,
   getTodayKey,
-  isCalendarHouseworkTask,
   isLaundryTask,
   isTaskVisibleOnDate,
+  normalizeGeneratedTaskTitle,
   normalizeGeneratedTaskTitles,
   normalizeThinQDevices,
   pendingTasksForNotification,
@@ -34,12 +37,28 @@ import {
 } from "./utils/taskUtils.js";
 
 const ENABLE_ONBOARDING_TASK_GENERATION = false;
+const USER_COLORS = {
+  sumin: "#8b5cf6",
+  jea: "#fb4b6f",
+  dada: "#14b8a6",
+};
+const USER_TO_OWNER = {
+  sumin: "theresa",
+  jea: "me",
+  dada: "minsu",
+};
+const OWNER_TO_USER = Object.fromEntries(Object.entries(USER_TO_OWNER).map(([userId, ownerId]) => [ownerId, userId]));
 
 export default function App() {
-  const [tasks, setTasks] = useState(() => normalizeGeneratedTaskTitles(initialTasks));
-  const [memberColors, setMemberColors] = useState(() => Object.fromEntries(members.map((member) => [member.id, member.color])));
-  const [activeTab, setActiveTab] = useState("home");
-  const [isOnboardingComplete, setOnboardingComplete] = useState(false);
+  const [currentUser, setCurrentUser] = useState(readStoredCurrentUser);
+  const [activeCalendarUser, setActiveCalendarUser] = useState(readStoredCurrentUser);
+  const [tasks, setTasks] = useState(() => normalizeTasksForUsers(normalizeGeneratedTaskTitles(initialTasks)));
+  const [memberColors, setMemberColors] = useState(() => ({
+    ...Object.fromEntries(members.map((member) => [member.id, member.color])),
+    ...USER_COLORS,
+  }));
+  const [activeTab, setActiveTab] = useState(() => (readStoredCurrentUser() ? "schedule" : "home"));
+  const [isOnboardingComplete, setOnboardingComplete] = useState(() => Boolean(readStoredCurrentUser()));
   const [hasGeneratedOnboardingTasks, setHasGeneratedOnboardingTasks] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState("intro");
   const [onboardingProfile, setOnboardingProfile] = useState({
@@ -53,7 +72,7 @@ export default function App() {
     const today = new Date();
     return { year: today.getFullYear(), month: today.getMonth() + 1 };
   });
-  const [selectedMember, setSelectedMember] = useState("me");
+  const [selectedMember, setSelectedMember] = useState(() => readStoredCurrentUser()?.id || "jea");
   const [query, setQuery] = useState("");
   const [isComposerOpen, setComposerOpen] = useState(false);
   const [pendingPostpone, setPendingPostpone] = useState(null);
@@ -124,7 +143,18 @@ export default function App() {
     }
   }, [panel?.type]);
 
-  const scopedTasks = tasks.filter((task) => selectedMember === "all" || task.owner === selectedMember);
+  useEffect(() => {
+    if (!currentUser) return;
+    setActiveCalendarUser((current) => current || currentUser);
+    setSelectedMember((current) => current || currentUser.id);
+  }, [currentUser]);
+
+  const sortedCalendarUsers = useMemo(() => {
+    if (!currentUser) return USERS;
+    return [currentUser, ...USERS.filter((user) => user.id !== currentUser.id)];
+  }, [currentUser]);
+  const activeCalendarUserId = activeCalendarUser?.id || currentUser?.id || "";
+  const scopedTasks = tasks.filter((task) => !activeCalendarUserId || getTaskUserId(task) === activeCalendarUserId);
   const selectedTasks = sortTasks(
     scopedTasks
       .filter((task) => isTaskVisibleOnDate(task, selectedDate))
@@ -140,7 +170,7 @@ export default function App() {
   const monthLabel = `${visibleMonth.year}. ${String(visibleMonth.month).padStart(2, "0")}`;
   const tasksByDate = useMemo(() => {
     return tasks.reduce((map, task) => {
-      const shouldShowTask = selectedMember === "all" || task.owner === selectedMember || isCalendarHouseworkTask(task);
+      const shouldShowTask = !activeCalendarUserId || getTaskUserId(task) === activeCalendarUserId;
       if (!shouldShowTask) return map;
 
       getTaskDateKeys(task).forEach((date) => {
@@ -148,7 +178,7 @@ export default function App() {
       });
       return map;
     }, {});
-  }, [tasks, selectedMember]);
+  }, [tasks, activeCalendarUserId]);
   const notificationItems = useMemo(() => {
     const automationItems = automationAlerts
       .filter((alert) => !dismissedAlerts.includes(alert.id))
@@ -222,11 +252,13 @@ export default function App() {
   }
 
   function changeTaskOwner(id, owner) {
-    setTasks((current) => current.map((task) => (task.id === id ? { ...task, owner } : task)));
+    setTasks((current) => current.map((task) => (task.id === id ? normalizeTaskForUser({ ...task, owner }, OWNER_TO_USER[owner] || task.userId) : task)));
   }
 
   function updateTask(id, updates) {
-    setTasks((current) => current.map((task) => (task.id === id ? { ...task, ...updates } : task)));
+    setTasks((current) =>
+      current.map((task) => (task.id === id ? normalizeTaskForUser({ ...task, ...updates }, getTaskUserId(task) || activeCalendarUserId) : task)),
+    );
   }
 
   function changeMemberColor(memberId, color) {
@@ -254,7 +286,10 @@ export default function App() {
   }
 
   function addTask(task) {
-    const nextTask = normalizeGeneratedTaskTitle({ id: task.id || Date.now() + (task.copyIndex || 0), source: "manual", ...task });
+    const nextTask = normalizeTaskForUser(
+      normalizeGeneratedTaskTitle({ id: task.id || Date.now() + (task.copyIndex || 0), source: "manual", ...task }),
+      activeCalendarUserId,
+    );
     setTasks((current) => [nextTask, ...current]);
     if (nextTask.date) {
       const [year, month] = nextTask.date.split("-").map(Number);
@@ -283,7 +318,7 @@ export default function App() {
       return;
     }
 
-    const generated = buildOnboardingTasks(onboardingProfile, selectedMember, onboardingSetup);
+    const generated = normalizeTasksForUsers(buildOnboardingTasks(onboardingProfile, selectedMember, onboardingSetup), activeCalendarUserId);
     setTasks((current) => [...generated, ...current]);
     setHasGeneratedOnboardingTasks(true);
     setSelectedDate(generated[0]?.date || getTodayKey());
@@ -302,6 +337,33 @@ export default function App() {
     }
   }
 
+  function handleLogin(user) {
+    localStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(user));
+    setCurrentUser(user);
+    setActiveCalendarUser(user);
+    setSelectedMember(user.id);
+    setActiveTab("schedule");
+    setOnboardingComplete(true);
+  }
+
+  function handleLogout() {
+    localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+    setCurrentUser(null);
+    setActiveCalendarUser(null);
+    setSelectedMember("jea");
+    setActiveTab("home");
+    setMenuOpen(false);
+    setCalendarMenuOpen(false);
+    setNotificationOpen(false);
+  }
+
+  function selectActiveCalendarUser(userOrId) {
+    const user = typeof userOrId === "string" ? findUserById(userOrId) : userOrId;
+    if (!user) return;
+    setActiveCalendarUser(user);
+    setSelectedMember(user.id);
+  }
+
   function addWeatherRecommendationTask(date, recommendation) {
     const startTime = recommendation.recommendedStartTime || recommendation.startTime || "19:00";
     const endTime = recommendation.recommendedEndTime || recommendation.endTime || "20:00";
@@ -311,7 +373,7 @@ export default function App() {
       title: recommendation.title,
       place: appliancePlaceLabel[recommendation.applianceType] || "우리 집",
       tag: "routine",
-      owner: selectedMember === "all" ? "me" : selectedMember,
+      owner: userIdToOwner(activeCalendarUserId),
       done: false,
       repeat: `${startTime}-${endTime}`,
       source: "auto",
@@ -447,25 +509,29 @@ export default function App() {
   }
 
   function addAutomationTask(item, date) {
-    setTasks((current) => [
+    const task = normalizeTaskForUser(
       {
         id: Date.now(),
         date,
         title: item.taskTitle,
         place: item.place,
         tag: "house",
-        owner: selectedMember === "all" ? "all" : selectedMember,
+        owner: userIdToOwner(activeCalendarUserId),
         done: false,
         repeat: "자동화",
         source: "auto",
       },
+      activeCalendarUserId,
+    );
+    setTasks((current) => [
+      task,
       ...current,
     ]);
     setSelectedDate(date);
   }
 
   function applyScheduleAutomation(task) {
-    const owner = selectedMember === "all" ? "all" : selectedMember;
+    const owner = userIdToOwner(activeCalendarUserId);
     const generated = [
       "귀가 전 세탁 완료 예약",
       "제습기 미리 켜기",
@@ -482,7 +548,7 @@ export default function App() {
       repeat: "일정 연동",
       source: "auto",
     }));
-    setTasks((current) => [...generated, ...current]);
+    setTasks((current) => [...normalizeTasksForUsers(generated, activeCalendarUserId), ...current]);
     setAutomationPrompt(null);
   }
 
@@ -492,10 +558,13 @@ export default function App() {
     selectedTasks,
     selectedDate,
     selectedMember,
+    activeCalendarUser,
+    calendarUsers: sortedCalendarUsers,
     memberColors,
     changeMemberColor,
     setSelectedDate,
-    setSelectedMember,
+    setSelectedMember: selectActiveCalendarUser,
+    onActiveCalendarUserChange: selectActiveCalendarUser,
     query,
     setQuery,
     month,
@@ -521,9 +590,16 @@ export default function App() {
     setCalendarView,
   };
 
+  if (!currentUser) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
   return (
     <main className="app-shell">
       <section className={`app-frame ${activeTab === "home" ? "thinq-home-frame" : ""} ${activeTab === "schedule" && !isOnboardingComplete ? "onboarding-frame" : ""}`}>
+        <button className="session-logout-button" type="button" onClick={handleLogout}>
+          {currentUser.displayName} 로그아웃
+        </button>
         {activeTab !== "home" && (
         <header className="topbar">
           <div className="brand">
@@ -637,8 +713,8 @@ export default function App() {
           </div>
         )}
         {activeTab === "schedule" && isOnboardingComplete && <CalendarPage {...pageProps} />}
-        {activeTab === "devices" && <SimpleTabPage icon={<Grid2X2 size={28} />} title="디바이스" text="자주 쓰는 제품을 홈 화면에 배치해 바로 사용할 수 있어요." />}
-        {activeTab === "care" && <SimpleTabPage icon={<ChartColumnIncreasing size={28} />} title="케어" text="제품 상태와 사용 리포트를 한눈에 볼 수 있게 준비 중이에요." />}
+        {activeTab === "devices" && <DevicesPage />}
+        {activeTab === "care" && <CarePage />}
         {activeTab === "menu" && <CrewPage {...pageProps} />}
 
         <nav className="tabbar thinq-main-tabbar" aria-label="하단 탭">
@@ -827,4 +903,41 @@ export default function App() {
       )}
     </main>
   );
+}
+
+function readStoredCurrentUser() {
+  if (typeof localStorage === "undefined") return null;
+
+  try {
+    const savedUser = JSON.parse(localStorage.getItem(CURRENT_USER_STORAGE_KEY) || "null");
+    return findUserById(savedUser?.id);
+  } catch {
+    localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+    return null;
+  }
+}
+
+function normalizeTasksForUsers(tasks, fallbackUserId) {
+  return tasks.map((task) => normalizeTaskForUser(task, fallbackUserId));
+}
+
+function normalizeTaskForUser(task, fallbackUserId) {
+  const userId = getTaskUserId(task) || fallbackUserId || "jea";
+  const owner = USERS.some((user) => user.id === task.owner) ? userIdToOwner(task.owner) : task.owner || userIdToOwner(userId);
+
+  return {
+    ...task,
+    owner,
+    userId,
+  };
+}
+
+function getTaskUserId(task) {
+  if (USERS.some((user) => user.id === task.userId)) return task.userId;
+  if (USERS.some((user) => user.id === task.owner)) return task.owner;
+  return OWNER_TO_USER[task.owner] || "";
+}
+
+function userIdToOwner(userId) {
+  return USER_TO_OWNER[userId] || "me";
 }
