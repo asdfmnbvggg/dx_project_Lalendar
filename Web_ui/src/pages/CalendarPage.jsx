@@ -422,12 +422,12 @@ export default function CalendarPage({
   }
 
   function openApplianceMode(task) {
-    const applianceType = normalizeApplianceType(task);
+    const applianceType = normalizeApplianceType(resolveApplianceTask(task));
     const catalog = applianceModeCatalog[applianceType] || applianceModeCatalog.ETC;
     const currentMode = task.applianceMode || task.currentMode || "";
     const selectedMode = catalog.modes.find((mode) => mode.label === currentMode || mode.id === currentMode) || catalog.modes[0];
 
-    setApplianceModeTask({ ...task, applianceType });
+    setApplianceModeTask({ ...task, applianceType, displayType: "appliance" });
     setSelectedApplianceModeId(selectedMode?.id || "");
     setApplianceModeMessage("");
     setDailyContextTaskId(null);
@@ -1069,7 +1069,7 @@ export default function CalendarPage({
         {selectedTasks.map((task) => (
           <TaskItem
             key={task.id}
-            task={task}
+            task={getDisplayTask(task)}
             onToggle={toggleTask}
             onDelete={deleteTask}
             onOwnerChange={changeTaskOwner}
@@ -2030,11 +2030,36 @@ function getCalendarTaskOrder(task) {
 }
 
 function getCalendarCellTaskLabel(task) {
-  if (task.displayType === "appliance" && task.applianceType) {
-    return `${getHouseTaskEmoji(task)} ${getHouseTaskLabel(applianceTypeLabel[task.applianceType] || task.title)}`;
-  }
+  return getDailyTaskGroup(task) === "housework" ? `${getHouseTaskEmoji(task)} ${getHouseTaskLabel(getHouseworkDisplayTitle(task))}` : getMonthTaskLabel(task.title);
+}
 
-  return getDailyTaskGroup(task) === "housework" ? `${getHouseTaskEmoji(task)} ${getHouseTaskLabel(task.title)}` : getMonthTaskLabel(task.title);
+function getHouseworkDisplayTitle(task = {}) {
+  const explicitType = String(task.applianceType || "").toUpperCase();
+  if (applianceTypeLabel[explicitType]) return applianceTypeLabel[explicitType];
+
+  const title = String(task.title || "");
+  if (/세탁기|세탁 예약|세탁기 돌리기/i.test(title)) return applianceTypeLabel.WASHER;
+  if (/건조기|건조기 예약|건조기 사용/i.test(title)) return applianceTypeLabel.DRYER;
+  if (/식기세척|식기세척기/i.test(title)) return applianceTypeLabel.DISHWASHER;
+  if (/공기청정|공기청정기/i.test(title)) return applianceTypeLabel.AIR_PURIFIER;
+  if (/에어컨|냉방/i.test(title)) return applianceTypeLabel.AIR_CONDITIONER;
+  if (/냉장고/i.test(title)) return applianceTypeLabel.REFRIGERATOR;
+  if (/제습기/i.test(title)) return applianceTypeLabel.DEHUMIDIFIER;
+  if (/가습기/i.test(title)) return applianceTypeLabel.HUMIDIFIER;
+
+  return title;
+}
+
+function getDisplayTask(task) {
+  if (getDailyTaskGroup(task) !== "housework") return task;
+  const title = getHouseworkDisplayTitle(task);
+  return title === task.title ? task : { ...task, title };
+}
+
+function resolveApplianceTask(task = {}) {
+  const title = getHouseworkDisplayTitle(task);
+  const applianceType = Object.entries(applianceTypeLabel).find(([, label]) => label === title)?.[0];
+  return applianceType ? { ...task, applianceType } : task;
 }
 
 function getHouseTaskEmoji(task) {
@@ -2240,10 +2265,7 @@ function formatMinutes(minutes) {
 }
 
 function getDailyBlockTitle(task, variant) {
-  if (variant === "housework" && task.applianceType) {
-    return applianceTypeLabel[task.applianceType] || task.title;
-  }
-  return task.title;
+  return variant === "housework" ? getHouseworkDisplayTitle(task) : task.title;
 }
 
 function getDailyBlockColor(task, memberColors, variant, index) {
@@ -2284,7 +2306,7 @@ function buildAiReport(selectedDate, selectedTasks, tasksByDate = {}) {
   const fixedTasks = reportTasks.filter((task) => task.displayType === "fixed" || getDailyTaskGroup(task) === "schedule");
   const applianceTasks = reportTasks.filter((task) => getDailyTaskGroup(task) === "housework");
   const fixedTask = fixedTasks[0];
-  const applianceSummary = formatReportList(applianceTasks.slice(0, 3).map((task) => task.title));
+  const applianceSummary = formatReportList(applianceTasks.slice(0, 3).map((task) => getHouseworkDisplayTitle(task)));
 
   if (fixedTask && applianceSummary) {
     return dateLabel + "에는 " + fixedTask.title + " 일정이 있어요. 오늘은 " + applianceSummary + "을 챙기면 좋아요.";
@@ -2478,7 +2500,7 @@ function WeekTimetable({ dates, tasksByDate, memberColors, selectedDate, onPrevW
                   }}
                   onClick={() => onSelectDate(date)}
                 >
-                  <strong>{task.title}</strong>
+                  <strong>{getDailyTaskGroup(task) === "housework" ? getHouseworkDisplayTitle(task) : task.title}</strong>
                   <span>{task.place}</span>
                 </button>
               );
