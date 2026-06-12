@@ -2060,6 +2060,7 @@ function getCalendarCellTaskLabel(task) {
 
 function getHouseworkDisplayTitle(task = {}) {
   const explicitType = String(task.applianceType || "").toUpperCase();
+  if (explicitType === "AIR_CONDITIONER") return formatAirConditionerDisplayTitle(task);
   if (applianceTypeLabel[explicitType]) return applianceTypeLabel[explicitType];
 
   const title = String(task.title || "");
@@ -2073,6 +2074,18 @@ function getHouseworkDisplayTitle(task = {}) {
   if (/가습기/i.test(title)) return applianceTypeLabel.HUMIDIFIER;
 
   return title;
+}
+
+function formatAirConditionerDisplayTitle(task = {}) {
+  const title = String(task.title || "");
+  const nameMatch = title.match(/(수민|다빈|재혁)\s*에어컨/);
+  if (nameMatch) return `${nameMatch[1]} 에어컨`;
+
+  const place = String(task.place || "");
+  const placeMatch = place.match(/(수민|다빈|재혁)\s*방/);
+  if (placeMatch) return `${placeMatch[1]} 에어컨`;
+
+  return applianceTypeLabel.AIR_CONDITIONER;
 }
 
 function getDisplayTask(task) {
