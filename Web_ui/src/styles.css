@@ -8792,13 +8792,13 @@ body {
   right: 0 !important;
   bottom: 0 !important;
   width: min(430px, 100%) !important;
-  height: 86px !important;
-  min-height: 86px;
+  height: 74px !important;
+  min-height: 74px;
   margin: 0 auto;
   grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  align-items: end;
+  align-items: center;
   gap: 0 !important;
-  padding: 7px 12px max(8px, env(safe-area-inset-bottom)) !important;
+  padding: 5px 12px max(6px, env(safe-area-inset-bottom)) !important;
   border-radius: 0 !important;
   background: rgba(255, 255, 255, 0.46) !important;
   backdrop-filter: blur(18px);
@@ -8808,10 +8808,10 @@ body {
 .thinq-main-tabbar button {
   position: relative;
   min-width: 0;
-  height: 70px;
+  height: 58px;
   flex-direction: column;
-  justify-content: end;
-  gap: 5px;
+  justify-content: center;
+  gap: 3px;
   padding: 0 2px;
   border-radius: 0 !important;
   color: #666;
@@ -8822,8 +8822,8 @@ body {
 }
 
 .thinq-main-tabbar button svg {
-  width: 27px;
-  height: 27px;
+  width: 25px;
+  height: 25px;
   stroke-width: 2.2;
 }
 
@@ -8852,13 +8852,13 @@ body {
 .thinq-main-tabbar button.active::before {
   content: "";
   position: absolute;
-  inset: 2px auto auto 50%;
-  width: 58px;
-  height: 58px;
+  inset: 50% auto auto 50%;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   background: #ff792b;
   box-shadow: 0 10px 22px rgba(255, 109, 31, 0.34);
-  transform: translateX(-50%) scale(1);
+  transform: translate(-50%, -50%) scale(1);
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
@@ -8870,7 +8870,7 @@ body {
 }
 
 .thinq-main-tabbar button.active svg {
-  transform: scale(1.1) translateY(-1px);
+  transform: scale(1.1) translateY(4px);
   transition: transform 180ms ease;
 }
 
@@ -11269,10 +11269,11 @@ body {
 }
 
 .app-frame:has(.calendar-page-month) > .thinq-main-tabbar {
-  min-height: 74px;
+  height: 74px !important;
+  min-height: 74px !important;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: center;
-  padding: 6px 16px 8px;
+  padding: 5px 16px 6px !important;
   border-top: 1px solid rgba(226, 226, 226, 0.9);
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 -10px 22px rgba(15, 23, 42, 0.05);
@@ -11280,6 +11281,7 @@ body {
 
 .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button {
   min-height: 56px;
+  height: 58px;
   gap: 3px;
   color: #7b7b7b;
   background: transparent;
@@ -11295,13 +11297,13 @@ body {
 .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active::before {
   content: "";
   position: absolute;
-  inset: -8px auto auto 50%;
-  width: 58px;
-  height: 58px;
+  inset: 50% auto auto 50%;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   background: #ff792b;
   box-shadow: 0 10px 22px rgba(255, 109, 31, 0.34);
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
 }
 
 .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active svg,
@@ -11311,7 +11313,7 @@ body {
 }
 
 .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active svg {
-  margin-top: -1px;
+  transform: scale(1.1) translateY(4px);
   color: #fff;
 }
 
@@ -11892,19 +11894,21 @@ body {
   }
 
   .app-frame:has(.calendar-page-month) > .thinq-main-tabbar {
-    min-height: 72px;
-    padding: 5px 8px 7px;
+    height: 72px !important;
+    min-height: 72px !important;
+    padding: 4px 8px 6px !important;
   }
 
   .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button {
     min-height: 54px;
+    height: 56px;
     font-size: 10px;
   }
 
   .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active::before {
     width: 54px;
     height: 54px;
-    inset: -1px auto auto 50%;
+    inset: 50% auto auto 50%;
   }
 }
 

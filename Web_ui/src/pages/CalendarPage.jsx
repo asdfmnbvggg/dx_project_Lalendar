@@ -2353,7 +2353,7 @@ function buildAiReport(selectedDate, selectedTasks, tasksByDate = {}) {
   const fixedTasks = reportTasks.filter((task) => task.displayType === "fixed" || getDailyTaskGroup(task) === "schedule");
   const applianceTasks = reportTasks.filter((task) => getDailyTaskGroup(task) === "housework");
   const fixedTask = fixedTasks[0];
-  const applianceSummary = formatReportList(applianceTasks.slice(0, 3).map((task) => getHouseworkDisplayTitle(task)));
+  const applianceSummary = formatReportList(getUniqueAiReportApplianceLabels(applianceTasks).slice(0, 3));
 
   if (fixedTask && applianceSummary) {
     return dateLabel + "에는 " + fixedTask.title + " 일정이 있어요. 오늘은 " + applianceSummary + "을 챙기면 좋아요.";
@@ -2391,6 +2391,17 @@ function getAiReportTaskTag(task = {}) {
   }
 
   return String(task.title || "").trim() || "개인 일정";
+}
+
+function getUniqueAiReportApplianceLabels(tasks = []) {
+  const labels = [];
+
+  tasks.forEach((task) => {
+    const label = getHouseworkDisplayTitle(resolveApplianceTask(task)) || task.title || "";
+    if (label && !labels.includes(label)) labels.push(label);
+  });
+
+  return labels;
 }
 
 function getNearestApplianceSchedule(tasksByDate = {}, applianceType, referenceDate) {

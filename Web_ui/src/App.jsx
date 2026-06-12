@@ -963,7 +963,7 @@ const applianceCalendarRules = {
   dishwasher: { startTime: "19:30", endTime: "20:30" },
   washerDays: new Set(["월", "목", "토"]),
   washer: { startTime: "20:30", endTime: "21:30" },
-  dryerDelayMinutes: 60,
+  dryerDelayMinutes: 0,
   dryerDurationMinutes: 60,
   robotDurationMinutes: 60,
   airconDurationMinutes: 40,
@@ -1001,8 +1001,10 @@ function buildRuleBasedApplianceCalendarTasks(fixedTasks) {
   Object.entries(fixedByDate).forEach(([date, dayFixedTasks]) => {
     const day = dayLabels[new Date(`${date}T00:00:00`).getDay()];
 
-    const robotTask = buildRobotCleanerTask(id++, date, dayFixedTasks);
-    if (robotTask) tasks.push(robotTask);
+    if (isRobotCleanerDate(date)) {
+      const robotTask = buildRobotCleanerTask(id++, date, dayFixedTasks);
+      if (robotTask) tasks.push(robotTask);
+    }
 
     if (!hasFixedScheduleOverlap(dayFixedTasks, applianceCalendarRules.dinner.startTime, applianceCalendarRules.dishwasher.endTime)) {
       tasks.push(
@@ -1106,6 +1108,13 @@ function buildRobotCleanerTask(id, date, fixedTasks) {
     applianceMode: "전체 청소",
     sortOrder: 30,
   });
+}
+
+function isRobotCleanerDate(date) {
+  const startDate = new Date("2026-06-01T00:00:00");
+  const currentDate = new Date(`${date}T00:00:00`);
+  const dayOffset = Math.round((currentDate - startDate) / 86400000);
+  return dayOffset >= 0 && dayOffset % 2 === 0;
 }
 
 function buildAirConditionerTasksForLastSchedules(date, fixedTasks, startId) {
