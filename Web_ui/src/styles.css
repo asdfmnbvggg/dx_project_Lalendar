@@ -6461,7 +6461,7 @@ body {
 .daily-time-rail,
 .daily-timetable-column {
   min-width: 0;
-  min-height: calc(38px + (var(--hour-count, 24) * 36px));
+  min-height: calc(38px + (var(--hour-count, 24) * 38px));
   display: grid;
   grid-template-rows: 38px minmax(0, 1fr);
   overflow: visible;
@@ -6486,7 +6486,7 @@ body {
 .daily-time-scale,
 .daily-timetable-track {
   position: relative;
-  min-height: calc(var(--hour-count, 24) * 36px);
+  min-height: calc(var(--hour-count, 24) * 38px);
   overflow: hidden;
 }
 
