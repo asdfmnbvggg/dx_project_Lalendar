@@ -313,7 +313,8 @@ export default function CalendarPage({
   const shouldShowWeatherMissing = weatherApiStatus !== "loading" && !selectedWeather?.hasWeatherData;
   const selectedRecommendations = getRecommendationsForDate(selectedDate, weatherByDate, routineRecommendations);
   const filteredTasksByDate = filterTasksByCalendarMode(tasksByDate, calendarTaskMode, selectedMember);
-  const selectedVisibleTasks = filteredTasksByDate[selectedDate] || [];
+  const mainCalendarTasksByDate = hideFixedTasksByDate(filteredTasksByDate);
+  const selectedVisibleTasks = mainCalendarTasksByDate[selectedDate] || [];
   const detailDate = selectedDetailDate || selectedDate;
   const detailTasks = filteredTasksByDate[detailDate] || [];
   const dailyFixedTasks = detailTasks.filter((task) => getDailyTaskGroup(task) === "schedule");
@@ -881,7 +882,7 @@ export default function CalendarPage({
         {!isHouseCalendar && calendarView === "week" ? (
           <WeekTimetable
             dates={displayDates}
-            tasksByDate={filteredTasksByDate}
+            tasksByDate={mainCalendarTasksByDate}
             memberColors={memberColors}
             selectedDate={selectedDate}
             onPrevWeek={() => moveCalendar(-1)}
@@ -913,7 +914,7 @@ export default function CalendarPage({
               {!isHouseCalendar && calendarView !== "month" &&
                 Array.from({ length: leadingBlanks }).map((_, index) => <span className="blank-day" key={index} />)}
               {calendarCells.map(({ key, day, isCurrentMonth }) => {
-                const tasks = filteredTasksByDate[key] || [];
+                const tasks = mainCalendarTasksByDate[key] || [];
                 const cellTasks = getCalendarCellTasks(tasks, isHouseCalendar);
                 const visibleTasks =
                   !isHouseCalendar && cellTasks.length >= CALENDAR_CELL_TASK_LIMIT
@@ -1005,10 +1006,10 @@ export default function CalendarPage({
         <section className="calendar-ai-report" aria-label="AI Report">
           <h3>Daily AI Report</h3>
           <div>
-            <p>{buildAiReport(selectedDate, selectedVisibleTasks, filteredTasksByDate)}</p>
+            <p>{buildAiReport(selectedDate, selectedVisibleTasks, mainCalendarTasksByDate)}</p>
             <img src={aiDailyReportImage} alt="" aria-hidden="true" />
             <div className="calendar-ai-report-tags" aria-hidden="true">
-              {buildAiReportTags(selectedDate, selectedVisibleTasks, filteredTasksByDate).map((tag) => (
+              {buildAiReportTags(selectedDate, selectedVisibleTasks, mainCalendarTasksByDate).map((tag) => (
                 <span key={tag}>{tag}</span>
               ))}
             </div>
@@ -2122,6 +2123,15 @@ function filterTasksByCalendarMode(tasksByDate, mode, selectedMember) {
         if (mode === "house") return isHousework;
         return selectedMember === "all" || memberFilterIds.has(task.userId) || memberFilterIds.has(task.owner);
       }),
+    ]),
+  );
+}
+
+function hideFixedTasksByDate(tasksByDate) {
+  return Object.fromEntries(
+    Object.entries(tasksByDate).map(([date, tasks]) => [
+      date,
+      tasks.filter((task) => task.displayType !== "fixed"),
     ]),
   );
 }

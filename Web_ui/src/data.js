@@ -421,7 +421,7 @@ const demoCalendarTasks = [
   },
 ];
 
-export const initialTasks = [...baseTasks, ...buildWeatherRoutineTasks(), ...demoCalendarTasks];
+export const initialTasks = [...baseTasks];
 
 export const navItems = [
   { id: "calendar", label: "캘린더", icon: CalendarDays },

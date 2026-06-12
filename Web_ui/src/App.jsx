@@ -12,7 +12,7 @@ import {
   Pencil,
   Plus,
 } from "lucide-react";
-import { automationAlerts, dateKey, initialTasks, isRainyDate, members, tagLabel } from "./data.js";
+import { automationAlerts, dateKey, initialTasks, isRainyDate, members, tagLabel, weatherByDate } from "./data.js";
 import CalendarPage from "./pages/CalendarPage.jsx";
 import CrewPage from "./pages/CrewPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
@@ -50,7 +50,7 @@ export default function App() {
   const initialVisibleMonth = visibleMonthFromDate(initialSelectedDate);
   const [currentUser, setCurrentUser] = useState(storedUser);
   const [activeCalendarUser, setActiveCalendarUser] = useState(() => findUserById(storedSession?.activeCalendarUserId) || storedUser);
-  const [tasks, setTasks] = useState(() => normalizeTasksForUsers(normalizeGeneratedTaskTitles([...initialTasks, ...buildDefaultFixedCalendarTasks()])));
+  const [tasks, setTasks] = useState(() => normalizeTasksForUsers(normalizeGeneratedTaskTitles([...initialTasks, ...buildDefaultCalendarTasks()])));
   const [memberColors, setMemberColors] = useState(() => ({
     ...Object.fromEntries(members.map((member) => [member.id, member.color])),
     ...USER_COLORS,
@@ -916,6 +916,11 @@ const defaultFixedScheduleUsers = [
   { templateId: "dabin", userId: "dada", owner: "minsu" },
 ];
 
+function buildDefaultCalendarTasks() {
+  const fixedTasks = buildDefaultFixedCalendarTasks();
+  return [...fixedTasks, ...buildRuleBasedApplianceCalendarTasks(fixedTasks)];
+}
+
 function buildDefaultFixedCalendarTasks() {
   const dayLabels = ["일", "월", "화", "수", "목", "금", "토"];
   const startDate = new Date("2026-06-01T00:00:00");
@@ -951,6 +956,247 @@ function buildDefaultFixedCalendarTasks() {
   }
 
   return tasks;
+}
+
+const applianceCalendarRules = {
+  dinner: { startTime: "19:00", endTime: "19:30" },
+  dishwasher: { startTime: "19:30", endTime: "20:30" },
+  washerDays: new Set(["월", "목", "토"]),
+  washer: { startTime: "20:30", endTime: "21:30" },
+  dryerDelayMinutes: 60,
+  dryerDurationMinutes: 60,
+  robotDurationMinutes: 60,
+  airconDurationMinutes: 40,
+};
+
+const applianceCalendarUserRooms = {
+  sumin: { owner: "theresa", name: "수민", room: "수민 방" },
+  jea: { owner: "me", name: "재혁", room: "재혁 방" },
+  dada: { owner: "minsu", name: "다빈", room: "다빈 방" },
+};
+
+const applianceCalendarAssignees = {
+  WASHER: "theresa",
+  DRYER: "me",
+  DISHWASHER: "theresa",
+  ROBOT_CLEANER: "minsu",
+  AIR_PURIFIER: "me",
+};
+
+const applianceCalendarColors = {
+  WASHER: "#60a5fa",
+  DRYER: "#c084fc",
+  ROBOT_CLEANER: "#f59e0b",
+  AIR_PURIFIER: "#7c3aed",
+  DISHWASHER: "#0ea5e9",
+  AIR_CONDITIONER: "#22d3ee",
+};
+
+function buildRuleBasedApplianceCalendarTasks(fixedTasks) {
+  const fixedByDate = groupFixedTasksByDate(fixedTasks);
+  const dayLabels = ["일", "월", "화", "수", "목", "금", "토"];
+  const tasks = [];
+  let id = 40000;
+
+  Object.entries(fixedByDate).forEach(([date, dayFixedTasks]) => {
+    const day = dayLabels[new Date(`${date}T00:00:00`).getDay()];
+
+    const robotTask = buildRobotCleanerTask(id++, date, dayFixedTasks);
+    if (robotTask) tasks.push(robotTask);
+
+    if (!hasFixedScheduleOverlap(dayFixedTasks, applianceCalendarRules.dinner.startTime, applianceCalendarRules.dishwasher.endTime)) {
+      tasks.push(
+        createApplianceCalendarTask({
+          id: id++,
+          date,
+          title: "식사 시간 공기청정",
+          place: "거실",
+          owner: applianceCalendarAssignees.AIR_PURIFIER,
+          repeat: `${applianceCalendarRules.dinner.startTime}-${applianceCalendarRules.dinner.endTime}`,
+          applianceType: "AIR_PURIFIER",
+          applianceMode: "강력",
+          sortOrder: 40,
+        }),
+        createApplianceCalendarTask({
+          id: id++,
+          date,
+          title: "식기세척 예약",
+          place: "주방",
+          owner: applianceCalendarAssignees.DISHWASHER,
+          repeat: `${applianceCalendarRules.dishwasher.startTime}-${applianceCalendarRules.dishwasher.endTime}`,
+          applianceType: "DISHWASHER",
+          applianceMode: "에코",
+          sortOrder: 41,
+        }),
+      );
+    }
+
+    if (applianceCalendarRules.washerDays.has(day) && !hasFixedScheduleOverlap(dayFixedTasks, applianceCalendarRules.washer.startTime, applianceCalendarRules.washer.endTime)) {
+      tasks.push(
+        createApplianceCalendarTask({
+          id: id++,
+          date,
+          title: "세탁 예약",
+          place: "세탁실",
+          owner: applianceCalendarAssignees.WASHER,
+          repeat: `${applianceCalendarRules.washer.startTime}-${applianceCalendarRules.washer.endTime}`,
+          applianceType: "WASHER",
+          applianceMode: "표준",
+          sortOrder: 50,
+        }),
+      );
+
+      const dryerStart = addMinutesToTime(applianceCalendarRules.washer.endTime, applianceCalendarRules.dryerDelayMinutes);
+      const dryerEnd = addMinutesToTime(dryerStart, applianceCalendarRules.dryerDurationMinutes);
+      tasks.push(
+        createApplianceCalendarTask({
+          id: id++,
+          date,
+          title: "건조기 예약",
+          place: "세탁실",
+          owner: applianceCalendarAssignees.DRYER,
+          repeat: `${dryerStart}-${dryerEnd}`,
+          applianceType: "DRYER",
+          applianceMode: "섬세",
+          sortOrder: 51,
+        }),
+      );
+    }
+
+    if (isHotCalendarDate(date)) {
+      buildAirConditionerTasksForLastSchedules(date, dayFixedTasks, id).forEach((task) => {
+        tasks.push(task);
+        id += 1;
+      });
+    }
+  });
+
+  return tasks;
+}
+
+function groupFixedTasksByDate(fixedTasks) {
+  return fixedTasks.reduce((map, task) => {
+    map[task.date] = [...(map[task.date] || []), task].sort((first, second) => getTaskStartMinutes(first) - getTaskStartMinutes(second));
+    return map;
+  }, {});
+}
+
+function buildRobotCleanerTask(id, date, fixedTasks) {
+  const schedule = fixedTasks.find((task) => {
+    const start = getTaskStartMinutes(task);
+    const end = getTaskEndMinutes(task);
+    return end - start >= applianceCalendarRules.robotDurationMinutes;
+  });
+
+  if (!schedule) return null;
+
+  const startTime = addMinutesToTime(getTaskStartTime(schedule), 30);
+  const endTime = addMinutesToTime(startTime, applianceCalendarRules.robotDurationMinutes);
+
+  if (toFixedScheduleMinutes(endTime) > getTaskEndMinutes(schedule)) return null;
+
+  return createApplianceCalendarTask({
+    id,
+    date,
+    title: "로봇청소 시작",
+    place: "거실",
+    owner: applianceCalendarAssignees.ROBOT_CLEANER,
+    repeat: `${startTime}-${endTime}`,
+    applianceType: "ROBOT_CLEANER",
+    applianceMode: "전체 청소",
+    sortOrder: 30,
+  });
+}
+
+function buildAirConditionerTasksForLastSchedules(date, fixedTasks, startId) {
+  const lastSchedulesByUser = fixedTasks.reduce((map, task) => {
+    const room = applianceCalendarUserRooms[task.userId];
+    const endTime = getTaskEndTime(task);
+    if (!room || !endTime) return map;
+
+    const current = map[task.userId];
+    if (!current || getTaskEndMinutes(task) > getTaskEndMinutes(current)) {
+      map[task.userId] = task;
+    }
+
+    return map;
+  }, {});
+
+  return Object.values(lastSchedulesByUser)
+    .sort((first, second) => getTaskEndMinutes(first) - getTaskEndMinutes(second))
+    .map((fixedTask, index) => {
+      const room = applianceCalendarUserRooms[fixedTask.userId];
+      const endTime = getTaskEndTime(fixedTask);
+
+      return createApplianceCalendarTask({
+        id: startId + index,
+        date,
+        title: `${room.name} 에어컨 예냉`,
+        place: room.room,
+        owner: room.owner,
+        userId: fixedTask.userId,
+        repeat: `${endTime}-${addMinutesToTime(endTime, applianceCalendarRules.airconDurationMinutes)}`,
+        applianceType: "AIR_CONDITIONER",
+        applianceMode: "냉방",
+        sortOrder: 90 + index,
+      });
+    });
+}
+
+function createApplianceCalendarTask({ id, date, title, place, owner, userId, repeat, applianceType, applianceMode, sortOrder }) {
+  return {
+    id,
+    date,
+    title,
+    place,
+    tag: "house",
+    owner,
+    userId,
+    done: false,
+    repeat,
+    source: "auto",
+    displayType: "appliance",
+    applianceType,
+    applianceMode,
+    currentMode: applianceMode,
+    color: applianceCalendarColors[applianceType],
+    sortOrder,
+  };
+}
+
+function isHotCalendarDate(date) {
+  const weather = weatherByDate[date];
+  const temperature = Number(weather?.high ?? weather?.maxTemp ?? weather?.temperature);
+  return Number.isFinite(temperature) && temperature >= 28;
+}
+
+function hasFixedScheduleOverlap(fixedTasks, startTime, endTime) {
+  const start = toFixedScheduleMinutes(startTime);
+  const end = toFixedScheduleMinutes(endTime);
+  return fixedTasks.some((task) => getTaskStartMinutes(task) < end && start < getTaskEndMinutes(task));
+}
+
+function getTaskStartTime(task) {
+  return String(task.repeat || "").match(/(\d{1,2}:\d{2})/)?.[1] || "";
+}
+
+function getTaskEndTime(task) {
+  return String(task.repeat || "").match(/\d{1,2}:\d{2}-(\d{1,2}:\d{2})/)?.[1] || "";
+}
+
+function getTaskStartMinutes(task) {
+  return toFixedScheduleMinutes(getTaskStartTime(task));
+}
+
+function getTaskEndMinutes(task) {
+  return toFixedScheduleMinutes(getTaskEndTime(task));
+}
+
+function addMinutesToTime(time, minutesToAdd) {
+  const totalMinutes = toFixedScheduleMinutes(time) + minutesToAdd;
+  const hour = Math.floor(totalMinutes / 60) % 24;
+  const minute = totalMinutes % 60;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
 function getFixedScheduleColor(titleOrIndex) {
