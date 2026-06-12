@@ -198,8 +198,8 @@ const applianceModeCatalog = {
   },
 };
 
-const CALENDAR_CELL_TASK_LIMIT = 3;
-const CALENDAR_CELL_COLLAPSED_TASK_LIMIT = 2;
+const CALENDAR_CELL_TASK_LIMIT = 6;
+const CALENDAR_CELL_COLLAPSED_TASK_LIMIT = 5;
 const SCHEDULE_PLANNING_DELAY = 3000;
 const DAILY_TIMETABLE_START_HOUR = 6;
 const DAILY_TIMETABLE_END_HOUR = 24;
@@ -1863,11 +1863,11 @@ function getApplianceModeImage(applianceType) {
 }
 
 function getMonthTaskLabel(title) {
-  return String(title || "").replace(/\s+/g, "").trim().slice(0, 3);
+  return String(title || "").trim();
 }
 
 function getHouseTaskLabel(title) {
-  return String(title || "").replace(/\s+/g, "").trim().slice(0, 4);
+  return String(title || "").trim();
 }
 
 function getCalendarCellTasks(tasks, isHouseCalendar) {
