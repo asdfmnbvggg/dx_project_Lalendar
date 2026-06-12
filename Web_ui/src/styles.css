@@ -6606,8 +6606,9 @@ body {
 
 .daily-time-block {
   position: absolute;
-  left: 8px;
-  right: 8px;
+  left: calc(8px + ((100% - 16px) / var(--block-lane-count, 1) * var(--block-lane, 0)));
+  width: calc((100% - 16px) / var(--block-lane-count, 1) - 4px);
+  right: auto;
   top: var(--block-top);
   min-height: 42px;
   height: var(--block-height);
@@ -7444,8 +7445,9 @@ body {
   }
 
   .daily-time-block {
-    left: 5px;
-    right: 5px;
+    left: calc(5px + ((100% - 10px) / var(--block-lane-count, 1) * var(--block-lane, 0)));
+    width: calc((100% - 10px) / var(--block-lane-count, 1) - 4px);
+    right: auto;
     padding: 8px 7px;
   }
 }

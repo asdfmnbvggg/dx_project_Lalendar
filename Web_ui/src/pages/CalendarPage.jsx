@@ -1372,6 +1372,7 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
   const totalMinutes = Math.max(60, (endHour - startHour) * 60);
   const displayStartMinutes = startHour * 60;
   const displayEndMinutes = endHour * 60;
+  const blockLayouts = layoutDailyTimetableTasks(tasks, displayStartMinutes, displayEndMinutes, totalMinutes);
 
   return (
     <section className={["daily-timetable-column", variant].filter(Boolean).join(" ")} aria-label={title}>
@@ -1380,14 +1381,7 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
         {hours.slice(0, -1).map((hour) => (
           <span className="daily-timetable-line" key={hour} />
         ))}
-        {tasks.map((task, index) => {
-          const range = getDailyTaskRange(task, index);
-          const visibleStartMinutes = Math.max(displayStartMinutes, range.startMinutes);
-          const visibleEndMinutes = Math.min(displayEndMinutes, range.endMinutes);
-          if (visibleEndMinutes <= visibleStartMinutes) return null;
-
-          const top = ((visibleStartMinutes - displayStartMinutes) / totalMinutes) * 100;
-          const height = Math.max(7, ((visibleEndMinutes - visibleStartMinutes) / totalMinutes) * 100);
+        {blockLayouts.map(({ task, index, range, top, height, lane, laneCount }) => {
           const color = getDailyBlockColor(task, memberColors, variant, index);
 
           return (
@@ -1400,6 +1394,8 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
                 "--block-top": Math.max(0, Math.min(96, top)) + "%",
                 "--block-height": Math.min(100, height) + "%",
                 "--block-color": color,
+                "--block-lane": lane,
+                "--block-lane-count": laneCount,
               }}
               onContextMenu={(event) => {
                 event.preventDefault();
@@ -1798,16 +1794,31 @@ function getMonthHouseImage(task) {
 }
 
 function filterTasksByCalendarMode(tasksByDate, mode, selectedMember) {
+  const memberFilterIds = getMemberFilterIds(selectedMember);
+
   return Object.fromEntries(
     Object.entries(tasksByDate).map(([date, tasks]) => [
       date,
       tasks.filter((task) => {
         const isHousework = getDailyTaskGroup(task) === "housework";
         if (mode === "house") return isHousework;
-        return !isHousework || selectedMember === "all" || task.userId === selectedMember || task.owner === selectedMember;
+        return selectedMember === "all" || memberFilterIds.has(task.userId) || memberFilterIds.has(task.owner);
       }),
     ]),
   );
+}
+
+function getMemberFilterIds(memberId) {
+  const aliasMap = {
+    dada: ["dada", "minsu"],
+    minsu: ["dada", "minsu"],
+    sumin: ["sumin", "theresa"],
+    theresa: ["sumin", "theresa"],
+    jea: ["jea", "me"],
+    me: ["jea", "me"],
+  };
+
+  return new Set(aliasMap[memberId] || [memberId].filter(Boolean));
 }
 
 function getDailyTaskGroup(task) {
@@ -1851,6 +1862,46 @@ function getDailyTaskRange(task, index = 0) {
   return normalizeTimeRange(fallbackHour * 60, fallbackHour * 60 + 60);
 }
 
+function layoutDailyTimetableTasks(tasks, displayStartMinutes, displayEndMinutes, totalMinutes) {
+  const visibleTasks = tasks
+    .map((task, index) => {
+      const range = getDailyTaskRange(task, index);
+      const visibleStartMinutes = Math.max(displayStartMinutes, range.startMinutes);
+      const visibleEndMinutes = Math.min(displayEndMinutes, range.endMinutes);
+      if (visibleEndMinutes <= visibleStartMinutes) return null;
+
+      return {
+        task,
+        index,
+        range,
+        visibleStartMinutes,
+        visibleEndMinutes,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.visibleStartMinutes - b.visibleStartMinutes || a.visibleEndMinutes - b.visibleEndMinutes || a.index - b.index);
+
+  return visibleTasks.map((item, itemIndex) => {
+    const overlappingItems = visibleTasks.filter(
+      (candidate) => candidate.visibleStartMinutes < item.visibleEndMinutes && candidate.visibleEndMinutes > item.visibleStartMinutes,
+    );
+    const earlierOverlaps = overlappingItems.filter(
+      (candidate) =>
+        candidate.visibleStartMinutes < item.visibleStartMinutes ||
+        (candidate.visibleStartMinutes === item.visibleStartMinutes && candidate.index < item.index),
+    );
+
+    return {
+      ...item,
+      lane: Math.min(earlierOverlaps.length, overlappingItems.length - 1),
+      laneCount: Math.max(1, overlappingItems.length),
+      top: ((item.visibleStartMinutes - displayStartMinutes) / totalMinutes) * 100,
+      height: Math.max(7, ((item.visibleEndMinutes - item.visibleStartMinutes) / totalMinutes) * 100),
+      key: item.task.id || `${item.task.title}-${itemIndex}`,
+    };
+  });
+}
+
 function getEditableTaskTime(task) {
   const timeText = String(task.repeat || "");
   if (timeText.includes("하루종일")) {
@@ -1875,8 +1926,10 @@ function getEditableTaskTime(task) {
 }
 
 function normalizeTimeRange(startMinutes, endMinutes) {
-  const start = Math.max(0, Math.min(23 * 60 + 59, startMinutes));
-  const end = Math.max(start + 30, Math.min(24 * 60, endMinutes));
+  const minMinutes = DAILY_TIMETABLE_START_HOUR * 60;
+  const maxMinutes = DAILY_TIMETABLE_END_HOUR * 60;
+  const start = Math.max(minMinutes, Math.min(maxMinutes - 30, startMinutes));
+  const end = Math.max(start + 30, Math.min(maxMinutes, endMinutes));
   return { startMinutes: start, endMinutes: end };
 }
 
