@@ -406,10 +406,6 @@ export default function CalendarPage({
     if (nextSave.type === "edit") {
       const updatedTask = { ...nextSave.task, ...nextSave.updates };
       updateTask?.(nextSave.task.id, nextSave.updates);
-      const generatedPlan = buildAiHousePlanTask(updatedTask);
-      if (generatedPlan) {
-        onAddTask?.(generatedPlan);
-      }
       setEditingTask(null);
       const nextDate = updatedTask.date || detailDate;
       setSelectedDate(nextDate);
@@ -418,10 +414,6 @@ export default function CalendarPage({
     }
 
     onAddTask?.(nextSave.task);
-    const generatedPlan = buildAiHousePlanTask(nextSave.task);
-    if (generatedPlan) {
-      onAddTask?.(generatedPlan);
-    }
     setActiveAddColumn(null);
     setSelectedDate(nextSave.task.date);
     setSelectedDetailDate(nextSave.task.date);
@@ -535,8 +527,7 @@ export default function CalendarPage({
                 onOpenModeChange={openApplianceMode}
               />
 
-              {detailTasks.length === 0 && <p className="date-detail-empty">이 날의 일정이 없어요</p>}
-            </div>
+              </div>
           ) : (
             <div className="daily-list-shell" aria-label="Daily schedule list">
               <DailyListColumn
@@ -561,7 +552,6 @@ export default function CalendarPage({
                 onChooseContextAction={chooseDailyContextAction}
                 onOpenModeChange={openApplianceMode}
               />
-              {detailTasks.length === 0 && <p className="date-detail-empty">이 날의 일정이 없어요</p>}
             </div>
           )}
 
@@ -1717,33 +1707,6 @@ function buildDailyHours(tasks) {
     { length: DAILY_TIMETABLE_END_HOUR - DAILY_TIMETABLE_START_HOUR + 1 },
     (_, index) => DAILY_TIMETABLE_START_HOUR + index,
   );
-}
-
-function buildAiHousePlanTask(task) {
-  if (!task || getDailyTaskGroup(task) === "housework") return null;
-
-  const range = getDailyTaskRange(task);
-  const startsEarly = range.startMinutes < 9 * 60;
-  const startMinutes = startsEarly ? Math.min(22 * 60, range.endMinutes + 30) : Math.max(7 * 60, range.startMinutes - 90);
-  const endMinutes = Math.min(24 * 60, startMinutes + 45);
-  const applianceType = "AIR_PURIFIER";
-
-  return {
-    id: Date.now() + 17,
-    date: task.date,
-    title: applianceTypeLabel[applianceType],
-    place: "LG ThinQ",
-    tag: "house",
-    owner: task.owner || "me",
-    done: false,
-    repeat: formatMinutes(startMinutes) + " ~ " + formatMinutes(endMinutes),
-    source: "auto",
-    displayType: "appliance",
-    applianceType,
-    color: applianceTypeColor[applianceType],
-    description: "새로 입력된 개인 일정을 기준으로 자동 재배치된 가사 계획입니다.",
-    automationType: "AI_SCHEDULE_REPLAN",
-  };
 }
 
 function normalizeApplianceType(task = {}) {
