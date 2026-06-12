@@ -161,9 +161,9 @@ const calendarMemberLabels = {
 };
 
 const calendarProfileNames = {
-  sumin: "수민",
+  sumin: "한수민",
   jea: "최재혁",
-  dada: "다빈",
+  dada: "김다빈",
   me: "최재혁",
   minsu: "김철수",
   theresa: "김수현",
@@ -171,12 +171,15 @@ const calendarProfileNames = {
 
 const calendarMemberIconText = {
   sumin: "수",
-  jea: "최",
+  jea: "재",
   dada: "다",
   me: "MY",
   minsu: "김철수",
   theresa: "김수현",
 };
+
+const DABIN_MEMBER_IDS = new Set(["dada", "minsu"]);
+const DABIN_TASK_OWNER = "minsu";
 
 export default function CalendarPage({
   month,
@@ -252,6 +255,7 @@ export default function CalendarPage({
   const dailyHouseTasks = detailTasks.filter((task) => getDailyTaskGroup(task) === "housework");
   const dailyHours = buildDailyHours(detailTasks);
   const familyMembers = calendarUsers.length > 0 ? calendarUsers : members.filter((member) => member.id !== "all");
+  const dailyAddMembers = familyMembers.filter(isDabinMember);
   const selectedMemberProfile = activeCalendarUser || familyMembers.find((member) => member.id === selectedMember) || familyMembers[0] || members[0];
   const selectedMemberName = calendarProfileNames[selectedMemberProfile.id] || selectedMemberProfile.name;
   const calendarOwnerTitle = isHouseCalendar ? "가사 캘린더" : `${activeCalendarUser?.displayName || selectedMemberName + "님"}의 캘린더`;
@@ -467,8 +471,9 @@ export default function CalendarPage({
               <ChevronLeft size={22} />
             </button>
             <div>
-              <span>{formatDateTitle(detailDate)} · {formatDDay(detailDate)}</span>
               <h3>{calendarOwnerTitle}</h3>
+              <span></span>
+              <span>{formatDateTitle(detailDate)}</span>
             </div>
             <button
               type="button"
@@ -483,14 +488,6 @@ export default function CalendarPage({
             >
               <Repeat2 size={21} strokeWidth={3} />
             </button>
-          </div>
-
-          <div className="date-detail-member-strip" aria-label="Members">
-            {familyMembers.slice(0, 3).map((member) => (
-              <span key={member.id} style={{ "--member-color": memberColors[member.id] || member.color }}>
-                {memberImages[member.id] ? <img src={memberImages[member.id]} alt="" aria-hidden="true" /> : calendarMemberIconText[member.id] || member.short || member.name?.slice(0, 1)}
-              </span>
-            ))}
           </div>
 
           {dailyDetailView === "timetable" ? (
@@ -976,7 +973,7 @@ function SchedulePlanningLoadingPage({ pendingSave, onComplete }) {
 
 function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSave }) {
   const parsedDate = parseDateKey(selectedDate);
-  const initialOwner = selectedMember === "all" ? "me" : selectedMember;
+  const initialOwner = selectedMember === "minsu" ? selectedMember : DABIN_TASK_OWNER;
   const colorOptions = scheduleColorOptions;
   const [title, setTitle] = useState("");
   const [color, setColor] = useState(colorOptions[1]);
@@ -2118,6 +2115,11 @@ function getWeekTaskColor(task, memberColors, index) {
 
 function colorMix(primary, fallback) {
   return primary === "#d4144b" ? fallback : primary;
+}
+
+function isDabinMember(member) {
+  const name = `${member?.name || ""} ${member?.displayName || ""}`;
+  return DABIN_MEMBER_IDS.has(member?.id) || name.includes("다빈");
 }
 
 function DateWheel({ label, values, value, formatter, onChange, loop = false }) {
