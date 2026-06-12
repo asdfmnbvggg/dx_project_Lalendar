@@ -142,6 +142,8 @@ const applianceModeCatalog = {
 const CALENDAR_CELL_TASK_LIMIT = 3;
 const CALENDAR_CELL_COLLAPSED_TASK_LIMIT = 2;
 const SCHEDULE_PLANNING_DELAY = 3000;
+const DAILY_TIMETABLE_START_HOUR = 6;
+const DAILY_TIMETABLE_END_HOUR = 24;
 const scheduleColorOptions = ["#ff9e9e", "#7bd3ff", "#d7a8ff", "#f7fda6", "#c100ff", "#00bf63", "#ff0aa8", "#0d7ff2"];
 
 const memberImages = {
@@ -480,12 +482,18 @@ export default function CalendarPage({
           </div>
 
           {dailyDetailView === "timetable" ? (
-            <div className="daily-timetable-shell" aria-label="Daily timetable" style={{ "--hour-count": dailyHours.length }}>
+            <div className="daily-timetable-shell" aria-label="Daily timetable" style={{ "--hour-count": dailyHours.length - 1 }}>
               <section className="daily-time-rail" aria-label="Time">
                 <strong>시간</strong>
-                <div className="daily-time-scale" style={{ "--hour-count": dailyHours.length }}>
-                  {dailyHours.map((hour) => (
-                    <span key={hour}>{formatDailyHour(hour)}</span>
+                <div className="daily-time-scale" style={{ "--hour-count": dailyHours.length - 1 }}>
+                  {dailyHours.map((hour, index) => (
+                    <span
+                      key={hour}
+                      className={index === 0 ? "start" : index === dailyHours.length - 1 ? "end" : ""}
+                      style={{ "--hour-index": index }}
+                    >
+                      {formatDailyHour(hour)}
+                    </span>
                   ))}
                 </div>
               </section>
@@ -1337,9 +1345,9 @@ function timeToMinutes(time) {
 }
 
 function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, activeTaskId, activeAction, onOpenContext, onChooseContextAction, onOpenModeChange }) {
-  const startHour = hours[0] ?? 8;
-  const endHour = hours[hours.length - 1] ?? 22;
-  const totalMinutes = Math.max(60, (endHour - startHour + 1) * 60);
+  const startHour = hours[0] ?? DAILY_TIMETABLE_START_HOUR;
+  const endHour = hours[hours.length - 1] ?? DAILY_TIMETABLE_END_HOUR;
+  const totalMinutes = Math.max(60, (endHour - startHour) * 60);
 
   return (
     <section className={["daily-timetable-column", variant].filter(Boolean).join(" ")} aria-label={title}>
@@ -1679,7 +1687,10 @@ function getApplianceModeOptions(applianceType) {
 }
 
 function buildDailyHours(tasks) {
-  return Array.from({ length: 24 }, (_, index) => index);
+  return Array.from(
+    { length: DAILY_TIMETABLE_END_HOUR - DAILY_TIMETABLE_START_HOUR + 1 },
+    (_, index) => DAILY_TIMETABLE_START_HOUR + index,
+  );
 }
 
 function buildAiHousePlanTask(task) {

@@ -6451,19 +6451,30 @@ body {
 }
 
 .daily-time-scale {
-  display: grid;
-  grid-template-rows: repeat(var(--hour-count, 15), minmax(0, 1fr));
+  overflow: visible;
 }
 
 .daily-time-scale span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc((var(--hour-index, 0) / var(--hour-count, 18)) * 100%);
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 8px;
-  border-bottom: 1px dashed #edf0f4;
   color: #7d828b;
   font-size: 10px;
   font-weight: 900;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.daily-time-scale span.start {
+  transform: translateY(0);
+}
+
+.daily-time-scale span.end {
+  transform: translateY(-100%);
 }
 
 .daily-timetable-track {
