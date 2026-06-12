@@ -10732,7 +10732,16 @@ body {
 .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active span {
   position: relative;
   z-index: 1;
+}
+
+.app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active svg {
+  margin-top: -1px;
   color: #fff;
+}
+
+.app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active span {
+  color: #fff;
+  transform: translateY(2px);
 }
 
 .calendar-page-month {
@@ -11317,7 +11326,7 @@ body {
   .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active::before {
     width: 54px;
     height: 54px;
-    inset: -6px auto auto 50%;
+    inset: -1px auto auto 50%;
   }
 }
 
