@@ -5558,6 +5558,22 @@ body {
   color: inherit !important;
 }
 
+.calendar-month-view .date-cell i,
+.calendar-house-view .date-cell i {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  place-items: initial !important;
+  text-align: left;
+}
+
+.calendar-month-view .date-cell i span,
+.calendar-house-view .date-cell i span {
+  width: auto;
+  min-width: 0;
+  text-align: left;
+}
+
 .task-appliance-image {
   display: none;
   width: 0;
