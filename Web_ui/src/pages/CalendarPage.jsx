@@ -1362,7 +1362,7 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
               tabIndex={0}
               style={{
                 "--block-top": Math.max(0, Math.min(96, top)) + "%",
-                "--block-height": Math.min(96, height) + "%",
+                "--block-height": Math.min(100, height) + "%",
                 "--block-color": color,
               }}
               onContextMenu={(event) => {
@@ -1785,6 +1785,10 @@ function getDailyTaskGroup(task) {
 
 function getDailyTaskRange(task, index = 0) {
   const timeText = String(task.repeat || "");
+  if (timeText.includes("하루종일")) {
+    return { startMinutes: 0, endMinutes: 24 * 60, isAllDay: true };
+  }
+
   const rangeMatch = timeText.match(/\b(\d{1,2}):(\d{2})\s*(?:~|-|to)\s*(\d{1,2}):(\d{2})\b/i);
 
   if (rangeMatch) {
@@ -1847,6 +1851,7 @@ function formatDailyHour(hour) {
 }
 
 function formatTaskRange(range) {
+  if (range.isAllDay) return "하루종일";
   return formatMinutes(range.startMinutes) + " ~ " + formatMinutes(range.endMinutes);
 }
 
