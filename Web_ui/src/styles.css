@@ -7554,7 +7554,11 @@ body {
   }
 
   .daily-add-row.housework-only {
-    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-columns: 48px repeat(3, minmax(0, 1fr));
+  }
+
+  .daily-add-row.housework-only.list-view {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .daily-time-block {

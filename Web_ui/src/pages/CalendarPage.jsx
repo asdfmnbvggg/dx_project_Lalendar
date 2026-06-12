@@ -325,6 +325,9 @@ export default function CalendarPage({
   const selectedMemberName = calendarProfileNames[selectedMemberProfile.id] || selectedMemberProfile.name;
   const calendarOwnerTitle = isHouseCalendar ? "가사 캘린더" : `${activeCalendarUser?.displayName || selectedMemberName + "님"}의 캘린더`;
   const currentHouseworkMember = HOUSEWORK_MEMBER_TABS.find((member) => member.userId === currentUser?.id || member.ownerId === currentUser?.id);
+  const orderedHouseworkMembers = currentHouseworkMember
+    ? [currentHouseworkMember, ...HOUSEWORK_MEMBER_TABS.filter((member) => member.userId !== currentHouseworkMember.userId)]
+    : HOUSEWORK_MEMBER_TABS;
 
   useEffect(() => {
     onSelectedDetailDateChange?.(selectedDetailDate);
@@ -579,7 +582,7 @@ export default function CalendarPage({
               {dailyDetailView === "timetable" ? (
                 <div className="daily-timetable-shell housework-detail three-members" aria-label="가사 일정" style={{ "--hour-count": dailyHours.length - 1 }}>
                   <DailyTimeRail hours={dailyHours} />
-                  {HOUSEWORK_MEMBER_TABS.map((member) => (
+                  {orderedHouseworkMembers.map((member) => (
                     <DailyTimetableColumn
                       key={member.memberName}
                       title={member.label}
@@ -597,7 +600,7 @@ export default function CalendarPage({
                 </div>
               ) : (
                 <div className="daily-list-shell housework-detail three-members" aria-label="가사 일정 목록">
-                  {HOUSEWORK_MEMBER_TABS.map((member) => (
+                  {orderedHouseworkMembers.map((member) => (
                     <DailyListColumn
                       key={member.memberName}
                       title={member.label}
@@ -680,7 +683,7 @@ export default function CalendarPage({
               {isHouseCalendar ? (
                 <>
                   {dailyDetailView === "timetable" && <span aria-hidden="true" />}
-                  {HOUSEWORK_MEMBER_TABS.map((member) =>
+                  {orderedHouseworkMembers.map((member) =>
                     member.userId === currentHouseworkMember?.userId ? (
                       <button
                         type="button"
