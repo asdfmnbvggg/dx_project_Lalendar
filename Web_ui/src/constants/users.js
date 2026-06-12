@@ -4,20 +4,20 @@ export const USERS = [
   {
     id: "sumin",
     password: "sumin",
-    name: "수민",
-    displayName: "수민님",
+    name: "한수민",
+    displayName: "한수민님",
   },
   {
     id: "jea",
     password: "jea",
-    name: "재혁",
+    name: "최재혁",
     displayName: "최재혁님",
   },
   {
     id: "dada",
     password: "dada",
-    name: "다빈",
-    displayName: "다빈님",
+    name: "김다빈",
+    displayName: "김다빈님",
   },
 ];
 

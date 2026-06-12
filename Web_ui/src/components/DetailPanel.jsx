@@ -166,7 +166,7 @@ export default function DetailPanel({
 
         {panel.type === "rotation" && (
           <section className="detail-list">
-            {["최재혁", "김다빈", "김수현"].map((name, index) => (
+            {["최재혁", "김다빈", "한수민"].map((name, index) => (
               <article className="notice-row" key={name}>
                 <Cpu size={18} />
                 <div>

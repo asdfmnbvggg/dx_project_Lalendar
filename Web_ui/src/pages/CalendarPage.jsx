@@ -10,7 +10,6 @@ import washerImage from "../assets/appliances/세탁기.png";
 import lgCharacterImage from "../assets/lg-character.png";
 
 import jaehyeokImage from "../assets/people/재혁님.png";
-import suhyunImage from "../assets/people/김수현.jpg";
 
 const weatherIcon = {
   sunny: "☀️",
@@ -148,16 +147,6 @@ const scheduleColorOptions = ["#ff9e9e", "#7bd3ff", "#d7a8ff", "#f7fda6", "#c100
 const memberImages = {
   jea: jaehyeokImage,
   me: jaehyeokImage,
-  theresa: suhyunImage,
-};
-
-const calendarMemberLabels = {
-  sumin: "수민",
-  jea: "재혁",
-  dada: "다빈",
-  me: "MY",
-  minsu: "김철수",
-  theresa: "김수현",
 };
 
 const calendarProfileNames = {
@@ -165,8 +154,8 @@ const calendarProfileNames = {
   jea: "최재혁",
   dada: "김다빈",
   me: "최재혁",
-  minsu: "김철수",
-  theresa: "김수현",
+  minsu: "김다빈",
+  theresa: "한수민",
 };
 
 const calendarMemberIconText = {
@@ -174,8 +163,8 @@ const calendarMemberIconText = {
   jea: "재",
   dada: "다",
   me: "MY",
-  minsu: "김철수",
-  theresa: "김수현",
+  minsu: "다",
+  theresa: "수",
 };
 
 const DABIN_MEMBER_IDS = new Set(["dada", "minsu"]);
