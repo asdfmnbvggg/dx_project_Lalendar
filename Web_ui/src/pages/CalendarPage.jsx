@@ -22,6 +22,63 @@ const weatherIcon = {
   unknown: "?",
 };
 
+const houseCalendarWeatherByDate = {
+  "2026-06-01": createHouseWeather("sunny", 31, 16, "맑음"),
+  "2026-06-02": createHouseWeather("partly_cloudy", 29, 16, "구름 조금"),
+  "2026-06-03": createHouseWeather("partly_cloudy", 33, 19, "구름 조금"),
+  "2026-06-04": createHouseWeather("partly_cloudy", 31, 21, "구름 조금"),
+  "2026-06-05": createHouseWeather("rain", 28, 16, "비", 30),
+  "2026-06-06": createHouseWeather("partly_cloudy", 25, 13, "구름 조금"),
+  "2026-06-07": createHouseWeather("partly_cloudy", 28, 20, "구름 조금"),
+  "2026-06-08": createHouseWeather("rain", 24, 17, "비", 30),
+  "2026-06-09": createHouseWeather("partly_cloudy", 26, 14, "구름 조금"),
+  "2026-06-10": createHouseWeather("partly_cloudy", 28, 16, "구름 조금"),
+  "2026-06-11": createHouseWeather("partly_cloudy", 27, 15, "구름 조금"),
+  "2026-06-12": createHouseWeather("rain", 26, 16, "비", 30),
+  "2026-06-13": createHouseWeather("sunny", 28, 16, "맑음"),
+  "2026-06-14": createHouseWeather("partly_cloudy", 32, 19, "구름 조금"),
+  "2026-06-15": createHouseWeather("cloudy", 31, 19, "흐림"),
+  "2026-06-16": createHouseWeather("partly_cloudy", 32, 20, "구름 조금"),
+  "2026-06-17": createHouseWeather("partly_cloudy", 32, 20, "구름 조금"),
+  "2026-06-18": createHouseWeather("partly_cloudy", 33, 21, "구름 조금"),
+  "2026-06-19": createHouseWeather("partly_cloudy", 33, 21, "구름 조금"),
+  "2026-06-20": createHouseWeather("partly_cloudy", 33, 22, "구름 조금"),
+  "2026-06-21": createHouseWeather("rain", 32, 22, "비", 30),
+  "2026-06-22": createHouseWeather("rain", 31, 21, "비", 30),
+  "2026-06-23": createHouseWeather("partly_cloudy", 30, 20, "구름 조금"),
+  "2026-06-24": createHouseWeather("partly_cloudy", 30, 20, "구름 조금"),
+  "2026-06-25": createHouseWeather("rain", 30, 20, "비", 30),
+  "2026-06-26": createHouseWeather("rain", 28, 20, "비", 30),
+  "2026-06-27": createHouseWeather("rain", 29, 20, "비", 30),
+  "2026-06-28": createHouseWeather("cloudy", 28, 20, "평균"),
+  "2026-06-29": createHouseWeather("cloudy", 28, 20, "평균"),
+  "2026-06-30": createHouseWeather("cloudy", 28, 21, "평균"),
+  "2026-07-01": createHouseWeather("cloudy", 28, 21, "평균"),
+  "2026-07-02": createHouseWeather("cloudy", 28, 21, "평균"),
+  "2026-07-03": createHouseWeather("cloudy", 28, 21, "평균"),
+  "2026-07-04": createHouseWeather("cloudy", 28, 21, "평균"),
+  "2026-07-05": createHouseWeather("cloudy", 28, 21, "평균"),
+};
+
+function createHouseWeather(icon, maxTemp, minTemp, sky, pop = null) {
+  return {
+    icon,
+    maxTemp,
+    minTemp,
+    pop,
+    sky,
+    pty: pop ? "비" : "없음",
+    source: "HARDCODED",
+    hasWeatherData: true,
+  };
+}
+
+const houseCalendarTodayAirQuality = {
+  grade: "보통",
+  pm10: 34,
+  pm25: 18,
+};
+
 const applianceTypeLabel = {
   WASHER: "세탁기",
   DRYER: "건조기",
@@ -750,8 +807,9 @@ export default function CalendarPage({
                     ? cellTasks.slice(0, CALENDAR_CELL_COLLAPSED_TASK_LIMIT)
                     : cellTasks;
                 const hiddenTaskCount = cellTasks.length - visibleTasks.length;
-                const weather = weatherByDate[key];
+                const weather = isHouseCalendar ? houseCalendarWeatherByDate[key] || weatherByDate[key] : weatherByDate[key];
                 const hasWeatherData = Boolean(weather?.hasWeatherData);
+                const shouldShowAirQuality = isHouseCalendar && key === getTodayDateKey();
 
                 return (
                   <button
@@ -776,6 +834,11 @@ export default function CalendarPage({
                             <small>{formatTemp(weather.minTemp)}</small>
                             {Number.isFinite(weather.pop) && <small className="weather-pop">강수 {weather.pop}%</small>}
                             <small>{formatWeatherState(weather)}</small>
+                            {shouldShowAirQuality && (
+                              <small className="air-quality-chip">
+                                미세 {houseCalendarTodayAirQuality.grade} · PM10 {houseCalendarTodayAirQuality.pm10}
+                              </small>
+                            )}
                           </span>
                         </>
                       </span>
@@ -2375,6 +2438,10 @@ function addDays(date, amount) {
   const next = new Date(date + "T00:00:00");
   next.setDate(next.getDate() + amount);
   return toDateKey(next);
+}
+
+function getTodayDateKey() {
+  return toDateKey(new Date());
 }
 
 function toDateKey(date) {

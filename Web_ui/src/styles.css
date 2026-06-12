@@ -5235,7 +5235,7 @@ body {
   position: relative;
   min-height: 0 !important;
   height: 100%;
-  grid-template-rows: 28px 0 1fr !important;
+  grid-template-rows: 28px minmax(0, 1fr) 42px !important;
   align-items: start;
   padding: 0 0 8px !important;
   border-radius: 0 !important;
@@ -5247,7 +5247,7 @@ body {
   position: relative;
   min-height: 104px !important;
   height: 100%;
-  grid-template-rows: 30px 0 1fr !important;
+  grid-template-rows: 30px minmax(0, 1fr) 50px !important;
   align-items: start;
   padding: 0 0 10px !important;
   border-radius: 0 !important;
@@ -5287,13 +5287,63 @@ body {
 }
 
 .calendar-house-view .day-weather {
+  grid-row: 3;
+  min-height: 50px;
+  display: grid;
+  justify-items: center;
+  align-content: end;
+  gap: 0;
+  margin-top: auto;
+  padding-bottom: 2px;
+}
+
+.calendar-house-view .weather-icon {
+  height: 18px;
+  font-size: 17px;
+}
+
+.calendar-house-view .weather-temps {
+  gap: 0;
+  line-height: 1;
+}
+
+.calendar-house-view .weather-temps b {
+  color: #64748b;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.calendar-house-view .weather-temps small {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.calendar-house-view .weather-pop {
+  color: #3b82f6 !important;
+  font-size: 10px !important;
+}
+
+.calendar-house-view .air-quality-chip {
+  margin-top: 1px;
+  padding: 1px 4px;
+  border-radius: 999px;
+  background: #eef6ff;
+  color: #2563eb !important;
+  font-size: 9px !important;
+  font-weight: 900;
+}
+
+.calendar-house-view .day-weather.empty {
+  min-height: 0;
   display: none;
 }
 
 .calendar-house-view .date-tasks {
+  grid-row: 2;
   position: relative;
-  height: 100%;
-  min-height: 72px;
+  height: auto;
+  min-height: 0;
   align-content: start;
   justify-items: stretch;
   gap: 3px;
@@ -5354,9 +5404,10 @@ body {
 }
 
 .calendar-month-view .date-tasks {
+  grid-row: 2;
   position: relative;
-  height: 100%;
-  min-height: 72px;
+  height: auto;
+  min-height: 0;
   grid-auto-rows: 18px;
   align-content: start;
   justify-items: center;
