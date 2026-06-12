@@ -8,6 +8,7 @@ import dryerImage from "../assets/appliances/건조기.png";
 import fridgeImage from "../assets/appliances/냉장고.png";
 import washerImage from "../assets/appliances/세탁기.png";
 import lgCharacterImage from "../assets/lg-character.png";
+import aiDailyReportImage from "../assets/ai-daily-report.png";
 
 import jaehyeokImage from "../assets/people/재혁님.png";
 import suminImage from "../assets/people/수민님.png";
@@ -324,6 +325,7 @@ export default function CalendarPage({
   const selectedMemberProfile = activeCalendarUser || familyMembers.find((member) => member.id === selectedMember) || familyMembers[0] || members[0];
   const selectedMemberName = calendarProfileNames[selectedMemberProfile.id] || selectedMemberProfile.name;
   const calendarOwnerTitle = isHouseCalendar ? "가사 캘린더" : `${activeCalendarUser?.displayName || selectedMemberName + "님"}의 캘린더`;
+  const calendarOwnerDesignName = getCalendarOwnerDesignName(activeCalendarUser?.displayName || selectedMemberName);
   const currentHouseworkMember = HOUSEWORK_MEMBER_TABS.find((member) => member.userId === currentUser?.id || member.ownerId === currentUser?.id);
   const orderedHouseworkMembers = currentHouseworkMember
     ? [currentHouseworkMember, ...HOUSEWORK_MEMBER_TABS.filter((member) => member.userId !== currentHouseworkMember.userId)]
@@ -760,7 +762,18 @@ export default function CalendarPage({
   return (
     <section className={["page", "calendar-page", "calendar-page-" + calendarView].join(" ")}>
       <div className="calendar-filter-block">
-        <h1 className="calendar-family-title">{calendarOwnerTitle}</h1>
+        <h1 className="calendar-family-title">
+          {isHouseCalendar ? (
+            calendarOwnerTitle
+          ) : (
+            <>
+              <span>{calendarOwnerDesignName}</span>의 캘린더
+            </>
+          )}
+        </h1>
+        <button className="calendar-notification-button" type="button" aria-label="알림" onClick={() => onOpenPanel?.({ type: "notifications" })}>
+          <Bell size={19} strokeWidth={2.4} />
+        </button>
         <button className="calendar-settings-button" type="button" aria-label="설정" onClick={() => onOpenPanel?.({ type: "settings" })}>
           <Settings size={22} strokeWidth={2.3} />
         </button>
@@ -985,9 +998,15 @@ export default function CalendarPage({
 
       {(isHouseCalendar || calendarView === "month") && (
         <section className="calendar-ai-report" aria-label="AI Report">
-          <h3>AI Report</h3>
+          <h3>Daily AI Report</h3>
           <div>
             <p>{buildAiReport(selectedDate, selectedVisibleTasks, filteredTasksByDate)}</p>
+            <img src={aiDailyReportImage} alt="" aria-hidden="true" />
+            <div className="calendar-ai-report-tags" aria-hidden="true">
+              <span>세탁</span>
+              <span>청소</span>
+              <span>실내 케어</span>
+            </div>
           </div>
         </section>
       )}
@@ -2356,6 +2375,12 @@ function getScheduleOwnerDisplayName(task = {}) {
   if (mappedName) return mappedName;
   const member = members.find((item) => item.id === ownerId);
   return member?.name || "사용자";
+}
+
+function getCalendarOwnerDesignName(name = "") {
+  const trimmed = String(name || "").replace(/님$/, "").trim();
+  if (!trimmed) return "나";
+  return trimmed.length >= 3 ? trimmed.slice(1) : trimmed;
 }
 
 function formatRunDate(date) {
