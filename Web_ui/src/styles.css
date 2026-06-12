@@ -7187,6 +7187,432 @@ body {
   box-shadow: 0 12px 22px rgba(51, 79, 117, 0.24);
 }
 
+.washer-control-page {
+  min-height: calc(100svh - 124px);
+  display: grid;
+  grid-template-rows: auto auto auto auto auto auto 1fr auto;
+  gap: 18px;
+  overflow: auto;
+  padding: 18px 20px 74px;
+  background: #eff1f5;
+  color: #111827;
+}
+
+.washer-control-head {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.washer-control-head button {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: transparent;
+  color: #667386;
+}
+
+.washer-control-head h2 {
+  margin: 0;
+  font-size: 29px;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.washer-control-head > div {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.washer-settings-button {
+  position: relative;
+}
+
+.washer-settings-button::after {
+  content: "";
+  position: absolute;
+  right: 2px;
+  top: 1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff5738;
+}
+
+.washer-hero {
+  min-height: 246px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 22px;
+  background:
+    radial-gradient(circle at 50% 58%, rgba(255, 255, 255, 0.96) 0 22%, rgba(255, 255, 255, 0.54) 40%, transparent 64%),
+    linear-gradient(180deg, #f5f6f9 0%, #eef1f5 100%);
+}
+
+.washer-hero img {
+  width: 138px;
+  height: 138px;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 22px rgba(75, 85, 99, 0.18));
+}
+
+.washer-hero span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 48px;
+  padding: 0 17px;
+  border-radius: 999px;
+  background: #d8dde7;
+  color: #1f2937;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.washer-course-section {
+  display: grid;
+  gap: 20px;
+}
+
+.washer-course-row {
+  position: relative;
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  align-items: center;
+  gap: 16px;
+}
+
+.washer-mode-picker {
+  position: relative;
+  justify-self: start;
+}
+
+.washer-mode-picker > button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+  background: transparent;
+  color: #111827;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.washer-mode-menu {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  width: 142px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+}
+
+.washer-mode-menu button {
+  width: 100%;
+  min-height: 42px;
+  display: block;
+  padding: 0 16px;
+  background: #fff;
+  color: #111827;
+  font-size: 15px;
+  font-weight: 850;
+  text-align: left;
+}
+
+.washer-mode-menu button.active {
+  background: #e8eef8;
+  color: #3e5d89;
+}
+
+.washer-power-button {
+  width: 80px;
+  height: 80px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  color: #6478e9;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.16);
+}
+
+.washer-power-button.active {
+  color: #fff;
+  background: #6377ff;
+}
+
+.washer-setting-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.washer-setting-card {
+  min-height: 184px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 7px;
+  padding: 16px 8px;
+  border-radius: 16px;
+  color: #4e5e9e;
+  text-align: center;
+}
+
+.washer-setting-card.rinse {
+  background: #d9ecfa;
+  color: #4f66a9;
+}
+
+.washer-setting-card.spin {
+  background: #d9efec;
+  color: #4f66a9;
+}
+
+.washer-setting-card.temp {
+  background: #e7e2f4;
+  color: #4f66a9;
+}
+
+.washer-setting-card svg,
+.washer-cycle-card svg,
+.washer-option-icon svg,
+.washer-care-card > svg {
+  color: #22a7dc;
+  filter: drop-shadow(0 5px 7px rgba(34, 167, 220, 0.22));
+}
+
+.washer-setting-card.temp svg {
+  color: #ff6b2f;
+}
+
+.washer-setting-card span {
+  color: #4b5563;
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.washer-setting-card strong {
+  color: #4f66a9;
+  font-size: 30px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.washer-cycle-card {
+  min-height: 112px;
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 0 31px;
+  border-radius: 14px;
+  background: #e2e6fb;
+  color: #111827;
+  text-align: left;
+}
+
+.washer-cycle-card span {
+  font-size: 23px;
+  font-weight: 900;
+}
+
+.washer-cycle-card strong {
+  color: #5267a4;
+  font-size: 23px;
+  font-weight: 950;
+}
+
+.washer-send-button {
+  min-height: 68px;
+  border-radius: 999px;
+  background: #405c83;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.washer-reserve-button {
+  justify-self: center;
+  max-width: 100%;
+  min-height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: #5267a4;
+  font-size: 17px;
+  font-weight: 950;
+  line-height: 1.25;
+  text-align: center;
+  white-space: normal;
+}
+
+.washer-reserve-button svg:first-child {
+  color: #1faea9;
+}
+
+.washer-care-card,
+.washer-option-list {
+  border-radius: 14px;
+  background: #fff;
+}
+
+.washer-care-card {
+  min-height: 126px;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 60px;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 26px;
+}
+
+.washer-care-card div {
+  min-width: 0;
+}
+
+.washer-care-card strong {
+  position: relative;
+  display: block;
+  color: #111827;
+  font-size: 21px;
+  font-weight: 950;
+}
+
+.washer-care-card strong i {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: #ff5738;
+  vertical-align: top;
+}
+
+.washer-care-card span {
+  display: block;
+  margin-top: 4px;
+  color: #667386;
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.washer-care-card button {
+  color: #4b5563;
+  background: transparent;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.washer-option-list {
+  display: grid;
+  overflow: hidden;
+}
+
+.washer-option-row {
+  min-height: 84px;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 84px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 32px;
+  background: #fff;
+  border-bottom: 1px solid #e6e9ef;
+  color: #111827;
+  text-align: left;
+}
+
+.washer-option-row:last-child {
+  border-bottom: 0;
+}
+
+.washer-option-row strong {
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.washer-option-icon {
+  width: 34px;
+  display: grid;
+  place-items: center;
+}
+
+.washer-option-row i {
+  position: relative;
+  width: 72px;
+  height: 44px;
+  justify-self: end;
+  border-radius: 999px;
+  background: #99a2ae;
+}
+
+.washer-option-row i::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 160ms ease;
+}
+
+.washer-option-row i.active {
+  background: #6174ff;
+}
+
+.washer-option-row i.active::after {
+  transform: translateX(28px);
+}
+
+.washer-mode-feedback {
+  min-height: 24px;
+  margin: 0;
+  color: #5267a4;
+  font-size: 13px;
+  font-weight: 850;
+  text-align: center;
+}
+
+.washer-bottom-tabs {
+  position: sticky;
+  bottom: -58px;
+  justify-self: center;
+  width: min(390px, 100%);
+  min-height: 56px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(226, 232, 240, 0.65);
+}
+
+.washer-bottom-tabs button {
+  min-height: 48px;
+  border-radius: 999px;
+  background: transparent;
+  color: #667386;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.washer-bottom-tabs button.active {
+  background: #405c83;
+  color: #fff;
+}
+
 .daily-add-page {
   min-height: calc(100svh - 124px);
   display: grid;

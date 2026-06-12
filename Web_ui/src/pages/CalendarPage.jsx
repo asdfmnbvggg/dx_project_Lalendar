@@ -1,6 +1,6 @@
 ﻿import { ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Repeat2, Search, Settings, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { CheckCircle2, Home, Power, SlidersHorizontal } from "lucide-react";
+import { Bell, CheckCircle2, ChevronDown, Clock3, Home, Info, Power, Shirt, SlidersHorizontal, Thermometer, WashingMachine, Waves } from "lucide-react";
 import { dateKey, members } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
 import airConditionerImage from "../assets/appliances/에어컨.png";
@@ -516,6 +516,26 @@ export default function CalendarPage({
     return <SchedulePlanningLoadingPage pendingSave={pendingScheduleSave} onComplete={completeSchedulePlanning} />;
   }
 
+  if (applianceModeTask) {
+    const nearestRunSchedule = getNearestApplianceSchedule(tasksByDate, normalizeApplianceType(applianceModeTask), selectedDate);
+
+    return (
+      <ApplianceModePage
+        task={applianceModeTask}
+        selectedModeId={selectedApplianceModeId}
+        message={applianceModeMessage}
+        nearestRunText={nearestRunSchedule ? formatNearestRunText(nearestRunSchedule) : ""}
+        onSelectMode={setSelectedApplianceModeId}
+        onApply={(mode) => changeApplianceMode(applianceModeTask, mode)}
+        onClose={() => {
+          setApplianceModeTask(null);
+          setSelectedApplianceModeId("");
+          setApplianceModeMessage("");
+        }}
+      />
+    );
+  }
+
   if (selectedDetailDate && editingTask) {
     return (
       <DailyScheduleEditPage
@@ -734,20 +754,6 @@ export default function CalendarPage({
             </div>
           )}
         </section>
-        {applianceModeTask && (
-          <ApplianceModeSheet
-            task={applianceModeTask}
-            selectedModeId={selectedApplianceModeId}
-            message={applianceModeMessage}
-            onSelectMode={setSelectedApplianceModeId}
-            onApply={(mode) => changeApplianceMode(applianceModeTask, mode)}
-            onClose={() => {
-              setApplianceModeTask(null);
-              setSelectedApplianceModeId("");
-              setApplianceModeMessage("");
-            }}
-          />
-        )}
       </section>
     );
   }
@@ -1736,7 +1742,7 @@ function DailyListColumn({ title, tasks, memberColors, variant, activeTaskId, ac
   );
 }
 
-function ApplianceModeSheet({ task, selectedModeId, message, onSelectMode, onApply, onClose }) {
+function ApplianceModePage({ task, selectedModeId, message, nearestRunText, onSelectMode, onApply, onClose }) {
   const applianceType = normalizeApplianceType(task);
   const catalog = applianceModeCatalog[applianceType] || applianceModeCatalog.ETC;
   const applianceName = applianceTypeLabel[applianceType] || task.title || "가전";
@@ -1744,101 +1750,164 @@ function ApplianceModeSheet({ task, selectedModeId, message, onSelectMode, onApp
   const selectedMode = modes.find((mode) => mode.id === selectedModeId) || modes[0];
   const currentMode = task.applianceMode || task.currentMode || selectedMode?.label || modes[0]?.label || "자동";
   const image = getApplianceModeImage(applianceType);
-  const optionRows = getApplianceModeOptions(applianceType);
+  const [isPowerOn, setPowerOn] = useState(false);
+  const [isModeMenuOpen, setModeMenuOpen] = useState(false);
+  const [rinseCount, setRinseCount] = useState(2);
+  const [spinLevel, setSpinLevel] = useState("강");
+  const [waterTemp, setWaterTemp] = useState(40);
+  const [washCourse, setWashCourse] = useState(currentMode);
+  const [careEnabled, setCareEnabled] = useState(false);
+  const [options, setOptions] = useState(() => getApplianceModeOptions(applianceType));
+  const [activeTab, setActiveTab] = useState("product");
+  const [statusText, setStatusText] = useState("");
+
+  function selectMode(mode) {
+    onSelectMode(mode.id);
+    setWashCourse(mode.label);
+    setModeMenuOpen(false);
+    setStatusText(`${mode.label} 코스로 변경했어요.`);
+  }
+
+  function toggleOption(label) {
+    setOptions((current) => current.map((option) => (option.label === label ? { ...option, active: !option.active } : option)));
+  }
+
+  function sendToWasher() {
+    onApply(selectedMode);
+    setPowerOn(true);
+    setStatusText("세탁기에 설정을 전송했어요.");
+  }
+
+  function reserveCourse() {
+    setStatusText(nearestRunText || "가까운 실행 예정 일정이 없어요.");
+  }
 
   return (
-    <div className="appliance-mode-backdrop" role="presentation" onPointerDown={onClose}>
-      <section
-        className="appliance-mode-sheet"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="appliance-mode-title"
-        onPointerDown={(event) => event.stopPropagation()}
-      >
-        <header className="appliance-mode-head">
-          <button type="button" aria-label="닫기" onClick={onClose}>
-            <ChevronLeft size={20} />
+    <section className="page calendar-page washer-control-page" aria-label={`${applianceName} 작동 설정`}>
+      <header className="washer-control-head">
+        <button type="button" aria-label="뒤로가기" onClick={onClose}>
+          <ChevronLeft size={30} strokeWidth={2.2} />
+        </button>
+        <h2>{applianceName}</h2>
+        <div>
+          <button type="button" aria-label="홈 보기" onClick={() => setStatusText("홈 화면 버튼을 눌렀어요.")}>
+            <Home size={26} strokeWidth={2.1} />
           </button>
-          <h2 id="appliance-mode-title">{applianceName}</h2>
-          <div className="appliance-mode-head-actions" aria-hidden="true">
-            <Home size={17} />
-            <Settings size={17} />
-          </div>
-        </header>
-
-        <div className="appliance-mode-hero">
-          <div className="appliance-mode-visual">
-            <img src={image} alt="" aria-hidden="true" />
-          </div>
-          <span className="appliance-mode-state-pill">원격제어 가능</span>
-          <button type="button" className="appliance-mode-power" aria-label="전원">
-            <Power size={18} />
+          <button type="button" aria-label="설정" className="washer-settings-button" onClick={() => setStatusText("설정 버튼을 눌렀어요.")}>
+            <Settings size={30} strokeWidth={2.4} />
           </button>
         </div>
+      </header>
 
-        <section className="appliance-current-card" aria-label="현재 작동 상태">
-          <div>
-            <span>현재 모드</span>
-            <strong>{currentMode}</strong>
-          </div>
-          <p>{task.place || "LG ThinQ"} · {catalog.status}</p>
-        </section>
+      <div className="washer-hero">
+        <img src={image} alt="" aria-hidden="true" />
+        <span>
+          원격제어 꺼짐
+          <Info size={15} strokeWidth={2.3} />
+        </span>
+      </div>
 
-        <section className="appliance-mode-section" aria-label="모드 선택">
-          <div className="appliance-mode-title-row">
-            <div>
-              <span>모드</span>
-              <strong>{selectedMode?.label || currentMode}</strong>
-            </div>
-            <SlidersHorizontal size={18} />
-          </div>
-          <div className="appliance-mode-grid">
-            {modes.map((mode) => (
-              <button
-                type="button"
-                key={mode.id}
-                className={mode.id === selectedMode?.id ? "selected" : ""}
-                onClick={() => onSelectMode(mode.id)}
-              >
-                <span className="appliance-mode-symbol">{mode.icon}</span>
-                <strong>{mode.label}</strong>
-                <small>{mode.meta}</small>
-              </button>
-            ))}
-          </div>
-          <button type="button" className="appliance-mode-run-button" onClick={() => onApply(selectedMode)}>
-            {applianceName} 원격 시작
-          </button>
-        </section>
-
-        <section className="appliance-mode-option-list" aria-label="부가 옵션">
-          {optionRows.map((option) => (
-            <div className="appliance-mode-option-row" key={option.label}>
-              <div>
-                <span>{option.icon}</span>
-                <strong>{option.label}</strong>
+      <section className="washer-course-section" aria-label="세탁 코스">
+        <div className="washer-course-row">
+          <div className="washer-mode-picker">
+            <button type="button" aria-expanded={isModeMenuOpen} onClick={() => setModeMenuOpen((current) => !current)}>
+              {selectedMode?.label || washCourse || currentMode}
+              <ChevronDown size={24} strokeWidth={2.5} />
+            </button>
+            {isModeMenuOpen && (
+              <div className="washer-mode-menu">
+                {modes.map((mode) => (
+                  <button type="button" key={mode.id} className={mode.id === selectedMode?.id ? "active" : ""} onClick={() => selectMode(mode)}>
+                    {mode.label}
+                  </button>
+                ))}
               </div>
-              <i className={option.active ? "active" : ""} aria-hidden="true" />
-            </div>
-          ))}
-        </section>
-
-        <div className="appliance-mode-message" aria-live="polite">
-          <CheckCircle2 size={15} />
-          <span>{message || "실제 ThinQ API 대신 mock 데이터로 모드 변경을 확인합니다."}</span>
+            )}
+          </div>
+          <button type="button" className={["washer-power-button", isPowerOn ? "active" : ""].filter(Boolean).join(" ")} aria-label="전원" onClick={() => setPowerOn((current) => !current)}>
+            <Power size={40} strokeWidth={2.1} />
+          </button>
         </div>
 
-        <footer className="appliance-mode-actions">
-          <button type="button" onClick={onClose}>
-            취소
+        <div className="washer-setting-grid">
+          <button type="button" className="washer-setting-card rinse" onClick={() => setRinseCount((current) => (current >= 5 ? 1 : current + 1))}>
+            <Shirt size={50} strokeWidth={2.2} />
+            <span>헹굼</span>
+            <strong>{rinseCount}회</strong>
           </button>
-          <button type="button" className="primary" onClick={() => onApply(selectedMode)}>
-            적용하기
+          <button type="button" className="washer-setting-card spin" onClick={() => setSpinLevel((current) => (current === "강" ? "중" : current === "중" ? "약" : "강"))}>
+            <Waves size={50} strokeWidth={2.2} />
+            <span>탈수</span>
+            <strong>{spinLevel}</strong>
           </button>
-        </footer>
+          <button type="button" className="washer-setting-card temp" onClick={() => setWaterTemp((current) => (current >= 60 ? 20 : current + 10))}>
+            <Thermometer size={50} strokeWidth={2.2} />
+            <span>물온도</span>
+            <strong>{waterTemp}도</strong>
+          </button>
+        </div>
+
+        <button type="button" className="washer-cycle-card" onClick={() => setStatusText("세탁 단계 상세를 눌렀어요.")}>
+          <Shirt size={50} strokeWidth={2.2} />
+          <span>세탁</span>
+          <strong>{washCourse || selectedMode?.label || "표준"}</strong>
+        </button>
+
+        <button type="button" className="washer-send-button" onClick={sendToWasher}>
+          세탁기에 전송
+        </button>
+
+        <button type="button" className="washer-reserve-button" onClick={reserveCourse}>
+          <Clock3 size={25} strokeWidth={2.3} />
+          {nearestRunText || "가까운 실행 예정 일정이 없어요."}
+        </button>
       </section>
-    </div>
+
+      <section className="washer-care-card" aria-label="종료 후 세탁물 케어">
+        <WashingMachine size={31} strokeWidth={2.2} />
+        <div>
+          <strong>
+            종료 후 세탁물 케어
+            <i aria-hidden="true" />
+          </strong>
+          <span>원격제어를 켠 뒤 사용할 수 있어요.</span>
+        </div>
+        <button type="button" onClick={() => setCareEnabled((current) => !current)}>
+          {careEnabled ? "켜짐" : "꺼짐"}
+        </button>
+      </section>
+
+      <section className="washer-option-list" aria-label="제품 기능">
+        {options.map((option) => (
+          <button type="button" className="washer-option-row" key={option.label} onClick={() => toggleOption(option.label)}>
+            <span className="washer-option-icon">{getWasherOptionIcon(option.label)}</span>
+            <strong>{option.label}</strong>
+            <i className={option.active ? "active" : ""} aria-hidden="true" />
+          </button>
+        ))}
+      </section>
+
+      <p className="washer-mode-feedback" aria-live="polite">
+        {statusText || message || "ThinQ API 없이 mock 데이터로 버튼 동작을 구성했어요."}
+      </p>
+
+      <nav className="washer-bottom-tabs" aria-label="세탁기 보기 전환">
+        <button type="button" className={activeTab === "product" ? "active" : ""} onClick={() => setActiveTab("product")}>
+          제품
+        </button>
+        <button type="button" className={activeTab === "features" ? "active" : ""} onClick={() => setActiveTab("features")}>
+          유용한 기능
+        </button>
+      </nav>
+    </section>
   );
+}
+
+function getWasherOptionIcon(label) {
+  if (label === "터보샷") return <Waves size={26} strokeWidth={2.5} />;
+  if (label === "알림") return <Bell size={25} strokeWidth={2.4} />;
+  if (label === "구김방지") return <Shirt size={25} strokeWidth={2.3} />;
+  return <SlidersHorizontal size={24} strokeWidth={2.3} />;
 }
 
 function getApplianceModeOptions(applianceType) {
@@ -2201,6 +2270,54 @@ function buildAiReport(selectedDate, selectedTasks, tasksByDate = {}) {
   }
 
   return "오늘은 등록된 개인 일정과 추천 가사일이 없어요. 여유 있게 하루를 보내도 괜찮아요.";
+}
+
+function getNearestApplianceSchedule(tasksByDate = {}, applianceType, referenceDate) {
+  const referenceKey = referenceDate || getTodayDateKey();
+  const candidates = Object.values(tasksByDate)
+    .flat()
+    .filter((task) => !task.done)
+    .filter((task) => getDailyTaskGroup(task) === "housework")
+    .filter((task) => normalizeApplianceType(task) === applianceType)
+    .map((task, index) => {
+      const range = getDailyTaskRange(task, index);
+      return {
+        task,
+        date: task.date,
+        startMinutes: range.startMinutes,
+        timestamp: new Date(`${task.date}T${formatMinutes(range.startMinutes)}:00`).getTime(),
+      };
+    })
+    .filter((item) => item.date >= referenceKey)
+    .sort((first, second) => first.timestamp - second.timestamp);
+
+  return candidates[0] || null;
+}
+
+function formatNearestRunText(schedule) {
+  const name = getScheduleOwnerDisplayName(schedule.task);
+  return `${name}님이 ${formatRunDate(schedule.date)} ${formatKoreanTime(schedule.startMinutes)}에 실행시킬 예정입니다.`;
+}
+
+function getScheduleOwnerDisplayName(task = {}) {
+  const ownerId = task.owner || task.userId;
+  const mappedName = calendarProfileNames[ownerId];
+  if (mappedName) return mappedName;
+  const member = members.find((item) => item.id === ownerId);
+  return member?.name || "사용자";
+}
+
+function formatRunDate(date) {
+  const parsed = parseDateKey(date);
+  return parsed.day + "일";
+}
+
+function formatKoreanTime(minutes) {
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+  const period = hour < 12 ? "오전" : "오후";
+  const displayHour = hour % 12 || 12;
+  return period + " " + displayHour + "시" + (minute ? " " + minute + "분" : "");
 }
 
 function formatReportList(items) {
