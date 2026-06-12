@@ -1487,17 +1487,6 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
                 >
                   <button
                     type="button"
-                    className={activeAction === "delete" ? "active" : ""}
-                    role="menuitem"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onChooseContextAction?.("delete", task);
-                    }}
-                  >
-                    삭제
-                  </button>
-                  <button
-                    type="button"
                     className={activeAction === "edit" ? "active" : ""}
                     role="menuitem"
                     onClick={(event) => {
@@ -1524,6 +1513,17 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
                       복사
                     </button>
                   )}
+                  <button
+                    type="button"
+                    className={activeAction === "delete" ? "active" : ""}
+                    role="menuitem"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onChooseContextAction?.("delete", task);
+                    }}
+                  >
+                    삭제
+                  </button>
                 </div>
               )}
             </article>
@@ -1580,17 +1580,6 @@ function DailyListColumn({ title, tasks, memberColors, variant, activeTaskId, ac
                   >
                     <button
                       type="button"
-                      className={activeAction === "delete" ? "active" : ""}
-                      role="menuitem"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onChooseContextAction?.("delete", task);
-                      }}
-                    >
-                      삭제
-                    </button>
-                    <button
-                      type="button"
                       className={activeAction === "edit" ? "active" : ""}
                       role="menuitem"
                       onClick={(event) => {
@@ -1617,6 +1606,17 @@ function DailyListColumn({ title, tasks, memberColors, variant, activeTaskId, ac
                         복사
                       </button>
                     )}
+                    <button
+                      type="button"
+                      className={activeAction === "delete" ? "active" : ""}
+                      role="menuitem"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onChooseContextAction?.("delete", task);
+                      }}
+                    >
+                      삭제
+                    </button>
                   </div>
                 )}
               </article>
