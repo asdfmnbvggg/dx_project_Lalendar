@@ -1214,6 +1214,7 @@ function OnboardingPage({ step, userName = "00", onNext, onInfoNext, onFixedNext
               {!isScheduleInfoComplete && <i aria-hidden="true" />}
             </p>
             <button className="onboarding-next-button onboarding-info-next-button" type="button" onClick={onInfoNext} disabled={!isScheduleInfoComplete} aria-label="고정 일정 입력으로 이동">
+              <span>NEXT</span>
               <ArrowRight size={18} strokeWidth={2.6} />
             </button>
           </section>
