@@ -11427,7 +11427,7 @@ body {
   flex: 0 0 auto;
   min-height: 0;
   margin: 0;
-  padding: 18px 16px 18px;
+  padding: 0 16px 18px;
   border-radius: 14px;
   background: #fff;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
@@ -11435,7 +11435,7 @@ body {
 
 .calendar-page-month .calendar-header {
   min-height: 36px;
-  padding: 0;
+  padding: 0 10px;
   border: 0;
 }
 
@@ -11480,7 +11480,7 @@ body {
 }
 
 .calendar-page-month .weekdays {
-  margin: 12px 0 8px;
+  margin: 0 0 8px;
   color: #353535;
   font-size: 12px;
   font-weight: 900;
@@ -11781,7 +11781,7 @@ body {
   }
 
   .calendar-page-month .calendar-board {
-    padding: 10px 10px 12px;
+    padding: 0 10px 12px;
     border-radius: 12px;
   }
 
@@ -11803,7 +11803,7 @@ body {
   }
 
   .calendar-page-month .weekdays {
-    margin: 6px 0 4px;
+    margin: 0 0 4px;
     font-size: 10px;
   }
 
@@ -11915,7 +11915,7 @@ body {
   }
 
   .calendar-page-month .calendar-board {
-    padding: 14px 15px 16px;
+    padding: 0 15px 16px;
   }
 
   .calendar-page-month .calendar-month-view {

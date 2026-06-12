@@ -50,7 +50,7 @@ export default function App() {
   const initialVisibleMonth = visibleMonthFromDate(initialSelectedDate);
   const [currentUser, setCurrentUser] = useState(storedUser);
   const [activeCalendarUser, setActiveCalendarUser] = useState(() => findUserById(storedSession?.activeCalendarUserId) || storedUser);
-  const [tasks, setTasks] = useState(() => normalizeTasksForUsers(normalizeGeneratedTaskTitles(initialTasks)));
+  const [tasks, setTasks] = useState(() => normalizeTasksForUsers(normalizeGeneratedTaskTitles([...initialTasks, ...buildDefaultFixedCalendarTasks()])));
   const [memberColors, setMemberColors] = useState(() => ({
     ...Object.fromEntries(members.map((member) => [member.id, member.color])),
     ...USER_COLORS,
@@ -909,6 +909,49 @@ const fixedScheduleTemplates = {
     })),
   ],
 };
+
+const defaultFixedScheduleUsers = [
+  { templateId: "sumin", userId: "sumin", owner: "theresa" },
+  { templateId: "jaehyeok", userId: "jea", owner: "me" },
+  { templateId: "dabin", userId: "dada", owner: "minsu" },
+];
+
+function buildDefaultFixedCalendarTasks() {
+  const dayLabels = ["일", "월", "화", "수", "목", "금", "토"];
+  const startDate = new Date("2026-06-01T00:00:00");
+  const endDate = new Date("2026-06-30T00:00:00");
+  const tasks = [];
+  let id = 30000;
+
+  for (let currentDate = new Date(startDate); currentDate <= endDate; currentDate.setDate(currentDate.getDate() + 1)) {
+    const day = dayLabels[currentDate.getDay()];
+    const date = dateKey(currentDate.getFullYear(), currentDate.getMonth() + 1, currentDate.getDate());
+
+    defaultFixedScheduleUsers.forEach(({ templateId, userId, owner }) => {
+      (fixedScheduleTemplates[templateId] || [])
+        .filter((schedule) => schedule.day === day)
+        .forEach((schedule, index) => {
+          tasks.push({
+            id: id++,
+            date,
+            title: schedule.title,
+            place: "고정 일정",
+            tag: schedule.title === "필라테스" ? "routine" : "plan",
+            owner,
+            userId,
+            done: false,
+            repeat: `${schedule.startTime}-${schedule.endTime}`,
+            source: "manual",
+            displayType: "fixed",
+            color: schedule.color || getFixedScheduleColor(schedule.title),
+            sortOrder: 10 + index,
+          });
+        });
+    });
+  }
+
+  return tasks;
+}
 
 function getFixedScheduleColor(titleOrIndex) {
   if (typeof titleOrIndex === "string" && fixedScheduleColorByTitle[titleOrIndex]) {

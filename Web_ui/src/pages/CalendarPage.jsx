@@ -297,6 +297,7 @@ export default function CalendarPage({
   const [draftDate, setDraftDate] = useState(() => parseDateKey(selectedDate));
   const selectedDay = Number(selectedDate.slice(-2));
   const isHouseCalendar = calendarTaskMode === "house";
+  const maxCalendarScale = isHouseCalendar || calendarView === "month" ? 2 : 4;
   const displayDates = getDisplayDates(calendarView, selectedDate, month);
   const displayLabel = getDisplayLabel(calendarView, selectedDate, monthLabel);
   const calendarTitle = isHouseCalendar ? getTwoWeekCalendarTitle(selectedDate) : calendarView === "month" ? monthLabel.replace(". ", ".") : displayLabel;
@@ -335,6 +336,10 @@ export default function CalendarPage({
     onSelectedDetailDateChange?.(selectedDetailDate);
   }, [onSelectedDetailDateChange, selectedDetailDate]);
 
+  useEffect(() => {
+    setCalendarScale((current) => Math.min(current, maxCalendarScale));
+  }, [maxCalendarScale]);
+
   function moveCalendar(offset) {
     if (isHouseCalendar) {
       const nextDate = addDays(selectedDate, offset * 14);
@@ -352,7 +357,7 @@ export default function CalendarPage({
   }
 
   function changeScale(offset) {
-    setCalendarScale((current) => Math.min(4, Math.max(0, current + offset)));
+    setCalendarScale((current) => Math.min(maxCalendarScale, Math.max(0, current + offset)));
   }
 
   function openDatePicker() {
@@ -826,37 +831,37 @@ export default function CalendarPage({
         </div>
       </div>
 
-      <section className="calendar-board">
-        <div className="calendar-header">
-          <div className="month-switcher">
-            <button onClick={() => moveCalendar(-1)} aria-label="이전 기간">
-              <ChevronLeft size={18} />
+      <div className="calendar-header">
+        <div className="month-switcher">
+          <button onClick={() => moveCalendar(-1)} aria-label="이전 기간">
+            <ChevronLeft size={18} />
+          </button>
+          <h2>
+            <button type="button" className="month-title-button" onClick={openDatePicker}>
+              {calendarTitle}
             </button>
-            <h2>
-              <button type="button" className="month-title-button" onClick={openDatePicker}>
-                {calendarTitle}
-              </button>
-            </h2>
-            <button onClick={() => moveCalendar(1)} aria-label="다음 기간">
-              <ChevronRight size={18} />
-            </button>
-          </div>
-          <div className="calendar-header-actions">
-            <button className="calendar-zoom-button" onClick={() => changeScale(-1)} disabled={calendarScale === 0}>
-              <Minus size={15} />
-              축소
-            </button>
-            <button className="calendar-zoom-button" onClick={() => changeScale(1)} disabled={calendarScale === 4}>
-              <Plus size={15} />
-              확대
-            </button>
-            <button className="calendar-add-button" onClick={openCalendarComposer}>
-              <Plus size={18} />
-              일정 추가
-            </button>
-          </div>
+          </h2>
+          <button onClick={() => moveCalendar(1)} aria-label="다음 기간">
+            <ChevronRight size={18} />
+          </button>
         </div>
+        <div className="calendar-header-actions">
+          <button className="calendar-zoom-button" onClick={() => changeScale(-1)} disabled={calendarScale === 0}>
+            <Minus size={15} />
+            축소
+          </button>
+          <button className="calendar-zoom-button" onClick={() => changeScale(1)} disabled={calendarScale === maxCalendarScale}>
+            <Plus size={15} />
+            확대
+          </button>
+          <button className="calendar-add-button" onClick={openCalendarComposer}>
+            <Plus size={18} />
+            일정 추가
+          </button>
+        </div>
+      </div>
 
+      <section className="calendar-board">
         {!isHouseCalendar && (
           <div className="calendar-toolbar">
             <div className="calendar-mode-controls" aria-label="캘린더 보기 방식">
@@ -1003,9 +1008,9 @@ export default function CalendarPage({
             <p>{buildAiReport(selectedDate, selectedVisibleTasks, filteredTasksByDate)}</p>
             <img src={aiDailyReportImage} alt="" aria-hidden="true" />
             <div className="calendar-ai-report-tags" aria-hidden="true">
-              <span>세탁</span>
-              <span>청소</span>
-              <span>실내 케어</span>
+              {buildAiReportTags(selectedDate, selectedVisibleTasks, filteredTasksByDate).map((tag) => (
+                <span key={tag}>{tag}</span>
+              ))}
             </div>
           </div>
         </section>
@@ -2340,6 +2345,29 @@ function buildAiReport(selectedDate, selectedTasks, tasksByDate = {}) {
   }
 
   return "오늘은 등록된 개인 일정과 추천 가사일이 없어요. 여유 있게 하루를 보내도 괜찮아요.";
+}
+
+function buildAiReportTags(selectedDate, selectedTasks, tasksByDate = {}) {
+  const upcomingTasks = [0, 1, 2]
+    .flatMap((offset) => tasksByDate[addDays(selectedDate, offset)] || [])
+    .filter((task, index, list) => list.findIndex((item) => item.id === task.id) === index);
+  const reportTasks = upcomingTasks.length > 0 ? upcomingTasks : selectedTasks;
+  const tags = [];
+
+  reportTasks.forEach((task) => {
+    const tag = getAiReportTaskTag(task);
+    if (tag && !tags.includes(tag)) tags.push(tag);
+  });
+
+  return tags.slice(0, 3).length > 0 ? tags.slice(0, 3) : ["세탁", "청소", "실내 케어"];
+}
+
+function getAiReportTaskTag(task = {}) {
+  if (getDailyTaskGroup(task) === "housework") {
+    return getHouseworkDisplayTitle(resolveApplianceTask(task)) || task.title || "가전 일정";
+  }
+
+  return String(task.title || "").trim() || "개인 일정";
 }
 
 function getNearestApplianceSchedule(tasksByDate = {}, applianceType, referenceDate) {
