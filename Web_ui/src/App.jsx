@@ -19,6 +19,7 @@ import LoginPage from "./pages/LoginPage.jsx";
 import TaskComposer from "./components/TaskComposer.jsx";
 import DetailPanel from "./components/DetailPanel.jsx";
 import lgCharacter from "./assets/lg-character.png";
+import floatingStar from "./assets/floating-star.svg";
 import { CURRENT_USER_STORAGE_KEY, USERS, findUserById } from "./constants/users.js";
 import { fetchCalendarWeather, fetchShortWeather } from "./services/weatherService.js";
 import { fetchMidWeather } from "./services/midWeatherService.js";
@@ -55,7 +56,7 @@ export default function App() {
     ...USER_COLORS,
   }));
   const [activeTab, setActiveTab] = useState(storedSession?.activeTab || DEFAULT_TAB);
-  const [isOnboardingComplete, setOnboardingComplete] = useState(Boolean(storedUser));
+  const [isOnboardingComplete, setOnboardingComplete] = useState(Boolean(storedSession?.isOnboardingComplete));
   const [hasGeneratedOnboardingTasks, setHasGeneratedOnboardingTasks] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState("intro");
   const [onboardingProfile, setOnboardingProfile] = useState({
@@ -150,9 +151,10 @@ export default function App() {
         selectedMember,
         activeCalendarUserId: activeCalendarUser?.id || currentUser.id,
         calendarView,
+        isOnboardingComplete,
       }),
     );
-  }, [activeCalendarUser, activeTab, calendarView, currentUser, selectedDate, selectedDetailDate, selectedMember, visibleMonth]);
+  }, [activeCalendarUser, activeTab, calendarView, currentUser, isOnboardingComplete, selectedDate, selectedDetailDate, selectedMember, visibleMonth]);
 
   const sortedCalendarUsers = useMemo(() => {
     if (!currentUser) return USERS;
@@ -354,7 +356,7 @@ export default function App() {
     setVisibleMonth(nextVisibleMonth);
     setCalendarView(savedSession?.calendarView || DEFAULT_CALENDAR_VIEW);
     setActiveTab(savedSession?.activeTab || DEFAULT_TAB);
-    setOnboardingComplete(true);
+    setOnboardingComplete(Boolean(savedSession?.isOnboardingComplete));
     setOnboardingStep("intro");
     setHasGeneratedOnboardingTasks(false);
     setPanel(null);
@@ -534,6 +536,15 @@ export default function App() {
     calendarView,
     setCalendarView,
   };
+  const onboardingBackdropPageProps = {
+    ...pageProps,
+    tasks: [],
+    scopedTasks: [],
+    selectedTasks: [],
+    tasksByDate: {},
+    completion: 0,
+    routineRecommendations: [],
+  };
 
   if (!currentUser) {
     return <LoginPage onLogin={handleLogin} />;
@@ -542,7 +553,7 @@ export default function App() {
   return (
     <main className="app-shell">
       <section className={`app-frame ${activeTab === "home" ? "thinq-home-frame" : ""} ${activeTab === "schedule" && !isOnboardingComplete ? "onboarding-frame" : ""}`}>
-        {activeTab !== "home" && (
+        {activeTab !== "home" && !(activeTab === "schedule" && !isOnboardingComplete) && (
         <header className="topbar">
           <div className="brand">
             <span>L</span>
@@ -630,10 +641,11 @@ export default function App() {
         {activeTab === "schedule" && !isOnboardingComplete && (
           <div className="onboarding-live-stage">
             <div className="onboarding-calendar-backdrop" aria-hidden="true">
-              <CalendarPage {...pageProps} />
+              <CalendarPage {...onboardingBackdropPageProps} />
             </div>
             <OnboardingPage
               step={onboardingStep}
+              userName={currentUser?.name || currentUser?.displayName || "00"}
               onNext={() => setOnboardingStep("scheduleInfo")}
               onInfoNext={() => setOnboardingStep("fixedSchedule")}
               onFixedNext={() => setOnboardingStep("googleConfirm")}
@@ -835,7 +847,104 @@ const mainNavItems = [
   { id: "menu", label: "메뉴", icon: Menu },
 ];
 
-function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onApplianceNext, onAssigneeNext, onBack, onComplete, onSkip }) {
+const fixedScheduleColorByTitle = {
+  "회사": "#ff8a2a",
+  "필라테스": "#f59e0b",
+  "공업수학": "#ff8a2a",
+  "정역학": "#f59e0b",
+  "열역학": "#f97316",
+  "유체역학": "#ea580c",
+  "기계제도": "#fb923c",
+  "재료역학": "#d97706",
+  "기계공작법": "#ffb020",
+  "기계공학실험": "#c2410c",
+  "부트 캠프": "#ff8a2a",
+  "삼겹살집 알바": "#f59e0b",
+};
+const fallbackFixedScheduleColors = ["#ff8a2a", "#f59e0b", "#f97316", "#ea580c"];
+
+const fixedScheduleTemplates = {
+  sumin: [
+    ...["월", "화", "수", "목", "금"].map((day) => ({
+      title: "회사",
+      day,
+      startTime: "09:00",
+      endTime: "18:00",
+      color: getFixedScheduleColor("회사"),
+    })),
+    ...["화", "토"].map((day) => ({
+      title: "필라테스",
+      day,
+      startTime: "19:00",
+      endTime: "20:00",
+      color: getFixedScheduleColor("필라테스"),
+    })),
+  ],
+  jaehyeok: [
+    ["공업수학", "월", "09:00", "10:30"],
+    ["정역학", "월", "11:00", "12:30"],
+    ["열역학", "월", "14:00", "16:00"],
+    ["유체역학", "화", "10:00", "12:00"],
+    ["기계제도", "화", "14:00", "17:00"],
+    ["공업수학", "수", "09:00", "10:30"],
+    ["재료역학", "수", "13:00", "15:00"],
+    ["유체역학", "목", "10:00", "12:00"],
+    ["기계공작법", "목", "14:00", "16:00"],
+    ["기계공학실험", "금", "13:00", "16:00"],
+  ].map(([title, day, startTime, endTime]) => ({ title, day, startTime, endTime, color: getFixedScheduleColor(title) })),
+  dabin: [
+    ...["월", "화", "수", "목", "금"].map((day) => ({
+      title: "부트 캠프",
+      day,
+      startTime: "09:00",
+      endTime: "18:00",
+      color: getFixedScheduleColor("부트 캠프"),
+    })),
+    ...["토", "일"].map((day) => ({
+      title: "삼겹살집 알바",
+      day,
+      startTime: "15:00",
+      endTime: "18:00",
+      color: getFixedScheduleColor("삼겹살집 알바"),
+    })),
+  ],
+};
+
+function getFixedScheduleColor(titleOrIndex) {
+  if (typeof titleOrIndex === "string" && fixedScheduleColorByTitle[titleOrIndex]) {
+    return fixedScheduleColorByTitle[titleOrIndex];
+  }
+
+  const index = Number.isFinite(Number(titleOrIndex)) ? Number(titleOrIndex) : 0;
+  return fallbackFixedScheduleColors[index % fallbackFixedScheduleColors.length];
+}
+
+function getOverlappingFixedScheduleIds(currentSchedules, nextSchedules) {
+  const duplicatedIds = new Set();
+
+  currentSchedules.forEach((current) => {
+    nextSchedules.forEach((next) => {
+      if (current.day !== next.day) return;
+      if (current.id === next.id) return;
+      if (isFixedScheduleOverlapping(current, next)) {
+        duplicatedIds.add(current.id);
+      }
+    });
+  });
+
+  return [...duplicatedIds];
+}
+
+function isFixedScheduleOverlapping(first, second) {
+  const firstStart = toFixedScheduleMinutes(first.startTime);
+  const firstEnd = toFixedScheduleMinutes(first.endTime);
+  const secondStart = toFixedScheduleMinutes(second.startTime);
+  const secondEnd = toFixedScheduleMinutes(second.endTime);
+
+  return firstStart < secondEnd && secondStart < firstEnd;
+}
+
+function OnboardingPage({ step, userName = "00", onNext, onInfoNext, onFixedNext, onPreview, onApplianceNext, onAssigneeNext, onBack, onComplete, onSkip }) {
   const isIntro = step === "intro";
   const isScheduleInfo = step === "scheduleInfo";
   const isFixedSchedule = step === "fixedSchedule";
@@ -853,8 +962,9 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
   const [fixedStartMinute, setFixedStartMinute] = useState("");
   const [fixedEndHour, setFixedEndHour] = useState("");
   const [fixedEndMinute, setFixedEndMinute] = useState("");
-  const introMessage = "어서오세요!\n당신을 위한 최적의 가사일 계획을\n자동으로 짜주는 AI 가사일 플래너\n현우입니다!";
-  const scheduleInfoMessage = "AI가 최적의 가사일을\n자동으로 계획하려면\n00님의 일정 정보가 필요해요!";
+  const introMessage = "어서오세요!\n최적의 가사일 계획을\n자동으로 짜주는 \nAI 가사일 플래너\n플래니입니다!";
+  const scheduleUserName = String(userName || "00").endsWith("님") ? String(userName || "00").slice(0, -1) : String(userName || "00");
+  const scheduleInfoMessage = `AI가 최적의 가사일을\n자동으로 계획하려면\n${scheduleUserName}님의 일정 정보가 필요해요!`;
   const [introTextLength, setIntroTextLength] = useState(0);
   const [scheduleInfoTextLength, setScheduleInfoTextLength] = useState(0);
   const guideByStep = {
@@ -864,11 +974,14 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
   };
   const onboardingApplianceOptions = [
     ["세탁기", "washer"],
-    ["에어컨", "air"],
-    ["냉장고", "fridge"],
     ["건조기", "dryer"],
-    ["제습기", "dehumidifier"],
+    ["식기세척기", "dishwasher"],
     ["로봇청소기", "robot"],
+    ["공기청정기", "air-purifier"],
+    ["거실 에어컨", "air-living"],
+    ["수민 에어컨", "air-sumin"],
+    ["다빈 에어컨", "air-dabin"],
+    ["재혁 에어컨", "air-jaehyeok"],
   ];
   const selectedAppliances = isAppliance || isAssignee ? onboardingApplianceOptions : onboardingApplianceOptions.filter(([, type]) => selectedApplianceTypes.includes(type));
   const assignedApplianceTypes = useMemo(
@@ -885,7 +998,7 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
   const fixedMinutes = ["00", "10", "20", "30", "40", "50"];
   const fixedTimelineStartHour = 6;
   const fixedTimelineEndHour = 24;
-  const fixedTimelineRowHeight = 34;
+  const fixedTimelineRowHeight = 42;
   const fixedTimelineHours = Array.from({ length: fixedTimelineEndHour - fixedTimelineStartHour }, (_, index) => fixedTimelineStartHour + index);
   const isFixedScheduleReady = Boolean(fixedTitle.trim() && fixedDay && fixedStartHour && fixedStartMinute && fixedEndHour && fixedEndMinute);
 
@@ -957,6 +1070,20 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
     setApplianceAssignees((current) => ({ ...current, [type]: assignee }));
   }
 
+  function autoFillApplianceAssignees() {
+    setApplianceAssignees({
+      washer: "theresa",
+      dryer: "me",
+      dishwasher: "theresa",
+      robot: "minsu",
+      "air-purifier": "me",
+      "air-living": "minsu",
+      "air-sumin": "theresa",
+      "air-dabin": "minsu",
+      "air-jaehyeok": "me",
+    });
+  }
+
   function importGoogleCalendar() {
     setSelectedImportMethod("google");
     window.setTimeout(onPreview, 180);
@@ -966,16 +1093,19 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
     event.preventDefault();
     if (!isFixedScheduleReady) return;
 
-    setFixedSchedules((current) => [
-      ...current,
-      {
-        id: Date.now(),
-        title: fixedTitle.trim(),
-        day: fixedDay,
-        startTime: `${fixedStartHour}:${fixedStartMinute}`,
-        endTime: `${fixedEndHour}:${fixedEndMinute}`,
-      },
-    ]);
+    const nextSchedule = {
+      id: Date.now(),
+      title: fixedTitle.trim(),
+      day: fixedDay,
+      startTime: `${fixedStartHour}:${fixedStartMinute}`,
+      endTime: `${fixedEndHour}:${fixedEndMinute}`,
+      color: getFixedScheduleColor(fixedTitle.trim()) || getFixedScheduleColor(fixedSchedules.length),
+    };
+    const duplicatedIds = getOverlappingFixedScheduleIds(fixedSchedules, [nextSchedule]);
+
+    if (duplicatedIds.length > 0 && !window.confirm("일정이 중복되면 중복된 일정을 삭제하시겠습니까?")) return;
+
+    setFixedSchedules((current) => [...current.filter((schedule) => !duplicatedIds.includes(schedule.id)), nextSchedule]);
     setFixedTitle("");
     setFixedDay("");
     setFixedStartHour("");
@@ -984,19 +1114,35 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
     setFixedEndMinute("");
   }
 
+  function addFixedScheduleTemplate(templateId) {
+    const templateSchedules = fixedScheduleTemplates[templateId] || [];
+    const timestamp = Date.now();
+    const nextSchedules = templateSchedules.map((schedule, index) => ({
+      ...schedule,
+      id: `${templateId}-${timestamp}-${index}`,
+      sourceTemplate: templateId,
+      color: schedule.color || getFixedScheduleColor(schedule.title) || getFixedScheduleColor(index),
+    }));
+    const duplicatedIds = getOverlappingFixedScheduleIds(fixedSchedules, nextSchedules);
+
+    if (duplicatedIds.length > 0 && !window.confirm("일정이 중복되면 중복된 일정을 삭제하시겠습니까?")) return;
+
+    setFixedSchedules((current) => [...current.filter((schedule) => schedule.sourceTemplate !== templateId && !duplicatedIds.includes(schedule.id)), ...nextSchedules]);
+  }
+
   function getFixedScheduleBlockStyle(schedule) {
     const startMinutes = toFixedScheduleMinutes(schedule.startTime);
     const endMinutes = toFixedScheduleMinutes(schedule.endTime);
     const timelineStart = fixedTimelineStartHour * 60;
     const top = Math.max(0, ((startMinutes - timelineStart) / 60) * fixedTimelineRowHeight);
     const height = Math.max(24, ((Math.max(endMinutes, startMinutes + 30) - startMinutes) / 60) * fixedTimelineRowHeight);
-    return { top: `${top}px`, height: `${height}px` };
+    return { top: `${top}px`, height: `${height}px`, "--fixed-schedule-color": schedule.color || getFixedScheduleColor(schedule.title) };
   }
 
   return (
-    <section className="onboarding-page" aria-label="온보딩">
+    <section className={`onboarding-page ${isFixedSchedule ? "onboarding-fixed-page" : ""}`} aria-label="온보딩">
       {!isIntro && !isScheduleInfo && !isReady && <button className="onboarding-back-zone" type="button" onClick={onBack} aria-label="이전 단계로 이동" />}
-      {!isIntro && !isScheduleInfo && !isGoogleConfirm && !isReady && (
+      {!isIntro && !isScheduleInfo && !isGoogleConfirm && !isFixedSchedule && !isReady && (
         <div className="onboarding-progress" aria-hidden="true">
           {["fixedSchedule", "appliance", "ready"].map((item) => (
             <span key={item} className={step === item ? "active" : ""} />
@@ -1053,42 +1199,31 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
         {isIntro ? (
           <section className="onboarding-intro-panel" aria-label="환영 멘트">
             <p className="onboarding-intro-type">
-              {introText.split("\n").map((line, index) => (
-                <span key={index}>
-                  {line}
-                  {index < introText.split("\n").length - 1 && <br />}
-                </span>
-              ))}
+              {renderTypedOnboardingText(introText, "플래니")}
               {!isIntroComplete && <i aria-hidden="true" />}
             </p>
             <button className="onboarding-next-button" type="button" onClick={onNext} disabled={!isIntroComplete} aria-label="다음 단계로 이동">
               <span>NEXT</span>
               <ArrowRight size={18} strokeWidth={2.6} />
             </button>
-            <button className="onboarding-skip-button" type="button" onClick={onSkip}>
-              온보딩 건너뛰기
-            </button>
           </section>
         ) : isScheduleInfo ? (
           <section className="onboarding-intro-panel onboarding-info-panel" aria-label="일정 정보 안내">
             <p className="onboarding-intro-type onboarding-info-type">
-              {scheduleInfoText.split("\n").map((line, index) => (
-                <span key={index}>
-                  {line}
-                  {index < scheduleInfoText.split("\n").length - 1 && <br />}
-                </span>
-              ))}
+              {renderTypedOnboardingText(scheduleInfoText, scheduleUserName)}
               {!isScheduleInfoComplete && <i aria-hidden="true" />}
             </p>
             <button className="onboarding-next-button onboarding-info-next-button" type="button" onClick={onInfoNext} disabled={!isScheduleInfoComplete} aria-label="고정 일정 입력으로 이동">
               <ArrowRight size={18} strokeWidth={2.6} />
             </button>
-            <button className="onboarding-skip-button" type="button" onClick={onSkip}>
-              온보딩 건너뛰기
-            </button>
           </section>
         ) : isFixedSchedule ? (
           <div className="onboarding-card onboarding-method-card onboarding-fixed-card">
+            <div className="onboarding-fixed-progress" aria-hidden="true">
+              {["fixedSchedule", "appliance", "ready"].map((item) => (
+                <span key={item} className={step === item ? "active" : ""} />
+              ))}
+            </div>
             <div>
               <h1>고정 일정을 알려주세요.</h1>
               <p>일상에서 반복되는 고정 일정을 입력해 주세요.</p>
@@ -1170,6 +1305,18 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
               </fieldset>
             </form>
 
+            <div className="onboarding-fixed-auto-actions" aria-label="자동 일정 추가">
+              <button type="button" onClick={() => addFixedScheduleTemplate("sumin")}>
+                수민 일정 추가
+              </button>
+              <button type="button" onClick={() => addFixedScheduleTemplate("jaehyeok")}>
+                재혁 일정 추가
+              </button>
+              <button type="button" onClick={() => addFixedScheduleTemplate("dabin")}>
+                다빈 일정 추가
+              </button>
+            </div>
+
             <button className="onboarding-next-button onboarding-fixed-next-button" type="button" onClick={onFixedNext} aria-label="구글 캘린더 연동 확인으로 이동">
               <ArrowRight size={18} strokeWidth={2.6} />
             </button>
@@ -1189,15 +1336,17 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
                 연동하기
               </button>
             </div>
-            <button className="onboarding-skip-button" type="button" onClick={onSkip}>
-              온보딩 건너뛰기
-            </button>
           </section>
         ) : isAppliance ? (
           <div className="onboarding-card onboarding-appliance-card onboarding-combined-appliance-card">
-            <div>
-              <h1>자동화할 가전을 알려주세요.</h1>
-              <p>자동 작동시킬 가전을 선택해 주세요.</p>
+            <div className="onboarding-assignee-head">
+              <div>
+                <h1>가전별 담당자를 지정해주세요.</h1>
+                <p>담당자에게 가전 작동 알림이 가요.</p>
+              </div>
+              <button type="button" onClick={autoFillApplianceAssignees}>
+                자동으로 채우기
+              </button>
             </div>
 
             <div className="onboarding-assignee-list" aria-label="가전별 담당자 지정">
@@ -1262,9 +1411,14 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
           </div>
         ) : isAssignee ? (
           <div className="onboarding-card onboarding-assignee-card">
-            <div>
-              <h1>가전별 담당자를 지정해주세요.</h1>
-              <p>담당자에게 가전 작동 알림이 가요.</p>
+            <div className="onboarding-assignee-head">
+              <div>
+                <h1>가전별 담당자를 지정해주세요.</h1>
+                <p>담당자에게 가전 작동 알림이 가요.</p>
+              </div>
+              <button type="button" onClick={autoFillApplianceAssignees}>
+                자동으로 채우기
+              </button>
             </div>
 
             <div className="onboarding-assignee-list" aria-label="가전별 담당자 지정">
@@ -1309,11 +1463,11 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
             <section className="onboarding-ai-wait-card">
               <span className="onboarding-ai-spinner" aria-hidden="true" />
               <p>
-                00님의 일정, 날씨, 온습도
+                {scheduleUserName}님의 일정, 날씨, 온습도
                 <br />
                 데이터를 분석해서
                 <br />
-                현우가 최적의 가사일 계획을
+                플래니가 최적의 가사일 계획을
                 <br />
                 짜고 있어요!
               </p>
@@ -1321,10 +1475,42 @@ function OnboardingPage({ step, onNext, onInfoNext, onFixedNext, onPreview, onAp
             </section>
           </div>
         )}
-        {!isReady && !isFixedSchedule && <img className="onboarding-character-image" src={lgCharacter} alt="" />}
+        {!isReady && !isFixedSchedule && (
+          <span className="onboarding-character-wrap" aria-hidden="true">
+            <img className="onboarding-floating-star star-a" src={floatingStar} alt="" />
+            <img className="onboarding-floating-star star-b" src={floatingStar} alt="" />
+            <img className="onboarding-character-image" src={lgCharacter} alt="" />
+          </span>
+        )}
       </div>
     </section>
   );
+}
+
+function renderTypedOnboardingText(text, highlightWord = "") {
+  const lines = text.split("\n");
+
+  return lines.map((line, index) => {
+    const highlightIndex = highlightWord ? line.indexOf(highlightWord) : -1;
+    const isPartialHighlight = highlightWord && highlightIndex === -1 && highlightWord.startsWith(line) && line.length > 0;
+
+    return (
+      <span key={index}>
+        {highlightIndex >= 0 ? (
+          <>
+            {line.slice(0, highlightIndex)}
+            <span className="onboarding-highlight-name">{highlightWord}</span>
+            {line.slice(highlightIndex + highlightWord.length)}
+          </>
+        ) : isPartialHighlight ? (
+          <span className="onboarding-highlight-name">{line}</span>
+        ) : (
+          line
+        )}
+        {index < lines.length - 1 && <br />}
+      </span>
+    );
+  });
 }
 
 function HomePage({ onOpenNotifications }) {
@@ -1836,6 +2022,30 @@ const applianceOnboardingPlans = {
   robot: {
     place: "거실",
     titles: ["로봇청소 시작", "바닥 청소 예약", "청소 구역 확인"],
+  },
+  dishwasher: {
+    place: "주방",
+    titles: ["식기세척 예약", "식기세척기 작동", "그릇 정리"],
+  },
+  "air-purifier": {
+    place: "거실",
+    titles: ["공기청정기 작동", "실내 공기 정화", "환기 후 공기청정"],
+  },
+  "air-living": {
+    place: "거실",
+    titles: ["거실 에어컨 예냉", "거실 냉방 예약", "거실 온도 조절"],
+  },
+  "air-sumin": {
+    place: "수민 방",
+    titles: ["수민 에어컨 예냉", "수민 방 냉방", "수민 방 온도 조절"],
+  },
+  "air-dabin": {
+    place: "다빈 방",
+    titles: ["다빈 에어컨 예냉", "다빈 방 냉방", "다빈 방 온도 조절"],
+  },
+  "air-jaehyeok": {
+    place: "재혁 방",
+    titles: ["재혁 에어컨 예냉", "재혁 방 냉방", "재혁 방 온도 조절"],
   },
 };
 
