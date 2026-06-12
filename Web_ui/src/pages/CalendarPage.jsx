@@ -618,7 +618,7 @@ export default function CalendarPage({
             {familyMembers.map((member) => (
               <button
                 key={member.id}
-                className={selectedMember === member.id || (selectedMember === "all" && member.id === selectedMemberProfile.id) ? "active" : ""}
+                className={!isHouseCalendar && (selectedMember === member.id || (selectedMember === "all" && member.id === selectedMemberProfile.id)) ? "active" : ""}
                 aria-label={(calendarProfileNames[member.id] || member.name) + " 캘린더 보기"}
                 onClick={() => {
                   onActiveCalendarUserChange?.(member);
@@ -642,7 +642,21 @@ export default function CalendarPage({
               closeDateDetail();
             }}
           >
-            <img className="house-calendar-toggle-image" src={dryerImage} alt="" aria-hidden="true" />
+            <span className="family-split-avatar" aria-hidden="true">
+              {familyMembers.slice(0, 3).map((member, index) => (
+                <span
+                  className={"family-split-part part-" + (index + 1)}
+                  key={member.id}
+                  style={{ "--member-color": memberColors[member.id] || member.color || "#d9d9d9" }}
+                >
+                  {memberImages[member.id] ? (
+                    <img src={memberImages[member.id]} alt="" />
+                  ) : (
+                    <b>{calendarMemberIconText[member.id] || member.short || member.name?.slice(0, 1)}</b>
+                  )}
+                </span>
+              ))}
+            </span>
           </button>
         </div>
       </div>
@@ -1797,6 +1811,7 @@ function filterTasksByCalendarMode(tasksByDate, mode, selectedMember) {
 }
 
 function getDailyTaskGroup(task) {
+  if (task.applianceType || task.applianceMode || task.currentMode || task.automationType) return "housework";
   if (task.displayType === "appliance") return "housework";
   if (task.tag === "house" || task.source === "auto") return "housework";
   return "schedule";

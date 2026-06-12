@@ -174,15 +174,12 @@ export default function App() {
   const monthLabel = `${visibleMonth.year}. ${String(visibleMonth.month).padStart(2, "0")}`;
   const tasksByDate = useMemo(() => {
     return tasks.reduce((map, task) => {
-      const shouldShowTask = !activeCalendarUserId || getTaskUserId(task) === activeCalendarUserId;
-      if (!shouldShowTask) return map;
-
       getTaskDateKeys(task).forEach((date) => {
         map[date] = sortTasks([...(map[date] || []), task]);
       });
       return map;
     }, {});
-  }, [tasks, activeCalendarUserId]);
+  }, [tasks]);
   const notificationItems = useMemo(() => {
     const automationItems = automationAlerts
       .filter((alert) => !dismissedAlerts.includes(alert.id))
@@ -403,6 +400,8 @@ export default function App() {
       done: false,
       repeat: `${startTime}-${endTime}`,
       source: "auto",
+      displayType: "appliance",
+      applianceType: recommendation.applianceType,
       description: recommendation.description,
       automationType: recommendation.automationType,
       recommendationSource: recommendation.source,
@@ -447,6 +446,8 @@ export default function App() {
         done: false,
         repeat: "자동화",
         source: "auto",
+        displayType: "appliance",
+        applianceType: item.applianceType,
       },
       activeCalendarUserId,
     );
