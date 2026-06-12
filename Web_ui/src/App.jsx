@@ -1318,6 +1318,7 @@ function OnboardingPage({ step, userName = "00", onNext, onInfoNext, onFixedNext
             </div>
 
             <button className="onboarding-next-button onboarding-fixed-next-button" type="button" onClick={onFixedNext} aria-label="구글 캘린더 연동 확인으로 이동">
+              <span>NEXT</span>
               <ArrowRight size={18} strokeWidth={2.6} />
             </button>
           </div>
@@ -1406,7 +1407,8 @@ function OnboardingPage({ step, userName = "00", onNext, onInfoNext, onFixedNext
               disabled={!hasAssignedAppliance}
               aria-label="담당자 지정 완료"
             >
-              완료
+              <span>NEXT</span>
+              <ArrowRight size={18} strokeWidth={2.6} />
             </button>
           </div>
         ) : isAssignee ? (
@@ -1455,7 +1457,8 @@ function OnboardingPage({ step, userName = "00", onNext, onInfoNext, onFixedNext
               disabled={!hasAssignedAppliance}
               aria-label="담당자 지정 완료"
             >
-              완료
+              <span>NEXT</span>
+              <ArrowRight size={18} strokeWidth={2.6} />
             </button>
           </div>
         ) : (
