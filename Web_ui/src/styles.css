@@ -6456,6 +6456,26 @@ body {
   scrollbar-color: #d7dbe0 transparent;
 }
 
+.daily-timetable-shell.housework-detail {
+  grid-template-columns: 54px minmax(0, 1fr);
+}
+
+.daily-timetable-shell.housework-detail.three-members {
+  grid-template-columns: 54px repeat(3, minmax(0, 1fr));
+}
+
+.daily-timetable-shell.housework-detail.three-members .daily-time-block {
+  padding: 7px 6px;
+}
+
+.daily-timetable-shell.housework-detail.three-members .daily-time-block strong {
+  font-size: 11px;
+}
+
+.daily-timetable-shell.housework-detail.three-members .daily-time-block span {
+  font-size: 9px;
+}
+
 .daily-list-shell {
   position: relative;
   height: 100%;
@@ -6466,6 +6486,15 @@ body {
   gap: 6px;
   margin-inline: -2px;
   overflow: visible;
+}
+
+.daily-list-shell.housework-detail {
+  grid-template-columns: minmax(0, 1fr);
+  margin-inline: 0;
+}
+
+.daily-list-shell.housework-detail.three-members {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .daily-list-column {
@@ -6754,6 +6783,10 @@ body {
   grid-template-columns: 54px minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
   align-items: center;
+}
+
+.daily-add-row.housework-only {
+  grid-template-columns: 54px minmax(0, 1fr);
 }
 
 .daily-detail-page .date-detail-add {
@@ -7490,9 +7523,21 @@ body {
     gap: 6px;
   }
 
+  .daily-timetable-shell.housework-detail {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .daily-timetable-shell.housework-detail.three-members {
+    grid-template-columns: 48px repeat(3, minmax(0, 1fr));
+  }
+
   .daily-add-row {
     grid-template-columns: 48px minmax(0, 1fr) minmax(0, 1fr);
     gap: 6px;
+  }
+
+  .daily-add-row.housework-only {
+    grid-template-columns: 48px minmax(0, 1fr);
   }
 
   .daily-time-block {
