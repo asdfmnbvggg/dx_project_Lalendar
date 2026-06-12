@@ -1506,7 +1506,6 @@ function DailyListColumn({ title, tasks, memberColors, variant, activeTaskId, ac
                 <div className="daily-list-task-card">
                   <strong>{getDailyBlockTitle(task, variant)}</strong>
                   <span>{formatTaskRange(range)}</span>
-                  <small>{task.place || (variant === "housework" ? "가전 일정" : "개인 일정")}</small>
                 </div>
                 {activeTaskId === task.id && (
                   <div
