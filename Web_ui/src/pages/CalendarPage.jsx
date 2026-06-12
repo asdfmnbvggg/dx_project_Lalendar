@@ -10,6 +10,8 @@ import washerImage from "../assets/appliances/세탁기.png";
 import lgCharacterImage from "../assets/lg-character.png";
 
 import jaehyeokImage from "../assets/people/재혁님.png";
+import suminImage from "../assets/people/수민님.png";
+import dabinImage from "../assets/people/김수현.jpg";
 
 const weatherIcon = {
   sunny: "☀️",
@@ -151,6 +153,8 @@ const scheduleColorOptions = ["#ff9e9e", "#7bd3ff", "#d7a8ff", "#f7fda6", "#c100
 const memberImages = {
   jea: jaehyeokImage,
   me: jaehyeokImage,
+  sumin: suminImage,
+  dada: dabinImage,
 };
 
 const calendarProfileNames = {
@@ -1767,8 +1771,12 @@ function getHouseTaskLabel(title) {
 }
 
 function getCalendarCellTasks(tasks, isHouseCalendar) {
-  if (isHouseCalendar) return tasks.filter((task) => getDailyTaskGroup(task) === "housework");
-  return tasks;
+  const visibleTasks = isHouseCalendar ? tasks.filter((task) => getDailyTaskGroup(task) === "housework") : tasks;
+  return [...visibleTasks].sort((first, second) => getCalendarTaskOrder(first) - getCalendarTaskOrder(second));
+}
+
+function getCalendarTaskOrder(task) {
+  return getDailyTaskGroup(task) === "housework" ? 1 : 0;
 }
 
 function getCalendarCellTaskLabel(task) {
