@@ -257,6 +257,7 @@ export default function CalendarPage({
   onSelectedDetailDateChange,
   setSelectedDate,
   selectedMember,
+  currentUser,
   activeCalendarUser,
   calendarUsers = [],
   memberColors,
@@ -323,6 +324,7 @@ export default function CalendarPage({
   const selectedMemberProfile = activeCalendarUser || familyMembers.find((member) => member.id === selectedMember) || familyMembers[0] || members[0];
   const selectedMemberName = calendarProfileNames[selectedMemberProfile.id] || selectedMemberProfile.name;
   const calendarOwnerTitle = isHouseCalendar ? "가사 캘린더" : `${activeCalendarUser?.displayName || selectedMemberName + "님"}의 캘린더`;
+  const currentHouseworkMember = HOUSEWORK_MEMBER_TABS.find((member) => member.userId === currentUser?.id || member.ownerId === currentUser?.id);
 
   useEffect(() => {
     onSelectedDetailDateChange?.(selectedDetailDate);
@@ -427,6 +429,28 @@ export default function CalendarPage({
     setApplianceModeMessage("");
     setDailyContextTaskId(null);
     setDailyContextAction(null);
+  }
+
+  function openHouseworkComposerFor(member) {
+    if (!currentUser || member?.userId !== currentUser.id) return;
+
+    setSelectedDate(detailDate);
+    onActiveCalendarUserChange?.(currentUser);
+    setSelectedMember(currentUser.id);
+    setActiveAddColumn("housework");
+    openComposer({ ownerId: member.ownerId });
+  }
+
+  function openCalendarComposer() {
+    if (isHouseCalendar && currentUser) {
+      const member = HOUSEWORK_MEMBER_TABS.find((item) => item.userId === currentUser.id);
+      onActiveCalendarUserChange?.(currentUser);
+      setSelectedMember(currentUser.id);
+      openComposer({ ownerId: member?.ownerId });
+      return;
+    }
+
+    openComposer();
   }
 
   function changeApplianceMode(task, mode) {
@@ -652,33 +676,54 @@ export default function CalendarPage({
               선택한 일정 삭제
             </button>
           ) : (
-            <div className={["daily-add-row", isHouseCalendar ? "housework-only" : ""].filter(Boolean).join(" ")} aria-label="일정 추가">
-              <span aria-hidden="true" />
-              {!isHouseCalendar && (
-                <button
-                  type="button"
-                  className={["date-detail-add", "personal", activeAddColumn === "personal" ? "active" : ""].filter(Boolean).join(" ")}
-                  aria-label="개인 일정 추가"
-                  onClick={() => {
-                    setSelectedDate(detailDate);
-                    setActiveAddColumn("personal");
-                  }}
-                >
-                  <Plus size={24} strokeWidth={2.4} />
-                </button>
+            <div className={["daily-add-row", isHouseCalendar ? "housework-only three-members" : "", dailyDetailView + "-view"].filter(Boolean).join(" ")} aria-label="일정 추가">
+              {isHouseCalendar ? (
+                <>
+                  {dailyDetailView === "timetable" && <span aria-hidden="true" />}
+                  {HOUSEWORK_MEMBER_TABS.map((member) =>
+                    member.userId === currentHouseworkMember?.userId ? (
+                      <button
+                        type="button"
+                        key={member.userId}
+                        className={["date-detail-add", "housework", activeAddColumn === "housework" ? "active" : ""].filter(Boolean).join(" ")}
+                        aria-label="내 가사 일정 추가"
+                        onClick={() => openHouseworkComposerFor(member)}
+                      >
+                        <Plus size={24} strokeWidth={2.4} />
+                      </button>
+                    ) : (
+                      <span className="daily-add-placeholder" aria-hidden="true" key={member.userId} />
+                    ),
+                  )}
+                </>
+              ) : (
+                <>
+                  <span aria-hidden="true" />
+                  <button
+                    type="button"
+                    className={["date-detail-add", "personal", activeAddColumn === "personal" ? "active" : ""].filter(Boolean).join(" ")}
+                    aria-label="개인 일정 추가"
+                    onClick={() => {
+                      setSelectedDate(detailDate);
+                      setActiveAddColumn("personal");
+                    }}
+                  >
+                    <Plus size={24} strokeWidth={2.4} />
+                  </button>
+                  <button
+                    type="button"
+                    className={["date-detail-add", "housework", activeAddColumn === "housework" ? "active" : ""].filter(Boolean).join(" ")}
+                    aria-label="가사 일정 추가"
+                    onClick={() => {
+                      setSelectedDate(detailDate);
+                      setActiveAddColumn("housework");
+                      openComposer();
+                    }}
+                  >
+                    <Plus size={24} strokeWidth={2.4} />
+                  </button>
+                </>
               )}
-              <button
-                type="button"
-                className={["date-detail-add", "housework", activeAddColumn === "housework" ? "active" : ""].filter(Boolean).join(" ")}
-                aria-label="가사 일정 추가"
-                onClick={() => {
-                  setSelectedDate(detailDate);
-                  setActiveAddColumn("housework");
-                  openComposer();
-                }}
-              >
-                <Plus size={24} strokeWidth={2.4} />
-              </button>
             </div>
           )}
         </section>
@@ -779,7 +824,7 @@ export default function CalendarPage({
               <Plus size={15} />
               확대
             </button>
-            <button className="calendar-add-button" onClick={openComposer}>
+            <button className="calendar-add-button" onClick={openCalendarComposer}>
               <Plus size={18} />
               일정 추가
             </button>

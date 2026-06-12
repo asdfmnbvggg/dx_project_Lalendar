@@ -4336,6 +4336,11 @@ button[title*="Vercel"] {
   font-weight: 950;
 }
 
+.schedule-chip-row button:disabled {
+  cursor: default;
+  opacity: 0.36;
+}
+
 .schedule-options {
   margin-top: 12px;
 }
@@ -6749,6 +6754,10 @@ body {
   transform: translate(-50%, 0);
 }
 
+.daily-time-block .daily-context-menu {
+  top: calc(100% + 4px);
+}
+
 .daily-context-menu button {
   width: 100%;
   min-height: 22px;
@@ -6786,7 +6795,11 @@ body {
 }
 
 .daily-add-row.housework-only {
-  grid-template-columns: 54px minmax(0, 1fr);
+  grid-template-columns: 54px repeat(3, minmax(0, 1fr));
+}
+
+.daily-add-row.housework-only.list-view {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .daily-detail-page .date-detail-add {
@@ -6817,6 +6830,10 @@ body {
   color: #fff;
   box-shadow: 0 16px 30px rgba(225, 29, 72, 0.28);
   transform: scale(0.96);
+}
+
+.daily-add-placeholder {
+  min-width: 0;
 }
 
 .daily-detail-page .date-detail-add.housework.active,

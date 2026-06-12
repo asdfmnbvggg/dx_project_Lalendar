@@ -70,6 +70,7 @@ export default function App() {
   const [selectedMember, setSelectedMember] = useState(() => storedSession?.selectedMember || storedUser?.id || "jea");
   const [query, setQuery] = useState("");
   const [isComposerOpen, setComposerOpen] = useState(false);
+  const [composerOwnerLock, setComposerOwnerLock] = useState(null);
   const [pendingPostpone, setPendingPostpone] = useState(null);
   const [postponePicker, setPostponePicker] = useState(null);
   const [automationPrompt, setAutomationPrompt] = useState(null);
@@ -361,6 +362,7 @@ export default function App() {
     setCalendarMenuOpen(false);
     setNotificationOpen(false);
     setComposerOpen(false);
+    setComposerOwnerLock(null);
   }
 
   function handleLogout() {
@@ -378,6 +380,7 @@ export default function App() {
     setCalendarMenuOpen(false);
     setNotificationOpen(false);
     setComposerOpen(false);
+    setComposerOwnerLock(null);
   }
 
   function selectActiveCalendarUser(userOrId) {
@@ -385,6 +388,16 @@ export default function App() {
     if (!user) return;
     setActiveCalendarUser(user);
     setSelectedMember(user.id);
+  }
+
+  function openTaskComposer(options = {}) {
+    setComposerOwnerLock(options.ownerId || null);
+    setComposerOpen(true);
+  }
+
+  function closeTaskComposer() {
+    setComposerOpen(false);
+    setComposerOwnerLock(null);
   }
 
   function addWeatherRecommendationTask(date, recommendation) {
@@ -488,6 +501,7 @@ export default function App() {
     initialSelectedDetailDate: selectedDetailDate,
     onSelectedDetailDateChange: setSelectedDetailDate,
     selectedMember,
+    currentUser,
     activeCalendarUser,
     calendarUsers: sortedCalendarUsers,
     memberColors,
@@ -515,7 +529,7 @@ export default function App() {
     postponeTask,
     onAddWeatherRecommendation: addWeatherRecommendationTask,
     onAddTask: addTask,
-    openComposer: () => setComposerOpen(true),
+    openComposer: openTaskComposer,
     onOpenPanel: setPanel,
     calendarView,
     setCalendarView,
@@ -603,7 +617,7 @@ export default function App() {
                   <button type="button" onClick={() => { setPanel({ type: "notifications" }); setMenuOpen(false); }}>알림 설정</button>
                   <button type="button" onClick={() => { setPanel({ type: "settings" }); setMenuOpen(false); }}>테마 설정</button>
                   <button type="button" onClick={() => setMenuOpen(false)}>데이터 내보내기</button>
-                  <button type="button" onClick={() => { setComposerOpen(true); setMenuOpen(false); }}>작업 추가</button>
+                  <button type="button" onClick={() => { openTaskComposer(); setMenuOpen(false); }}>작업 추가</button>
                   <button type="button" onClick={handleLogout}>로그아웃</button>
                 </div>
               )}
@@ -703,10 +717,11 @@ export default function App() {
         <TaskComposer
           selectedDate={selectedDate}
           selectedMember={selectedMember}
-          onClose={() => setComposerOpen(false)}
+          lockedOwner={composerOwnerLock}
+          onClose={closeTaskComposer}
           onAdd={(task) => {
             addTask(task);
-            setComposerOpen(false);
+            closeTaskComposer();
           }}
         />
       )}
@@ -726,7 +741,7 @@ export default function App() {
         onAddTask={(task) => addTask(task)}
         selectedDate={selectedDate}
         selectedMember={selectedMember}
-        onOpenComposer={() => setComposerOpen(true)}
+        onOpenComposer={() => openTaskComposer()}
         onLogout={handleLogout}
       />
 
