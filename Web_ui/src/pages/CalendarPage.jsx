@@ -144,6 +144,8 @@ const CALENDAR_CELL_COLLAPSED_TASK_LIMIT = 2;
 const SCHEDULE_PLANNING_DELAY = 3000;
 const DAILY_TIMETABLE_START_HOUR = 6;
 const DAILY_TIMETABLE_END_HOUR = 24;
+const DAILY_TIMETABLE_START_TIME = "06:00";
+const DAILY_TIMETABLE_END_INPUT_TIME = "23:59";
 const scheduleColorOptions = ["#ff9e9e", "#7bd3ff", "#d7a8ff", "#f7fda6", "#c100ff", "#00bf63", "#ff0aa8", "#0d7ff2"];
 
 const memberImages = {
@@ -774,10 +776,16 @@ export default function CalendarPage({
                         <>
                           {visibleTasks.map((task) => (
                             (() => {
-                              const taskColor = getTaskDisplayColor(task, memberColors, getDailyTaskGroup(task) === "housework" ? "housework" : "personal");
+                              const taskGroup = getDailyTaskGroup(task);
+                              const isHousework = taskGroup === "housework";
+                              const taskColor = getTaskDisplayColor(task, memberColors, isHousework ? "housework" : "personal");
                               return (
                             <i
-                              className={[task.tag, task.displayType === "fixed" ? "fixed-event-task" : ""].filter(Boolean).join(" ")}
+                              className={[
+                                task.tag,
+                                task.displayType === "fixed" ? "fixed-event-task" : "",
+                                isHousework ? "housework-task" : "",
+                              ].filter(Boolean).join(" ")}
                               key={task.id}
                               style={{ "--task-bg": taskColor, "--task-fg": getReadableTextColor(taskColor) }}
                             >
@@ -980,8 +988,8 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
   const [startDay, setStartDay] = useState(parsedDate.day);
   const [endMonth, setEndMonth] = useState(parsedDate.month);
   const [endDay, setEndDay] = useState(parsedDate.day);
-  const [startTime, setStartTime] = useState("07:00");
-  const [endTime, setEndTime] = useState("08:00");
+  const [startTime, setStartTime] = useState(DAILY_TIMETABLE_START_TIME);
+  const [endTime, setEndTime] = useState("07:00");
   const [error, setError] = useState("");
 
   function saveSchedule() {
@@ -1127,12 +1135,12 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
 
           <div className={["daily-time-row", isAllDay ? "disabled" : ""].filter(Boolean).join(" ")}>
             <strong>시간</strong>
-            <input type="time" value={startTime} disabled={isAllDay} onChange={(event) => {
+            <input type="time" value={startTime} min={DAILY_TIMETABLE_START_TIME} max={DAILY_TIMETABLE_END_INPUT_TIME} disabled={isAllDay} onChange={(event) => {
               setStartTime(event.target.value);
               setError("");
             }} />
             <span>~</span>
-            <input type="time" value={endTime} disabled={isAllDay} onChange={(event) => {
+            <input type="time" value={endTime} min={DAILY_TIMETABLE_START_TIME} max={DAILY_TIMETABLE_END_INPUT_TIME} disabled={isAllDay} onChange={(event) => {
               setEndTime(event.target.value);
               setError("");
             }} />
@@ -1303,12 +1311,12 @@ function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
 
           <div className={["daily-time-row", isAllDay ? "disabled" : ""].filter(Boolean).join(" ")}>
             <strong>시간</strong>
-            <input type="time" value={startTime} disabled={isAllDay} onChange={(event) => {
+            <input type="time" value={startTime} min={DAILY_TIMETABLE_START_TIME} max={DAILY_TIMETABLE_END_INPUT_TIME} disabled={isAllDay} onChange={(event) => {
               setStartTime(event.target.value);
               setError("");
             }} />
             <span>~</span>
-            <input type="time" value={endTime} disabled={isAllDay} onChange={(event) => {
+            <input type="time" value={endTime} min={DAILY_TIMETABLE_START_TIME} max={DAILY_TIMETABLE_END_INPUT_TIME} disabled={isAllDay} onChange={(event) => {
               setEndTime(event.target.value);
               setError("");
             }} />
@@ -1348,18 +1356,24 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
   const startHour = hours[0] ?? DAILY_TIMETABLE_START_HOUR;
   const endHour = hours[hours.length - 1] ?? DAILY_TIMETABLE_END_HOUR;
   const totalMinutes = Math.max(60, (endHour - startHour) * 60);
+  const displayStartMinutes = startHour * 60;
+  const displayEndMinutes = endHour * 60;
 
   return (
     <section className={["daily-timetable-column", variant].filter(Boolean).join(" ")} aria-label={title}>
       <strong>{title}</strong>
-      <div className="daily-timetable-track" style={{ "--hour-count": hours.length }}>
-        {hours.map((hour) => (
+      <div className="daily-timetable-track" style={{ "--hour-count": hours.length - 1 }}>
+        {hours.slice(0, -1).map((hour) => (
           <span className="daily-timetable-line" key={hour} />
         ))}
         {tasks.map((task, index) => {
           const range = getDailyTaskRange(task, index);
-          const top = ((range.startMinutes - startHour * 60) / totalMinutes) * 100;
-          const height = Math.max(7, ((range.endMinutes - range.startMinutes) / totalMinutes) * 100);
+          const visibleStartMinutes = Math.max(displayStartMinutes, range.startMinutes);
+          const visibleEndMinutes = Math.min(displayEndMinutes, range.endMinutes);
+          if (visibleEndMinutes <= visibleStartMinutes) return null;
+
+          const top = ((visibleStartMinutes - displayStartMinutes) / totalMinutes) * 100;
+          const height = Math.max(7, ((visibleEndMinutes - visibleStartMinutes) / totalMinutes) * 100);
           const color = getDailyBlockColor(task, memberColors, variant, index);
 
           return (
@@ -1759,10 +1773,25 @@ function getCalendarCellTasks(tasks, isHouseCalendar) {
 
 function getCalendarCellTaskLabel(task) {
   if (task.displayType === "appliance" && task.applianceType) {
-    return getHouseTaskLabel(applianceTypeLabel[task.applianceType] || task.title);
+    return `${getHouseTaskEmoji(task)} ${getHouseTaskLabel(applianceTypeLabel[task.applianceType] || task.title)}`;
   }
 
-  return getDailyTaskGroup(task) === "housework" ? getHouseTaskLabel(task.title) : getMonthTaskLabel(task.title);
+  return getDailyTaskGroup(task) === "housework" ? `${getHouseTaskEmoji(task)} ${getHouseTaskLabel(task.title)}` : getMonthTaskLabel(task.title);
+}
+
+function getHouseTaskEmoji(task) {
+  const type = String(task.applianceType || "").toUpperCase();
+  const text = `${type} ${task.title || ""} ${task.place || ""}`.toLowerCase();
+
+  if (type === "WASHER" || text.includes("세탁") || text.includes("빨래")) return "🧺";
+  if (type === "DRYER" || text.includes("건조")) return "🌀";
+  if (type === "AIR_PURIFIER" || text.includes("공기") || text.includes("청정")) return "🌀";
+  if (type === "ROBOT_CLEANER" || text.includes("청소")) return "🤖";
+  if (type === "DISHWASHER" || text.includes("식기")) return "🍽️";
+  if (type === "REFRIGERATOR" || text.includes("냉장")) return "🧊";
+  if (type === "AIR_CONDITIONER" || text.includes("에어컨")) return "❄️";
+  if (type === "HUMIDIFIER" || text.includes("가습") || text.includes("제습")) return "💧";
+  return "🏠";
 }
 
 function getMonthHouseImage(task) {
@@ -1831,7 +1860,7 @@ function getDailyTaskRange(task, index = 0) {
 function getEditableTaskTime(task) {
   const timeText = String(task.repeat || "");
   if (timeText.includes("하루종일")) {
-    return { isAllDay: true, startTime: "09:00", endTime: "10:00" };
+    return { isAllDay: true, startTime: DAILY_TIMETABLE_START_TIME, endTime: DAILY_TIMETABLE_END_INPUT_TIME };
   }
 
   const rangeMatch = timeText.match(/\b(\d{1,2}):(\d{2})\s*(?:~|-|to)\s*(\d{1,2}):(\d{2})\b/i);

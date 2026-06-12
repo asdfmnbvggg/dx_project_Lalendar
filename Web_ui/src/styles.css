@@ -5533,6 +5533,26 @@ body {
   display: none !important;
 }
 
+.calendar-month-view .date-cell i.housework-task,
+.calendar-house-view .date-cell i.housework-task {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  padding: 0 4px 0 5px !important;
+  border-left: 3px solid var(--task-bg, #2563eb) !important;
+  color: #334155 !important;
+  background: #f8fbff !important;
+  font-weight: 850;
+  text-align: left;
+}
+
+.calendar-month-view .date-cell i.housework-task span,
+.calendar-house-view .date-cell i.housework-task span {
+  text-align: left;
+  color: inherit !important;
+}
+
 .task-appliance-image {
   display: none;
   width: 0;
