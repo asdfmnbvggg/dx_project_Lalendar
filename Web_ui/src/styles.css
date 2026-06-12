@@ -11152,28 +11152,28 @@ body {
   .calendar-page-month {
     min-height: 0;
     height: calc(100svh - 72px);
-    gap: 7px;
-    padding: 10px 10px 14px;
+    gap: 9px;
+    padding: 16px 10px 14px;
     overflow-y: auto;
   }
 
   .calendar-page-month .calendar-filter-block {
-    gap: 5px;
+    gap: 10px;
     padding: 0 3px;
   }
 
   .calendar-page-month .calendar-family-title {
-    padding-top: 2px;
-    font-size: 14px;
+    padding-top: 0;
+    font-size: 17px;
   }
 
   .calendar-page-month .calendar-family-title span {
-    font-size: 16px;
+    font-size: 19px;
   }
 
   .calendar-page-month .calendar-filter-row {
     gap: 10px;
-    margin-top: 0;
+    margin-top: 3px;
   }
 
   .calendar-page-month .profile-strip {
@@ -11221,7 +11221,7 @@ body {
   }
 
   .calendar-page-month .calendar-month-view {
-    min-height: min(466px, calc(100svh - 236px));
+    min-height: min(456px, calc(100svh - 246px));
     gap: 3px;
     grid-template-rows: repeat(var(--calendar-row-count, 6), minmax(66px, 1fr));
   }
@@ -11352,6 +11352,6 @@ body {
 
 @media (max-width: 640px) and (max-height: 760px) {
   .calendar-page-month .calendar-month-view {
-    min-height: min(430px, calc(100svh - 226px));
+    min-height: min(420px, calc(100svh - 236px));
   }
 }
