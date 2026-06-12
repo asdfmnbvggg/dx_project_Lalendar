@@ -1047,7 +1047,7 @@ function OnboardingPage({ step, userName = "00", onNext, onInfoNext, onFixedNext
           applianceTypes: assignedApplianceTypes,
           applianceAssignees,
         }),
-      2800,
+      5000,
     );
     return () => window.clearTimeout(timeout);
   }, [applianceAssignees, assignedApplianceTypes, isReady, onComplete]);
@@ -1471,11 +1471,15 @@ function OnboardingPage({ step, userName = "00", onNext, onInfoNext, onFixedNext
                 <br />
                 데이터를 분석해서
                 <br />
-                플래니가 최적의 가사일 계획을
+                플래니가 <span className="onboarding-ai-highlight">최적의 가사일 계획</span>을
                 <br />
                 짜고 있어요!
               </p>
-              <img src={lgCharacter} alt="" />
+              <span className="onboarding-ai-character-wrap" aria-hidden="true">
+                <img className="onboarding-floating-star star-a" src={floatingStar} alt="" />
+                <img className="onboarding-floating-star star-b" src={floatingStar} alt="" />
+                <img className="onboarding-character-image" src={lgCharacter} alt="" />
+              </span>
             </section>
           </div>
         )}
