@@ -38,17 +38,24 @@ const USER_TO_OWNER = {
   dada: "minsu",
 };
 const OWNER_TO_USER = Object.fromEntries(Object.entries(USER_TO_OWNER).map(([userId, ownerId]) => [ownerId, userId]));
+const APP_SESSION_STORAGE_KEY = "lalendarAppSession";
+const DEFAULT_TAB = "schedule";
+const DEFAULT_CALENDAR_VIEW = "month";
 
 export default function App() {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [activeCalendarUser, setActiveCalendarUser] = useState(null);
+  const storedUser = readStoredCurrentUser();
+  const storedSession = readStoredAppSession();
+  const initialSelectedDate = isDateKey(storedSession?.selectedDate) ? storedSession.selectedDate : getTodayKey();
+  const initialVisibleMonth = visibleMonthFromDate(initialSelectedDate);
+  const [currentUser, setCurrentUser] = useState(storedUser);
+  const [activeCalendarUser, setActiveCalendarUser] = useState(() => findUserById(storedSession?.activeCalendarUserId) || storedUser);
   const [tasks, setTasks] = useState(() => normalizeTasksForUsers(normalizeGeneratedTaskTitles(initialTasks)));
   const [memberColors, setMemberColors] = useState(() => ({
     ...Object.fromEntries(members.map((member) => [member.id, member.color])),
     ...USER_COLORS,
   }));
-  const [activeTab, setActiveTab] = useState("schedule");
-  const [isOnboardingComplete, setOnboardingComplete] = useState(false);
+  const [activeTab, setActiveTab] = useState(storedSession?.activeTab || DEFAULT_TAB);
+  const [isOnboardingComplete, setOnboardingComplete] = useState(Boolean(storedUser));
   const [hasGeneratedOnboardingTasks, setHasGeneratedOnboardingTasks] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState("intro");
   const [onboardingProfile, setOnboardingProfile] = useState({
@@ -57,12 +64,10 @@ export default function App() {
     cleaningDay: "일요일",
     returnHomeTime: "19:30",
   });
-  const [selectedDate, setSelectedDate] = useState(getTodayKey);
-  const [visibleMonth, setVisibleMonth] = useState(() => {
-    const today = new Date();
-    return { year: today.getFullYear(), month: today.getMonth() + 1 };
-  });
-  const [selectedMember, setSelectedMember] = useState(() => readStoredCurrentUser()?.id || "jea");
+  const [selectedDate, setSelectedDate] = useState(initialSelectedDate);
+  const [visibleMonth, setVisibleMonth] = useState(initialVisibleMonth);
+  const [selectedDetailDate, setSelectedDetailDate] = useState(isDateKey(storedSession?.selectedDetailDate) ? storedSession.selectedDetailDate : null);
+  const [selectedMember, setSelectedMember] = useState(() => storedSession?.selectedMember || storedUser?.id || "jea");
   const [query, setQuery] = useState("");
   const [isComposerOpen, setComposerOpen] = useState(false);
   const [pendingPostpone, setPendingPostpone] = useState(null);
@@ -74,7 +79,7 @@ export default function App() {
   const [isCalendarMenuOpen, setCalendarMenuOpen] = useState(false);
   const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [notificationPosition, setNotificationPosition] = useState({ x: 0, y: 0 });
-  const [calendarView, setCalendarView] = useState("month");
+  const [calendarView, setCalendarView] = useState(storedSession?.calendarView || DEFAULT_CALENDAR_VIEW);
   const [calendarWeatherByDate, setCalendarWeatherByDate] = useState({});
   const [weatherApiStatus, setWeatherApiStatus] = useState("loading");
 
@@ -130,6 +135,23 @@ export default function App() {
     setActiveCalendarUser((current) => current || currentUser);
     setSelectedMember((current) => current || currentUser.id);
   }, [currentUser]);
+
+  useEffect(() => {
+    if (!currentUser || typeof localStorage === "undefined") return;
+
+    localStorage.setItem(
+      APP_SESSION_STORAGE_KEY,
+      JSON.stringify({
+        activeTab,
+        selectedDate,
+        selectedDetailDate,
+        visibleMonth,
+        selectedMember,
+        activeCalendarUserId: activeCalendarUser?.id || currentUser.id,
+        calendarView,
+      }),
+    );
+  }, [activeCalendarUser, activeTab, calendarView, currentUser, selectedDate, selectedDetailDate, selectedMember, visibleMonth]);
 
   const sortedCalendarUsers = useMemo(() => {
     if (!currentUser) return USERS;
@@ -320,12 +342,21 @@ export default function App() {
   }
 
   function handleLogin(user) {
+    const savedSession = readStoredAppSession();
+    const nextSelectedDate = isDateKey(savedSession?.selectedDate) ? savedSession.selectedDate : selectedDate;
+    const nextVisibleMonth = savedSession?.visibleMonth || visibleMonthFromDate(nextSelectedDate);
+    const nextCalendarUser = findUserById(savedSession?.activeCalendarUserId) || user;
+
     localStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(user));
     setCurrentUser(user);
-    setActiveCalendarUser(user);
-    setSelectedMember(user.id);
-    setActiveTab("schedule");
-    setOnboardingComplete(false);
+    setActiveCalendarUser(nextCalendarUser);
+    setSelectedMember(savedSession?.selectedMember || nextCalendarUser.id);
+    setSelectedDate(nextSelectedDate);
+    setSelectedDetailDate(isDateKey(savedSession?.selectedDetailDate) ? savedSession.selectedDetailDate : null);
+    setVisibleMonth(nextVisibleMonth);
+    setCalendarView(savedSession?.calendarView || DEFAULT_CALENDAR_VIEW);
+    setActiveTab(savedSession?.activeTab || DEFAULT_TAB);
+    setOnboardingComplete(true);
     setOnboardingStep("intro");
     setHasGeneratedOnboardingTasks(false);
     setPanel(null);
@@ -337,10 +368,12 @@ export default function App() {
 
   function handleLogout() {
     localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+    localStorage.removeItem(APP_SESSION_STORAGE_KEY);
     setCurrentUser(null);
     setActiveCalendarUser(null);
     setSelectedMember("jea");
-    setActiveTab("schedule");
+    setSelectedDetailDate(null);
+    setActiveTab(DEFAULT_TAB);
     setOnboardingComplete(false);
     setOnboardingStep("intro");
     setPanel(null);
@@ -451,6 +484,8 @@ export default function App() {
     scopedTasks,
     selectedTasks,
     selectedDate,
+    initialSelectedDetailDate: selectedDetailDate,
+    onSelectedDetailDateChange: setSelectedDetailDate,
     selectedMember,
     activeCalendarUser,
     calendarUsers: sortedCalendarUsers,
@@ -1834,6 +1869,32 @@ function readStoredCurrentUser() {
     localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
     return null;
   }
+}
+
+function readStoredAppSession() {
+  if (typeof localStorage === "undefined") return null;
+
+  try {
+    const session = JSON.parse(localStorage.getItem(APP_SESSION_STORAGE_KEY) || "null");
+    if (!session || typeof session !== "object") return null;
+    return session;
+  } catch {
+    localStorage.removeItem(APP_SESSION_STORAGE_KEY);
+    return null;
+  }
+}
+
+function isDateKey(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
+}
+
+function visibleMonthFromDate(date) {
+  const [year, month] = String(date || getTodayKey()).split("-").map(Number);
+  if (!Number.isFinite(year) || !Number.isFinite(month)) {
+    const today = new Date();
+    return { year: today.getFullYear(), month: today.getMonth() + 1 };
+  }
+  return { year, month };
 }
 
 function normalizeTasksForUsers(tasks, fallbackUserId) {

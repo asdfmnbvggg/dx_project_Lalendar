@@ -190,6 +190,8 @@ export default function CalendarPage({
   onSelectCalendarDate,
   tasksByDate,
   selectedDate,
+  initialSelectedDetailDate,
+  onSelectedDetailDateChange,
   setSelectedDate,
   selectedMember,
   activeCalendarUser,
@@ -214,7 +216,7 @@ export default function CalendarPage({
 }) {
   const [calendarScale, setCalendarScale] = useState(2);
   const [calendarTaskMode, setCalendarTaskMode] = useState("personal");
-  const [selectedDetailDate, setSelectedDetailDate] = useState(null);
+  const [selectedDetailDate, setSelectedDetailDate] = useState(initialSelectedDetailDate || null);
   const [isDeleteMode, setDeleteMode] = useState(false);
   const [selectedDeleteTaskIds, setSelectedDeleteTaskIds] = useState([]);
   const [activeAddColumn, setActiveAddColumn] = useState(null);
@@ -256,6 +258,10 @@ export default function CalendarPage({
   const selectedMemberProfile = activeCalendarUser || familyMembers.find((member) => member.id === selectedMember) || familyMembers[0] || members[0];
   const selectedMemberName = calendarProfileNames[selectedMemberProfile.id] || selectedMemberProfile.name;
   const calendarOwnerTitle = isHouseCalendar ? "가사 캘린더" : `${activeCalendarUser?.displayName || selectedMemberName + "님"}의 캘린더`;
+
+  useEffect(() => {
+    onSelectedDetailDateChange?.(selectedDetailDate);
+  }, [onSelectedDetailDateChange, selectedDetailDate]);
 
   function moveCalendar(offset) {
     if (isHouseCalendar) {
