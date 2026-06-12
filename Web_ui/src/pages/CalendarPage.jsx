@@ -441,7 +441,6 @@ export default function CalendarPage({
     onActiveCalendarUserChange?.(currentUser);
     setSelectedMember(currentUser.id);
     setActiveAddColumn("housework");
-    openComposer({ ownerId: member.ownerId });
   }
 
   function openCalendarComposer() {
@@ -449,11 +448,13 @@ export default function CalendarPage({
       const member = HOUSEWORK_MEMBER_TABS.find((item) => item.userId === currentUser.id);
       onActiveCalendarUserChange?.(currentUser);
       setSelectedMember(currentUser.id);
-      openComposer({ ownerId: member?.ownerId });
+      setSelectedDetailDate(selectedDate);
+      setActiveAddColumn("housework");
       return;
     }
 
-    openComposer();
+    setSelectedDetailDate(selectedDate);
+    setActiveAddColumn("personal");
   }
 
   function changeApplianceMode(task, mode) {
@@ -528,11 +529,15 @@ export default function CalendarPage({
     );
   }
 
-  if (selectedDetailDate && activeAddColumn === "personal") {
+  if (selectedDetailDate && (activeAddColumn === "personal" || activeAddColumn === "housework")) {
+    const houseworkMember = HOUSEWORK_MEMBER_TABS.find((member) => member.userId === currentUser?.id || member.ownerId === currentUser?.id);
+
     return (
-      <DailyPersonalSchedulePage
+      <DailyScheduleAddPage
         selectedDate={detailDate}
         selectedMember={selectedMember}
+        scheduleType={activeAddColumn}
+        houseworkOwnerId={houseworkMember?.ownerId}
         onClose={() => setActiveAddColumn(null)}
         onSave={(task) => {
           startSchedulePlanning({ type: "add", task });
@@ -720,7 +725,6 @@ export default function CalendarPage({
                     onClick={() => {
                       setSelectedDate(detailDate);
                       setActiveAddColumn("housework");
-                      openComposer();
                     }}
                   >
                     <Plus size={24} strokeWidth={2.4} />
@@ -1138,9 +1142,9 @@ function SchedulePlanningLoadingPage({ pendingSave, onComplete }) {
   );
 }
 
-function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSave }) {
+function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "personal", houseworkOwnerId, onClose, onSave }) {
   const parsedDate = parseDateKey(selectedDate);
-  const initialOwner = selectedMember === "minsu" ? selectedMember : DABIN_TASK_OWNER;
+  const initialOwner = scheduleType === "housework" ? houseworkOwnerId || selectedMember || DABIN_TASK_OWNER : selectedMember === "minsu" ? selectedMember : DABIN_TASK_OWNER;
   const colorOptions = scheduleColorOptions;
   const [title, setTitle] = useState("");
   const [color, setColor] = useState(colorOptions[1]);
@@ -1172,8 +1176,8 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
     onSave({
       date: scheduleDates.date,
       title: trimmedTitle,
-      place: "개인 일정",
-      tag: "plan",
+      place: scheduleType === "housework" ? "가사 일정" : "개인 일정",
+      tag: scheduleType === "housework" ? "house" : "plan",
       owner: initialOwner,
       done: false,
       repeat: isAllDay ? "하루종일" : startTime + " ~ " + endTime,
