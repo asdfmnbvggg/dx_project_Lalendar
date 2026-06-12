@@ -6,8 +6,8 @@ const places = ["우리 집", "회사", "학교", "학원", "마트", "병원", 
 const repeatOptions = ["없음", "매일", "매주", "매월", "사용자 지정"];
 const reminderOptions = ["OFF", "정시", "10분 전", "30분 전", "1시간 전", "하루 전"];
 
-export default function TaskComposer({ selectedDate, selectedMember, onAdd, onClose }) {
-  const initialOwner = selectedMember === "all" ? "me" : selectedMember;
+export default function TaskComposer({ selectedDate, selectedMember, lockedOwner, onAdd, onClose }) {
+  const initialOwner = lockedOwner || (selectedMember === "all" ? "me" : selectedMember);
   const [title, setTitle] = useState("");
   const [placePreset, setPlacePreset] = useState("우리 집");
   const [customPlace, setCustomPlace] = useState("");
@@ -20,6 +20,8 @@ export default function TaskComposer({ selectedDate, selectedMember, onAdd, onCl
   const [memo, setMemo] = useState("");
 
   function toggleOwner(ownerId) {
+    if (lockedOwner) return;
+
     if (ownerId === "all") {
       setOwners(["all"]);
       return;
@@ -37,7 +39,7 @@ export default function TaskComposer({ selectedDate, selectedMember, onAdd, onCl
     if (!trimmedTitle) return;
 
     const place = placePreset === "직접 입력" ? customPlace.trim() || "우리 집" : placePreset;
-    const targets = owners.includes("all") ? ["all"] : owners;
+    const targets = lockedOwner ? [lockedOwner] : owners.includes("all") ? ["all"] : owners;
     targets.forEach((owner, index) => {
       onAdd({
         date,
@@ -104,7 +106,7 @@ export default function TaskComposer({ selectedDate, selectedMember, onAdd, onCl
           대상자
           <div className="schedule-chip-row">
             {members.map((member) => (
-              <button key={member.id} type="button" className={owners.includes(member.id) ? "active" : ""} onClick={() => toggleOwner(member.id)}>
+              <button key={member.id} type="button" className={owners.includes(member.id) ? "active" : ""} onClick={() => toggleOwner(member.id)} disabled={Boolean(lockedOwner && member.id !== lockedOwner)}>
                 {member.id === "all" ? "전체" : member.name}
               </button>
             ))}

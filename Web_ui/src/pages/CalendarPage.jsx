@@ -198,8 +198,8 @@ const applianceModeCatalog = {
   },
 };
 
-const CALENDAR_CELL_TASK_LIMIT = 3;
-const CALENDAR_CELL_COLLAPSED_TASK_LIMIT = 2;
+const CALENDAR_CELL_TASK_LIMIT = 6;
+const CALENDAR_CELL_COLLAPSED_TASK_LIMIT = 5;
 const SCHEDULE_PLANNING_DELAY = 3000;
 const DAILY_TIMETABLE_START_HOUR = 6;
 const DAILY_TIMETABLE_END_HOUR = 24;
@@ -232,6 +232,12 @@ const calendarMemberIconText = {
   theresa: "수",
 };
 
+const HOUSEWORK_MEMBER_TABS = [
+  { userId: "jea", ownerId: "me", memberName: "최재혁", label: "최재혁 가사 일정" },
+  { userId: "sumin", ownerId: "theresa", memberName: "한수민", label: "한수민 가사 일정" },
+  { userId: "dada", ownerId: "minsu", memberName: "김다빈", label: "김다빈 가사 일정" },
+];
+
 const DABIN_MEMBER_IDS = new Set(["dada", "minsu"]);
 const DABIN_TASK_OWNER = "minsu";
 
@@ -251,6 +257,7 @@ export default function CalendarPage({
   onSelectedDetailDateChange,
   setSelectedDate,
   selectedMember,
+  currentUser,
   activeCalendarUser,
   calendarUsers = [],
   memberColors,
@@ -308,13 +315,19 @@ export default function CalendarPage({
   const detailDate = selectedDetailDate || selectedDate;
   const detailTasks = filteredTasksByDate[detailDate] || [];
   const dailyFixedTasks = detailTasks.filter((task) => getDailyTaskGroup(task) === "schedule");
-  const dailyHouseTasks = detailTasks.filter((task) => getDailyTaskGroup(task) === "housework");
+  const dailyHouseTasks = detailTasks
+    .filter((task) => getDailyTaskGroup(task) === "housework")
+    .map((task) => ({ ...task, memberName: getHouseworkTaskMemberName(task) }));
   const dailyHours = buildDailyHours(detailTasks);
   const familyMembers = calendarUsers.length > 0 ? calendarUsers : members.filter((member) => member.id !== "all");
   const dailyAddMembers = familyMembers.filter(isDabinMember);
   const selectedMemberProfile = activeCalendarUser || familyMembers.find((member) => member.id === selectedMember) || familyMembers[0] || members[0];
   const selectedMemberName = calendarProfileNames[selectedMemberProfile.id] || selectedMemberProfile.name;
   const calendarOwnerTitle = isHouseCalendar ? "가사 캘린더" : `${activeCalendarUser?.displayName || selectedMemberName + "님"}의 캘린더`;
+  const currentHouseworkMember = HOUSEWORK_MEMBER_TABS.find((member) => member.userId === currentUser?.id || member.ownerId === currentUser?.id);
+  const orderedHouseworkMembers = currentHouseworkMember
+    ? [currentHouseworkMember, ...HOUSEWORK_MEMBER_TABS.filter((member) => member.userId !== currentHouseworkMember.userId)]
+    : HOUSEWORK_MEMBER_TABS;
 
   useEffect(() => {
     onSelectedDetailDateChange?.(selectedDetailDate);
@@ -419,6 +432,28 @@ export default function CalendarPage({
     setApplianceModeMessage("");
     setDailyContextTaskId(null);
     setDailyContextAction(null);
+  }
+
+  function openHouseworkComposerFor(member) {
+    if (!currentUser || member?.userId !== currentUser.id) return;
+
+    setSelectedDate(detailDate);
+    onActiveCalendarUserChange?.(currentUser);
+    setSelectedMember(currentUser.id);
+    setActiveAddColumn("housework");
+    openComposer({ ownerId: member.ownerId });
+  }
+
+  function openCalendarComposer() {
+    if (isHouseCalendar && currentUser) {
+      const member = HOUSEWORK_MEMBER_TABS.find((item) => item.userId === currentUser.id);
+      onActiveCalendarUserChange?.(currentUser);
+      setSelectedMember(currentUser.id);
+      openComposer({ ownerId: member?.ownerId });
+      return;
+    }
+
+    openComposer();
   }
 
   function changeApplianceMode(task, mode) {
@@ -542,22 +577,49 @@ export default function CalendarPage({
             </button>
           </div>
 
-          {dailyDetailView === "timetable" ? (
-            <div className="daily-timetable-shell" aria-label="Daily timetable" style={{ "--hour-count": dailyHours.length - 1 }}>
-              <section className="daily-time-rail" aria-label="Time">
-                <strong>시간</strong>
-                <div className="daily-time-scale" style={{ "--hour-count": dailyHours.length - 1 }}>
-                  {dailyHours.map((hour, index) => (
-                    <span
-                      key={hour}
-                      className={index === 0 ? "start" : index === dailyHours.length - 1 ? "end" : ""}
-                      style={{ "--hour-index": index }}
-                    >
-                      {formatDailyHour(hour)}
-                    </span>
+          {isHouseCalendar ? (
+            <>
+              {dailyDetailView === "timetable" ? (
+                <div className="daily-timetable-shell housework-detail three-members" aria-label="가사 일정" style={{ "--hour-count": dailyHours.length - 1 }}>
+                  <DailyTimeRail hours={dailyHours} />
+                  {orderedHouseworkMembers.map((member) => (
+                    <DailyTimetableColumn
+                      key={member.memberName}
+                      title={member.label}
+                      tasks={dailyHouseTasks.filter((task) => task.memberName === member.memberName)}
+                      hours={dailyHours}
+                      memberColors={memberColors}
+                      variant="housework"
+                      activeTaskId={dailyContextTaskId}
+                      activeAction={dailyContextAction}
+                      onOpenContext={openDailyContext}
+                      onChooseContextAction={chooseDailyContextAction}
+                      onOpenModeChange={openApplianceMode}
+                    />
                   ))}
                 </div>
-              </section>
+              ) : (
+                <div className="daily-list-shell housework-detail three-members" aria-label="가사 일정 목록">
+                  {orderedHouseworkMembers.map((member) => (
+                    <DailyListColumn
+                      key={member.memberName}
+                      title={member.label}
+                      tasks={dailyHouseTasks.filter((task) => task.memberName === member.memberName)}
+                      memberColors={memberColors}
+                      variant="housework"
+                      activeTaskId={dailyContextTaskId}
+                      activeAction={dailyContextAction}
+                      onOpenContext={openDailyContext}
+                      onChooseContextAction={chooseDailyContextAction}
+                      onOpenModeChange={openApplianceMode}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          ) : dailyDetailView === "timetable" ? (
+            <div className="daily-timetable-shell" aria-label="Daily timetable" style={{ "--hour-count": dailyHours.length - 1 }}>
+              <DailyTimeRail hours={dailyHours} />
 
               <DailyTimetableColumn
                 title="개인 일정"
@@ -584,7 +646,7 @@ export default function CalendarPage({
                 onOpenModeChange={openApplianceMode}
               />
 
-              </div>
+            </div>
           ) : (
             <div className="daily-list-shell" aria-label="Daily schedule list">
               <DailyListColumn
@@ -617,31 +679,54 @@ export default function CalendarPage({
               선택한 일정 삭제
             </button>
           ) : (
-            <div className="daily-add-row" aria-label="일정 추가">
-              <span aria-hidden="true" />
-              <button
-                type="button"
-                className={["date-detail-add", "personal", activeAddColumn === "personal" ? "active" : ""].filter(Boolean).join(" ")}
-                aria-label="개인 일정 추가"
-                onClick={() => {
-                  setSelectedDate(detailDate);
-                  setActiveAddColumn("personal");
-                }}
-              >
-                <Plus size={24} strokeWidth={2.4} />
-              </button>
-              <button
-                type="button"
-                className={["date-detail-add", "housework", activeAddColumn === "housework" ? "active" : ""].filter(Boolean).join(" ")}
-                aria-label="가사일 일정 추가"
-                onClick={() => {
-                  setSelectedDate(detailDate);
-                  setActiveAddColumn("housework");
-                  openComposer();
-                }}
-              >
-                <Plus size={24} strokeWidth={2.4} />
-              </button>
+            <div className={["daily-add-row", isHouseCalendar ? "housework-only three-members" : "", dailyDetailView + "-view"].filter(Boolean).join(" ")} aria-label="일정 추가">
+              {isHouseCalendar ? (
+                <>
+                  {dailyDetailView === "timetable" && <span aria-hidden="true" />}
+                  {orderedHouseworkMembers.map((member) =>
+                    member.userId === currentHouseworkMember?.userId ? (
+                      <button
+                        type="button"
+                        key={member.userId}
+                        className={["date-detail-add", "housework", activeAddColumn === "housework" ? "active" : ""].filter(Boolean).join(" ")}
+                        aria-label="내 가사 일정 추가"
+                        onClick={() => openHouseworkComposerFor(member)}
+                      >
+                        <Plus size={24} strokeWidth={2.4} />
+                      </button>
+                    ) : (
+                      <span className="daily-add-placeholder" aria-hidden="true" key={member.userId} />
+                    ),
+                  )}
+                </>
+              ) : (
+                <>
+                  <span aria-hidden="true" />
+                  <button
+                    type="button"
+                    className={["date-detail-add", "personal", activeAddColumn === "personal" ? "active" : ""].filter(Boolean).join(" ")}
+                    aria-label="개인 일정 추가"
+                    onClick={() => {
+                      setSelectedDate(detailDate);
+                      setActiveAddColumn("personal");
+                    }}
+                  >
+                    <Plus size={24} strokeWidth={2.4} />
+                  </button>
+                  <button
+                    type="button"
+                    className={["date-detail-add", "housework", activeAddColumn === "housework" ? "active" : ""].filter(Boolean).join(" ")}
+                    aria-label="가사 일정 추가"
+                    onClick={() => {
+                      setSelectedDate(detailDate);
+                      setActiveAddColumn("housework");
+                      openComposer();
+                    }}
+                  >
+                    <Plus size={24} strokeWidth={2.4} />
+                  </button>
+                </>
+              )}
             </div>
           )}
         </section>
@@ -742,7 +827,7 @@ export default function CalendarPage({
               <Plus size={15} />
               확대
             </button>
-            <button className="calendar-add-button" onClick={openComposer}>
+            <button className="calendar-add-button" onClick={openCalendarComposer}>
               <Plus size={18} />
               일정 추가
             </button>
@@ -1429,6 +1514,25 @@ function timeToMinutes(time) {
   return hour * 60 + minute;
 }
 
+function DailyTimeRail({ hours }) {
+  return (
+    <section className="daily-time-rail" aria-label="Time">
+      <strong>시간</strong>
+      <div className="daily-time-scale" style={{ "--hour-count": hours.length - 1 }}>
+        {hours.map((hour, index) => (
+          <span
+            key={hour}
+            className={index === 0 ? "start" : index === hours.length - 1 ? "end" : ""}
+            style={{ "--hour-index": index }}
+          >
+            {formatDailyHour(hour)}
+          </span>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, activeTaskId, activeAction, onOpenContext, onChooseContextAction, onOpenModeChange }) {
   const startHour = hours[0] ?? DAILY_TIMETABLE_START_HOUR;
   const endHour = hours[hours.length - 1] ?? DAILY_TIMETABLE_END_HOUR;
@@ -1807,11 +1911,11 @@ function getApplianceModeImage(applianceType) {
 }
 
 function getMonthTaskLabel(title) {
-  return String(title || "").replace(/\s+/g, "").trim().slice(0, 3);
+  return String(title || "").trim();
 }
 
 function getHouseTaskLabel(title) {
-  return String(title || "").replace(/\s+/g, "").trim().slice(0, 4);
+  return String(title || "").trim();
 }
 
 function getCalendarCellTasks(tasks, isHouseCalendar) {
@@ -1884,6 +1988,13 @@ function getMemberFilterIds(memberId) {
   return new Set(aliasMap[memberId] || [memberId].filter(Boolean));
 }
 
+function getHouseworkTaskMemberName(task = {}) {
+  if (task.memberName) return task.memberName;
+
+  const member = HOUSEWORK_MEMBER_TABS.find((item) => [item.userId, item.ownerId].includes(task.userId) || [item.userId, item.ownerId].includes(task.owner));
+  return member?.memberName || HOUSEWORK_MEMBER_TABS[0].memberName;
+}
+
 function getDailyTaskGroup(task) {
   if (task.applianceType || task.applianceMode || task.currentMode || task.automationType) return "housework";
   if (task.displayType === "appliance") return "housework";
@@ -1895,6 +2006,10 @@ function getDailyTaskRange(task, index = 0) {
   const timeText = String(task.repeat || "");
   if (timeText.includes("하루종일")) {
     return { startMinutes: 0, endMinutes: 24 * 60, isAllDay: true };
+  }
+
+  if (task.startTime && task.endTime) {
+    return normalizeTimeRange(timeToMinutes(task.startTime), timeToMinutes(task.endTime));
   }
 
   const rangeMatch = timeText.match(/\b(\d{1,2}):(\d{2})\s*(?:~|-|to)\s*(\d{1,2}):(\d{2})\b/i);
