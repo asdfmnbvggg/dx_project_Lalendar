@@ -1502,9 +1502,12 @@ function DailyListColumn({ title, tasks, memberColors, variant, activeTaskId, ac
                   }
                 }}
               >
-                <span>{formatTaskRange(range)}</span>
-                <strong>{getDailyBlockTitle(task, variant)}</strong>
-                <small>{task.place || (variant === "housework" ? "가전 일정" : "개인 일정")}</small>
+                <time>{formatBlockStartTime(range)}</time>
+                <div className="daily-list-task-card">
+                  <strong>{getDailyBlockTitle(task, variant)}</strong>
+                  <span>{formatTaskRange(range)}</span>
+                  <small>{task.place || (variant === "housework" ? "가전 일정" : "개인 일정")}</small>
+                </div>
                 {activeTaskId === task.id && (
                   <div
                     className="daily-context-menu"
@@ -1907,6 +1910,17 @@ function formatDailyHour(hour) {
 function formatTaskRange(range) {
   if (range.isAllDay) return "하루종일";
   return formatMinutes(range.startMinutes) + " ~ " + formatMinutes(range.endMinutes);
+}
+
+function formatBlockStartTime(range) {
+  if (range.isAllDay) return "종일";
+  return formatCompactMinutes(range.startMinutes);
+}
+
+function formatCompactMinutes(minutes) {
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+  return String(hour) + ":" + String(minute).padStart(2, "0");
 }
 
 function formatMinutes(minutes) {
