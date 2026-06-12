@@ -1750,11 +1750,14 @@ function ApplianceModePage({ task, selectedModeId, message, nearestRunText, onSe
   const selectedMode = modes.find((mode) => mode.id === selectedModeId) || modes[0];
   const currentMode = task.applianceMode || task.currentMode || selectedMode?.label || modes[0]?.label || "자동";
   const image = getApplianceModeImage(applianceType);
+  const isDryer = applianceType === "DRYER";
   const [isPowerOn, setPowerOn] = useState(false);
   const [isModeMenuOpen, setModeMenuOpen] = useState(false);
   const [rinseCount, setRinseCount] = useState(2);
   const [spinLevel, setSpinLevel] = useState("강");
   const [waterTemp, setWaterTemp] = useState(40);
+  const [ecoMode, setEcoMode] = useState("자동");
+  const [dryLevel, setDryLevel] = useState("표준");
   const [washCourse, setWashCourse] = useState(currentMode);
   const [careEnabled, setCareEnabled] = useState(false);
   const [options, setOptions] = useState(() => getApplianceModeOptions(applianceType));
@@ -1772,10 +1775,10 @@ function ApplianceModePage({ task, selectedModeId, message, nearestRunText, onSe
     setOptions((current) => current.map((option) => (option.label === label ? { ...option, active: !option.active } : option)));
   }
 
-  function sendToWasher() {
+  function sendToAppliance() {
     onApply(selectedMode);
     setPowerOn(true);
-    setStatusText("세탁기에 설정을 전송했어요.");
+    setStatusText(`${applianceName}에 설정을 전송했어요.`);
   }
 
   function reserveCourse() {
@@ -1783,7 +1786,7 @@ function ApplianceModePage({ task, selectedModeId, message, nearestRunText, onSe
   }
 
   return (
-    <section className="page calendar-page washer-control-page" aria-label={`${applianceName} 작동 설정`}>
+    <section className={["page", "calendar-page", "washer-control-page", isDryer ? "dryer-control-page" : ""].filter(Boolean).join(" ")} aria-label={`${applianceName} 작동 설정`}>
       <header className="washer-control-head">
         <button type="button" aria-label="뒤로가기" onClick={onClose}>
           <ChevronLeft size={30} strokeWidth={2.2} />
@@ -1807,7 +1810,7 @@ function ApplianceModePage({ task, selectedModeId, message, nearestRunText, onSe
         </span>
       </div>
 
-      <section className="washer-course-section" aria-label="세탁 코스">
+      <section className="washer-course-section" aria-label={`${applianceName} 코스`}>
         <div className="washer-course-row">
           <div className="washer-mode-picker">
             <button type="button" aria-expanded={isModeMenuOpen} onClick={() => setModeMenuOpen((current) => !current)}>
@@ -1829,32 +1832,52 @@ function ApplianceModePage({ task, selectedModeId, message, nearestRunText, onSe
           </button>
         </div>
 
-        <div className="washer-setting-grid">
-          <button type="button" className="washer-setting-card rinse" onClick={() => setRinseCount((current) => (current >= 5 ? 1 : current + 1))}>
-            <Shirt size={50} strokeWidth={2.2} />
-            <span>헹굼</span>
-            <strong>{rinseCount}회</strong>
-          </button>
-          <button type="button" className="washer-setting-card spin" onClick={() => setSpinLevel((current) => (current === "강" ? "중" : current === "중" ? "약" : "강"))}>
-            <Waves size={50} strokeWidth={2.2} />
-            <span>탈수</span>
-            <strong>{spinLevel}</strong>
-          </button>
-          <button type="button" className="washer-setting-card temp" onClick={() => setWaterTemp((current) => (current >= 60 ? 20 : current + 10))}>
-            <Thermometer size={50} strokeWidth={2.2} />
-            <span>물온도</span>
-            <strong>{waterTemp}도</strong>
-          </button>
-        </div>
+        {isDryer ? (
+          <div className="washer-setting-grid dryer-setting-grid">
+            <button type="button" className="washer-setting-card dryer-saving" onClick={() => setEcoMode((current) => (current === "자동" ? "켜짐" : current === "켜짐" ? "꺼짐" : "자동"))}>
+              <Shirt size={50} strokeWidth={2.2} />
+              <span>절약모드</span>
+              <strong>{ecoMode}</strong>
+            </button>
+            <button type="button" className="washer-setting-card dryer-level" onClick={() => setDryLevel((current) => (current === "표준" ? "강력" : current === "강력" ? "약" : "표준"))}>
+              <Shirt size={50} strokeWidth={2.2} />
+              <span>
+                건조정도
+                <i aria-hidden="true" />
+              </span>
+              <strong>{dryLevel}</strong>
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="washer-setting-grid">
+              <button type="button" className="washer-setting-card rinse" onClick={() => setRinseCount((current) => (current >= 5 ? 1 : current + 1))}>
+                <Shirt size={50} strokeWidth={2.2} />
+                <span>헹굼</span>
+                <strong>{rinseCount}회</strong>
+              </button>
+              <button type="button" className="washer-setting-card spin" onClick={() => setSpinLevel((current) => (current === "강" ? "중" : current === "중" ? "약" : "강"))}>
+                <Waves size={50} strokeWidth={2.2} />
+                <span>탈수</span>
+                <strong>{spinLevel}</strong>
+              </button>
+              <button type="button" className="washer-setting-card temp" onClick={() => setWaterTemp((current) => (current >= 60 ? 20 : current + 10))}>
+                <Thermometer size={50} strokeWidth={2.2} />
+                <span>물온도</span>
+                <strong>{waterTemp}도</strong>
+              </button>
+            </div>
 
-        <button type="button" className="washer-cycle-card" onClick={() => setStatusText("세탁 단계 상세를 눌렀어요.")}>
-          <Shirt size={50} strokeWidth={2.2} />
-          <span>세탁</span>
-          <strong>{washCourse || selectedMode?.label || "표준"}</strong>
-        </button>
+            <button type="button" className="washer-cycle-card" onClick={() => setStatusText("세탁 단계 상세를 눌렀어요.")}>
+              <Shirt size={50} strokeWidth={2.2} />
+              <span>세탁</span>
+              <strong>{washCourse || selectedMode?.label || "표준"}</strong>
+            </button>
+          </>
+        )}
 
-        <button type="button" className="washer-send-button" onClick={sendToWasher}>
-          세탁기에 전송
+        <button type="button" className="washer-send-button" onClick={sendToAppliance}>
+          {applianceName}에 전송
         </button>
 
         <button type="button" className="washer-reserve-button" onClick={reserveCourse}>
@@ -1877,12 +1900,19 @@ function ApplianceModePage({ task, selectedModeId, message, nearestRunText, onSe
         </button>
       </section>
 
-      <section className="washer-option-list" aria-label="제품 기능">
+      <section className={["washer-option-list", isDryer ? "dryer-option-list" : ""].filter(Boolean).join(" ")} aria-label="제품 기능">
         {options.map((option) => (
           <button type="button" className="washer-option-row" key={option.label} onClick={() => toggleOption(option.label)}>
             <span className="washer-option-icon">{getWasherOptionIcon(option.label)}</span>
             <strong>{option.label}</strong>
-            <i className={option.active ? "active" : ""} aria-hidden="true" />
+            {isDryer ? (
+              <span className="dryer-option-state">
+                {option.active ? "켜짐" : "꺼짐"}
+                <ChevronRight size={25} strokeWidth={2.6} />
+              </span>
+            ) : (
+              <i className={option.active ? "active" : ""} aria-hidden="true" />
+            )}
           </button>
         ))}
       </section>
@@ -1919,9 +1949,8 @@ function getApplianceModeOptions(applianceType) {
 
   if (applianceType === "DRYER") {
     return [
-      { label: "구김방지", icon: "G", active: true },
-      { label: "절약 건조", icon: "E", active: false },
-      { label: "알림", icon: "!", active: true },
+      { label: "다림질알림", icon: "I", active: false },
+      { label: "구김방지", icon: "G", active: false },
     ];
   }
 

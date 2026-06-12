@@ -7380,6 +7380,36 @@ body {
   color: #4f66a9;
 }
 
+.dryer-setting-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dryer-setting-grid .washer-setting-card {
+  min-height: 184px;
+}
+
+.washer-setting-card.dryer-saving {
+  background: #d9edf2;
+}
+
+.washer-setting-card.dryer-level {
+  background: #f4dfe7;
+}
+
+.washer-setting-card.dryer-level span {
+  position: relative;
+}
+
+.washer-setting-card.dryer-level span i {
+  position: absolute;
+  right: -11px;
+  top: 1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff5738;
+}
+
 .washer-setting-card svg,
 .washer-cycle-card svg,
 .washer-option-icon svg,
@@ -7572,6 +7602,20 @@ body {
 
 .washer-option-row i.active::after {
   transform: translateX(28px);
+}
+
+.dryer-option-list .washer-option-row {
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+}
+
+.dryer-option-state {
+  display: inline-flex;
+  align-items: center;
+  justify-self: end;
+  gap: 8px;
+  color: #5267a4;
+  font-size: 18px;
+  font-weight: 950;
 }
 
 .washer-mode-feedback {
