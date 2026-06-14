@@ -2306,7 +2306,7 @@ function toFixedScheduleMinutes(time) {
 function PostponeTimePicker({ label, value, onChange }) {
   const [isOpen, setOpen] = useState(false);
   const [hour, minute] = normalizeEditableTimeValue(value).split(":");
-  const hours = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
+  const hours = Array.from({ length: 18 }, (_, index) => String(index + 6).padStart(2, "0"));
   const minutes = ["00", "10", "20", "30", "40", "50"];
 
   return (
@@ -2322,20 +2322,34 @@ function PostponeTimePicker({ label, value, onChange }) {
       </button>
       {isOpen && (
         <div className="postpone-time-scrolls" aria-label={label}>
-          <select size={3} value={hour} onChange={(event) => onChange(`${event.target.value}:${minute}`)} aria-label="시">
+          <div className="postpone-time-column" role="listbox" aria-label="시">
             {hours.map((option) => (
-              <option key={option} value={option}>
+              <button
+                key={option}
+                type="button"
+                role="option"
+                aria-selected={hour === option}
+                className={hour === option ? "active" : ""}
+                onClick={() => onChange(`${option}:${minute}`)}
+              >
                 {option}시
-              </option>
+              </button>
             ))}
-          </select>
-          <select size={3} value={minute} onChange={(event) => onChange(`${hour}:${event.target.value}`)} aria-label="분">
+          </div>
+          <div className="postpone-time-column" role="listbox" aria-label="분">
             {minutes.map((option) => (
-              <option key={option} value={option}>
+              <button
+                key={option}
+                type="button"
+                role="option"
+                aria-selected={minute === option}
+                className={minute === option ? "active" : ""}
+                onClick={() => onChange(`${hour}:${option}`)}
+              >
                 {option}분
-              </option>
+              </button>
             ))}
-          </select>
+          </div>
         </div>
       )}
     </div>
@@ -2810,7 +2824,7 @@ function formatEditableTimeValue(value) {
 
 function normalizeEditableTimeValue(value) {
   const digits = String(value || "").replace(/\D/g, "").padEnd(4, "0").slice(0, 4);
-  const hour = Math.min(23, Number(digits.slice(0, 2)) || 0);
+  const hour = Math.max(6, Math.min(23, Number(digits.slice(0, 2)) || 6));
   const minute = Math.min(59, Number(digits.slice(2, 4)) || 0);
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }

@@ -419,13 +419,30 @@ button {
   display: grid;
   grid-template-rows: auto auto 1fr;
   overflow: hidden;
-  border: 1px solid rgba(232, 232, 232, 0.9);
+  border: 1px solid #ffdca8;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.16);
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(135deg, rgba(255, 170, 64, 0.8), rgba(255, 109, 31, 0.42)) border-box;
+  box-shadow: 0 24px 70px rgba(138, 78, 15, 0.2);
   transform: translate(var(--notification-x, 0), var(--notification-y, 0));
   backdrop-filter: blur(18px);
   animation: soft-enter 180ms ease both;
+}
+
+.notification-popover::before,
+.notification-execute-dialog::before,
+.confirm-dialog::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: -9px;
+  height: 18px;
+  background:
+    radial-gradient(circle, #c7a47b 0 1.8px, transparent 2.2px) 0 0 / 18px 18px repeat-x,
+    linear-gradient(90deg, transparent 6px, rgba(145, 108, 66, 0.72) 6px 8px, transparent 8px 18px) 0 6px / 18px 10px repeat-x;
+  pointer-events: none;
 }
 
 .notification-time-control {
@@ -434,8 +451,8 @@ button {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  border-bottom: 1px solid #f0f0f2;
-  background: #fffaf4;
+  border-bottom: 1px solid #f6d49f;
+  background: #fff8ee;
 }
 
 .notification-time-picker-wrap {
@@ -507,8 +524,8 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 14px 10px;
-  border-bottom: 1px solid #f0f0f2;
+  padding: 18px 14px 10px;
+  border-bottom: 1px solid #f6d49f;
   cursor: grab;
   touch-action: none;
   user-select: none;
@@ -524,13 +541,13 @@ button {
 }
 
 .notification-popover-head strong {
-  color: #111;
+  color: #7a3e0b;
   font-size: 17px;
   font-weight: 950;
 }
 
 .notification-popover-head span {
-  color: #8e8e93;
+  color: #a36b2e;
   font-size: 12px;
   font-weight: 800;
 }
@@ -539,8 +556,8 @@ button {
   min-height: 30px;
   padding: 0 10px;
   border-radius: 999px;
-  background: #f3f4f8;
-  color: #666;
+  background: #fff3d7;
+  color: #7a3e0b;
   font-size: 12px;
   font-weight: 850;
 }
@@ -551,7 +568,7 @@ button {
   gap: 8px;
   min-height: 0;
   overflow: auto;
-  padding: 10px;
+  padding: 10px 10px 12px;
 }
 
 .notification-popover-item {
@@ -559,7 +576,8 @@ button {
   gap: 7px;
   padding: 12px;
   border-radius: 16px;
-  background: #f8f9fc;
+  border: 1px solid #ffe0a9;
+  background: #fffaf3;
 }
 
 .notification-schedule-time {
@@ -573,14 +591,14 @@ button {
 }
 
 .notification-popover-item strong {
-  color: #202124;
+  color: #3b2615;
   font-size: 14px;
   font-weight: 900;
 }
 
 .notification-popover-item p {
   margin: 0;
-  color: #777b84;
+  color: #7f6b57;
   font-size: 12px;
   font-weight: 700;
   line-height: 1.35;
@@ -596,20 +614,20 @@ button {
   min-height: 30px;
   padding: 0 10px;
   border-radius: 999px;
-  background: #eceef3;
-  color: #555b66;
+  background: #fff1d2;
+  color: #9a5a22;
   font-size: 12px;
   font-weight: 850;
 }
 
 .notification-popover-item button:last-child {
   color: #fff;
-  background: #4a9df0;
+  background: #ff7a21;
 }
 
 .notification-popover-empty {
   margin: 18px 0;
-  color: #8e8e93;
+  color: #9a6a35;
   font-size: 13px;
   font-weight: 800;
   text-align: center;
@@ -631,10 +649,11 @@ button {
   width: min(348px, calc(100vw - 48px));
   display: grid;
   gap: 12px;
-  padding: 22px 20px 20px;
+  padding: 28px 20px 20px;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 26px 80px rgba(15, 23, 42, 0.2);
+  border: 1px solid #ffdca8;
+  background: #fff;
+  box-shadow: 0 26px 80px rgba(138, 78, 15, 0.22);
   animation: soft-enter 180ms ease both;
 }
 
@@ -647,15 +666,15 @@ button {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  color: #f43f6f;
-  background: #fff1f5;
+  color: #ff6d1f;
+  background: #fff1d2;
   font-size: 28px;
   line-height: 1;
 }
 
 .notification-execute-dialog p {
   margin: 0;
-  color: #f43f6f;
+  color: #ff6d1f;
   font-size: 14px;
   font-weight: 950;
 }
@@ -663,7 +682,7 @@ button {
 .notification-execute-dialog h2 {
   max-width: calc(100% - 46px);
   margin: 0;
-  color: #111;
+  color: #3b2615;
   font-size: 25px;
   font-weight: 950;
   letter-spacing: 0;
@@ -673,14 +692,14 @@ button {
 .notification-execute-dialog span,
 .notification-execute-dialog small {
   display: block;
-  color: #6f7580;
+  color: #7f6b57;
   font-size: 13px;
   font-weight: 800;
   line-height: 1.4;
 }
 
 .notification-execute-dialog small {
-  color: #9aa0aa;
+  color: #a36b2e;
   font-size: 12px;
 }
 
@@ -699,13 +718,13 @@ button {
 }
 
 .notification-execute-dialog div button:first-child {
-  color: #f43f6f;
-  background: #fff1f5;
+  color: #9a5a22;
+  background: #fff1d2;
 }
 
 .notification-execute-dialog div button:last-child {
   color: #fff;
-  background: #ef2857;
+  background: #ff7a21;
 }
 
 .menu-popover button {
@@ -3408,29 +3427,32 @@ button {
 }
 
 .confirm-dialog {
+  position: relative;
   width: min(430px, 100%);
-  padding: 22px;
+  padding: 28px 22px 22px;
+  border: 1px solid #ffdca8;
   border-radius: 28px;
   background: #fff;
-  box-shadow: 0 30px 90px rgba(109, 12, 42, 0.26);
+  box-shadow: 0 30px 90px rgba(138, 78, 15, 0.24);
   animation: soft-enter 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .confirm-dialog p {
   margin: 0 0 6px;
-  color: var(--red);
+  color: #ff6d1f;
   font-weight: 950;
 }
 
 .confirm-dialog h2 {
   margin: 0;
+  color: #3b2615;
   font-size: 28px;
 }
 
 .confirm-dialog span {
   display: block;
   margin-top: 10px;
-  color: var(--muted);
+  color: #7f6b57;
   font-weight: 800;
   line-height: 1.5;
 }
@@ -3449,13 +3471,13 @@ button {
 }
 
 .confirm-actions button:first-child {
-  color: #5f5258;
-  background: #f4f5f7;
+  color: #9a5a22;
+  background: #fff1d2;
 }
 
 .confirm-actions button:last-child {
   color: #fff;
-  background: linear-gradient(135deg, var(--pink), var(--red));
+  background: #ff7a21;
 }
 
 .postpone-option-grid {
@@ -3467,10 +3489,10 @@ button {
 .postpone-option-grid button {
   min-height: 44px;
   padding: 0 14px;
-  border: 1px solid #f5c7d4;
+  border: 1px solid #ffd6a6;
   border-radius: 15px;
-  color: #5f5258;
-  background: #fff8fa;
+  color: #7a3e0b;
+  background: #fffaf3;
   font-size: 13px;
   font-weight: 950;
   text-align: left;
@@ -3479,15 +3501,15 @@ button {
 .postpone-option-grid button.active {
   color: #fff;
   border-color: transparent;
-  background: linear-gradient(135deg, var(--pink), var(--red));
-  box-shadow: 0 10px 22px rgba(225, 29, 72, 0.18);
+  background: #ff7a21;
+  box-shadow: 0 10px 22px rgba(255, 122, 33, 0.2);
 }
 
 .postpone-date-field {
   display: grid;
   gap: 8px;
   margin-top: 16px;
-  color: #5f5258;
+  color: #7a3e0b;
   font-size: 13px;
   font-weight: 950;
 }
@@ -3501,13 +3523,21 @@ button {
 .postpone-date-field select {
   width: 100%;
   height: 46px;
-  border: 1px solid #f5c7d4;
-  border-radius: 16px;
+  border: 1px solid #ffd6a6;
+  border-radius: 999px;
   outline: 0;
   padding: 0 13px;
-  background: #fff8fa;
-  color: var(--ink);
+  background: #fffaf3;
+  color: #3b2615;
   font-weight: 850;
+}
+
+.postpone-date-field input[type="date"]::-webkit-calendar-picker-indicator {
+  padding: 6px;
+  border-radius: 999px;
+  background-color: #fff1d2;
+  cursor: pointer;
+  filter: sepia(1) saturate(2.5) hue-rotate(350deg);
 }
 
 .postpone-time-picker {
@@ -3518,12 +3548,16 @@ button {
   margin-top: 16px;
   min-height: 46px;
   padding: 4px 12px;
-  border: 1px solid #f5c7d4;
-  border-radius: 16px;
-  color: #5f5258;
-  background: #fff8fa;
+  border: 1px solid #ffd6a6;
+  border-radius: 999px;
+  color: #7a3e0b;
+  background: #fffaf3;
   font-size: 13px;
   font-weight: 950;
+}
+
+.postpone-time-picker.open {
+  border-radius: 22px;
 }
 
 .postpone-time-display {
@@ -3531,7 +3565,7 @@ button {
   height: 30px;
   border: 0;
   border-radius: 12px;
-  color: var(--ink);
+  color: #ff6d1f;
   background: transparent;
   font-size: 18px;
   font-weight: 950;
@@ -3547,18 +3581,42 @@ button {
   animation: soft-enter 160ms ease both;
 }
 
-.postpone-time-scrolls select {
+.postpone-time-column {
   width: 100%;
   height: 92px;
-  padding: 0 14px;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 6px;
   overflow-y: auto;
-  border: 1px solid #f5c7d4;
-  border-radius: 16px;
+  border: 1px solid #ffd6a6;
+  border-radius: 22px;
   outline: 0;
-  color: var(--ink);
-  background: #fff8fa;
+  background: #fffaf3;
+  scrollbar-width: thin;
+  scrollbar-color: #ffc77c transparent;
+}
+
+.postpone-time-column button {
+  min-height: 28px;
+  border-radius: 999px;
+  color: #9a5a22;
+  background: transparent;
   font-size: 18px;
   font-weight: 950;
+}
+
+.postpone-time-column button.active {
+  color: #fff;
+  background: #ff7a21;
+}
+
+.postpone-time-column button:hover {
+  background: #fff1d2;
+}
+
+.postpone-time-column button.active:hover {
+  background: #ff7a21;
 }
 
 .detail-summary {
@@ -8338,9 +8396,11 @@ body {
   gap: 14px;
   margin: 0;
   padding: 18px 32px 24px;
+  border: 1px solid #ffd6a6;
+  border-bottom: 0;
   border-radius: 30px 30px 0 0;
   background: #fff;
-  box-shadow: 0 -26px 70px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 -26px 70px rgba(138, 78, 15, 0.18);
   transform: translateX(-50%);
 }
 
@@ -8349,7 +8409,7 @@ body {
   height: 6px;
   justify-self: center;
   border-radius: 999px;
-  background: #dedee2;
+  background: #ffd6a6;
 }
 
 .date-picker-wheels {
@@ -8368,7 +8428,8 @@ body {
   top: 50%;
   height: 40px;
   border-radius: 20px;
-  background: #f3f3f5;
+  border: 1px solid #ffd6a6;
+  background: #fffaf3;
   transform: translateY(-50%);
   pointer-events: none;
 }
@@ -8391,7 +8452,7 @@ body {
 .date-picker-wheel button {
   height: 28px;
   border-radius: 14px;
-  color: #b7b7b7;
+  color: #b98145;
   font-size: 17px;
   font-weight: 650;
   letter-spacing: 0;
@@ -8414,7 +8475,7 @@ body {
 }
 
 .date-picker-wheel button.active {
-  color: #252525;
+  color: #ff6d1f;
   opacity: 1;
   font-size: 22px;
   font-weight: 850;
@@ -8428,11 +8489,16 @@ body {
 
 .date-picker-actions button {
   min-height: 48px;
-  border-radius: 12px;
-  background: #f4f4f6;
-  color: #111;
+  border-radius: 999px;
+  background: #fff1d2;
+  color: #9a5a22;
   font-size: 16px;
   font-weight: 900;
+}
+
+.date-picker-actions button:last-child {
+  color: #fff;
+  background: #ff7a21;
 }
 
 @media (max-width: 560px) {
