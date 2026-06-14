@@ -813,22 +813,17 @@ export default function App() {
               </button>
             </div>
             <div className="notification-time-control">
-              <label className="notification-time-field">
-                <span>현재 시간</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]{2}:[0-9]{2}"
-                  maxLength={5}
+              <div className="notification-time-picker-wrap">
+                <PostponeTimePicker
+                  label="현재 시간"
                   value={notificationDemoTime}
-                  onChange={(event) => {
-                    setNotificationDemoTime(formatEditableTimeValue(event.target.value));
+                  onChange={(time) => {
+                    setNotificationDemoTime(time);
                     setNotificationTimeEdited(true);
                   }}
-                  onBlur={(event) => setNotificationDemoTime(normalizeEditableTimeValue(event.target.value))}
                 />
                 <small>{notificationDemoDate} 기준</small>
-              </label>
+              </div>
               <button
                 type="button"
                 onClick={() => {
@@ -2305,29 +2300,40 @@ function toFixedScheduleMinutes(time) {
 }
 
 function PostponeTimePicker({ label, value, onChange }) {
+  const [isOpen, setOpen] = useState(false);
   const [hour, minute] = normalizeEditableTimeValue(value).split(":");
   const hours = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
   const minutes = ["00", "10", "20", "30", "40", "50"];
 
   return (
-    <div className="postpone-time-picker">
+    <div
+      className={["postpone-time-picker", isOpen ? "open" : ""].filter(Boolean).join(" ")}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
       <span>{label}</span>
-      <div className="postpone-time-scrolls" aria-label={label}>
-        <select size={3} value={hour} onChange={(event) => onChange(`${event.target.value}:${minute}`)} aria-label="시">
-          {hours.map((option) => (
-            <option key={option} value={option}>
-              {option}시
-            </option>
-          ))}
-        </select>
-        <select size={3} value={minute} onChange={(event) => onChange(`${hour}:${event.target.value}`)} aria-label="분">
-          {minutes.map((option) => (
-            <option key={option} value={option}>
-              {option}분
-            </option>
-          ))}
-        </select>
-      </div>
+      <button type="button" className="postpone-time-display" onClick={() => setOpen((current) => !current)} aria-expanded={isOpen}>
+        {hour}:{minute}
+      </button>
+      {isOpen && (
+        <div className="postpone-time-scrolls" aria-label={label}>
+          <select size={3} value={hour} onChange={(event) => onChange(`${event.target.value}:${minute}`)} aria-label="시">
+            {hours.map((option) => (
+              <option key={option} value={option}>
+                {option}시
+              </option>
+            ))}
+          </select>
+          <select size={3} value={minute} onChange={(event) => onChange(`${hour}:${event.target.value}`)} aria-label="분">
+            {minutes.map((option) => (
+              <option key={option} value={option}>
+                {option}분
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   );
 }

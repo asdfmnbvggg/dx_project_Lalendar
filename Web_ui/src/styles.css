@@ -431,11 +431,9 @@ button {
   background: #fffaf4;
 }
 
-.notification-time-field {
+.notification-time-picker-wrap {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
+  gap: 5px;
   min-width: 0;
   padding: 8px 10px;
   border: 1px solid #ffd6a6;
@@ -443,31 +441,40 @@ button {
   background: #fff;
 }
 
-.notification-time-field span {
-  grid-column: 1;
+.notification-time-picker-wrap .postpone-time-picker {
+  gap: 5px;
+  margin-top: 0;
+}
+
+.notification-time-picker-wrap .postpone-time-picker > span {
   color: #9a5a22;
   font-size: 10px;
   font-weight: 900;
 }
 
-.notification-time-field input {
-  grid-column: 2;
-  grid-row: 1 / 3;
-  width: 92px;
+.notification-time-picker-wrap .postpone-time-display {
   height: 38px;
-  padding: 0 2px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  border-radius: 12px;
   color: #ff6d1f;
+  background: #fffaf4;
   font-size: 22px;
-  font-weight: 950;
-  line-height: 1;
-  text-align: center;
 }
 
-.notification-time-field small {
-  grid-column: 1;
+.notification-time-picker-wrap .postpone-time-scrolls {
+  gap: 7px;
+  margin-top: 4px;
+}
+
+.notification-time-picker-wrap .postpone-time-scrolls select {
+  height: 74px;
+  padding: 0 8px;
+  border-color: #ffd6a6;
+  background: #fffaf4;
+  color: #ff6d1f;
+  font-size: 17px;
+}
+
+.notification-time-picker-wrap small {
   color: #a9a0a0;
   font-size: 10px;
   font-weight: 800;
@@ -3501,10 +3508,23 @@ button {
   font-weight: 950;
 }
 
+.postpone-time-display {
+  width: 100%;
+  height: 46px;
+  border: 1px solid #f5c7d4;
+  border-radius: 16px;
+  color: var(--ink);
+  background: #fff8fa;
+  font-size: 18px;
+  font-weight: 950;
+  text-align: center;
+}
+
 .postpone-time-scrolls {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  animation: soft-enter 160ms ease both;
 }
 
 .postpone-time-scrolls select {
