@@ -28,6 +28,40 @@ import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendat
 import { buildRoutineRecommendations } from "./services/routinePredictionService.js";
 
 const ENABLE_ONBOARDING_TASK_GENERATION = false;
+const CALENDAR_SCHEDULE_COLORS = ["#ff7976", "#ffd5d6", "#ffc68f", "#ffb063", "#fff294", "#cbf39d", "#95cff5", "#d3b5f3"];
+const LEGACY_CALENDAR_COLOR_MAP = {
+  "#fb7185": "#ff7976",
+  "#ff9e9e": "#ff7976",
+  "#38bdf8": "#95cff5",
+  "#7bd3ff": "#95cff5",
+  "#a78bfa": "#d3b5f3",
+  "#d7a8ff": "#d3b5f3",
+  "#60a5fa": "#95cff5",
+  "#f59e0b": "#ffb063",
+  "#22d3ee": "#95cff5",
+  "#c084fc": "#d3b5f3",
+  "#34d399": "#cbf39d",
+  "#0ea5e9": "#95cff5",
+  "#7c3aed": "#d3b5f3",
+  "#ff8a2a": "#ffb063",
+  "#f97316": "#ffb063",
+  "#ea580c": "#ffb063",
+  "#fb923c": "#ffb063",
+  "#d97706": "#ffc68f",
+  "#ffb020": "#ffc68f",
+  "#c2410c": "#ff7976",
+  "#ef4444": "#ff7976",
+  "#2563eb": "#95cff5",
+  "#16a34a": "#cbf39d",
+  "#9333ea": "#d3b5f3",
+  "#0f766e": "#cbf39d",
+  "#0891b2": "#95cff5",
+  "#be123c": "#ff7976",
+  "#d4144b": "#ff7976",
+  "#fb4b6f": "#ff7976",
+  "#14b8a6": "#cbf39d",
+  "#8b5cf6": "#d3b5f3",
+};
 const USER_COLORS = {
   sumin: "#8b5cf6",
   jea: "#fb4b6f",
@@ -42,6 +76,8 @@ const OWNER_TO_USER = Object.fromEntries(Object.entries(USER_TO_OWNER).map(([use
 const APP_SESSION_STORAGE_KEY = "lalendarAppSession";
 const DEFAULT_TAB = "schedule";
 const DEFAULT_CALENDAR_VIEW = "month";
+const DEFAULT_ONBOARDING_APPLIANCE_TYPES = [];
+const DEFAULT_ONBOARDING_APPLIANCE_ASSIGNEES = {};
 
 export default function App() {
   const storedUser = readStoredCurrentUser();
@@ -50,7 +86,7 @@ export default function App() {
   const initialVisibleMonth = visibleMonthFromDate(initialSelectedDate);
   const [currentUser, setCurrentUser] = useState(storedUser);
   const [activeCalendarUser, setActiveCalendarUser] = useState(() => findUserById(storedSession?.activeCalendarUserId) || storedUser);
-  const [tasks, setTasks] = useState(() => normalizeTasksForUsers(normalizeGeneratedTaskTitles([...initialTasks, ...buildDefaultCalendarTasks()])));
+  const [tasks, setTasks] = useState(() => normalizeCalendarTaskColors(normalizeTasksForUsers(normalizeGeneratedTaskTitles([...initialTasks, ...buildDefaultCalendarTasks()]))));
   const [memberColors, setMemberColors] = useState(() => ({
     ...Object.fromEntries(members.map((member) => [member.id, member.color])),
     ...USER_COLORS,
@@ -65,6 +101,9 @@ export default function App() {
     cleaningDay: "일요일",
     returnHomeTime: "19:30",
   });
+  const [onboardingSetup, setOnboardingSetup] = useState(() =>
+    storedSession?.isOnboardingComplete ? normalizeOnboardingSetup(storedSession?.onboardingSetup) : createDefaultOnboardingSetup(),
+  );
   const [selectedDate, setSelectedDate] = useState(initialSelectedDate);
   const [visibleMonth, setVisibleMonth] = useState(initialVisibleMonth);
   const [notificationDemoDate, setNotificationDemoDate] = useState(initialSelectedDate);
@@ -92,7 +131,7 @@ export default function App() {
 
   useEffect(() => {
     setTasks((current) => {
-      const normalized = normalizeGeneratedTaskTitles(current);
+      const normalized = normalizeCalendarTaskColors(normalizeGeneratedTaskTitles(current));
       return normalized.some((task, index) => task !== current[index]) ? normalized : current;
     });
   }, []);
@@ -170,9 +209,10 @@ export default function App() {
         activeCalendarUserId: activeCalendarUser?.id || currentUser.id,
         calendarView,
         isOnboardingComplete,
+        onboardingSetup,
       }),
     );
-  }, [activeCalendarUser, activeTab, calendarView, currentUser, isOnboardingComplete, selectedDate, selectedDetailDate, selectedMember, visibleMonth]);
+  }, [activeCalendarUser, activeTab, calendarView, currentUser, isOnboardingComplete, onboardingSetup, selectedDate, selectedDetailDate, selectedMember, visibleMonth]);
 
   const sortedCalendarUsers = useMemo(() => {
     if (!currentUser) return USERS;
@@ -408,6 +448,9 @@ export default function App() {
   }
 
   function completeOnboarding(onboardingSetup = {}) {
+    const nextOnboardingSetup = onboardingSetup.skipGeneration ? createDefaultOnboardingSetup() : normalizeOnboardingSetup(onboardingSetup);
+    setOnboardingSetup(nextOnboardingSetup);
+
     if (onboardingSetup.skipGeneration) {
       setOnboardingComplete(true);
       return;
@@ -432,6 +475,7 @@ export default function App() {
   function selectMainTab(id) {
     setActiveTab(id);
     if (id === "schedule" && !isOnboardingComplete && !hasGeneratedOnboardingTasks) {
+      setOnboardingSetup(createDefaultOnboardingSetup());
       setOnboardingComplete(false);
       setOnboardingStep("intro");
     }
@@ -456,6 +500,7 @@ export default function App() {
     setCalendarView(savedSession?.calendarView || DEFAULT_CALENDAR_VIEW);
     setActiveTab(savedSession?.activeTab || DEFAULT_TAB);
     setOnboardingComplete(Boolean(savedSession?.isOnboardingComplete));
+    setOnboardingSetup(savedSession?.isOnboardingComplete ? normalizeOnboardingSetup(savedSession?.onboardingSetup) : createDefaultOnboardingSetup());
     setOnboardingStep("intro");
     setHasGeneratedOnboardingTasks(false);
     setPanel(null);
@@ -475,6 +520,7 @@ export default function App() {
     setSelectedDetailDate(null);
     setActiveTab(DEFAULT_TAB);
     setOnboardingComplete(false);
+    setOnboardingSetup(createDefaultOnboardingSetup());
     setOnboardingStep("intro");
     setPanel(null);
     setMenuOpen(false);
@@ -756,6 +802,8 @@ export default function App() {
             <OnboardingPage
               step={onboardingStep}
               userName={currentUser?.name || currentUser?.displayName || "00"}
+              onboardingSetup={onboardingSetup}
+              onSetupChange={setOnboardingSetup}
               onNext={() => setOnboardingStep("scheduleInfo")}
               onInfoNext={() => setOnboardingStep("fixedSchedule")}
               onFixedNext={() => setOnboardingStep("googleConfirm")}
@@ -891,6 +939,9 @@ export default function App() {
         onAddTask={(task) => addTask(task)}
         selectedDate={selectedDate}
         selectedMember={selectedMember}
+        currentUser={currentUser}
+        onboardingSetup={onboardingSetup}
+        onOnboardingSetupChange={setOnboardingSetup}
         onOpenComposer={() => openTaskComposer()}
         onLogout={handleLogout}
       />
@@ -1072,20 +1123,20 @@ const mainNavItems = [
 ];
 
 const fixedScheduleColorByTitle = {
-  "회사": "#ff8a2a",
-  "필라테스": "#f59e0b",
-  "공업수학": "#ff8a2a",
-  "정역학": "#f59e0b",
-  "열역학": "#f97316",
-  "유체역학": "#ea580c",
-  "기계제도": "#fb923c",
-  "재료역학": "#d97706",
-  "기계공작법": "#ffb020",
-  "기계공학실험": "#c2410c",
-  "부트 캠프": "#ff8a2a",
-  "삼겹살집 알바": "#f59e0b",
+  "회사": "#ffb063",
+  "필라테스": "#d3b5f3",
+  "공업수학": "#95cff5",
+  "정역학": "#cbf39d",
+  "열역학": "#ffc68f",
+  "유체역학": "#fff294",
+  "기계제도": "#ffd5d6",
+  "재료역학": "#d3b5f3",
+  "기계공작법": "#95cff5",
+  "기계공학실험": "#ff7976",
+  "부트 캠프": "#cbf39d",
+  "삼겹살집 알바": "#ffc68f",
 };
-const fallbackFixedScheduleColors = ["#ff8a2a", "#f59e0b", "#f97316", "#ea580c"];
+const fallbackFixedScheduleColors = CALENDAR_SCHEDULE_COLORS;
 
 const fixedScheduleTemplates = {
   sumin: [
@@ -1208,12 +1259,12 @@ const applianceCalendarAssignees = {
 };
 
 const applianceCalendarColors = {
-  WASHER: "#60a5fa",
-  DRYER: "#c084fc",
-  ROBOT_CLEANER: "#f59e0b",
-  AIR_PURIFIER: "#7c3aed",
-  DISHWASHER: "#0ea5e9",
-  AIR_CONDITIONER: "#22d3ee",
+  WASHER: "#95cff5",
+  DRYER: "#d3b5f3",
+  ROBOT_CLEANER: "#ffb063",
+  AIR_PURIFIER: "#cbf39d",
+  DISHWASHER: "#ffc68f",
+  AIR_CONDITIONER: "#95cff5",
 };
 
 function buildRuleBasedApplianceCalendarTasks(fixedTasks) {
@@ -1466,7 +1517,7 @@ function isFixedScheduleOverlapping(first, second) {
   return firstStart < secondEnd && secondStart < firstEnd;
 }
 
-function OnboardingPage({ step, userName = "00", onNext, onInfoNext, onFixedNext, onPreview, onApplianceNext, onAssigneeNext, onBack, onComplete, onSkip }) {
+function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange, onNext, onInfoNext, onFixedNext, onPreview, onApplianceNext, onAssigneeNext, onBack, onComplete, onSkip }) {
   const isIntro = step === "intro";
   const isScheduleInfo = step === "scheduleInfo";
   const isFixedSchedule = step === "fixedSchedule";
@@ -1474,10 +1525,10 @@ function OnboardingPage({ step, userName = "00", onNext, onInfoNext, onFixedNext
   const isAppliance = step === "appliance";
   const isAssignee = step === "assignee";
   const isReady = step === "ready";
-  const [selectedApplianceTypes, setSelectedApplianceTypes] = useState([]);
-  const [applianceAssignees, setApplianceAssignees] = useState({});
+  const [selectedApplianceTypes, setSelectedApplianceTypes] = useState(() => onboardingSetup?.applianceTypes || []);
+  const [applianceAssignees, setApplianceAssignees] = useState(() => onboardingSetup?.applianceAssignees || {});
   const [selectedImportMethod, setSelectedImportMethod] = useState("");
-  const [fixedSchedules, setFixedSchedules] = useState([]);
+  const [fixedSchedules, setFixedSchedules] = useState(() => onboardingSetup?.fixedSchedules || []);
   const [fixedTitle, setFixedTitle] = useState("");
   const [fixedDay, setFixedDay] = useState("");
   const [fixedStartHour, setFixedStartHour] = useState("");
@@ -1505,6 +1556,7 @@ function OnboardingPage({ step, userName = "00", onNext, onInfoNext, onFixedNext
     ["다빈 에어컨", "air-dabin"],
     ["재혁 에어컨", "air-jaehyeok"],
   ];
+  const assigneeMemberOptions = members.filter((member) => member.id !== "all");
   const selectedAppliances = isAppliance || isAssignee ? onboardingApplianceOptions : onboardingApplianceOptions.filter(([, type]) => selectedApplianceTypes.includes(type));
   const assignedApplianceTypes = useMemo(
     () => onboardingApplianceOptions.map(([, type]) => type).filter((type) => Boolean(applianceAssignees[type])),
@@ -1568,11 +1620,20 @@ function OnboardingPage({ step, userName = "00", onNext, onInfoNext, onFixedNext
         onComplete({
           applianceTypes: assignedApplianceTypes,
           applianceAssignees,
+          fixedSchedules,
         }),
       5000,
     );
     return () => window.clearTimeout(timeout);
-  }, [applianceAssignees, assignedApplianceTypes, isReady, onComplete]);
+  }, [applianceAssignees, assignedApplianceTypes, fixedSchedules, isReady, onComplete]);
+
+  useEffect(() => {
+    onSetupChange?.({
+      applianceTypes: selectedApplianceTypes,
+      applianceAssignees,
+      fixedSchedules,
+    });
+  }, [applianceAssignees, fixedSchedules, onSetupChange, selectedApplianceTypes]);
 
   function toggleApplianceType(type) {
     setSelectedApplianceTypes((current) => {
@@ -1875,28 +1936,17 @@ function OnboardingPage({ step, userName = "00", onNext, onInfoNext, onFixedNext
 
             <div className="onboarding-assignee-list" aria-label="가전별 담당자 지정">
               {selectedAppliances.map(([label, type]) => (
-                <label className={`onboarding-assignee-row ${applianceAssignees[type] ? "assigned" : ""}`} key={type}>
+                <div className={`onboarding-assignee-row ${applianceAssignees[type] ? "assigned" : ""}`} key={type}>
                   <span className={`onboarding-assignee-icon ${type}`} aria-hidden="true">
                     <i />
                   </span>
                   <strong>{label}</strong>
-                  <select
-                    className={applianceAssignees[type] ? "assigned" : ""}
+                  <OnboardingAssigneeSelect
                     value={applianceAssignees[type] || ""}
-                    onChange={(event) => changeApplianceAssignee(type, event.target.value)}
-                  >
-                    <option value="" disabled>
-                      담당자를 선택해 주세요.
-                    </option>
-                    {members
-                      .filter((member) => member.id !== "all")
-                      .map((member) => (
-                        <option key={member.id} value={member.id}>
-                          {member.name}
-                        </option>
-                      ))}
-                  </select>
-                </label>
+                    options={assigneeMemberOptions}
+                    onChange={(value) => changeApplianceAssignee(type, value)}
+                  />
+                </div>
               ))}
             </div>
 
@@ -1948,28 +1998,17 @@ function OnboardingPage({ step, userName = "00", onNext, onInfoNext, onFixedNext
 
             <div className="onboarding-assignee-list" aria-label="가전별 담당자 지정">
               {selectedAppliances.map(([label, type]) => (
-                <label className={`onboarding-assignee-row ${applianceAssignees[type] ? "assigned" : ""}`} key={type}>
+                <div className={`onboarding-assignee-row ${applianceAssignees[type] ? "assigned" : ""}`} key={type}>
                   <span className={`onboarding-assignee-icon ${type}`} aria-hidden="true">
                     <i />
                   </span>
                   <strong>{label}</strong>
-                  <select
-                    className={applianceAssignees[type] ? "assigned" : ""}
+                  <OnboardingAssigneeSelect
                     value={applianceAssignees[type] || ""}
-                    onChange={(event) => changeApplianceAssignee(type, event.target.value)}
-                  >
-                    <option value="" disabled>
-                      담당자를 선택해 주세요.
-                    </option>
-                    {members
-                      .filter((member) => member.id !== "all")
-                      .map((member) => (
-                        <option key={member.id} value={member.id}>
-                          {member.name}
-                        </option>
-                      ))}
-                  </select>
-                </label>
+                    options={assigneeMemberOptions}
+                    onChange={(value) => changeApplianceAssignee(type, value)}
+                  />
+                </div>
               ))}
             </div>
 
@@ -2041,6 +2080,54 @@ function renderTypedOnboardingText(text, highlightWord = "") {
       </span>
     );
   });
+}
+
+function OnboardingAssigneeSelect({ value, options, onChange }) {
+  const [isOpen, setOpen] = useState(false);
+  const selectedOption = options.find((option) => option.id === value);
+  const selectedLabel = selectedOption?.name || "담당자 선택";
+
+  function selectOption(nextValue) {
+    onChange(nextValue);
+    setOpen(false);
+  }
+
+  return (
+    <div
+      className={`onboarding-assignee-select ${value ? "assigned" : ""} ${isOpen ? "open" : ""}`}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setOpen(false);
+        }
+      }}
+    >
+      <button type="button" aria-haspopup="listbox" aria-expanded={isOpen} onClick={() => setOpen((current) => !current)}>
+        <span>{selectedLabel}</span>
+        <ChevronDown size={12} strokeWidth={2.8} />
+      </button>
+      {isOpen && (
+        <div className="onboarding-assignee-options" role="listbox">
+          {options.map((option) => {
+            const isSelected = option.id === value;
+            return (
+              <button
+                type="button"
+                key={option.id}
+                role="option"
+                aria-selected={isSelected}
+                className={isSelected ? "selected" : ""}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => selectOption(option.id)}
+              >
+                <span>{option.name}</span>
+                {isSelected && <i aria-hidden="true" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function HomePage({ onOpenNotifications }) {
@@ -2594,6 +2681,43 @@ function getTodayKey() {
 
 function normalizeGeneratedTaskTitles(tasks) {
   return tasks.map(normalizeGeneratedTaskTitle);
+}
+
+function normalizeCalendarTaskColors(tasks) {
+  return tasks.map((task, index) => {
+    const nextColor = normalizeCalendarColor(task.color, index);
+    return nextColor && nextColor !== task.color ? { ...task, color: nextColor } : task;
+  });
+}
+
+function normalizeCalendarColor(color, index = 0) {
+  if (!color) return "";
+  const normalizedColor = String(color).trim().toLowerCase();
+  const paletteMatch = CALENDAR_SCHEDULE_COLORS.find((option) => option.toLowerCase() === normalizedColor);
+  if (paletteMatch) return paletteMatch;
+  return LEGACY_CALENDAR_COLOR_MAP[normalizedColor] || CALENDAR_SCHEDULE_COLORS[index % CALENDAR_SCHEDULE_COLORS.length];
+}
+
+function createDefaultOnboardingSetup() {
+  return {
+    applianceTypes: DEFAULT_ONBOARDING_APPLIANCE_TYPES,
+    applianceAssignees: DEFAULT_ONBOARDING_APPLIANCE_ASSIGNEES,
+    fixedSchedules: [],
+  };
+}
+
+function normalizeOnboardingSetup(setup = {}) {
+  const fallback = createDefaultOnboardingSetup();
+  const applianceTypes = Array.isArray(setup.applianceTypes) ? setup.applianceTypes : fallback.applianceTypes;
+  const applianceAssignees =
+    setup.applianceAssignees && typeof setup.applianceAssignees === "object" ? { ...fallback.applianceAssignees, ...setup.applianceAssignees } : fallback.applianceAssignees;
+  const fixedSchedules = Array.isArray(setup.fixedSchedules) ? setup.fixedSchedules : fallback.fixedSchedules;
+
+  return {
+    applianceTypes,
+    applianceAssignees,
+    fixedSchedules,
+  };
 }
 
 function normalizeGeneratedTaskTitle(task) {

@@ -213,7 +213,7 @@ const demoCalendarTasks = [
     repeat: "09:30-10:00",
     source: "manual",
     displayType: "fixed",
-    color: "#fb7185",
+    color: "#ff7976",
     sortOrder: 1,
   },
   {
@@ -227,7 +227,7 @@ const demoCalendarTasks = [
     repeat: "13:00-14:00",
     source: "manual",
     displayType: "fixed",
-    color: "#38bdf8",
+    color: "#95cff5",
     sortOrder: 2,
   },
   {
@@ -241,7 +241,7 @@ const demoCalendarTasks = [
     repeat: "19:30-20:30",
     source: "manual",
     displayType: "fixed",
-    color: "#a78bfa",
+    color: "#d3b5f3",
     sortOrder: 3,
   },
   {
@@ -258,7 +258,7 @@ const demoCalendarTasks = [
     applianceType: "WASHER",
     applianceMode: "표준",
     currentMode: "표준",
-    color: "#60a5fa",
+    color: "#95cff5",
     sortOrder: 4,
   },
   {
@@ -275,7 +275,7 @@ const demoCalendarTasks = [
     applianceType: "ROBOT_CLEANER",
     applianceMode: "전체 청소",
     currentMode: "전체 청소",
-    color: "#f59e0b",
+    color: "#ffb063",
     sortOrder: 5,
   },
   {
@@ -292,7 +292,7 @@ const demoCalendarTasks = [
     applianceType: "AIR_CONDITIONER",
     applianceMode: "냉방",
     currentMode: "냉방",
-    color: "#22d3ee",
+    color: "#95cff5",
     sortOrder: 6,
   },
   {
@@ -306,7 +306,7 @@ const demoCalendarTasks = [
     repeat: "10:30-11:30",
     source: "manual",
     displayType: "fixed",
-    color: "#fb7185",
+    color: "#ff7976",
     sortOrder: 1,
   },
   {
@@ -323,7 +323,7 @@ const demoCalendarTasks = [
     applianceType: "DRYER",
     applianceMode: "섬세",
     currentMode: "섬세",
-    color: "#c084fc",
+    color: "#d3b5f3",
     sortOrder: 2,
   },
   {
@@ -337,7 +337,7 @@ const demoCalendarTasks = [
     repeat: "17:30-18:20",
     source: "manual",
     displayType: "fixed",
-    color: "#34d399",
+    color: "#cbf39d",
     sortOrder: 3,
   },
   {
@@ -354,7 +354,7 @@ const demoCalendarTasks = [
     applianceType: "DISHWASHER",
     applianceMode: "에코",
     currentMode: "에코",
-    color: "#0ea5e9",
+    color: "#95cff5",
     sortOrder: 4,
   },
   {
@@ -368,7 +368,7 @@ const demoCalendarTasks = [
     repeat: "12:00-13:30",
     source: "manual",
     displayType: "fixed",
-    color: "#a78bfa",
+    color: "#d3b5f3",
     sortOrder: 1,
   },
   {
@@ -385,7 +385,7 @@ const demoCalendarTasks = [
     applianceType: "REFRIGERATOR",
     applianceMode: "절전 모드",
     currentMode: "절전 모드",
-    color: "#38bdf8",
+    color: "#95cff5",
     sortOrder: 2,
   },
   {
@@ -399,7 +399,7 @@ const demoCalendarTasks = [
     repeat: "20:00-20:40",
     source: "manual",
     displayType: "fixed",
-    color: "#fb7185",
+    color: "#ff7976",
     sortOrder: 1,
   },
   {
@@ -416,7 +416,7 @@ const demoCalendarTasks = [
     applianceType: "AIR_PURIFIER",
     applianceMode: "강력",
     currentMode: "강력",
-    color: "#7c3aed",
+    color: "#d3b5f3",
     sortOrder: 2,
   },
 ];

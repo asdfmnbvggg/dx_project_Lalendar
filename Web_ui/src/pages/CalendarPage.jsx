@@ -1,4 +1,4 @@
-﻿import { ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Repeat2, Search, Settings, Trash2, X } from "lucide-react";
+﻿import { CalendarDays, ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Repeat2, Search, Settings, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Bell, CheckCircle2, ChevronDown, Clock3, Home, Info, Power, Shirt, SlidersHorizontal, Thermometer, WashingMachine, Waves } from "lucide-react";
 import { dateKey, members } from "../data.js";
@@ -95,17 +95,17 @@ const applianceTypeLabel = {
 };
 
 const applianceTypeColor = {
-  WASHER: "#60a5fa",
-  DRYER: "#c084fc",
-  NATURAL_DRY: "#38bdf8",
-  DEHUMIDIFIER: "#34d399",
-  AIR_CONDITIONER: "#22d3ee",
-  AIR_PURIFIER: "#7c3aed",
-  ROBOT_CLEANER: "#f59e0b",
-  DISHWASHER: "#0ea5e9",
-  REFRIGERATOR: "#38bdf8",
-  HUMIDIFIER: "#14b8a6",
-  ETC: "#64748b",
+  WASHER: "#95cff5",
+  DRYER: "#d3b5f3",
+  NATURAL_DRY: "#95cff5",
+  DEHUMIDIFIER: "#cbf39d",
+  AIR_CONDITIONER: "#95cff5",
+  AIR_PURIFIER: "#cbf39d",
+  ROBOT_CLEANER: "#ffb063",
+  DISHWASHER: "#ffc68f",
+  REFRIGERATOR: "#95cff5",
+  HUMIDIFIER: "#cbf39d",
+  ETC: "#ffd5d6",
 };
 
 const applianceImages = {
@@ -206,7 +206,40 @@ const DAILY_TIMETABLE_START_HOUR = 6;
 const DAILY_TIMETABLE_END_HOUR = 24;
 const DAILY_TIMETABLE_START_TIME = "06:00";
 const DAILY_TIMETABLE_END_INPUT_TIME = "23:59";
-const scheduleColorOptions = ["#ff9e9e", "#7bd3ff", "#d7a8ff", "#f7fda6", "#c100ff", "#00bf63", "#ff0aa8", "#0d7ff2"];
+const scheduleColorOptions = ["#ff7976", "#ffd5d6", "#ffc68f", "#ffb063", "#fff294", "#cbf39d", "#95cff5", "#d3b5f3"];
+const legacyScheduleColorMap = {
+  "#fb7185": "#ff7976",
+  "#ff9e9e": "#ff7976",
+  "#38bdf8": "#95cff5",
+  "#7bd3ff": "#95cff5",
+  "#a78bfa": "#d3b5f3",
+  "#d7a8ff": "#d3b5f3",
+  "#60a5fa": "#95cff5",
+  "#f59e0b": "#ffb063",
+  "#22d3ee": "#95cff5",
+  "#c084fc": "#d3b5f3",
+  "#34d399": "#cbf39d",
+  "#0ea5e9": "#95cff5",
+  "#7c3aed": "#d3b5f3",
+  "#ff8a2a": "#ffb063",
+  "#f97316": "#ffb063",
+  "#ea580c": "#ffb063",
+  "#fb923c": "#ffb063",
+  "#d97706": "#ffc68f",
+  "#ffb020": "#ffc68f",
+  "#c2410c": "#ff7976",
+  "#ef4444": "#ff7976",
+  "#2563eb": "#95cff5",
+  "#16a34a": "#cbf39d",
+  "#9333ea": "#d3b5f3",
+  "#0f766e": "#cbf39d",
+  "#0891b2": "#95cff5",
+  "#be123c": "#ff7976",
+  "#d4144b": "#ff7976",
+  "#fb4b6f": "#ff7976",
+  "#14b8a6": "#cbf39d",
+  "#8b5cf6": "#d3b5f3",
+};
 
 const memberImages = {
   jea: jaehyeokImage,
@@ -1220,9 +1253,6 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
     });
   }
 
-  const daysForStart = getDaysInMonth(parsedDate.year, startMonth);
-  const daysForEnd = getDaysInMonth(parsedDate.year, endMonth);
-
   return (
     <section className="page calendar-page daily-add-page">
       <form
@@ -1292,56 +1322,50 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
 
           <div className="daily-date-row">
             <strong>기간</strong>
-            <div className="daily-date-pair">
-              <select value={startMonth} onChange={(event) => {
-                setStartMonth(Number(event.target.value));
+            <DailyCalendarDatePicker
+              label="시작 날짜"
+              value={dateKey(parsedDate.year, startMonth, startDay)}
+              onChange={(value) => {
+                const next = parseDateKey(value);
+                setStartMonth(next.month);
+                setStartDay(next.day);
                 setError("");
-              }}>
-                {monthOptions().map((month) => (
-                  <option key={month} value={month}>{month + "월"}</option>
-                ))}
-              </select>
-              <select value={startDay} onChange={(event) => {
-                setStartDay(Number(event.target.value));
-                setError("");
-              }}>
-                {dayOptions(daysForStart).map((day) => (
-                  <option key={day} value={day}>{day + "일"}</option>
-                ))}
-              </select>
-            </div>
+              }}
+            />
             <span>~</span>
-            <div className="daily-date-pair">
-              <select value={endMonth} onChange={(event) => {
-                setEndMonth(Number(event.target.value));
+            <DailyCalendarDatePicker
+              label="종료 날짜"
+              value={dateKey(parsedDate.year, endMonth, endDay)}
+              onChange={(value) => {
+                const next = parseDateKey(value);
+                setEndMonth(next.month);
+                setEndDay(next.day);
                 setError("");
-              }}>
-                {monthOptions().map((month) => (
-                  <option key={month} value={month}>{month + "월"}</option>
-                ))}
-              </select>
-              <select value={endDay} onChange={(event) => {
-                setEndDay(Number(event.target.value));
-                setError("");
-              }}>
-                {dayOptions(daysForEnd).map((day) => (
-                  <option key={day} value={day}>{day + "일"}</option>
-                ))}
-              </select>
-            </div>
+              }}
+            />
           </div>
 
           <div className={["daily-time-row", isAllDay ? "disabled" : ""].filter(Boolean).join(" ")}>
             <strong>시간</strong>
-            <input type="time" value={startTime} min={DAILY_TIMETABLE_START_TIME} max={DAILY_TIMETABLE_END_INPUT_TIME} disabled={isAllDay} onChange={(event) => {
-              setStartTime(event.target.value);
-              setError("");
-            }} />
+            <DailyScrollTimePicker
+              label="시작 시간"
+              value={startTime}
+              disabled={isAllDay}
+              onChange={(value) => {
+                setStartTime(value);
+                setError("");
+              }}
+            />
             <span>~</span>
-            <input type="time" value={endTime} min={DAILY_TIMETABLE_START_TIME} max={DAILY_TIMETABLE_END_INPUT_TIME} disabled={isAllDay} onChange={(event) => {
-              setEndTime(event.target.value);
-              setError("");
-            }} />
+            <DailyScrollTimePicker
+              label="종료 시간"
+              value={endTime}
+              disabled={isAllDay}
+              onChange={(value) => {
+                setEndTime(value);
+                setError("");
+              }}
+            />
           </div>
         </section>
       </form>
@@ -1355,7 +1379,7 @@ function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
   const colorOptions = scheduleColorOptions;
   const initialTime = getEditableTaskTime(task);
   const [title, setTitle] = useState(task.title || "");
-  const [color, setColor] = useState(task.color || colorOptions[1]);
+  const [color, setColor] = useState(normalizeScheduleColor(task.color) || colorOptions[1]);
   const [isColorOpen, setColorOpen] = useState(false);
   const [isAllDay, setAllDay] = useState(initialTime.isAllDay);
   const [startMonth, setStartMonth] = useState(parsedDate.month);
@@ -1389,9 +1413,6 @@ function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
       repeat: isAllDay ? "하루종일" : startTime + " ~ " + endTime,
     });
   }
-
-  const daysForStart = getDaysInMonth(parsedDate.year, startMonth);
-  const daysForEnd = getDaysInMonth(parsedDate.year, endMonth);
 
   return (
     <section className="page calendar-page daily-add-page daily-edit-page">
@@ -1468,56 +1489,50 @@ function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
 
           <div className="daily-date-row">
             <strong>기간</strong>
-            <div className="daily-date-pair">
-              <select value={startMonth} onChange={(event) => {
-                setStartMonth(Number(event.target.value));
+            <DailyCalendarDatePicker
+              label="시작 날짜"
+              value={dateKey(parsedDate.year, startMonth, startDay)}
+              onChange={(value) => {
+                const next = parseDateKey(value);
+                setStartMonth(next.month);
+                setStartDay(next.day);
                 setError("");
-              }}>
-                {monthOptions().map((month) => (
-                  <option key={month} value={month}>{month + "월"}</option>
-                ))}
-              </select>
-              <select value={startDay} onChange={(event) => {
-                setStartDay(Number(event.target.value));
-                setError("");
-              }}>
-                {dayOptions(daysForStart).map((day) => (
-                  <option key={day} value={day}>{day + "일"}</option>
-                ))}
-              </select>
-            </div>
+              }}
+            />
             <span>~</span>
-            <div className="daily-date-pair">
-              <select value={endMonth} onChange={(event) => {
-                setEndMonth(Number(event.target.value));
+            <DailyCalendarDatePicker
+              label="종료 날짜"
+              value={dateKey(parsedDate.year, endMonth, endDay)}
+              onChange={(value) => {
+                const next = parseDateKey(value);
+                setEndMonth(next.month);
+                setEndDay(next.day);
                 setError("");
-              }}>
-                {monthOptions().map((month) => (
-                  <option key={month} value={month}>{month + "월"}</option>
-                ))}
-              </select>
-              <select value={endDay} onChange={(event) => {
-                setEndDay(Number(event.target.value));
-                setError("");
-              }}>
-                {dayOptions(daysForEnd).map((day) => (
-                  <option key={day} value={day}>{day + "일"}</option>
-                ))}
-              </select>
-            </div>
+              }}
+            />
           </div>
 
           <div className={["daily-time-row", isAllDay ? "disabled" : ""].filter(Boolean).join(" ")}>
             <strong>시간</strong>
-            <input type="time" value={startTime} min={DAILY_TIMETABLE_START_TIME} max={DAILY_TIMETABLE_END_INPUT_TIME} disabled={isAllDay} onChange={(event) => {
-              setStartTime(event.target.value);
-              setError("");
-            }} />
+            <DailyScrollTimePicker
+              label="시작 시간"
+              value={startTime}
+              disabled={isAllDay}
+              onChange={(value) => {
+                setStartTime(value);
+                setError("");
+              }}
+            />
             <span>~</span>
-            <input type="time" value={endTime} min={DAILY_TIMETABLE_START_TIME} max={DAILY_TIMETABLE_END_INPUT_TIME} disabled={isAllDay} onChange={(event) => {
-              setEndTime(event.target.value);
-              setError("");
-            }} />
+            <DailyScrollTimePicker
+              label="종료 시간"
+              value={endTime}
+              disabled={isAllDay}
+              onChange={(value) => {
+                setEndTime(value);
+                setError("");
+              }}
+            />
           </div>
         </section>
       </form>
@@ -1525,12 +1540,165 @@ function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
   );
 }
 
-function monthOptions() {
-  return Array.from({ length: 12 }, (_, index) => index + 1);
+function DailyScrollTimePicker({ label, value, disabled = false, onChange }) {
+  const [isOpen, setOpen] = useState(false);
+  const normalizedValue = normalizeDailyPickerTime(value);
+  const [hour, minute] = normalizedValue.split(":");
+  const hours = Array.from({ length: DAILY_TIMETABLE_END_HOUR - DAILY_TIMETABLE_START_HOUR }, (_, index) =>
+    String(DAILY_TIMETABLE_START_HOUR + index).padStart(2, "0"),
+  );
+  const minutes = buildDailyPickerMinutes(minute);
+
+  return (
+    <div
+      className={["daily-scroll-time-picker", isOpen ? "open" : "", disabled ? "disabled" : ""].filter(Boolean).join(" ")}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
+      <button type="button" className="daily-scroll-time-display" disabled={disabled} onClick={() => setOpen((current) => !current)} aria-expanded={isOpen}>
+        <span>{formatDailyPickerTime(normalizedValue)}</span>
+        <Clock3 size={14} strokeWidth={2.4} />
+      </button>
+      {isOpen && !disabled && (
+        <div className="daily-scroll-time-panel" aria-label={label}>
+          <div className="daily-scroll-time-column" role="listbox" aria-label="시">
+            {hours.map((option) => (
+              <button
+                key={option}
+                type="button"
+                role="option"
+                aria-selected={hour === option}
+                className={hour === option ? "active" : ""}
+                onClick={() => onChange?.(`${option}:${minute}`)}
+              >
+                {Number(option)}시
+              </button>
+            ))}
+          </div>
+          <div className="daily-scroll-time-column" role="listbox" aria-label="분">
+            {minutes.map((option) => (
+              <button
+                key={option}
+                type="button"
+                role="option"
+                aria-selected={minute === option}
+                className={minute === option ? "active" : ""}
+                onClick={() => onChange?.(`${hour}:${option}`)}
+              >
+                {option}분
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
-function dayOptions(daysInMonth) {
-  return Array.from({ length: daysInMonth }, (_, index) => index + 1);
+function DailyCalendarDatePicker({ label, value, onChange }) {
+  const [isOpen, setOpen] = useState(false);
+  const selected = parseDateKey(value);
+  const [viewDate, setViewDate] = useState(() => new Date(selected.year, selected.month - 1, 1));
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth() + 1;
+  const daysInMonth = getDaysInMonth(year, month);
+  const leadingBlanks = new Date(year, month - 1, 1).getDay();
+  const cells = [
+    ...Array.from({ length: leadingBlanks }, (_, index) => ({ key: `blank-${index}`, day: "", date: "" })),
+    ...Array.from({ length: daysInMonth }, (_, index) => {
+      const day = index + 1;
+      const date = dateKey(year, month, day);
+      return { key: date, day, date };
+    }),
+  ];
+
+  useEffect(() => {
+    const next = parseDateKey(value);
+    setViewDate(new Date(next.year, next.month - 1, 1));
+  }, [value]);
+
+  function moveMonth(offset) {
+    setViewDate((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
+  }
+
+  return (
+    <div
+      className={["daily-calendar-date-picker", isOpen ? "open" : ""].filter(Boolean).join(" ")}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
+      <button type="button" className="daily-calendar-date-display" onClick={() => setOpen((current) => !current)} aria-expanded={isOpen}>
+        <span>{formatDailyPickerDate(value)}</span>
+        <CalendarDays size={14} strokeWidth={2.4} />
+      </button>
+      {isOpen && (
+        <div className="daily-calendar-date-panel" aria-label={label}>
+          <div className="daily-calendar-date-head">
+            <button type="button" onClick={() => moveMonth(-1)} aria-label="이전 달">
+              <ChevronLeft size={15} />
+            </button>
+            <strong>
+              {year}년 {month}월
+            </strong>
+            <button type="button" onClick={() => moveMonth(1)} aria-label="다음 달">
+              <ChevronRight size={15} />
+            </button>
+          </div>
+          <div className="daily-calendar-date-weekdays" aria-hidden="true">
+            {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
+              <span key={day}>{day}</span>
+            ))}
+          </div>
+          <div className="daily-calendar-date-grid">
+            {cells.map((cell) =>
+              cell.date ? (
+                <button
+                  key={cell.key}
+                  type="button"
+                  className={cell.date === value ? "active" : ""}
+                  onClick={() => {
+                    onChange?.(cell.date);
+                    setOpen(false);
+                  }}
+                >
+                  {cell.day}
+                </button>
+              ) : (
+                <span key={cell.key} />
+              ),
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function formatDailyPickerDate(value) {
+  const parsed = parseDateKey(value);
+  return `${parsed.month}월 ${parsed.day}일`;
+}
+
+function normalizeDailyPickerTime(value) {
+  const match = String(value || DAILY_TIMETABLE_START_TIME).match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return DAILY_TIMETABLE_START_TIME;
+  const hour = Math.max(DAILY_TIMETABLE_START_HOUR, Math.min(DAILY_TIMETABLE_END_HOUR - 1, Number(match[1])));
+  const minute = Math.max(0, Math.min(59, Number(match[2])));
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function buildDailyPickerMinutes(currentMinute) {
+  return Array.from(new Set([...["00", "10", "20", "30", "40", "50"], currentMinute])).sort((first, second) => Number(first) - Number(second));
+}
+
+function formatDailyPickerTime(value) {
+  const [hourText, minute] = normalizeDailyPickerTime(value).split(":");
+  const hour = Number(hourText);
+  const period = hour < 12 ? "오전" : "오후";
+  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  return `${period} ${String(displayHour).padStart(2, "0")}:${minute}`;
 }
 
 function orderScheduleDates(date, endDate) {
@@ -1581,8 +1749,8 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
     <section className={["daily-timetable-column", variant].filter(Boolean).join(" ")} aria-label={title}>
       <strong>{title}</strong>
       <div className="daily-timetable-track" style={{ "--hour-count": hours.length - 1 }}>
-        {hours.slice(0, -1).map((hour) => (
-          <span className="daily-timetable-line" key={hour} />
+        {hours.slice(0, -1).map((hour, index) => (
+          <span className="daily-timetable-line" key={hour} style={{ "--line-index": index }} />
         ))}
         {blockLayouts.map(({ task, index, range, top, height, lane, laneCount }) => {
           const color = getDailyBlockColor(task, memberColors, variant, index);
@@ -1634,7 +1802,7 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
                       onChooseContextAction?.("edit", task);
                     }}
                   >
-                    편집
+                    수정
                   </button>
                   {variant === "housework" ? (
                     <button
@@ -1727,7 +1895,7 @@ function DailyListColumn({ title, tasks, memberColors, variant, activeTaskId, ac
                         onChooseContextAction?.("edit", task);
                       }}
                     >
-                      편집
+                      수정
                     </button>
                     {variant === "housework" ? (
                       <button
@@ -2317,19 +2485,28 @@ function getDailyBlockTitle(task, variant) {
 }
 
 function getDailyBlockColor(task, memberColors, variant, index) {
-  const personalPalette = ["#ef4444", "#2563eb", "#16a34a", "#9333ea", "#ea580c"];
-  const housePalette = ["#0f766e", "#7c3aed", "#c2410c", "#0891b2", "#be123c"];
+  const personalPalette = scheduleColorOptions;
+  const housePalette = scheduleColorOptions;
   const taskColor = getTaskDisplayColor(task, memberColors, variant);
   if (taskColor) return taskColor;
-  return (variant === "housework" ? housePalette : personalPalette)[index % 5];
+  return (variant === "housework" ? housePalette : personalPalette)[index % scheduleColorOptions.length];
 }
 
 function getTaskDisplayColor(task, memberColors, variant) {
-  if (task.color) return task.color;
+  if (task.color) return normalizeScheduleColor(task.color);
   if (variant === "housework" && task.applianceType && applianceTypeColor[task.applianceType]) {
     return applianceTypeColor[task.applianceType];
   }
-  return memberColors[task.userId] || memberColors[task.owner] || memberColors.all;
+  const memberColor = memberColors[task.userId] || memberColors[task.owner] || memberColors.all;
+  return normalizeScheduleColor(memberColor);
+}
+
+function normalizeScheduleColor(color) {
+  if (!color) return "";
+  const normalizedColor = String(color).trim().toLowerCase();
+  const paletteMatch = scheduleColorOptions.find((option) => option.toLowerCase() === normalizedColor);
+  if (paletteMatch) return paletteMatch;
+  return legacyScheduleColorMap[normalizedColor] || scheduleColorOptions[0];
 }
 
 function getReadableTextColor(backgroundColor) {
@@ -2637,14 +2814,15 @@ function getWeekTaskPlacement(task, dayIndex, taskIndex, hours) {
 }
 
 function getWeekTaskColor(task, memberColors, index) {
-  const palette = ["#fb7185", "#fbbf24", "#60a5fa", "#a78bfa", "#fb8a6b", "#34d399"];
-  if (task.userId && memberColors[task.userId]) return colorMix(memberColors[task.userId], palette[index % palette.length]);
-  if (task.owner && memberColors[task.owner]) return colorMix(memberColors[task.owner], palette[index % palette.length]);
+  const palette = scheduleColorOptions;
+  if (task.color) return normalizeScheduleColor(task.color);
+  if (task.userId && memberColors[task.userId]) return colorMix(normalizeScheduleColor(memberColors[task.userId]), palette[index % palette.length]);
+  if (task.owner && memberColors[task.owner]) return colorMix(normalizeScheduleColor(memberColors[task.owner]), palette[index % palette.length]);
   return palette[index % palette.length];
 }
 
 function colorMix(primary, fallback) {
-  return primary === "#d4144b" ? fallback : primary;
+  return normalizeScheduleColor(primary) || fallback;
 }
 
 function isDabinMember(member) {
