@@ -229,10 +229,12 @@ export default function App() {
   }, [calendarWeatherByDate, currentUser, dismissedAlerts, notificationDemoDate, notificationDemoTime, notificationScopedTasks]);
 
   useEffect(() => {
+    if (activeTab !== "home" && !isNotificationOpen) return;
+
     const currentMinutes = timeValueToMinutes(notificationDemoTime);
     const dueItem = notificationItems.find((item) => {
       const triggerMinutes = getNotificationTriggerMinutes(item);
-      return Number.isFinite(triggerMinutes) && triggerMinutes <= currentMinutes && triggerMinutes >= currentMinutes - 5;
+      return Number.isFinite(triggerMinutes) && triggerMinutes === currentMinutes;
     });
 
     if (!dueItem) return;
@@ -241,9 +243,9 @@ export default function App() {
     if (promptKey === lastNotificationPromptKey) return;
 
     setNotificationPrompt(dueItem);
-    setNotificationOpen(true);
+    setNotificationOpen(false);
     setLastNotificationPromptKey(promptKey);
-  }, [lastNotificationPromptKey, notificationDemoDate, notificationDemoTime, notificationItems]);
+  }, [activeTab, isNotificationOpen, lastNotificationPromptKey, notificationDemoDate, notificationDemoTime, notificationItems]);
   const routineRecommendations = useMemo(
     () =>
       buildRoutineRecommendations({
@@ -919,12 +921,12 @@ export default function App() {
             <button type="button" aria-label="알림 닫기" onClick={() => setNotificationPrompt(null)}>
               ×
             </button>
-            <p>알림</p>
-            <h2 id="notification-execute-title">{notificationPrompt.title}</h2>
+            <p>실행 확인 알림</p>
+            <h2 id="notification-execute-title">{getNotificationExecuteTitle(notificationPrompt)}</h2>
             <span>
-              {getNotificationScheduleLabel(notificationPrompt)}입니다. 지금 실행하시겠습니까?
+              {getNotificationExecuteDescription(notificationPrompt)}
             </span>
-            <small>{notificationPrompt.detail}</small>
+            <small>{getNotificationExecuteMeta(notificationPrompt)}</small>
             <div>
               <button
                 type="button"
@@ -1233,7 +1235,7 @@ function buildRuleBasedApplianceCalendarTasks(fixedTasks) {
         createApplianceCalendarTask({
           id: id++,
           date,
-          title: "식사 시간 공기청정",
+          title: "식사 시간 공기청정기",
           place: "거실",
           owner: applianceCalendarAssignees.AIR_PURIFIER,
           repeat: `${applianceCalendarRules.dinner.startTime}-${applianceCalendarRules.dinner.endTime}`,
@@ -1244,7 +1246,7 @@ function buildRuleBasedApplianceCalendarTasks(fixedTasks) {
         createApplianceCalendarTask({
           id: id++,
           date,
-          title: "식기세척 예약",
+          title: "식기세척기",
           place: "주방",
           owner: applianceCalendarAssignees.DISHWASHER,
           repeat: `${applianceCalendarRules.dishwasher.startTime}-${applianceCalendarRules.dishwasher.endTime}`,
@@ -1260,7 +1262,7 @@ function buildRuleBasedApplianceCalendarTasks(fixedTasks) {
         createApplianceCalendarTask({
           id: id++,
           date,
-          title: "세탁 예약",
+          title: "세탁기",
           place: "세탁실",
           owner: applianceCalendarAssignees.WASHER,
           repeat: `${applianceCalendarRules.washer.startTime}-${applianceCalendarRules.washer.endTime}`,
@@ -1276,7 +1278,7 @@ function buildRuleBasedApplianceCalendarTasks(fixedTasks) {
         createApplianceCalendarTask({
           id: id++,
           date,
-          title: "건조기 예약",
+          title: "건조기",
           place: "세탁실",
           owner: applianceCalendarAssignees.DRYER,
           repeat: `${dryerStart}-${dryerEnd}`,
@@ -2665,11 +2667,11 @@ function buildOnboardingTasks(profile, selectedMember, onboardingSetup = {}) {
 const applianceOnboardingPlans = {
   washer: {
     place: "세탁실",
-    titles: ["세탁 예약", "빨래 시작", "세탁물 정리"],
+    titles: ["세탁기", "빨래 시작", "세탁물 정리"],
   },
   air: {
     place: "거실",
-    titles: ["에어컨 예냉", "실내 온도 조절", "귀가 전 냉방"],
+    titles: ["에어컨 예약 냉방", "실내 온도 조절", "귀가 전 냉방"],
   },
   fridge: {
     place: "주방",
@@ -2677,19 +2679,19 @@ const applianceOnboardingPlans = {
   },
   dryer: {
     place: "세탁실",
-    titles: ["건조 예약", "건조 필터 확인", "습도 맞춤 건조"],
+    titles: ["건조기", "건조 필터 확인", "습도 맞춤 건조"],
   },
   dehumidifier: {
     place: "거실",
-    titles: ["제습기 예약", "습도 맞춤 제습", "실내 습도 확인"],
+    titles: ["제습기", "습도 맞춤 제습", "실내 습도 확인"],
   },
   robot: {
     place: "거실",
-    titles: ["로봇청소 시작", "바닥 청소 예약", "청소 구역 확인"],
+    titles: ["로봇청소기", "바닥 청소 예약", "청소 구역 확인"],
   },
   dishwasher: {
     place: "주방",
-    titles: ["식기세척 예약", "식기세척기 작동", "그릇 정리"],
+    titles: ["식기세척기", "식기세척기 작동", "그릇 정리"],
   },
   "air-purifier": {
     place: "거실",
@@ -2697,19 +2699,19 @@ const applianceOnboardingPlans = {
   },
   "air-living": {
     place: "거실",
-    titles: ["거실 에어컨 예냉", "거실 냉방 예약", "거실 온도 조절"],
+    titles: ["거실 에어컨 예약냉방", "거실 냉방 예약", "거실 온도 조절"],
   },
   "air-sumin": {
     place: "수민 방",
-    titles: ["수민 에어컨 예냉", "수민 방 냉방", "수민 방 온도 조절"],
+    titles: ["수민 에어컨 예약냉방", "수민 방 냉방", "수민 방 온도 조절"],
   },
   "air-dabin": {
     place: "다빈 방",
-    titles: ["다빈 에어컨 예냉", "다빈 방 냉방", "다빈 방 온도 조절"],
+    titles: ["다빈 에어컨 예약냉방", "다빈 방 냉방", "다빈 방 온도 조절"],
   },
   "air-jaehyeok": {
     place: "재혁 방",
-    titles: ["재혁 에어컨 예냉", "재혁 방 냉방", "재혁 방 온도 조절"],
+    titles: ["재혁 에어컨 예약냉방", "재혁 방 냉방", "재혁 방 온도 조절"],
   },
 };
 
@@ -2738,6 +2740,10 @@ function isCalendarHouseworkTask(task) {
   return task.displayType === "appliance" || task.tag === "house" || task.source === "auto";
 }
 
+function isPersonalScheduleTask(task) {
+  return !isCalendarHouseworkTask(task);
+}
+
 function shouldSuggestAutomation(task) {
   return task.source !== "auto" && /(회식|약속|여행|출근|수업|퇴근|귀가)/.test(`${task.title} ${task.place} ${task.repeat}`);
 }
@@ -2747,6 +2753,7 @@ function pendingTasksForNotification(tasks, context = {}) {
   return tasks
     .filter((task) => !task.done)
     .filter((task) => isTaskVisibleOnDate(task, context.date))
+    .filter((task) => !isPersonalScheduleTask(task))
     .filter((task) => {
       const range = getTaskNotificationRange(task);
       if (!range) return true;
@@ -2757,7 +2764,7 @@ function pendingTasksForNotification(tasks, context = {}) {
 }
 
 function buildConditionalNotifications(tasks, context = {}) {
-  const dateTasks = tasks.filter((task) => !task.done && isTaskVisibleOnDate(task, context.date));
+  const dateTasks = tasks.filter((task) => !task.done && isTaskVisibleOnDate(task, context.date) && !isPersonalScheduleTask(task));
   const currentMinutes = timeValueToMinutes(context.time);
   const notifications = [];
   const hasLaundry = dateTasks.some((task) => /세탁|빨래|건조/i.test(`${task.title} ${task.place}`));
@@ -2836,6 +2843,47 @@ function getNotificationScheduleLabel(item = {}) {
   const triggerMinutes = getNotificationTriggerMinutes(item);
   if (!Number.isFinite(triggerMinutes)) return "시간 미정";
   return `${formatTimeValue(triggerMinutes)} 알림 예정`;
+}
+
+function getNotificationExecuteTitle(item = {}) {
+  const title = getNotificationActionName(item);
+  return `${title}${getKoreanObjectParticle(title)} 실행하시겠습니까?`;
+}
+
+function getNotificationExecuteDescription(item = {}) {
+  const range = item.task ? getTaskNotificationRange(item.task) : null;
+  if (range) {
+    return `${formatTimeValue(range.startMinutes)}부터 ${formatTimeValue(range.endMinutes)}까지 진행 예정입니다.`;
+  }
+
+  const triggerMinutes = getNotificationTriggerMinutes(item);
+  if (Number.isFinite(triggerMinutes)) {
+    return `${formatTimeValue(triggerMinutes)}부터 진행 예정입니다.`;
+  }
+
+  return "지금 실행하시겠습니까?";
+}
+
+function getNotificationExecuteMeta(item = {}) {
+  const date = item.date || item.task?.date || "";
+  const place = item.task?.place || item.place || "";
+  return [date, place].filter(Boolean).join(" · ");
+}
+
+function getNotificationActionName(item = {}) {
+  const rawTitle = item.task?.title || item.taskTitle || item.title || "일정";
+  return String(rawTitle)
+    .replace(/\s*예약\b/g, "")
+    .replace(/\s*(진행 중|시작 예정|확인)$/g, "")
+    .trim() || "일정";
+}
+
+function getKoreanObjectParticle(text = "") {
+  const lastChar = [...String(text).trim()].pop();
+  if (!lastChar) return "을";
+  const code = lastChar.charCodeAt(0);
+  if (code < 0xac00 || code > 0xd7a3) return "을";
+  return (code - 0xac00) % 28 === 0 ? "를" : "을";
 }
 
 function getTaskNotificationRange(task = {}) {
