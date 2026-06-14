@@ -320,7 +320,9 @@ export default function App() {
     const task = tasks.find((item) => item.id === id);
     if (!task) return;
     const range = getTaskNotificationRange(task);
-    const nextPerson = sortedCalendarUsers.find((user) => user.id !== getTaskUserId(task)) || sortedCalendarUsers[0];
+    const currentTaskUserId = getTaskUserId(task) || currentUser?.id || activeCalendarUserId;
+    const postponeTargetUsers = getPostponeTargetUsers(sortedCalendarUsers, currentTaskUserId);
+    const nextPerson = postponeTargetUsers[0];
     setNotificationOpen(false);
     setNotificationPrompt(null);
     setPostponePicker({
@@ -328,21 +330,31 @@ export default function App() {
       mode: "date",
       date: addDays(task.date, 1),
       time: range ? formatTimeValue(Math.min(23 * 60 + 59, range.startMinutes + 30)) : "09:00",
-      targetUserId: nextPerson?.id || getTaskUserId(task) || activeCalendarUserId,
+      targetUserId: nextPerson?.id || currentTaskUserId,
     });
   }
 
-  function requestMoveTask(task, date) {
+  function requestMoveTask(task, date, startTime) {
     if (isLaundryTask(task) && isRainyDate(date)) {
-      setPendingPostpone({ task, nextDate: date });
+      setPendingPostpone({ task, nextDate: date, nextTime: startTime });
       return;
     }
 
-    moveTaskDate(task.id, date);
+    moveTaskDate(task.id, date, startTime);
   }
 
-  function moveTaskDate(id, date) {
-    setTasks((current) => current.map((task) => (task.id === id ? { ...task, date, repeat: `${task.repeat} · 미룸` } : task)));
+  function moveTaskDate(id, date, startTime) {
+    setTasks((current) =>
+      current.map((task) =>
+        task.id === id
+          ? {
+              ...task,
+              date,
+              repeat: startTime ? buildPostponedRepeat(task, startTime) : appendPostponeLabel(task.repeat, "미룸"),
+            }
+          : task,
+      ),
+    );
     setSelectedDate(date);
   }
 
@@ -953,7 +965,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => {
-                  moveTaskDate(pendingPostpone.task.id, pendingPostpone.nextDate);
+                  moveTaskDate(pendingPostpone.task.id, pendingPostpone.nextDate, pendingPostpone.nextTime);
                   setPendingPostpone(null);
                 }}
               >
@@ -993,7 +1005,7 @@ export default function App() {
                   value={postponePicker.targetUserId}
                   onChange={(event) => setPostponePicker((current) => ({ ...current, targetUserId: event.target.value }))}
                 >
-                  {sortedCalendarUsers.map((user) => (
+                  {getPostponeTargetUsers(sortedCalendarUsers, getTaskUserId(postponePicker.task) || currentUser?.id).map((user) => (
                     <option key={user.id} value={user.id}>
                       {user.displayName || user.name}
                     </option>
@@ -1002,28 +1014,28 @@ export default function App() {
               </label>
             )}
             {postponePicker.mode === "time" && (
-              <label className="postpone-date-field">
-                새 시간
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]{2}:[0-9]{2}"
-                  maxLength={5}
-                  value={postponePicker.time}
-                  onChange={(event) => setPostponePicker((current) => ({ ...current, time: formatEditableTimeValue(event.target.value) }))}
-                  onBlur={(event) => setPostponePicker((current) => ({ ...current, time: normalizeEditableTimeValue(event.target.value) }))}
-                />
-              </label>
+              <PostponeTimePicker
+                label="새 시간"
+                value={postponePicker.time}
+                onChange={(time) => setPostponePicker((current) => ({ ...current, time }))}
+              />
             )}
             {postponePicker.mode === "date" && (
-              <label className="postpone-date-field">
-                날짜
-                <input
-                  type="date"
-                  value={postponePicker.date}
-                  onChange={(event) => setPostponePicker((current) => ({ ...current, date: event.target.value }))}
+              <div className="postpone-date-time-fields">
+                <label className="postpone-date-field">
+                  날짜
+                  <input
+                    type="date"
+                    value={postponePicker.date}
+                    onChange={(event) => setPostponePicker((current) => ({ ...current, date: event.target.value }))}
+                  />
+                </label>
+                <PostponeTimePicker
+                  label="새 시간"
+                  value={postponePicker.time}
+                  onChange={(time) => setPostponePicker((current) => ({ ...current, time }))}
                 />
-              </label>
+              </div>
             )}
             <div className="confirm-actions">
               <button type="button" onClick={() => setPostponePicker(null)}>
@@ -1037,7 +1049,7 @@ export default function App() {
                   } else if (postponePicker.mode === "time") {
                     moveTaskTime(postponePicker.task.id, postponePicker.time);
                   } else {
-                    requestMoveTask(postponePicker.task, postponePicker.date);
+                    requestMoveTask(postponePicker.task, postponePicker.date, postponePicker.time);
                   }
                   setPostponePicker(null);
                 }}
@@ -2292,6 +2304,34 @@ function toFixedScheduleMinutes(time) {
   return (Number.isFinite(hour) ? hour : 0) * 60 + (Number.isFinite(minute) ? minute : 0);
 }
 
+function PostponeTimePicker({ label, value, onChange }) {
+  const [hour, minute] = normalizeEditableTimeValue(value).split(":");
+  const hours = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
+  const minutes = ["00", "10", "20", "30", "40", "50"];
+
+  return (
+    <div className="postpone-time-picker">
+      <span>{label}</span>
+      <div className="postpone-time-scrolls" aria-label={label}>
+        <select size={3} value={hour} onChange={(event) => onChange(`${event.target.value}:${minute}`)} aria-label="시">
+          {hours.map((option) => (
+            <option key={option} value={option}>
+              {option}시
+            </option>
+          ))}
+        </select>
+        <select size={3} value={minute} onChange={(event) => onChange(`${hour}:${event.target.value}`)} aria-label="분">
+          {minutes.map((option) => (
+            <option key={option} value={option}>
+              {option}분
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 function SimpleTabPage({ icon, title, text }) {
   return (
     <section className="page simple-tab-page">
@@ -2739,6 +2779,11 @@ function appendPostponeLabel(repeat, label) {
   if (!text) return label;
   if (text.includes(label)) return text;
   return `${text} · ${label}`;
+}
+
+function getPostponeTargetUsers(users, currentUserId) {
+  const filtered = users.filter((user) => user.id !== currentUserId);
+  return filtered.length > 0 ? filtered : users;
 }
 
 function timeValueToMinutes(value) {
