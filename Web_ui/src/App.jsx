@@ -795,14 +795,17 @@ export default function App() {
         </nav>
 
         {isNotificationOpen && (
-          <section
-            className="notification-popover"
-            style={{
-              "--notification-x": `${notificationPosition.x}px`,
-              "--notification-y": `${notificationPosition.y}px`,
-            }}
-            aria-label="알림"
-          >
+          <>
+            <div className="notification-popover-backdrop" role="presentation" onClick={() => setNotificationOpen(false)} />
+            <section
+              className="notification-popover"
+              style={{
+                "--notification-x": `${notificationPosition.x}px`,
+                "--notification-y": `${notificationPosition.y}px`,
+              }}
+              aria-label="알림"
+              onClick={(event) => event.stopPropagation()}
+            >
             <div className="notification-popover-head" onPointerDown={startNotificationDrag}>
               <div>
                 <strong>알림</strong>
@@ -853,7 +856,8 @@ export default function App() {
               ))}
               {notificationItems.length === 0 && <p className="notification-popover-empty">표시할 알림이 없습니다.</p>}
             </div>
-          </section>
+            </section>
+          </>
         )}
       </section>
 
