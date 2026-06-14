@@ -276,6 +276,7 @@ export default function CalendarPage({
   onAddTask,
   openComposer,
   onOpenPanel,
+  onOpenNotifications,
   calendarView = "month",
   setCalendarView,
 }) {
@@ -777,7 +778,7 @@ export default function CalendarPage({
             </>
           )}
         </h1>
-        <button className="calendar-notification-button" type="button" aria-label="알림" onClick={() => onOpenPanel?.({ type: "notifications" })}>
+        <button className="calendar-notification-button" type="button" aria-label="알림" onClick={() => onOpenNotifications?.()}>
           <Bell size={19} strokeWidth={2.4} />
         </button>
         <button className="calendar-settings-button" type="button" aria-label="설정" onClick={() => onOpenPanel?.({ type: "settings" })}>

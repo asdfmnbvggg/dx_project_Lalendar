@@ -67,6 +67,9 @@ export default function App() {
   });
   const [selectedDate, setSelectedDate] = useState(initialSelectedDate);
   const [visibleMonth, setVisibleMonth] = useState(initialVisibleMonth);
+  const [notificationDemoDate, setNotificationDemoDate] = useState(initialSelectedDate);
+  const [notificationDemoTime, setNotificationDemoTime] = useState(() => getCurrentTimeValue());
+  const [isNotificationTimeEdited, setNotificationTimeEdited] = useState(false);
   const [selectedDetailDate, setSelectedDetailDate] = useState(isDateKey(storedSession?.selectedDetailDate) ? storedSession.selectedDetailDate : null);
   const [selectedMember, setSelectedMember] = useState(() => storedSession?.selectedMember || storedUser?.id || "jea");
   const [query, setQuery] = useState("");
@@ -75,6 +78,8 @@ export default function App() {
   const [pendingPostpone, setPendingPostpone] = useState(null);
   const [postponePicker, setPostponePicker] = useState(null);
   const [automationPrompt, setAutomationPrompt] = useState(null);
+  const [notificationPrompt, setNotificationPrompt] = useState(null);
+  const [lastNotificationPromptKey, setLastNotificationPromptKey] = useState("");
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
   const [panel, setPanel] = useState(null);
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -139,6 +144,19 @@ export default function App() {
   }, [currentUser]);
 
   useEffect(() => {
+    setNotificationDemoDate(selectedDate);
+  }, [selectedDate]);
+
+  useEffect(() => {
+    if (isNotificationTimeEdited) return;
+
+    const syncCurrentTime = () => setNotificationDemoTime(getCurrentTimeValue());
+    syncCurrentTime();
+    const timerId = window.setInterval(syncCurrentTime, 1000);
+    return () => window.clearInterval(timerId);
+  }, [isNotificationTimeEdited]);
+
+  useEffect(() => {
     if (!currentUser || typeof localStorage === "undefined") return;
 
     localStorage.setItem(
@@ -162,6 +180,7 @@ export default function App() {
   }, [currentUser]);
   const activeCalendarUserId = activeCalendarUser?.id || currentUser?.id || "";
   const scopedTasks = tasks.filter((task) => !activeCalendarUserId || getTaskUserId(task) === activeCalendarUserId);
+  const notificationScopedTasks = tasks.filter((task) => !currentUser?.id || getTaskUserId(task) === currentUser.id);
   const selectedTasks = sortTasks(
     scopedTasks
       .filter((task) => isTaskVisibleOnDate(task, selectedDate))
@@ -184,19 +203,47 @@ export default function App() {
     }, {});
   }, [tasks]);
   const notificationItems = useMemo(() => {
-    const automationItems = automationAlerts
+    const notificationContext = {
+      date: notificationDemoDate,
+      time: notificationDemoTime,
+      userName: currentUser?.displayName || currentUser?.name || "사용자",
+      weather: calendarWeatherByDate[notificationDemoDate] || weatherByDate[notificationDemoDate],
+    };
+    const automationItems = buildConditionalNotifications(notificationScopedTasks, notificationContext)
       .filter((alert) => !dismissedAlerts.includes(alert.id))
       .map((alert) => ({ ...alert, type: "automation" }));
-    const taskItems = pendingTasksForNotification(scopedTasks).map((task) => ({
+    const savedAutomationItems = automationAlerts
+      .filter((alert) => alert.date === notificationDemoDate)
+      .filter((alert) => !dismissedAlerts.includes(alert.id))
+      .map((alert) => ({ ...alert, type: "automation" }));
+    const taskItems = pendingTasksForNotification(notificationScopedTasks, notificationContext).map((task) => ({
       id: `task-${task.id}`,
       type: "task",
       task,
-      title: task.title,
-      detail: `${task.date} · ${task.place} · ${task.repeat}`,
+      title: buildTaskNotificationTitle(task, notificationContext),
+      detail: buildTaskNotificationDetail(task, notificationContext),
+      scheduledTime: getTaskNotificationScheduledTime(task),
       date: task.date,
     }));
-    return [...automationItems, ...taskItems].slice(0, 8);
-  }, [dismissedAlerts, scopedTasks]);
+    return [...automationItems, ...savedAutomationItems, ...taskItems].slice(0, 8);
+  }, [calendarWeatherByDate, currentUser, dismissedAlerts, notificationDemoDate, notificationDemoTime, notificationScopedTasks]);
+
+  useEffect(() => {
+    const currentMinutes = timeValueToMinutes(notificationDemoTime);
+    const dueItem = notificationItems.find((item) => {
+      const triggerMinutes = getNotificationTriggerMinutes(item);
+      return Number.isFinite(triggerMinutes) && triggerMinutes <= currentMinutes && triggerMinutes >= currentMinutes - 5;
+    });
+
+    if (!dueItem) return;
+
+    const promptKey = `${dueItem.id}-${notificationDemoDate}-${notificationDemoTime}`;
+    if (promptKey === lastNotificationPromptKey) return;
+
+    setNotificationPrompt(dueItem);
+    setNotificationOpen(true);
+    setLastNotificationPromptKey(promptKey);
+  }, [lastNotificationPromptKey, notificationDemoDate, notificationDemoTime, notificationItems]);
   const routineRecommendations = useMemo(
     () =>
       buildRoutineRecommendations({
@@ -352,6 +399,9 @@ export default function App() {
     setActiveCalendarUser(nextCalendarUser);
     setSelectedMember(savedSession?.selectedMember || nextCalendarUser.id);
     setSelectedDate(nextSelectedDate);
+    setNotificationDemoDate(nextSelectedDate);
+    setNotificationDemoTime(getCurrentTimeValue());
+    setNotificationTimeEdited(false);
     setSelectedDetailDate(isDateKey(savedSession?.selectedDetailDate) ? savedSession.selectedDetailDate : null);
     setVisibleMonth(nextVisibleMonth);
     setCalendarView(savedSession?.calendarView || DEFAULT_CALENDAR_VIEW);
@@ -390,6 +440,13 @@ export default function App() {
     if (!user) return;
     setActiveCalendarUser(user);
     setSelectedMember(user.id);
+  }
+
+  function openNotificationPopover() {
+    setNotificationOpen(true);
+    setCalendarMenuOpen(false);
+    setMenuOpen(false);
+    setPanel(null);
   }
 
   function openTaskComposer(options = {}) {
@@ -533,6 +590,7 @@ export default function App() {
     onAddTask: addTask,
     openComposer: openTaskComposer,
     onOpenPanel: setPanel,
+    onOpenNotifications: openNotificationPopover,
     calendarView,
     setCalendarView,
   };
@@ -637,7 +695,7 @@ export default function App() {
         </header>
         )}
 
-        {activeTab === "home" && <HomePage onOpenNotifications={() => setNotificationOpen(true)} />}
+        {activeTab === "home" && <HomePage onOpenNotifications={openNotificationPopover} />}
         {activeTab === "schedule" && !isOnboardingComplete && (
           <div className="onboarding-live-stage">
             <div className="onboarding-calendar-backdrop" aria-hidden="true">
@@ -698,15 +756,44 @@ export default function App() {
             <div className="notification-popover-head" onPointerDown={startNotificationDrag}>
               <div>
                 <strong>알림</strong>
-                <span>{notificationItems.length}개</span>
+                <span>{currentUser?.displayName || currentUser?.name || "사용자"} · {notificationItems.length}개</span>
               </div>
               <button type="button" aria-label="알림 닫기" onClick={() => setNotificationOpen(false)}>
                 닫기
               </button>
             </div>
+            <div className="notification-time-control">
+              <label className="notification-time-field">
+                <span>현재 시간</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]{2}:[0-9]{2}"
+                  maxLength={5}
+                  value={notificationDemoTime}
+                  onChange={(event) => {
+                    setNotificationDemoTime(formatEditableTimeValue(event.target.value));
+                    setNotificationTimeEdited(true);
+                  }}
+                  onBlur={(event) => setNotificationDemoTime(normalizeEditableTimeValue(event.target.value))}
+                />
+                <small>{notificationDemoDate} 기준</small>
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  setNotificationDemoDate(selectedDate);
+                  setNotificationDemoTime(getCurrentTimeValue());
+                  setNotificationTimeEdited(false);
+                }}
+              >
+                지금
+              </button>
+            </div>
             <div className="notification-popover-list">
               {notificationItems.map((item) => (
                 <article className="notification-popover-item" key={item.id}>
+                  <span className="notification-schedule-time">{getNotificationScheduleLabel(item)}</span>
                   <strong>{item.title}</strong>
                   <p>{item.detail}</p>
                   <div>
@@ -770,6 +857,42 @@ export default function App() {
                 나중에
               </button>
               <button type="button" onClick={() => applyScheduleAutomation(automationPrompt)}>
+                실행하기
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {notificationPrompt && (
+        <div className="notification-execute-backdrop" role="presentation">
+          <section className="notification-execute-dialog" role="dialog" aria-modal="true" aria-labelledby="notification-execute-title">
+            <button type="button" aria-label="알림 닫기" onClick={() => setNotificationPrompt(null)}>
+              ×
+            </button>
+            <p>알림</p>
+            <h2 id="notification-execute-title">{notificationPrompt.title}</h2>
+            <span>
+              {getNotificationScheduleLabel(notificationPrompt)}입니다. 지금 실행하시겠습니까?
+            </span>
+            <small>{notificationPrompt.detail}</small>
+            <div>
+              <button
+                type="button"
+                onClick={() => {
+                  postponeNotification(notificationPrompt);
+                  setNotificationPrompt(null);
+                }}
+              >
+                미루기
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  executeNotification(notificationPrompt);
+                  setNotificationPrompt(null);
+                }}
+              >
                 실행하기
               </button>
             </div>
@@ -2384,11 +2507,160 @@ function shouldSuggestAutomation(task) {
   return task.source !== "auto" && /(회식|약속|여행|출근|수업|퇴근|귀가)/.test(`${task.title} ${task.place} ${task.repeat}`);
 }
 
-function pendingTasksForNotification(tasks) {
+function pendingTasksForNotification(tasks, context = {}) {
+  const currentMinutes = timeValueToMinutes(context.time);
   return tasks
     .filter((task) => !task.done)
+    .filter((task) => isTaskVisibleOnDate(task, context.date))
+    .filter((task) => {
+      const range = getTaskNotificationRange(task);
+      if (!range) return true;
+      return range.startMinutes <= currentMinutes + 30 && range.endMinutes >= currentMinutes - 10;
+    })
     .sort(taskSorter)
-    .slice(0, 4);
+    .slice(0, 5);
+}
+
+function buildConditionalNotifications(tasks, context = {}) {
+  const dateTasks = tasks.filter((task) => !task.done && isTaskVisibleOnDate(task, context.date));
+  const currentMinutes = timeValueToMinutes(context.time);
+  const notifications = [];
+  const hasLaundry = dateTasks.some((task) => /세탁|빨래|건조/i.test(`${task.title} ${task.place}`));
+  const hasRain = isRainyWeatherLike(context.weather);
+  const soonEndingTask = dateTasks.find((task) => {
+    const range = getTaskNotificationRange(task);
+    return range && range.endMinutes >= currentMinutes && range.endMinutes <= currentMinutes + 60;
+  });
+
+  if (hasRain && hasLaundry) {
+    notifications.push({
+      id: `condition-rain-laundry-${context.date}`,
+      date: context.date,
+      title: "비 예보로 세탁 일정을 확인해 주세요",
+      detail: `${context.userName}님의 ${context.date} 세탁/건조 일정이 날씨 영향을 받을 수 있어요.`,
+      taskTitle: "세탁 일정 날씨 맞춤 조정",
+      place: "세탁실",
+      applianceType: "WASHER",
+      scheduledTime: context.time,
+    });
+  }
+
+  if (soonEndingTask && /(회사|부트\s*캠프|수업|알바|필라테스|공업|정역학|열역학|유체|재료|기계)/i.test(soonEndingTask.title)) {
+    notifications.push({
+      id: `condition-after-schedule-${soonEndingTask.id}`,
+      date: context.date,
+      title: `${soonEndingTask.title} 후 집안 환경을 준비할까요?`,
+      detail: `${formatNotificationTimeRange(soonEndingTask)} 일정에 맞춰 에어컨과 공기청정기 자동화를 시연할 수 있어요.`,
+      taskTitle: "귀가 전 실내 환경 자동화",
+      place: "LG ThinQ",
+      applianceType: "AIR_CONDITIONER",
+      scheduledTime: formatTimeValue(getTaskNotificationRange(soonEndingTask).endMinutes),
+    });
+  }
+
+  return notifications;
+}
+
+function buildTaskNotificationTitle(task, context = {}) {
+  const range = getTaskNotificationRange(task);
+  const currentMinutes = timeValueToMinutes(context.time);
+
+  if (range && currentMinutes >= range.startMinutes && currentMinutes <= range.endMinutes) {
+    return `${task.title} 진행 중`;
+  }
+
+  if (range && range.startMinutes > currentMinutes) {
+    return `${task.title} 시작 예정`;
+  }
+
+  return `${task.title} 확인`;
+}
+
+function buildTaskNotificationDetail(task, context = {}) {
+  const rangeText = formatNotificationTimeRange(task);
+  const place = task.place || "장소 미정";
+  return `${context.date} · ${rangeText} · ${place}`;
+}
+
+function getTaskNotificationScheduledTime(task = {}) {
+  const range = getTaskNotificationRange(task);
+  if (!range) return "";
+  return formatTimeValue(range.startMinutes);
+}
+
+function getNotificationTriggerMinutes(item = {}) {
+  if (item.scheduledTime) return timeValueToMinutes(item.scheduledTime);
+  if (item.task) {
+    const range = getTaskNotificationRange(item.task);
+    return range?.startMinutes;
+  }
+  return undefined;
+}
+
+function getNotificationScheduleLabel(item = {}) {
+  const triggerMinutes = getNotificationTriggerMinutes(item);
+  if (!Number.isFinite(triggerMinutes)) return "시간 미정";
+  return `${formatTimeValue(triggerMinutes)} 알림 예정`;
+}
+
+function getTaskNotificationRange(task = {}) {
+  const text = String(task.repeat || "");
+  const rangeMatch = text.match(/\b(\d{1,2}):(\d{2})\s*(?:~|-|to)\s*(\d{1,2}):(\d{2})\b/i);
+  if (rangeMatch) {
+    return {
+      startMinutes: Number(rangeMatch[1]) * 60 + Number(rangeMatch[2]),
+      endMinutes: Number(rangeMatch[3]) * 60 + Number(rangeMatch[4]),
+    };
+  }
+
+  const clockMatch = text.match(/\b(\d{1,2}):(\d{2})\b/);
+  if (clockMatch) {
+    const startMinutes = Number(clockMatch[1]) * 60 + Number(clockMatch[2]);
+    return { startMinutes, endMinutes: startMinutes + 60 };
+  }
+
+  return null;
+}
+
+function formatNotificationTimeRange(task = {}) {
+  const range = getTaskNotificationRange(task);
+  if (!range) return task.repeat || "시간 미정";
+  return `${formatTimeValue(range.startMinutes)}-${formatTimeValue(range.endMinutes)}`;
+}
+
+function timeValueToMinutes(value) {
+  const match = String(value || "").match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return 0;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+function formatEditableTimeValue(value) {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}:${digits.slice(2)}`;
+}
+
+function normalizeEditableTimeValue(value) {
+  const digits = String(value || "").replace(/\D/g, "").padEnd(4, "0").slice(0, 4);
+  const hour = Math.min(23, Number(digits.slice(0, 2)) || 0);
+  const minute = Math.min(59, Number(digits.slice(2, 4)) || 0);
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function formatTimeValue(minutes) {
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function getCurrentTimeValue() {
+  const now = new Date();
+  return formatTimeValue(now.getHours() * 60 + now.getMinutes());
+}
+
+function isRainyWeatherLike(weather = {}) {
+  const text = `${weather.condition || ""} ${weather.label || ""} ${weather.sky || ""} ${weather.pty || ""} ${weather.icon || ""}`;
+  return /rain|storm|비|소나기|우천|강수|뇌우/i.test(text);
 }
 
 function readStoredCurrentUser() {
