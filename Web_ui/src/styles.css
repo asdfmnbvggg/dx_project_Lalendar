@@ -440,8 +440,8 @@ button {
   top: -9px;
   height: 18px;
   background:
-    radial-gradient(circle, #c7a47b 0 1.8px, transparent 2.2px) 0 0 / 18px 18px repeat-x,
-    linear-gradient(90deg, transparent 6px, rgba(145, 108, 66, 0.72) 6px 8px, transparent 8px 18px) 0 6px / 18px 10px repeat-x;
+    radial-gradient(circle, #d3d7de 0 1.8px, transparent 2.2px) 0 0 / 18px 18px repeat-x,
+    linear-gradient(90deg, transparent 6px, rgba(156, 163, 175, 0.82) 6px 8px, transparent 8px 18px) 0 6px / 18px 10px repeat-x;
   pointer-events: none;
 }
 
@@ -3434,6 +3434,7 @@ button {
   border-radius: 28px;
   background: #fff;
   box-shadow: 0 30px 90px rgba(138, 78, 15, 0.24);
+  overflow: visible;
   animation: soft-enter 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
@@ -3532,12 +3533,134 @@ button {
   font-weight: 850;
 }
 
-.postpone-date-field input[type="date"]::-webkit-calendar-picker-indicator {
-  padding: 6px;
+.postpone-date-picker {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  color: #7a3e0b;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.postpone-date-picker.open {
+  z-index: 30;
+}
+
+.postpone-date-display {
+  width: 100%;
+  height: 46px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px 0 14px;
+  border: 1px solid #ffd6a6;
   border-radius: 999px;
-  background-color: #fff1d2;
-  cursor: pointer;
-  filter: sepia(1) saturate(2.5) hue-rotate(350deg);
+  color: #3b2615;
+  background: #fffaf3;
+  text-align: left;
+}
+
+.postpone-date-display strong {
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.postpone-date-display small {
+  min-width: 30px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  background: #ff9a2e;
+  font-weight: 950;
+}
+
+.postpone-date-display small svg {
+  color: #fff;
+}
+
+.postpone-calendar-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #ffd6a6;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(255, 122, 33, 0.16);
+  animation: soft-enter 160ms ease both;
+}
+
+.postpone-calendar-head {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 6px;
+}
+
+.postpone-calendar-head strong {
+  color: #7a3e0b;
+  font-size: 14px;
+  font-weight: 950;
+  text-align: center;
+}
+
+.postpone-calendar-head button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: #ff6d1f;
+  background: #fff1d2;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.postpone-calendar-weekdays,
+.postpone-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.postpone-calendar-weekdays span {
+  color: #a36b2e;
+  font-size: 11px;
+  font-weight: 950;
+  text-align: center;
+}
+
+.postpone-calendar-grid button,
+.postpone-calendar-grid span {
+  min-width: 0;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #3b2615;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.postpone-calendar-grid button {
+  background: #fffaf3;
+}
+
+.postpone-calendar-grid button.active {
+  color: #fff;
+  background: #ff7a21;
+  box-shadow: 0 8px 18px rgba(255, 122, 33, 0.22);
+}
+
+.postpone-calendar-grid button:hover {
+  color: #ff6d1f;
+  background: #fff1d2;
 }
 
 .postpone-time-picker {

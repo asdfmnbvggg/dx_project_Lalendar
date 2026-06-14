@@ -1021,14 +1021,11 @@ export default function App() {
             )}
             {postponePicker.mode === "date" && (
               <div className="postpone-date-time-fields">
-                <label className="postpone-date-field">
-                  날짜
-                  <input
-                    type="date"
-                    value={postponePicker.date}
-                    onChange={(event) => setPostponePicker((current) => ({ ...current, date: event.target.value }))}
-                  />
-                </label>
+                <PostponeDatePicker
+                  label="날짜"
+                  value={postponePicker.date}
+                  onChange={(date) => setPostponePicker((current) => ({ ...current, date }))}
+                />
                 <PostponeTimePicker
                   label="새 시간"
                   value={postponePicker.time}
@@ -2356,6 +2353,89 @@ function PostponeTimePicker({ label, value, onChange }) {
   );
 }
 
+function PostponeDatePicker({ label, value, onChange }) {
+  const [isOpen, setOpen] = useState(false);
+  const selected = parsePickerDate(value);
+  const [viewDate, setViewDate] = useState(() => new Date(selected.year, selected.month - 1, 1));
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth() + 1;
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const leadingBlanks = new Date(year, month - 1, 1).getDay();
+  const cells = [
+    ...Array.from({ length: leadingBlanks }, (_, index) => ({ key: `blank-${index}`, day: "", date: "" })),
+    ...Array.from({ length: daysInMonth }, (_, index) => {
+      const day = index + 1;
+      const date = dateKey(year, month, day);
+      return { key: date, day, date };
+    }),
+  ];
+
+  useEffect(() => {
+    const next = parsePickerDate(value);
+    setViewDate(new Date(next.year, next.month - 1, 1));
+  }, [value]);
+
+  function moveMonth(offset) {
+    setViewDate((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
+  }
+
+  return (
+    <div
+      className={["postpone-date-picker", isOpen ? "open" : ""].filter(Boolean).join(" ")}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
+      <span>{label}</span>
+      <button type="button" className="postpone-date-display" onClick={() => setOpen((current) => !current)} aria-expanded={isOpen}>
+        <strong>{value}</strong>
+        <small aria-hidden="true">
+          <CalendarDays size={15} strokeWidth={2.5} />
+        </small>
+      </button>
+      {isOpen && (
+        <div className="postpone-calendar-panel" aria-label="날짜 선택">
+          <div className="postpone-calendar-head">
+            <button type="button" onClick={() => moveMonth(-1)} aria-label="이전 달">
+              {"<"}
+            </button>
+            <strong>
+              {year}년 {String(month).padStart(2, "0")}월
+            </strong>
+            <button type="button" onClick={() => moveMonth(1)} aria-label="다음 달">
+              {">"}
+            </button>
+          </div>
+          <div className="postpone-calendar-weekdays" aria-hidden="true">
+            {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
+              <span key={day}>{day}</span>
+            ))}
+          </div>
+          <div className="postpone-calendar-grid">
+            {cells.map((cell) =>
+              cell.date ? (
+                <button
+                  key={cell.key}
+                  type="button"
+                  className={cell.date === value ? "active" : ""}
+                  onClick={() => {
+                    onChange(cell.date);
+                    setOpen(false);
+                  }}
+                >
+                  {cell.day}
+                </button>
+              ) : (
+                <span key={cell.key} />
+              ),
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SimpleTabPage({ icon, title, text }) {
   return (
     <section className="page simple-tab-page">
@@ -2808,6 +2888,20 @@ function appendPostponeLabel(repeat, label) {
 function getPostponeTargetUsers(users, currentUserId) {
   const filtered = users.filter((user) => user.id !== currentUserId);
   return filtered.length > 0 ? filtered : users;
+}
+
+function parsePickerDate(value) {
+  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    const today = new Date();
+    return { year: today.getFullYear(), month: today.getMonth() + 1, day: today.getDate() };
+  }
+
+  return {
+    year: Number(match[1]),
+    month: Number(match[2]),
+    day: Number(match[3]),
+  };
 }
 
 function timeValueToMinutes(value) {
