@@ -1556,10 +1556,10 @@ button {
 }
 
 .house-calendar-toggle.active {
-  border-color: #050505;
+  border-color: #ff8a2a;
   background: #ffffff;
   color: #ffffff;
-  box-shadow: 0 0 0 2px rgba(5, 5, 5, 0.08);
+  box-shadow: 0 0 0 2px rgba(255, 138, 42, 0.16);
 }
 
 .family-split-avatar {
@@ -5459,9 +5459,9 @@ body {
 }
 
 .profile-strip button.active {
-  border-color: #050505;
+  border-color: #ff8a2a;
   background: #fff;
-  box-shadow: 0 0 0 2px rgba(5, 5, 5, 0.08);
+  box-shadow: 0 0 0 2px rgba(255, 138, 42, 0.16);
 }
 
 .profile-strip button.active span {
@@ -11860,9 +11860,9 @@ body {
 }
 
 .calendar-page-month .profile-strip button.active {
-  border-color: #050505;
+  border-color: #ff8a2a;
   background: #fff;
-  box-shadow: 0 0 0 2px rgba(5, 5, 5, 0.08), 0 9px 18px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 0 0 2px rgba(255, 138, 42, 0.18), 0 9px 18px rgba(255, 138, 42, 0.18);
 }
 
 .calendar-page-month .profile-strip span {
