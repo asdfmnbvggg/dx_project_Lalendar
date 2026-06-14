@@ -319,7 +319,17 @@ export default function App() {
   function postponeTask(id) {
     const task = tasks.find((item) => item.id === id);
     if (!task) return;
-    setPostponePicker({ task, date: addDays(task.date, 1) });
+    const range = getTaskNotificationRange(task);
+    const nextPerson = sortedCalendarUsers.find((user) => user.id !== getTaskUserId(task)) || sortedCalendarUsers[0];
+    setNotificationOpen(false);
+    setNotificationPrompt(null);
+    setPostponePicker({
+      task,
+      mode: "date",
+      date: addDays(task.date, 1),
+      time: range ? formatTimeValue(Math.min(23 * 60 + 59, range.startMinutes + 30)) : "09:00",
+      targetUserId: nextPerson?.id || getTaskUserId(task) || activeCalendarUserId,
+    });
   }
 
   function requestMoveTask(task, date) {
@@ -334,6 +344,31 @@ export default function App() {
   function moveTaskDate(id, date) {
     setTasks((current) => current.map((task) => (task.id === id ? { ...task, date, repeat: `${task.repeat} · 미룸` } : task)));
     setSelectedDate(date);
+  }
+
+  function moveTaskTime(id, startTime) {
+    const normalizedStartTime = normalizeEditableTimeValue(startTime);
+    setTasks((current) =>
+      current.map((task) => (task.id === id ? { ...task, repeat: buildPostponedRepeat(task, normalizedStartTime) } : task)),
+    );
+  }
+
+  function moveTaskToPerson(id, targetUserId) {
+    setTasks((current) =>
+      current.map((task) =>
+        task.id === id
+          ? normalizeTaskForUser(
+              {
+                ...task,
+                userId: targetUserId,
+                owner: userIdToOwner(targetUserId),
+                repeat: appendPostponeLabel(task.repeat, "담당 변경"),
+              },
+              targetUserId,
+            )
+          : task,
+      ),
+    );
   }
 
   function addTask(task) {
@@ -493,6 +528,9 @@ export default function App() {
   }
 
   function postponeNotification(item) {
+    setNotificationOpen(false);
+    setNotificationPrompt(null);
+
     if (item.type === "task") {
       onPostponeTaskFromNotification(item.task.id);
       return;
@@ -931,15 +969,62 @@ export default function App() {
           <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="postpone-picker-title">
             <p>일정 미루기</p>
             <h2 id="postpone-picker-title">언제로 미룰까요?</h2>
-            <span>{postponePicker.task.title}의 새 날짜를 선택해주세요.</span>
-            <label className="postpone-date-field">
-              날짜
-              <input
-                type="date"
-                value={postponePicker.date}
-                onChange={(event) => setPostponePicker((current) => ({ ...current, date: event.target.value }))}
-              />
-            </label>
+            <span>{postponePicker.task.title}의 미루기 방식을 선택해주세요.</span>
+            <div className="postpone-option-grid" aria-label="미루기 방식 선택">
+              {[
+                ["person", "다른 사람에게 미루기"],
+                ["time", "시간 미루기"],
+                ["date", "날짜 미루기"],
+              ].map(([mode, label]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  className={postponePicker.mode === mode ? "active" : ""}
+                  onClick={() => setPostponePicker((current) => ({ ...current, mode }))}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {postponePicker.mode === "person" && (
+              <label className="postpone-date-field">
+                담당자
+                <select
+                  value={postponePicker.targetUserId}
+                  onChange={(event) => setPostponePicker((current) => ({ ...current, targetUserId: event.target.value }))}
+                >
+                  {sortedCalendarUsers.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.displayName || user.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {postponePicker.mode === "time" && (
+              <label className="postpone-date-field">
+                새 시간
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]{2}:[0-9]{2}"
+                  maxLength={5}
+                  value={postponePicker.time}
+                  onChange={(event) => setPostponePicker((current) => ({ ...current, time: formatEditableTimeValue(event.target.value) }))}
+                  onBlur={(event) => setPostponePicker((current) => ({ ...current, time: normalizeEditableTimeValue(event.target.value) }))}
+                />
+              </label>
+            )}
+            {postponePicker.mode === "date" && (
+              <label className="postpone-date-field">
+                날짜
+                <input
+                  type="date"
+                  value={postponePicker.date}
+                  onChange={(event) => setPostponePicker((current) => ({ ...current, date: event.target.value }))}
+                />
+              </label>
+            )}
             <div className="confirm-actions">
               <button type="button" onClick={() => setPostponePicker(null)}>
                 취소
@@ -947,7 +1032,13 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => {
-                  requestMoveTask(postponePicker.task, postponePicker.date);
+                  if (postponePicker.mode === "person") {
+                    moveTaskToPerson(postponePicker.task.id, postponePicker.targetUserId);
+                  } else if (postponePicker.mode === "time") {
+                    moveTaskTime(postponePicker.task.id, postponePicker.time);
+                  } else {
+                    requestMoveTask(postponePicker.task, postponePicker.date);
+                  }
                   setPostponePicker(null);
                 }}
               >
@@ -2626,6 +2717,28 @@ function formatNotificationTimeRange(task = {}) {
   const range = getTaskNotificationRange(task);
   if (!range) return task.repeat || "시간 미정";
   return `${formatTimeValue(range.startMinutes)}-${formatTimeValue(range.endMinutes)}`;
+}
+
+function buildPostponedRepeat(task = {}, startTime) {
+  const range = getTaskNotificationRange(task);
+  const startMinutes = timeValueToMinutes(startTime);
+  const duration = range ? Math.max(30, range.endMinutes - range.startMinutes) : 60;
+  const endMinutes = Math.min(23 * 60 + 59, startMinutes + duration);
+  const nextRange = `${formatTimeValue(startMinutes)}-${formatTimeValue(endMinutes)}`;
+  const repeat = String(task.repeat || "");
+  const rangePattern = /\b\d{1,2}:\d{2}\s*(?:~|-|to)\s*\d{1,2}:\d{2}\b/i;
+  const clockPattern = /\b\d{1,2}:\d{2}\b/;
+
+  if (rangePattern.test(repeat)) return repeat.replace(rangePattern, nextRange);
+  if (clockPattern.test(repeat)) return repeat.replace(clockPattern, startTime);
+  return appendPostponeLabel(nextRange, "시간 변경");
+}
+
+function appendPostponeLabel(repeat, label) {
+  const text = String(repeat || "").trim();
+  if (!text) return label;
+  if (text.includes(label)) return text;
+  return `${text} · ${label}`;
 }
 
 function timeValueToMinutes(value) {

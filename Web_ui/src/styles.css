@@ -3440,6 +3440,31 @@ button {
   background: linear-gradient(135deg, var(--pink), var(--red));
 }
 
+.postpone-option-grid {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.postpone-option-grid button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #f5c7d4;
+  border-radius: 15px;
+  color: #5f5258;
+  background: #fff8fa;
+  font-size: 13px;
+  font-weight: 950;
+  text-align: left;
+}
+
+.postpone-option-grid button.active {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--pink), var(--red));
+  box-shadow: 0 10px 22px rgba(225, 29, 72, 0.18);
+}
+
 .postpone-date-field {
   display: grid;
   gap: 8px;
@@ -3449,7 +3474,8 @@ button {
   font-weight: 950;
 }
 
-.postpone-date-field input {
+.postpone-date-field input,
+.postpone-date-field select {
   width: 100%;
   height: 46px;
   border: 1px solid #f5c7d4;
@@ -3458,6 +3484,7 @@ button {
   padding: 0 13px;
   background: #fff8fa;
   color: var(--ink);
+  font-weight: 850;
 }
 
 .detail-summary {
