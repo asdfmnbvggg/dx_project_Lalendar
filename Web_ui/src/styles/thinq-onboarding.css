@@ -505,6 +505,10 @@
   cursor: pointer;
 }
 
+.onboarding-google-page .onboarding-back-zone {
+  display: none;
+}
+
 .onboarding-highlight-bg {
   position: absolute;
   inset: 42px 4px 120px;
@@ -1566,6 +1570,8 @@
 
 .onboarding-google-confirm {
   height: 232px;
+  z-index: 12;
+  pointer-events: auto;
 }
 
 .onboarding-google-actions {
@@ -1573,18 +1579,21 @@
   left: 22px;
   right: 22px;
   bottom: 28px;
+  z-index: 4;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+  pointer-events: auto;
 }
 
 .onboarding-google-actions button {
-  min-height: 34px;
+  min-height: 42px;
   border-radius: 999px;
   background: #b3b3b3;
   color: #616161;
   font-size: 12px;
   font-weight: 900;
+  touch-action: manipulation;
 }
 
 .onboarding-google-actions button.active,

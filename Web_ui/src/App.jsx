@@ -1756,7 +1756,7 @@ function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange,
   }
 
   return (
-    <section className={`onboarding-page ${isFixedSchedule ? "onboarding-fixed-page" : ""}`} aria-label="온보딩">
+    <section className={`onboarding-page ${isFixedSchedule ? "onboarding-fixed-page" : ""} ${isGoogleConfirm ? "onboarding-google-page" : ""}`} aria-label="온보딩">
       {!isIntro && !isScheduleInfo && !isReady && <button className="onboarding-back-zone" type="button" onClick={onBack} aria-label="이전 단계로 이동" />}
       {!isIntro && !isScheduleInfo && !isGoogleConfirm && !isFixedSchedule && !isReady && (
         <div className="onboarding-progress" aria-hidden="true">
