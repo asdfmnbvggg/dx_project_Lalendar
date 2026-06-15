@@ -778,3 +778,85 @@
     min-height: min(420px, calc(100svh - 236px));
   }
 }
+
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 640px) {
+    .app-shell {
+      min-height: 100dvh;
+    }
+
+    .app-frame:not(.thinq-home-frame),
+    .app-frame.thinq-home-frame {
+      min-height: 100dvh;
+      max-height: none;
+    }
+
+    .app-frame.onboarding-frame {
+      height: 100dvh;
+      min-height: 100dvh;
+      padding-bottom: calc(84px + env(safe-area-inset-bottom));
+      overflow: hidden;
+    }
+
+    .onboarding-live-stage,
+    .onboarding-calendar-backdrop,
+    .onboarding-calendar-backdrop .calendar-page {
+      min-height: calc(100dvh - 72px);
+      height: calc(100dvh - 72px);
+    }
+
+    .onboarding-page {
+      min-height: calc(100dvh - 72px);
+      padding-bottom: calc(112px + env(safe-area-inset-bottom));
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .onboarding-page.onboarding-fixed-page {
+      padding-bottom: calc(120px + env(safe-area-inset-bottom));
+    }
+
+    .onboarding-fixed-page .onboarding-character-scene.profile.fixed {
+      min-height: auto;
+      transform: none;
+    }
+
+    .onboarding-fixed-page .onboarding-fixed-card {
+      width: min(100%, 430px);
+      max-width: 430px;
+      padding-top: 20px;
+      padding-bottom: calc(120px + env(safe-area-inset-bottom));
+    }
+
+    .onboarding-fixed-page .onboarding-fixed-timetable {
+      min-height: clamp(206px, 32dvh, 278px);
+    }
+
+    .onboarding-fixed-page .onboarding-fixed-scroll {
+      max-height: clamp(180px, 29dvh, 252px);
+    }
+
+    .onboarding-fixed-page .onboarding-fixed-next-button {
+      right: 24px;
+      bottom: calc(28px + env(safe-area-inset-bottom));
+    }
+
+    .onboarding-google-confirm {
+      z-index: 80;
+      pointer-events: auto;
+    }
+
+    .onboarding-google-actions,
+    .onboarding-google-actions button {
+      position: relative;
+      z-index: 90;
+      pointer-events: auto;
+    }
+
+    .thinq-main-tabbar {
+      height: calc(74px + env(safe-area-inset-bottom)) !important;
+      min-height: calc(74px + env(safe-area-inset-bottom)) !important;
+      padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+    }
+  }
+}
