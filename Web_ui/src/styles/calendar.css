@@ -1561,13 +1561,16 @@
 
 .daily-detail-page .date-detail-card {
   position: relative;
-  grid-template-rows: auto auto minmax(0, 1fr) 60px;
+  align-content: start;
+  grid-template-rows: auto auto auto auto;
   padding: 14px 12px 12px;
 }
 
 .daily-timetable-shell {
   position: relative;
   min-height: 0;
+  height: auto;
+  max-height: calc(100svh - 310px);
   display: grid;
   grid-template-columns: 54px minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
@@ -1600,7 +1603,8 @@
 
 .daily-list-shell {
   position: relative;
-  height: 100%;
+  height: auto;
+  max-height: calc(100svh - 310px);
   min-height: auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -1623,8 +1627,8 @@
 .daily-list-column {
   position: relative;
   min-width: 0;
-  min-height: 100%;
-  height: 100%;
+  min-height: 0;
+  height: auto;
   display: grid;
   grid-template-rows: 38px minmax(0, 1fr);
   overflow: visible;
@@ -1942,6 +1946,7 @@
   grid-template-columns: 54px minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
   align-items: center;
+  margin-top: 12px;
 }
 
 .daily-add-row.housework-only {
@@ -1950,6 +1955,26 @@
 
 .daily-add-row.housework-only.list-view {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.daily-add-row.timetable-view:not(.housework-only) > span:first-child {
+  display: none;
+}
+
+.daily-add-row.timetable-view:not(.housework-only) .date-detail-add.personal {
+  grid-column: 1 / 3;
+}
+
+.daily-add-row.timetable-view:not(.housework-only) .date-detail-add.housework {
+  grid-column: 3;
+}
+
+.daily-add-row.list-view:not(.housework-only) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.daily-add-row.list-view:not(.housework-only) > span:first-child {
+  display: none;
 }
 
 .daily-detail-page .date-detail-add {
