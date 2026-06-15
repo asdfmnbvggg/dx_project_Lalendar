@@ -18,6 +18,7 @@ import CrewPage from "./pages/CrewPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import TaskComposer from "./components/TaskComposer.jsx";
 import DetailPanel from "./components/DetailPanel.jsx";
+import introLogo from "./assets/intro.png";
 import lgCharacter from "./assets/lg-character.png";
 import floatingStar from "./assets/floating-star.svg";
 import { CURRENT_USER_STORAGE_KEY, USERS, findUserById } from "./constants/users.js";
@@ -118,6 +119,7 @@ export default function App() {
   const [postponePicker, setPostponePicker] = useState(null);
   const [automationPrompt, setAutomationPrompt] = useState(null);
   const [notificationPrompt, setNotificationPrompt] = useState(null);
+  const [isLoginIntroOpen, setLoginIntroOpen] = useState(false);
   const [lastNotificationPromptKey, setLastNotificationPromptKey] = useState("");
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
   const [panel, setPanel] = useState(null);
@@ -181,6 +183,13 @@ export default function App() {
     setActiveCalendarUser((current) => current || currentUser);
     setSelectedMember((current) => current || currentUser.id);
   }, [currentUser]);
+
+  useEffect(() => {
+    if (!isLoginIntroOpen) return undefined;
+
+    const timer = window.setTimeout(() => setLoginIntroOpen(false), 1650);
+    return () => window.clearTimeout(timer);
+  }, [isLoginIntroOpen]);
 
   useEffect(() => {
     setNotificationDemoDate(selectedDate);
@@ -493,6 +502,7 @@ export default function App() {
     const nextCalendarUser = findUserById(savedSession?.activeCalendarUserId) || user;
 
     localStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(user));
+    setLoginIntroOpen(true);
     setCurrentUser(user);
     setActiveCalendarUser(nextCalendarUser);
     setSelectedMember(savedSession?.selectedMember || nextCalendarUser.id);
@@ -715,6 +725,10 @@ export default function App() {
 
   if (!currentUser) {
     return <LoginPage onLogin={handleLogin} />;
+  }
+
+  if (isLoginIntroOpen) {
+    return <LoginIntroSplash />;
   }
 
   return (
@@ -1119,6 +1133,15 @@ export default function App() {
           </section>
         </div>
       )}
+    </main>
+  );
+}
+
+function LoginIntroSplash() {
+  return (
+    <main className="login-intro-splash" aria-label="Lalendar 시작 중">
+      <div className="login-intro-glow" aria-hidden="true" />
+      <img src={introLogo} alt="Lalendar" />
     </main>
   );
 }

@@ -1,9 +1,10 @@
 ﻿import airConditionerImage from "../../assets/appliances/에어컨.png";
 import dryerImage from "../../assets/appliances/건조기.png";
-import fridgeImage from "../../assets/appliances/냉장고.png";
 import washerImage from "../../assets/appliances/세탁기.png";
 import lgCharacterImage from "../../assets/lg-character.png";
 import aiDailyReportImage from "../../assets/ai-daily-report.png";
+
+const fridgeImage = airConditionerImage;
 
 import jaehyeokImage from "../../assets/people/재혁님.png";
 import suminImage from "../../assets/people/수민님.png";
@@ -106,7 +107,6 @@ export const applianceTypeColor = {
 export const applianceImages = {
   air: airConditionerImage,
   dryer: dryerImage,
-  fridge: fridgeImage,
   washer: washerImage,
 };
 
@@ -165,14 +165,6 @@ export const applianceModeCatalog = {
       { id: "strong", label: "강력", meta: "기름때", icon: "강" },
       { id: "eco", label: "에코", meta: "절전 세척", icon: "에" },
       { id: "reserve", label: "예약 세척", meta: "시간 맞춤", icon: "예" },
-    ],
-  },
-  REFRIGERATOR: {
-    status: "절전 운전 중",
-    modes: [
-      { id: "fridge-temp", label: "냉장 온도 조절", meta: "3C 기준", icon: "냉" },
-      { id: "freezer-temp", label: "냉동 온도 조절", meta: "-18C 기준", icon: "동" },
-      { id: "eco", label: "절전 모드", meta: "전력 절약", icon: "절" },
     ],
   },
   HUMIDIFIER: {
