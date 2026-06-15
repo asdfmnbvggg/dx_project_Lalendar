@@ -1,5 +1,6 @@
 ﻿import { Check, ChevronLeft, ChevronRight, ClipboardList, Cpu, Save, Settings, UserRound, X } from "lucide-react";
 import { members } from "../../data.js";
+import { memberImages } from "../../pages/calendarPage/calendarConstants.js";
 import { useState } from "react";
 
 const settingsAutomationOptions = [
@@ -32,6 +33,7 @@ export default function SettingsPanelContent({ view, setView, onboardingSetup, s
   const [fixedScheduleDraft, setFixedScheduleDraft] = useState(null);
   const currentUserName = currentUser?.displayName || currentUser?.name || "사용자";
   const currentUserRole = currentUser?.id ? "현재 로그인 중" : "일정 담당자";
+  const currentUserImage = currentUser?.id ? memberImages[currentUser.id] : null;
   const selectedApplianceTypes = onboardingSetup.applianceTypes || [];
   const activeAssigneeTypes = settingsAutomationOptions.filter(([, type]) => selectedApplianceTypes.includes(type));
   const fixedSchedules = onboardingSetup.fixedSchedules || [];
@@ -276,7 +278,7 @@ export default function SettingsPanelContent({ view, setView, onboardingSetup, s
           <strong>{currentUserName}</strong>
           <span>{currentUserRole}</span>
         </div>
-        <UserRound size={24} />
+        {currentUserImage ? <img className="settings-user-avatar" src={currentUserImage} alt="" aria-hidden="true" /> : <UserRound size={24} />}
       </article>
       <div className="settings-menu-list">
         <button type="button" onClick={() => setView("automation")}>

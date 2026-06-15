@@ -2427,6 +2427,16 @@
   background: #ff8a22;
 }
 
+.settings-user-avatar {
+  width: 42px;
+  height: 42px;
+  border: 2px solid #ff9f42;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #fff;
+  box-shadow: 0 7px 16px rgba(255, 138, 34, 0.22);
+}
+
 .settings-menu-list {
   display: grid;
   overflow: hidden;
