@@ -782,18 +782,19 @@
 @supports (-webkit-touch-callout: none) {
   @media (max-width: 640px) {
     .app-shell {
-      min-height: 100dvh;
+      min-height: var(--app-visual-height, 100dvh);
     }
 
     .app-frame:not(.thinq-home-frame),
     .app-frame.thinq-home-frame {
-      min-height: 100dvh;
+      min-height: var(--app-visual-height, 100dvh);
       max-height: none;
     }
 
     .app-frame.onboarding-frame {
-      height: 100dvh;
-      min-height: 100dvh;
+      height: var(--app-visual-height, 100dvh);
+      min-height: var(--app-visual-height, 100dvh);
+      padding-inline: 0;
       padding-bottom: calc(84px + env(safe-area-inset-bottom));
       overflow: hidden;
     }
@@ -801,12 +802,19 @@
     .onboarding-live-stage,
     .onboarding-calendar-backdrop,
     .onboarding-calendar-backdrop .calendar-page {
-      min-height: calc(100dvh - 72px);
-      height: calc(100dvh - 72px);
+      min-height: calc(var(--app-visual-height, 100dvh) - 84px);
+      height: calc(var(--app-visual-height, 100dvh) - 84px);
+      overflow: hidden;
+    }
+
+    .onboarding-page:not(.onboarding-fixed-page) {
+      display: block;
+      min-height: calc(var(--app-visual-height, 100dvh) - 84px);
+      padding: 0 18px calc(96px + env(safe-area-inset-bottom));
+      overflow: hidden;
     }
 
     .onboarding-page {
-      min-height: calc(100dvh - 72px);
       padding-bottom: calc(112px + env(safe-area-inset-bottom));
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
@@ -829,11 +837,11 @@
     }
 
     .onboarding-fixed-page .onboarding-fixed-timetable {
-      min-height: clamp(206px, 32dvh, 278px);
+      min-height: clamp(206px, calc(var(--app-visual-height, 100dvh) * 0.32), 278px);
     }
 
     .onboarding-fixed-page .onboarding-fixed-scroll {
-      max-height: clamp(180px, 29dvh, 252px);
+      max-height: clamp(180px, calc(var(--app-visual-height, 100dvh) * 0.29), 252px);
     }
 
     .onboarding-fixed-page .onboarding-fixed-next-button {
@@ -857,6 +865,125 @@
       height: calc(74px + env(safe-area-inset-bottom)) !important;
       min-height: calc(74px + env(safe-area-inset-bottom)) !important;
       padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+    }
+
+    .onboarding-character-scene,
+    .onboarding-character-scene.intro,
+    .onboarding-character-scene.profile,
+    .onboarding-character-scene.google-confirm {
+      top: clamp(58px, calc(var(--app-visual-height, 100dvh) * 0.1), 102px) !important;
+      width: min(360px, calc(100vw - 48px));
+      gap: 10px;
+      transform: translateX(-50%);
+    }
+
+    .onboarding-intro-panel,
+    .onboarding-ai-wait-card {
+      width: min(326px, calc(100vw - 58px));
+      max-width: min(326px, calc(100vw - 58px));
+      min-height: 196px;
+      padding: 30px 18px 70px;
+    }
+
+    .onboarding-intro-type,
+    .onboarding-info-type {
+      min-height: 0;
+      font-size: clamp(16px, 4.7vw, 20px);
+      line-height: 1.28;
+      text-align: center;
+    }
+
+    .onboarding-next-button,
+    .onboarding-info-next-button {
+      right: 18px;
+      bottom: 20px;
+      min-width: 96px;
+      height: 42px;
+      min-height: 42px;
+      font-size: 15px;
+    }
+
+    .onboarding-character-scene.intro .onboarding-character-image,
+    .onboarding-character-scene.info .onboarding-character-image,
+    .onboarding-character-scene.google-confirm .onboarding-character-image {
+      width: min(204px, 52vw);
+      margin-top: 4px;
+    }
+
+    .onboarding-character-scene.intro .onboarding-floating-star.star-a,
+    .onboarding-character-scene.info .onboarding-floating-star.star-a,
+    .onboarding-character-scene.google-confirm .onboarding-floating-star.star-a {
+      left: 22px;
+      top: 238px;
+      width: 42px;
+      height: 42px;
+    }
+
+    .onboarding-character-scene.intro .onboarding-floating-star.star-b,
+    .onboarding-character-scene.info .onboarding-floating-star.star-b,
+    .onboarding-character-scene.google-confirm .onboarding-floating-star.star-b {
+      right: 38px;
+      top: 286px;
+      width: 30px;
+      height: 30px;
+    }
+
+    .onboarding-google-confirm {
+      min-height: 218px;
+      height: auto;
+      display: grid;
+      align-content: center;
+      padding: 34px 18px 92px;
+    }
+
+    .onboarding-google-confirm .onboarding-intro-type {
+      position: relative;
+      z-index: 1;
+      display: block;
+      min-height: 0;
+      font-size: clamp(17px, 4.8vw, 20px);
+      line-height: 1.3;
+    }
+
+    .onboarding-google-actions {
+      left: 18px;
+      right: 18px;
+      bottom: 24px;
+      gap: 10px;
+    }
+
+    .onboarding-google-actions button {
+      min-height: 46px;
+      font-size: 15px;
+    }
+
+    .onboarding-ai-wait {
+      min-height: calc(var(--app-visual-height, 100dvh) - 84px);
+      padding: 72px 18px 0;
+      place-items: start center;
+    }
+
+    .onboarding-ai-wait-card {
+      min-height: 218px;
+      transform: none;
+    }
+
+    .onboarding-ai-wait-card p {
+      top: 76px;
+      font-size: clamp(16px, 4.7vw, 20px);
+      line-height: 1.32;
+    }
+
+    .onboarding-ai-spinner {
+      top: 26px;
+    }
+
+    .onboarding-ai-character-wrap {
+      bottom: -246px;
+    }
+
+    .onboarding-ai-character-wrap .onboarding-character-image {
+      width: min(148px, 40vw);
     }
   }
 }

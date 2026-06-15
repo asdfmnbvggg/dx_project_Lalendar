@@ -155,6 +155,29 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const setVisualViewportVars = () => {
+      const viewport = window.visualViewport;
+      const height = Math.round(viewport?.height || window.innerHeight || document.documentElement.clientHeight);
+      const offsetTop = Math.round(viewport?.offsetTop || 0);
+      document.documentElement.style.setProperty("--app-visual-height", `${height}px`);
+      document.documentElement.style.setProperty("--app-visual-offset-top", `${offsetTop}px`);
+    };
+
+    setVisualViewportVars();
+    window.visualViewport?.addEventListener("resize", setVisualViewportVars);
+    window.visualViewport?.addEventListener("scroll", setVisualViewportVars);
+    window.addEventListener("resize", setVisualViewportVars);
+    window.addEventListener("orientationchange", setVisualViewportVars);
+
+    return () => {
+      window.visualViewport?.removeEventListener("resize", setVisualViewportVars);
+      window.visualViewport?.removeEventListener("scroll", setVisualViewportVars);
+      window.removeEventListener("resize", setVisualViewportVars);
+      window.removeEventListener("orientationchange", setVisualViewportVars);
+    };
+  }, []);
+
+  useEffect(() => {
     let isActive = true;
     setWeatherApiStatus("loading");
 
