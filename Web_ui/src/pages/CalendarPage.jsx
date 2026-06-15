@@ -199,7 +199,8 @@ export default function CalendarPage({
   }
 
   function openDailyContext(task) {
-    setDailyContextTaskId((current) => (current === task.id ? null : task.id));
+    const taskKey = getDailyTaskKey(task);
+    setDailyContextTaskId((current) => (current === taskKey ? null : taskKey));
     setDailyContextAction(null);
   }
 
@@ -1513,11 +1514,12 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
         ))}
         {blockLayouts.map(({ task, index, range, top, height, lane, laneCount }) => {
           const color = getDailyBlockColor(task, memberColors, variant, index);
+          const taskKey = getDailyTaskKey(task);
 
           return (
             <article
-              className={["daily-time-block", activeTaskId === task.id ? "context-open" : ""].filter(Boolean).join(" ")}
-              key={task.id}
+              className={["daily-time-block", activeTaskId === taskKey ? "context-open" : ""].filter(Boolean).join(" ")}
+              key={taskKey}
               role="button"
               tabIndex={0}
               style={{
@@ -1544,7 +1546,7 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
             >
               <strong>{getDailyBlockTitle(task, variant)}</strong>
               <span>{formatTaskRange(range)}</span>
-              {activeTaskId === task.id && (
+              {activeTaskId === taskKey && (
                 <div
                   className="daily-context-menu"
                   role="menu"
@@ -1612,11 +1614,12 @@ function DailyListColumn({ title, tasks, memberColors, variant, activeTaskId, ac
           tasks.map((task, index) => {
             const range = getDailyTaskRange(task, index);
             const color = getDailyBlockColor(task, memberColors, variant, index);
+            const taskKey = getDailyTaskKey(task);
 
             return (
               <article
-                className={["daily-list-task", activeTaskId === task.id ? "context-open" : ""].filter(Boolean).join(" ")}
-                key={task.id}
+                className={["daily-list-task", activeTaskId === taskKey ? "context-open" : ""].filter(Boolean).join(" ")}
+                key={taskKey}
                 role="button"
                 tabIndex={0}
                 style={{ "--block-color": color }}
@@ -1637,7 +1640,7 @@ function DailyListColumn({ title, tasks, memberColors, variant, activeTaskId, ac
                   <strong>{getDailyBlockTitle(task, variant)}</strong>
                   <span>{formatTaskRange(range)}</span>
                 </div>
-                {activeTaskId === task.id && (
+                {activeTaskId === taskKey && (
                   <div
                     className="daily-context-menu"
                     role="menu"
@@ -2102,6 +2105,10 @@ function getDailyTaskGroup(task) {
   if (task.displayType === "appliance") return "housework";
   if (task.tag === "house" || task.source === "auto") return "housework";
   return "schedule";
+}
+
+function getDailyTaskKey(task = {}) {
+  return [task.id, task.date, task.endDate, task.userId, task.owner, getDailyTaskGroup(task), task.title, task.repeat].filter((item) => item !== undefined && item !== null).join("::");
 }
 
 function getDailyTaskRange(task, index = 0) {

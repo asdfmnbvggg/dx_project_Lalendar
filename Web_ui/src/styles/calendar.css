@@ -1696,6 +1696,11 @@
   outline: 3px solid rgba(17, 24, 39, 0.12);
 }
 
+.daily-list-column.housework .daily-list-task.context-open {
+  outline: 3px solid rgba(249, 115, 22, 0.78);
+  outline-offset: 2px;
+}
+
 .daily-list-task > time {
   padding-top: 12px;
   color: #666a72;
@@ -1870,6 +1875,12 @@
 .daily-time-block.context-open {
   z-index: 200;
   outline: 3px solid rgba(17, 24, 39, 0.12);
+}
+
+.daily-timetable-column.housework .daily-time-block.context-open {
+  outline: 3px solid rgba(249, 115, 22, 0.82);
+  outline-offset: 2px;
+  box-shadow: 0 12px 26px rgba(249, 115, 22, 0.22);
 }
 
 .daily-time-block strong {

@@ -1032,8 +1032,7 @@ export default function App() {
         <div className="confirm-backdrop" role="presentation">
           <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="postpone-picker-title">
             <p>일정 미루기</p>
-            <h2 id="postpone-picker-title">언제로 미룰까요?</h2>
-            <span>{postponePicker.task.title}의 미루기 방식을 선택해주세요.</span>
+            <h3 id="postpone-picker-title">{postponePicker.task.title}의 미루기 방식을 선택해주세요.</h3>
             <div className="postpone-option-grid" aria-label="미루기 방식 선택">
               {[
                 ["person", "다른 사람에게 미루기"],
