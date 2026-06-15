@@ -987,3 +987,174 @@
     }
   }
 }
+
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 640px) {
+    .app-frame.onboarding-frame {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: var(--app-visual-height, 100dvh);
+      min-height: var(--app-visual-height, 100dvh);
+      max-height: var(--app-visual-height, 100dvh);
+      padding: 0 0 calc(74px + env(safe-area-inset-bottom));
+      overflow: hidden;
+    }
+
+    .app-frame.onboarding-frame .thinq-main-tabbar {
+      height: calc(74px + env(safe-area-inset-bottom)) !important;
+      min-height: calc(74px + env(safe-area-inset-bottom)) !important;
+      padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+    }
+
+    .onboarding-frame .onboarding-live-stage {
+      position: absolute;
+      inset: 0 0 calc(74px + env(safe-area-inset-bottom)) 0;
+      height: auto;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .onboarding-frame .onboarding-calendar-backdrop,
+    .onboarding-frame .onboarding-calendar-backdrop .calendar-page {
+      height: 100%;
+      min-height: 100%;
+    }
+
+    .onboarding-page:not(.onboarding-fixed-page) {
+      position: absolute;
+      inset: 0;
+      min-height: 0;
+      height: 100%;
+      display: block;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .onboarding-character-scene,
+    .onboarding-character-scene.intro,
+    .onboarding-character-scene.info,
+    .onboarding-character-scene.google-confirm {
+      top: 26px !important;
+      left: 50%;
+      width: min(320px, calc(100vw - 78px));
+      gap: 8px;
+      transform: translateX(-50%);
+    }
+
+    .onboarding-intro-panel,
+    .onboarding-google-confirm,
+    .onboarding-ai-wait-card {
+      width: min(320px, calc(100vw - 78px));
+      max-width: min(320px, calc(100vw - 78px));
+      min-height: 190px;
+      max-height: 228px;
+      padding: 28px 20px 72px;
+      border-radius: 22px;
+    }
+
+    .onboarding-intro-type,
+    .onboarding-info-type,
+    .onboarding-google-confirm .onboarding-intro-type {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      min-height: 112px;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      font-size: clamp(16px, 4.4vw, 19px);
+      line-height: 1.28;
+      text-align: center;
+      word-break: keep-all;
+    }
+
+    .onboarding-next-button,
+    .onboarding-info-next-button {
+      right: 16px;
+      bottom: 18px;
+      min-width: 90px;
+      height: 40px;
+      min-height: 40px;
+      font-size: 14px;
+      z-index: 5;
+    }
+
+    .onboarding-google-confirm {
+      display: block;
+      padding-bottom: 86px;
+    }
+
+    .onboarding-google-confirm .onboarding-intro-type {
+      min-height: 90px;
+      padding-top: 8px;
+    }
+
+    .onboarding-google-actions {
+      left: 16px;
+      right: 16px;
+      bottom: 18px;
+      z-index: 6;
+      gap: 8px;
+    }
+
+    .onboarding-google-actions button {
+      min-height: 42px;
+      font-size: 14px;
+    }
+
+    .onboarding-character-scene.intro .onboarding-character-image,
+    .onboarding-character-scene.info .onboarding-character-image,
+    .onboarding-character-scene.google-confirm .onboarding-character-image {
+      width: min(158px, 39vw);
+      margin-top: 8px;
+      max-height: calc(var(--app-visual-height, 100dvh) - 400px);
+      object-fit: contain;
+    }
+
+    .onboarding-character-scene.intro .onboarding-floating-star.star-a,
+    .onboarding-character-scene.info .onboarding-floating-star.star-a,
+    .onboarding-character-scene.google-confirm .onboarding-floating-star.star-a {
+      left: 8px;
+      top: 218px;
+      width: 32px;
+      height: 32px;
+    }
+
+    .onboarding-character-scene.intro .onboarding-floating-star.star-b,
+    .onboarding-character-scene.info .onboarding-floating-star.star-b,
+    .onboarding-character-scene.google-confirm .onboarding-floating-star.star-b {
+      right: 14px;
+      top: 244px;
+      width: 24px;
+      height: 24px;
+    }
+
+    .onboarding-ai-wait {
+      min-height: 100%;
+      height: 100%;
+      padding: 26px 18px 0;
+      place-items: start center;
+      overflow: hidden;
+    }
+
+    .onboarding-ai-wait-card {
+      min-height: 196px;
+      transform: none;
+    }
+
+    .onboarding-ai-wait-card p {
+      top: 68px;
+      font-size: clamp(15px, 4.2vw, 18px);
+      line-height: 1.3;
+    }
+
+    .onboarding-ai-character-wrap {
+      bottom: -178px;
+    }
+
+    .onboarding-ai-character-wrap .onboarding-character-image {
+      width: min(126px, 34vw);
+    }
+  }
+}
