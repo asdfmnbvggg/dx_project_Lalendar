@@ -2512,8 +2512,10 @@
 }
 
 .onboarding-fixed-page .onboarding-fixed-next-button {
-  right: 24px;
-  bottom: -38px;
+  position: fixed;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: calc(92px + env(safe-area-inset-bottom));
+  z-index: 80;
   width: auto;
   min-width: 74px;
   height: 32px;
@@ -2562,6 +2564,65 @@
 
   .onboarding-card h1 {
     font-size: 19px;
+  }
+
+  .onboarding-page.onboarding-fixed-page {
+    padding-bottom: calc(148px + env(safe-area-inset-bottom));
+  }
+
+  .onboarding-fixed-page .onboarding-fixed-card {
+    min-height: auto;
+    padding-bottom: calc(156px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 560px) and (max-height: 820px) {
+  .onboarding-page.onboarding-fixed-page {
+    padding-bottom: calc(136px + env(safe-area-inset-bottom));
+  }
+
+  .onboarding-fixed-page .onboarding-fixed-card {
+    gap: 10px;
+    padding-top: 20px;
+    padding-bottom: calc(144px + env(safe-area-inset-bottom));
+  }
+
+  .onboarding-fixed-page .onboarding-fixed-progress {
+    margin-bottom: 6px;
+  }
+
+  .onboarding-fixed-page .onboarding-fixed-card h1 {
+    font-size: 25px;
+  }
+
+  .onboarding-fixed-page .onboarding-fixed-card p {
+    margin-top: 5px;
+    font-size: 14px;
+  }
+
+  .onboarding-fixed-page .onboarding-fixed-timetable {
+    min-height: 216px;
+  }
+
+  .onboarding-fixed-page .onboarding-fixed-scroll {
+    max-height: 190px;
+  }
+
+  .onboarding-fixed-page .onboarding-fixed-form {
+    gap: 9px;
+  }
+
+  .onboarding-fixed-auto-actions {
+    gap: 7px;
+  }
+
+  .onboarding-fixed-auto-actions button {
+    min-height: 36px;
+    padding-block: 6px;
+  }
+
+  .onboarding-fixed-page .onboarding-fixed-next-button {
+    bottom: calc(88px + env(safe-area-inset-bottom));
   }
 }
 
