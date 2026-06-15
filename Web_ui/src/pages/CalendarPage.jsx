@@ -969,7 +969,7 @@ function SchedulePlanningLoadingPage({ pendingSave, onComplete }) {
 
 function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "personal", houseworkOwnerId, onClose, onSave }) {
   const parsedDate = parseDateKey(selectedDate);
-  const initialOwner = scheduleType === "housework" ? houseworkOwnerId || selectedMember || DABIN_TASK_OWNER : selectedMember === "minsu" ? selectedMember : DABIN_TASK_OWNER;
+  const initialOwner = scheduleType === "housework" ? houseworkOwnerId || selectedMember || DABIN_TASK_OWNER : selectedMember || DABIN_TASK_OWNER;
   const colorOptions = scheduleColorOptions;
   const [title, setTitle] = useState("");
   const [color, setColor] = useState(colorOptions[1]);
@@ -1009,7 +1009,7 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
       source: "manual",
       color,
       endDate: scheduleDates.endDate,
-      displayType: "fixed",
+      displayType: scheduleType === "housework" ? "appliance" : "manual",
     });
   }
 
