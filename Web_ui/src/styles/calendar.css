@@ -2983,14 +2983,21 @@
   box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
 }
 
-.daily-add-title-input input {
+.daily-add-title-input input,
+.daily-add-title-input select {
   min-width: 0;
   border: 0;
   outline: 0;
+  background: transparent;
   color: #2f2419;
   font: inherit;
   font-size: 15px;
   font-weight: 800;
+}
+
+.daily-add-title-input select {
+  width: 100%;
+  cursor: pointer;
 }
 
 .daily-add-title-input input::placeholder {

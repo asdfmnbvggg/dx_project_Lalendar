@@ -967,11 +967,33 @@ function SchedulePlanningLoadingPage({ pendingSave, onComplete }) {
   );
 }
 
+function getHouseworkApplianceOptions() {
+  return [
+    { id: "washer", type: "WASHER", label: "세탁기" },
+    { id: "dryer", type: "DRYER", label: "건조기" },
+    { id: "dishwasher", type: "DISHWASHER", label: "식기세척기" },
+    { id: "robot", type: "ROBOT_CLEANER", label: "로봇청소기" },
+    { id: "air-purifier", type: "AIR_PURIFIER", label: "공기청정기" },
+    { id: "air-living", type: "AIR_CONDITIONER", label: "거실 에어컨" },
+    { id: "air-sumin", type: "AIR_CONDITIONER", label: "수민 에어컨", room: "수민 방" },
+    { id: "air-dabin", type: "AIR_CONDITIONER", label: "다빈 에어컨", room: "다빈 방" },
+    { id: "air-jaehyeok", type: "AIR_CONDITIONER", label: "재혁 에어컨", room: "재혁 방" },
+  ];
+}
+
+function getDefaultApplianceModeLabel(applianceType) {
+  return applianceModeCatalog[applianceType]?.modes?.[0]?.label || "자동";
+}
+
 function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "personal", houseworkOwnerId, onClose, onSave }) {
   const parsedDate = parseDateKey(selectedDate);
   const initialOwner = scheduleType === "housework" ? houseworkOwnerId || selectedMember || DABIN_TASK_OWNER : selectedMember || DABIN_TASK_OWNER;
+  const isHouseworkSchedule = scheduleType === "housework";
+  const applianceOptions = getHouseworkApplianceOptions();
   const colorOptions = scheduleColorOptions;
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(isHouseworkSchedule ? applianceOptions[0]?.label || "" : "");
+  const [applianceOptionId, setApplianceOptionId] = useState(applianceOptions[0]?.id || "washer");
+  const [isApplianceOpen, setApplianceOpen] = useState(false);
   const [color, setColor] = useState(colorOptions[1]);
   const [isColorOpen, setColorOpen] = useState(false);
   const [isAllDay, setAllDay] = useState(false);
@@ -984,9 +1006,11 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
   const [error, setError] = useState("");
 
   function saveSchedule() {
-    const trimmedTitle = title.trim();
+    const selectedAppliance = applianceOptions.find((option) => option.id === applianceOptionId) || applianceOptions[0];
+    const applianceType = selectedAppliance?.type || "WASHER";
+    const trimmedTitle = isHouseworkSchedule ? selectedAppliance?.label || "" : title.trim();
     if (!trimmedTitle) {
-      setError("제목을 입력해 주세요.");
+      setError(isHouseworkSchedule ? "작동시킬 가전을 선택해 주세요." : "제목을 입력해 주세요.");
       return;
     }
 
@@ -1001,7 +1025,7 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
     onSave({
       date: scheduleDates.date,
       title: trimmedTitle,
-      place: scheduleType === "housework" ? "가사 일정" : "개인 일정",
+      place: scheduleType === "housework" ? selectedAppliance?.room || "가사 일정" : "개인 일정",
       tag: scheduleType === "housework" ? "house" : "plan",
       owner: initialOwner,
       done: false,
@@ -1009,7 +1033,10 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
       source: "manual",
       color,
       endDate: scheduleDates.endDate,
-      displayType: scheduleType === "housework" ? "appliance" : "manual",
+      displayType: isHouseworkSchedule ? "appliance" : "manual",
+      applianceType: isHouseworkSchedule ? applianceType : undefined,
+      applianceMode: isHouseworkSchedule ? getDefaultApplianceModeLabel(applianceType) : undefined,
+      currentMode: isHouseworkSchedule ? getDefaultApplianceModeLabel(applianceType) : undefined,
     });
   }
 
@@ -1031,19 +1058,55 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
         </div>
 
         <section className="daily-add-title-section">
-          <label htmlFor="daily-add-title">제목</label>
+          <label htmlFor="daily-add-title">{isHouseworkSchedule ? "작동시킬 가전" : "제목"}</label>
           <div className={["daily-add-title-input", error ? "invalid" : ""].filter(Boolean).join(" ")}>
-            <input
-              id="daily-add-title"
-              value={title}
-              onChange={(event) => {
-                setTitle(event.target.value);
-                setError("");
-              }}
-              placeholder="제목을 입력해 주세요."
-              aria-invalid={Boolean(error)}
-              autoFocus
-            />
+            {isHouseworkSchedule ? (
+              <div
+                className={["daily-appliance-select", isApplianceOpen ? "open" : ""].filter(Boolean).join(" ")}
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget)) setApplianceOpen(false);
+                }}
+              >
+                <button id="daily-add-title" type="button" onClick={() => setApplianceOpen((current) => !current)} aria-expanded={isApplianceOpen}>
+                  <span>{applianceOptions.find((option) => option.id === applianceOptionId)?.label || "가전 선택"}</span>
+                  <ChevronDown size={16} strokeWidth={2.5} />
+                </button>
+                {isApplianceOpen && (
+                  <div className="daily-appliance-options" role="listbox" aria-label="작동시킬 가전 선택">
+                    {applianceOptions.map((option) => (
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={option.id === applianceOptionId}
+                        className={option.id === applianceOptionId ? "active" : ""}
+                        key={option.id}
+                        onClick={() => {
+                          setApplianceOptionId(option.id);
+                          setTitle(option.label);
+                          setColor(applianceTypeColor[option.type] || colorOptions[1]);
+                          setError("");
+                          setApplianceOpen(false);
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <input
+                id="daily-add-title"
+                value={title}
+                onChange={(event) => {
+                  setTitle(event.target.value);
+                  setError("");
+                }}
+                placeholder="제목을 입력해 주세요."
+                aria-invalid={Boolean(error)}
+                autoFocus
+              />
+            )}
             <button type="button" className="daily-color-button" style={{ "--selected-color": color }} aria-label="색상 변경" onClick={() => setColorOpen((current) => !current)} />
           </div>
           {error && <p className="daily-add-error">{error}</p>}
