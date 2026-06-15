@@ -7360,7 +7360,7 @@ body {
 .daily-list-shell {
   position: relative;
   height: 100%;
-  min-height: calc(38px + (18 * 38px));
+  min-height: auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: stretch;
