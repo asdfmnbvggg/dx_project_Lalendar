@@ -2512,9 +2512,9 @@
 }
 
 .onboarding-fixed-page .onboarding-fixed-next-button {
-  position: fixed;
-  right: max(18px, env(safe-area-inset-right));
-  bottom: calc(92px + env(safe-area-inset-bottom));
+  position: absolute;
+  right: 24px;
+  bottom: 64px;
   z-index: 80;
   width: auto;
   min-width: 74px;
@@ -2567,24 +2567,31 @@
   }
 
   .onboarding-page.onboarding-fixed-page {
-    padding-bottom: calc(148px + env(safe-area-inset-bottom));
+    padding-bottom: calc(132px + env(safe-area-inset-bottom));
   }
 
   .onboarding-fixed-page .onboarding-fixed-card {
+    max-width: 430px;
+    margin-inline: auto;
     min-height: auto;
-    padding-bottom: calc(156px + env(safe-area-inset-bottom));
+    padding-bottom: calc(122px + env(safe-area-inset-bottom));
+  }
+
+  .onboarding-fixed-page .onboarding-fixed-next-button {
+    right: 24px;
+    bottom: 48px;
   }
 }
 
 @media (max-width: 560px) and (max-height: 820px) {
   .onboarding-page.onboarding-fixed-page {
-    padding-bottom: calc(136px + env(safe-area-inset-bottom));
+    padding-bottom: calc(124px + env(safe-area-inset-bottom));
   }
 
   .onboarding-fixed-page .onboarding-fixed-card {
     gap: 10px;
     padding-top: 20px;
-    padding-bottom: calc(144px + env(safe-area-inset-bottom));
+    padding-bottom: calc(114px + env(safe-area-inset-bottom));
   }
 
   .onboarding-fixed-page .onboarding-fixed-progress {
@@ -2622,7 +2629,7 @@
   }
 
   .onboarding-fixed-page .onboarding-fixed-next-button {
-    bottom: calc(88px + env(safe-area-inset-bottom));
+    bottom: 42px;
   }
 }
 
