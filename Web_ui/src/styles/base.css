@@ -262,6 +262,20 @@ body {
   }
 }
 
+@keyframes schedule-loading-progress {
+  0% {
+    transform: translateX(-110%);
+  }
+
+  50% {
+    transform: translateX(72%);
+  }
+
+  100% {
+    transform: translateX(230%);
+  }
+}
+
 button,
 input {
   font: inherit;

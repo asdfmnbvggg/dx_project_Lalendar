@@ -53,6 +53,7 @@ export default function CalendarPage({
   currentUser,
   activeCalendarUser,
   calendarUsers = [],
+  applianceAssignees = {},
   memberColors,
   setSelectedMember,
   onActiveCalendarUserChange,
@@ -66,6 +67,7 @@ export default function CalendarPage({
   postponeTask,
   onAddWeatherRecommendation,
   onAddTask,
+  onUpdateApplianceColor,
   openComposer,
   onOpenPanel,
   onOpenNotifications,
@@ -125,10 +127,19 @@ export default function CalendarPage({
   const orderedHouseworkMembers = currentHouseworkMember
     ? [currentHouseworkMember, ...HOUSEWORK_MEMBER_TABS.filter((member) => member.userId !== currentHouseworkMember.userId)]
     : HOUSEWORK_MEMBER_TABS;
+  const activeCalendarOwnerId = activeCalendarUser?.id || selectedMemberProfile.id;
+  const canEditPersonalCalendar = !isHouseCalendar && Boolean(currentUser?.id) && activeCalendarOwnerId === currentUser.id;
+  const canUseCalendarAdd = isHouseCalendar ? Boolean(currentHouseworkMember) : canEditPersonalCalendar;
 
   useEffect(() => {
     onSelectedDetailDateChange?.(selectedDetailDate);
   }, [onSelectedDetailDateChange, selectedDetailDate]);
+
+  useEffect(() => {
+    if (!isHouseCalendar && !canEditPersonalCalendar && selectedDetailDate) {
+      closeDateDetail();
+    }
+  }, [canEditPersonalCalendar, isHouseCalendar, selectedDetailDate]);
 
   useEffect(() => {
     setCalendarScale((current) => Math.min(current, maxCalendarScale));
@@ -248,6 +259,7 @@ export default function CalendarPage({
   function openCalendarComposer() {
     if (isHouseCalendar && currentUser) {
       const member = HOUSEWORK_MEMBER_TABS.find((item) => item.userId === currentUser.id);
+      if (!member) return;
       onActiveCalendarUserChange?.(currentUser);
       setSelectedMember(currentUser.id);
       setSelectedDetailDate(selectedDate);
@@ -255,6 +267,7 @@ export default function CalendarPage({
       return;
     }
 
+    if (!canEditPersonalCalendar) return;
     setSelectedDetailDate(selectedDate);
     setActiveAddColumn("personal");
   }
@@ -338,11 +351,12 @@ export default function CalendarPage({
     );
   }
 
-  if (selectedDetailDate && editingTask) {
+  if (selectedDetailDate && editingTask && (isHouseCalendar || canEditPersonalCalendar)) {
     return (
       <DailyScheduleEditPage
         task={editingTask}
         selectedDate={detailDate}
+        onApplianceColorChange={onUpdateApplianceColor}
         onClose={() => setEditingTask(null)}
         onSave={(updates) => {
           startSchedulePlanning({ type: "edit", task: editingTask, updates });
@@ -351,7 +365,7 @@ export default function CalendarPage({
     );
   }
 
-  if (selectedDetailDate && (activeAddColumn === "personal" || activeAddColumn === "housework")) {
+  if (selectedDetailDate && (activeAddColumn === "personal" || activeAddColumn === "housework") && (isHouseCalendar || canEditPersonalCalendar)) {
     const houseworkMember = HOUSEWORK_MEMBER_TABS.find((member) => member.userId === currentUser?.id || member.ownerId === currentUser?.id);
 
     return (
@@ -360,6 +374,8 @@ export default function CalendarPage({
         selectedMember={selectedMember}
         scheduleType={activeAddColumn}
         houseworkOwnerId={houseworkMember?.ownerId}
+        applianceAssignees={applianceAssignees}
+        onApplianceColorChange={onUpdateApplianceColor}
         onClose={() => setActiveAddColumn(null)}
         onSave={(task) => {
           startSchedulePlanning({ type: "add", task });
@@ -368,7 +384,7 @@ export default function CalendarPage({
     );
   }
 
-  if (selectedDetailDate) {
+  if (selectedDetailDate && (isHouseCalendar || canEditPersonalCalendar)) {
     return (
       <section className="page calendar-page daily-detail-page">
         <section
@@ -586,6 +602,7 @@ export default function CalendarPage({
                 className={!isHouseCalendar && (selectedMember === member.id || (selectedMember === "all" && member.id === selectedMemberProfile.id)) ? "active" : ""}
                 aria-label={(calendarProfileNames[member.id] || member.name) + " 캘린더 보기"}
                 onClick={() => {
+                  closeDateDetail();
                   onActiveCalendarUserChange?.(member);
                   setSelectedMember(member.id);
                   setCalendarTaskMode("personal");
@@ -649,10 +666,12 @@ export default function CalendarPage({
             <Plus size={15} />
             확대
           </button>
-          <button className="calendar-add-button" onClick={openCalendarComposer}>
-            <Plus size={18} />
-            일정 추가
-          </button>
+          {canUseCalendarAdd && (
+            <button className="calendar-add-button" onClick={openCalendarComposer}>
+              <Plus size={18} />
+              일정 추가
+            </button>
+          )}
         </div>
       </div>
 
@@ -682,6 +701,7 @@ export default function CalendarPage({
             onPrevWeek={() => moveCalendar(-1)}
             onNextWeek={() => moveCalendar(1)}
             onSelectDate={(date) => {
+              if (!canEditPersonalCalendar) return;
               setSelectedDate(date);
               setSelectedDetailDate(date);
             }}
@@ -725,6 +745,7 @@ export default function CalendarPage({
                     className={["date-cell", selectedDate === key ? "selected" : "", isCurrentMonth ? "" : "outside-month"].filter(Boolean).join(" ")}
                     onClick={() => {
                       if (!isHouseCalendar && !isCurrentMonth) return;
+                      if (!isHouseCalendar && !canEditPersonalCalendar) return;
                       setSelectedDate(key);
                       setSelectedDetailDate(key);
                     }}
@@ -960,15 +981,19 @@ function SchedulePlanningLoadingPage({ pendingSave, onComplete }) {
       </div>
 
       <div className="schedule-loading-copy">
+        <span>AI 루틴 정리 중</span>
         <strong>새로운 하루 계획을 만드는 중</strong>
         <p>입력한 일정을 반영해 AI가 가사 계획을 다시 정리하고 있어요</p>
+        <div className="schedule-loading-progress" aria-hidden="true">
+          <i />
+        </div>
       </div>
     </section>
   );
 }
 
-function getHouseworkApplianceOptions() {
-  return [
+function getHouseworkApplianceOptions(ownerId, applianceAssignees = {}) {
+  const options = [
     { id: "washer", type: "WASHER", label: "세탁기" },
     { id: "dryer", type: "DRYER", label: "건조기" },
     { id: "dishwasher", type: "DISHWASHER", label: "식기세척기" },
@@ -979,22 +1004,28 @@ function getHouseworkApplianceOptions() {
     { id: "air-dabin", type: "AIR_CONDITIONER", label: "다빈 에어컨", room: "다빈 방" },
     { id: "air-jaehyeok", type: "AIR_CONDITIONER", label: "재혁 에어컨", room: "재혁 방" },
   ];
+  const hasAssigneeSetting = Object.values(applianceAssignees || {}).some(Boolean);
+  if (!ownerId || !hasAssigneeSetting) return options;
+
+  return options.filter((option) => applianceAssignees[option.id] === ownerId);
 }
 
 function getDefaultApplianceModeLabel(applianceType) {
   return applianceModeCatalog[applianceType]?.modes?.[0]?.label || "자동";
 }
 
-function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "personal", houseworkOwnerId, onClose, onSave }) {
+function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "personal", houseworkOwnerId, applianceAssignees = {}, onClose, onSave, onApplianceColorChange }) {
   const parsedDate = parseDateKey(selectedDate);
   const initialOwner = scheduleType === "housework" ? houseworkOwnerId || selectedMember || DABIN_TASK_OWNER : selectedMember || DABIN_TASK_OWNER;
   const isHouseworkSchedule = scheduleType === "housework";
-  const applianceOptions = getHouseworkApplianceOptions();
+  const applianceOptions = getHouseworkApplianceOptions(houseworkOwnerId, applianceAssignees);
+  const applianceOptionKey = applianceOptions.map((option) => option.id).join("|");
   const colorOptions = scheduleColorOptions;
+  const initialApplianceType = applianceOptions[0]?.type || "ETC";
   const [title, setTitle] = useState(isHouseworkSchedule ? applianceOptions[0]?.label || "" : "");
   const [applianceOptionId, setApplianceOptionId] = useState(applianceOptions[0]?.id || "washer");
   const [isApplianceOpen, setApplianceOpen] = useState(false);
-  const [color, setColor] = useState(colorOptions[1]);
+  const [color, setColor] = useState(isHouseworkSchedule ? applianceTypeColor[initialApplianceType] || colorOptions[1] : colorOptions[1]);
   const [isColorOpen, setColorOpen] = useState(false);
   const [isAllDay, setAllDay] = useState(false);
   const [startMonth, setStartMonth] = useState(parsedDate.month);
@@ -1004,13 +1035,32 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
   const [startTime, setStartTime] = useState(DAILY_TIMETABLE_START_TIME);
   const [endTime, setEndTime] = useState("07:00");
   const [error, setError] = useState("");
+  const selectedAppliance = applianceOptions.find((option) => option.id === applianceOptionId) || applianceOptions[0];
+  const fixedApplianceColor = applianceTypeColor[selectedAppliance?.type] || colorOptions[1];
+  const selectedColor = isHouseworkSchedule ? color || fixedApplianceColor : color;
+  const applianceSelectLabel = selectedAppliance?.label || (isHouseworkSchedule ? "담당 가전 없음" : "");
+
+  useEffect(() => {
+    if (!isHouseworkSchedule) return;
+    if (!applianceOptions.length) {
+      setApplianceOptionId("");
+      setTitle("");
+      setColor(colorOptions[1]);
+      return;
+    }
+    if (applianceOptions.some((option) => option.id === applianceOptionId)) return;
+
+    const nextOption = applianceOptions[0];
+    setApplianceOptionId(nextOption.id);
+    setTitle(nextOption.label);
+    setColor(applianceTypeColor[nextOption.type] || colorOptions[1]);
+  }, [applianceOptionKey, applianceOptionId, colorOptions, isHouseworkSchedule]);
 
   function saveSchedule() {
-    const selectedAppliance = applianceOptions.find((option) => option.id === applianceOptionId) || applianceOptions[0];
-    const applianceType = selectedAppliance?.type || "WASHER";
+    const applianceType = selectedAppliance?.type || "ETC";
     const trimmedTitle = isHouseworkSchedule ? selectedAppliance?.label || "" : title.trim();
     if (!trimmedTitle) {
-      setError(isHouseworkSchedule ? "작동시킬 가전을 선택해 주세요." : "제목을 입력해 주세요.");
+      setError(isHouseworkSchedule ? "담당 가전이 없어요. 설정에서 담당 가전을 먼저 지정해 주세요." : "제목을 입력해 주세요.");
       return;
     }
 
@@ -1022,6 +1072,9 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
     }
 
     const scheduleDates = orderScheduleDates(startDate, endDate);
+    if (isHouseworkSchedule && selectedColor !== fixedApplianceColor) {
+      onApplianceColorChange?.(applianceType, selectedColor);
+    }
     onSave({
       date: scheduleDates.date,
       title: trimmedTitle,
@@ -1031,7 +1084,7 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
       done: false,
       repeat: isAllDay ? "하루종일" : startTime + " ~ " + endTime,
       source: "manual",
-      color,
+      color: selectedColor,
       endDate: scheduleDates.endDate,
       displayType: isHouseworkSchedule ? "appliance" : "manual",
       applianceType: isHouseworkSchedule ? applianceType : undefined,
@@ -1068,12 +1121,14 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
                 }}
               >
                 <button id="daily-add-title" type="button" onClick={() => setApplianceOpen((current) => !current)} aria-expanded={isApplianceOpen}>
-                  <span>{applianceOptions.find((option) => option.id === applianceOptionId)?.label || "가전 선택"}</span>
+                  <span>{applianceSelectLabel}</span>
                   <ChevronDown size={16} strokeWidth={2.5} />
                 </button>
                 {isApplianceOpen && (
                   <div className="daily-appliance-options" role="listbox" aria-label="작동시킬 가전 선택">
-                    {applianceOptions.map((option) => (
+                    {applianceOptions.length === 0 ? (
+                      <p className="daily-appliance-empty">담당 가전이 없어요</p>
+                    ) : applianceOptions.map((option) => (
                       <button
                         type="button"
                         role="option"
@@ -1107,7 +1162,18 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
                 autoFocus
               />
             )}
-            <button type="button" className="daily-color-button" style={{ "--selected-color": color }} aria-label="색상 변경" onClick={() => setColorOpen((current) => !current)} />
+            {isHouseworkSchedule ? (
+              <button
+                type="button"
+                className="daily-color-button appliance-color-button"
+                style={{ "--selected-color": selectedColor }}
+                aria-label={selectedColor === fixedApplianceColor ? "가전 고정 색상 변경" : "가전 변경 색상 변경"}
+                title={selectedColor === fixedApplianceColor ? "고정 색상" : "변경된 색상"}
+                onClick={() => setColorOpen((current) => !current)}
+              />
+            ) : (
+              <button type="button" className="daily-color-button" style={{ "--selected-color": color }} aria-label="색상 변경" onClick={() => setColorOpen((current) => !current)} />
+            )}
           </div>
           {error && <p className="daily-add-error">{error}</p>}
           {isColorOpen && (
@@ -1116,10 +1182,15 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
                 <button
                   key={option}
                   type="button"
-                  className={option === color ? "active" : ""}
+                  className={option === selectedColor ? "active" : ""}
                   style={{ "--option-color": option }}
                   aria-label={option + " 선택"}
                   onClick={() => {
+                    if (isHouseworkSchedule && option !== fixedApplianceColor && option !== selectedColor) {
+                      const applianceLabel = selectedAppliance?.label || applianceTypeLabel[selectedAppliance?.type] || "해당";
+                      const shouldUpdateAll = window.confirm(`${applianceLabel} 가전의 전체 캘린더 색상을 바꾸겠습니까?`);
+                      if (!shouldUpdateAll) return;
+                    }
                     setColor(option);
                     setColorOpen(false);
                   }}
@@ -1196,14 +1267,18 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
   );
 }
 
-function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
+function DailyScheduleEditPage({ task, selectedDate, onClose, onSave, onApplianceColorChange }) {
   const parsedDate = parseDateKey(task.date || selectedDate);
   const parsedEndDate = parseDateKey(task.endDate || task.date || selectedDate);
   const colorOptions = scheduleColorOptions;
   const initialTime = getEditableTaskTime(task);
+  const isHouseworkTask = getDailyTaskGroup(task) === "housework";
+  const fixedApplianceColor = task.applianceType ? applianceTypeColor[task.applianceType] : "";
+  const applianceLabel = task.applianceType ? applianceTypeLabel[task.applianceType] || task.title || "해당" : task.title || "해당";
   const [title, setTitle] = useState(task.title || "");
-  const [color, setColor] = useState(normalizeScheduleColor(task.color) || colorOptions[1]);
+  const [color, setColor] = useState(normalizeScheduleColor(task.color) || fixedApplianceColor || colorOptions[1]);
   const [isColorOpen, setColorOpen] = useState(false);
+  const [pendingApplianceColor, setPendingApplianceColor] = useState(null);
   const [isAllDay, setAllDay] = useState(initialTime.isAllDay);
   const [startMonth, setStartMonth] = useState(parsedDate.month);
   const [startDay, setStartDay] = useState(parsedDate.day);
@@ -1228,6 +1303,9 @@ function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
     }
 
     const scheduleDates = orderScheduleDates(startDate, endDate);
+    if (pendingApplianceColor && task.applianceType) {
+      onApplianceColorChange?.(task.applianceType, pendingApplianceColor);
+    }
     onSave({
       title: trimmedTitle,
       date: scheduleDates.date,
@@ -1287,6 +1365,13 @@ function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
                   style={{ "--option-color": option }}
                   aria-label={option + " 선택"}
                   onClick={() => {
+                    if (isHouseworkTask && task.applianceType && option !== color) {
+                      if (fixedApplianceColor && option !== fixedApplianceColor) {
+                        const shouldUpdateAll = window.confirm(`${applianceLabel} 가전의 전체 캘린더 색상을 바꾸겠습니까?`);
+                        if (!shouldUpdateAll) return;
+                      }
+                      setPendingApplianceColor(option);
+                    }
                     setColor(option);
                     setColorOpen(false);
                   }}

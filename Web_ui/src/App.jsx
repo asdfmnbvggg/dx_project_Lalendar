@@ -354,6 +354,11 @@ export default function App() {
     );
   }
 
+  function updateApplianceCalendarColor(applianceType, color) {
+    if (!applianceType || !color) return;
+    setTasks((current) => current.map((task) => (task.applianceType === applianceType ? { ...task, color } : task)));
+  }
+
   function changeMemberColor(memberId, color) {
     setMemberColors((current) => ({ ...current, [memberId]: color }));
   }
@@ -545,6 +550,10 @@ export default function App() {
   }
 
   function openTaskComposer(options = {}) {
+    const currentOwnerId = currentUser?.id ? userIdToOwner(currentUser.id) : "";
+    if (options.ownerId && options.ownerId !== currentOwnerId) return;
+    if (!options.ownerId && activeCalendarUserId && currentUser?.id && activeCalendarUserId !== currentUser.id) return;
+
     setComposerOwnerLock(options.ownerId || null);
     setComposerOpen(true);
   }
@@ -661,6 +670,7 @@ export default function App() {
     currentUser,
     activeCalendarUser,
     calendarUsers: sortedCalendarUsers,
+    applianceAssignees: onboardingSetup.applianceAssignees,
     memberColors,
     changeMemberColor,
     setSelectedDate,
@@ -683,6 +693,7 @@ export default function App() {
     deleteTask,
     changeTaskOwner,
     updateTask,
+    onUpdateApplianceColor: updateApplianceCalendarColor,
     postponeTask,
     onAddWeatherRecommendation: addWeatherRecommendationTask,
     onAddTask: addTask,
