@@ -2480,6 +2480,10 @@
   gap: 10px;
 }
 
+.settings-subhead:has(.settings-inline-add-button) {
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+}
+
 .settings-subhead > button {
   width: 34px;
   height: 34px;
@@ -2489,6 +2493,17 @@
   border-radius: 12px;
   color: #ff6d1f;
   background: #fff8ee;
+}
+
+.settings-subhead > .settings-inline-add-button {
+  width: auto;
+  min-width: 54px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: #fff;
+  background: #ff8a22;
+  font-size: 12px;
+  font-weight: 950;
 }
 
 .settings-subhead svg {
@@ -2628,13 +2643,118 @@
 .settings-fixed-list article {
   min-height: 48px;
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-columns: 34px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   padding: 8px 10px;
   border: 1px solid #ffe0a9;
   border-radius: 14px;
   background: #fffaf3;
+}
+
+.settings-fixed-editor {
+  display: grid;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid #ffd6a6;
+  border-radius: 16px;
+  background: #fff8ee;
+}
+
+.settings-fixed-editor label {
+  display: grid;
+  gap: 5px;
+}
+
+.settings-fixed-editor label span {
+  color: #a36b2e;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.settings-fixed-editor input {
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #ffd6a6;
+  border-radius: 10px;
+  background: #fff;
+  color: #3b2615;
+  font-size: 12px;
+  font-weight: 850;
+  outline: none;
+}
+
+.settings-fixed-editor input:focus {
+  border-color: #ffb25b;
+  box-shadow: 0 0 0 3px rgba(255, 138, 34, 0.14);
+}
+
+.settings-fixed-day-picker,
+.settings-fixed-time-row,
+.settings-fixed-editor-actions,
+.settings-fixed-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings-fixed-day-picker {
+  justify-content: space-between;
+}
+
+.settings-fixed-day-picker button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #ffd6a6;
+  border-radius: 50%;
+  background: #fff;
+  color: #a36b2e;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.settings-fixed-day-picker button.active {
+  color: #fff;
+  border-color: #ff8a22;
+  background: #ff8a22;
+}
+
+.settings-fixed-time-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.settings-fixed-editor-actions {
+  justify-content: flex-end;
+}
+
+.settings-fixed-editor-actions button,
+.settings-fixed-actions button {
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: #a36b2e;
+  background: #fff0dc;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.settings-fixed-editor-actions button:last-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #fff;
+  background: #ff8a22;
+}
+
+.settings-fixed-actions {
+  justify-content: flex-end;
+}
+
+.settings-fixed-actions button:last-child {
+  color: #ef4444;
+  background: #fff1f2;
 }
 
 .settings-fixed-list article > span {
