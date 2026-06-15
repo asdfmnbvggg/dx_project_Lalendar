@@ -1581,6 +1581,10 @@
   scrollbar-color: #d7dbe0 transparent;
 }
 
+.daily-timetable-shell:has(.daily-context-menu) {
+  overflow: visible;
+}
+
 .daily-timetable-shell.housework-detail {
   grid-template-columns: 54px minmax(0, 1fr);
 }
@@ -1659,6 +1663,10 @@
   gap: 8px;
   overflow: auto;
   padding: 8px;
+}
+
+.daily-list-column:has(.daily-context-menu) > div {
+  overflow: visible;
 }
 
 .daily-list-column p {
