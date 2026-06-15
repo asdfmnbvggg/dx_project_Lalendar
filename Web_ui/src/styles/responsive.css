@@ -988,6 +988,129 @@
   }
 }
 
+@media (max-width: 640px) {
+  .onboarding-character-scene.intro,
+  .onboarding-character-scene.info,
+  .onboarding-character-scene.google-confirm {
+    width: min(calc(100vw - 32px), 420px) !important;
+    max-width: calc(100vw - 32px) !important;
+  }
+
+  .onboarding-intro-panel,
+  .onboarding-info-panel,
+  .onboarding-google-confirm {
+    position: relative;
+    box-sizing: border-box;
+    width: min(calc(100vw - 32px), 420px) !important;
+    max-width: calc(100vw - 32px) !important;
+    min-height: clamp(220px, 34dvh, 320px) !important;
+    height: auto !important;
+    max-height: none !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(28px, 7vw, 56px) clamp(20px, 6vw, 44px) !important;
+    overflow: visible;
+  }
+
+  .onboarding-bubble-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(14px, 3vw, 24px);
+  }
+
+  .onboarding-intro-type,
+  .onboarding-info-type,
+  .onboarding-google-confirm .onboarding-intro-type {
+    position: static !important;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 0 !important;
+    margin: 0;
+    padding: 0;
+    display: block !important;
+    color: #6d4a20;
+    text-align: center;
+    font-size: clamp(22px, 6vw, 34px);
+    line-height: 1.2;
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  .onboarding-intro-type br,
+  .onboarding-info-type br {
+    display: none;
+  }
+
+  .onboarding-bubble-content > .onboarding-next-button,
+  .onboarding-bubble-content > .onboarding-info-next-button,
+  .onboarding-google-actions {
+    position: static !important;
+    inset: auto !important;
+    flex-shrink: 0;
+    transform: none !important;
+  }
+
+  .onboarding-bubble-content > .onboarding-next-button,
+  .onboarding-bubble-content > .onboarding-info-next-button {
+    min-width: 104px;
+    width: auto;
+    height: 44px;
+    min-height: 44px;
+    padding-inline: 18px 14px;
+    font-size: 15px;
+  }
+
+  .onboarding-google-actions {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(8px, 2.8vw, 14px);
+    pointer-events: auto;
+  }
+
+  .onboarding-google-actions button {
+    min-width: 0;
+    min-height: 46px;
+    padding-inline: 10px;
+    font-size: clamp(13px, 3.8vw, 16px);
+    white-space: nowrap;
+    touch-action: manipulation;
+  }
+
+  .onboarding-character-scene.intro .onboarding-character-image,
+  .onboarding-character-scene.info .onboarding-character-image,
+  .onboarding-character-scene.google-confirm .onboarding-character-image {
+    width: min(176px, 45vw) !important;
+    max-height: clamp(130px, 28dvh, 220px) !important;
+    object-fit: contain;
+  }
+}
+
+@media (max-width: 390px) {
+  .onboarding-intro-panel,
+  .onboarding-info-panel,
+  .onboarding-google-confirm {
+    width: calc(100vw - 28px) !important;
+    max-width: calc(100vw - 28px) !important;
+    padding-inline: 18px !important;
+  }
+
+  .onboarding-intro-type,
+  .onboarding-info-type,
+  .onboarding-google-confirm .onboarding-intro-type {
+    font-size: clamp(20px, 5.6vw, 28px);
+  }
+}
+
 @supports (-webkit-touch-callout: none) {
   @media (max-width: 640px) {
     .app-frame.onboarding-frame {
@@ -1156,5 +1279,117 @@
     .onboarding-ai-character-wrap .onboarding-character-image {
       width: min(126px, 34vw);
     }
+  }
+}
+
+@media (max-width: 640px) {
+  .onboarding-character-scene.intro,
+  .onboarding-character-scene.info,
+  .onboarding-character-scene.google-confirm {
+    width: min(calc(100vw - 32px), 420px) !important;
+    max-width: calc(100vw - 32px) !important;
+  }
+
+  .onboarding-intro-panel,
+  .onboarding-info-panel,
+  .onboarding-google-confirm {
+    position: relative;
+    box-sizing: border-box;
+    width: min(calc(100vw - 32px), 420px) !important;
+    max-width: calc(100vw - 32px) !important;
+    min-height: clamp(220px, 34dvh, 320px) !important;
+    height: auto !important;
+    max-height: none !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(28px, 7vw, 56px) clamp(20px, 6vw, 44px) !important;
+    overflow: visible;
+  }
+
+  .onboarding-bubble-content {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(14px, 3vw, 24px);
+  }
+
+  .onboarding-intro-type,
+  .onboarding-info-type,
+  .onboarding-google-confirm .onboarding-intro-type {
+    position: static !important;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 0 !important;
+    margin: 0;
+    padding: 0;
+    display: block !important;
+    text-align: center;
+    font-size: clamp(22px, 6vw, 34px);
+    line-height: 1.2;
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  .onboarding-intro-type br,
+  .onboarding-info-type br {
+    display: none;
+  }
+
+  .onboarding-bubble-content > .onboarding-next-button,
+  .onboarding-bubble-content > .onboarding-info-next-button,
+  .onboarding-google-actions {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    flex-shrink: 0;
+  }
+
+  .onboarding-bubble-content > .onboarding-next-button,
+  .onboarding-bubble-content > .onboarding-info-next-button {
+    min-width: 104px;
+    width: auto;
+    height: 44px;
+    min-height: 44px;
+    padding-inline: 18px 14px;
+    font-size: 15px;
+  }
+
+  .onboarding-google-actions {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(8px, 2.8vw, 14px);
+    pointer-events: auto;
+  }
+
+  .onboarding-google-actions button {
+    min-width: 0;
+    min-height: 46px;
+    padding-inline: 10px;
+    font-size: clamp(13px, 3.8vw, 16px);
+    white-space: nowrap;
+    touch-action: manipulation;
+  }
+}
+
+@media (max-width: 390px) {
+  .onboarding-intro-panel,
+  .onboarding-info-panel,
+  .onboarding-google-confirm {
+    width: calc(100vw - 28px) !important;
+    max-width: calc(100vw - 28px) !important;
+    padding-inline: 18px !important;
+  }
+
+  .onboarding-intro-type,
+  .onboarding-info-type,
+  .onboarding-google-confirm .onboarding-intro-type {
+    font-size: clamp(20px, 5.6vw, 28px);
   }
 }

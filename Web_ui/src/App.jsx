@@ -1837,25 +1837,29 @@ function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange,
       >
         {isIntro ? (
           <section className="onboarding-intro-panel" aria-label="환영 멘트">
-            <p className="onboarding-intro-type">
-              {renderTypedOnboardingText(introText, "플래니")}
-              {!isIntroComplete && <i aria-hidden="true" />}
-            </p>
-            <button className="onboarding-next-button" type="button" onClick={onNext} disabled={!isIntroComplete} aria-label="다음 단계로 이동">
-              <span>NEXT</span>
-              <ArrowRight size={18} strokeWidth={2.6} />
-            </button>
+            <div className="onboarding-bubble-content">
+              <p className="onboarding-intro-type">
+                {renderTypedOnboardingText(introText, "플래니")}
+                {!isIntroComplete && <i aria-hidden="true" />}
+              </p>
+              <button className="onboarding-next-button" type="button" onClick={onNext} disabled={!isIntroComplete} aria-label="다음 단계로 이동">
+                <span>NEXT</span>
+                <ArrowRight size={18} strokeWidth={2.6} />
+              </button>
+            </div>
           </section>
         ) : isScheduleInfo ? (
           <section className="onboarding-intro-panel onboarding-info-panel" aria-label="일정 정보 안내">
-            <p className="onboarding-intro-type onboarding-info-type">
-              {renderTypedOnboardingText(scheduleInfoText, scheduleUserName)}
-              {!isScheduleInfoComplete && <i aria-hidden="true" />}
-            </p>
-            <button className="onboarding-next-button onboarding-info-next-button" type="button" onClick={onInfoNext} disabled={!isScheduleInfoComplete} aria-label="고정 일정 입력으로 이동">
-              <span>NEXT</span>
-              <ArrowRight size={18} strokeWidth={2.6} />
-            </button>
+            <div className="onboarding-bubble-content">
+              <p className="onboarding-intro-type onboarding-info-type">
+                {renderTypedOnboardingText(scheduleInfoText, scheduleUserName)}
+                {!isScheduleInfoComplete && <i aria-hidden="true" />}
+              </p>
+              <button className="onboarding-next-button onboarding-info-next-button" type="button" onClick={onInfoNext} disabled={!isScheduleInfoComplete} aria-label="고정 일정 입력으로 이동">
+                <span>NEXT</span>
+                <ArrowRight size={18} strokeWidth={2.6} />
+              </button>
+            </div>
           </section>
         ) : isFixedSchedule ? (
           <div className="onboarding-card onboarding-method-card onboarding-fixed-card">
@@ -1964,18 +1968,20 @@ function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange,
           </div>
         ) : isGoogleConfirm ? (
           <section className="onboarding-intro-panel onboarding-google-confirm" aria-label="구글 캘린더 연동 확인">
-            <p className="onboarding-intro-type onboarding-info-type">
-              구글 캘린더에 등록된 일정도
-              <br />
-              함께 불러올까요?
-            </p>
-            <div className="onboarding-google-actions">
-              <button type="button" onClick={onPreview}>
-                나중에
-              </button>
-              <button className={selectedImportMethod === "google" ? "active" : ""} type="button" onClick={importGoogleCalendar}>
-                연동하기
-              </button>
+            <div className="onboarding-bubble-content">
+              <p className="onboarding-intro-type onboarding-info-type">
+                구글 캘린더에 등록된 일정도
+                <br />
+                함께 불러올까요?
+              </p>
+              <div className="onboarding-google-actions">
+                <button type="button" onClick={onPreview}>
+                  나중에
+                </button>
+                <button className={selectedImportMethod === "google" ? "active" : ""} type="button" onClick={importGoogleCalendar}>
+                  연동하기
+                </button>
+              </div>
             </div>
           </section>
         ) : isAppliance ? (
