@@ -211,7 +211,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!currentUser) return undefined;
+    if (!currentUser || !isOnboardingComplete) return undefined;
 
     return subscribeSensorLatest(SENSOR_DEVICE_ID, (sensorData) => {
       console.log("[sensor] realtime data received", sensorData);
@@ -228,10 +228,10 @@ export default function App() {
         "realtime",
       );
     });
-  }, [activeCalendarUser, currentUser, onboardingSetup.applianceAssignees]);
+  }, [activeCalendarUser, currentUser, isOnboardingComplete, onboardingSetup.applianceAssignees]);
 
   useEffect(() => {
-    if (!currentUser || !latestSensorData) return undefined;
+    if (!currentUser || !isOnboardingComplete || !latestSensorData) return undefined;
 
     const checkScheduledWasherAlerts = () => {
       const now = new Date();
@@ -268,7 +268,13 @@ export default function App() {
     checkScheduledWasherAlerts();
     const intervalId = window.setInterval(checkScheduledWasherAlerts, 60 * 1000);
     return () => window.clearInterval(intervalId);
-  }, [activeCalendarUser, currentUser, latestSensorData, tasks]);
+  }, [activeCalendarUser, currentUser, isOnboardingComplete, latestSensorData, tasks]);
+
+  useEffect(() => {
+    if (isOnboardingComplete) return;
+    setSensorPopup(null);
+    setSensorPopupQueue([]);
+  }, [isOnboardingComplete]);
 
   useEffect(() => {
     if (!currentUser) return;
