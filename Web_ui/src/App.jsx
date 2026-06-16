@@ -28,7 +28,7 @@ import { fetchAirQuality } from "./services/airQualityService.js";
 import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendationService.js";
 import { buildRoutineRecommendations } from "./services/routinePredictionService.js";
 import { sendDeviceCommand, subscribeSensorLatest } from "./services/sensorRealtimeService.js";
-import { buildAppliancePopups, getAppliancePopupKey } from "./services/appliancePopupRuleService.js";
+import { buildRealtimeAppliancePopups, buildScheduledWasherPopup, getPopupKey } from "./services/appliancePopupRuleService.js";
 
 const ENABLE_ONBOARDING_TASK_GENERATION = false;
 const SENSOR_DEVICE_ID = "living_room_01";
@@ -136,7 +136,9 @@ export default function App() {
   const [weatherApiStatus, setWeatherApiStatus] = useState("loading");
   const [sensorPopup, setSensorPopup] = useState(null);
   const [sensorPopupQueue, setSensorPopupQueue] = useState([]);
+  const [latestSensorData, setLatestSensorData] = useState(null);
   const sensorPopupCooldownRef = useRef({});
+  const washerPopupShownRef = useRef({});
 
   useEffect(() => {
     setTasks((current) => {
@@ -213,52 +215,60 @@ export default function App() {
 
     return subscribeSensorLatest(SENSOR_DEVICE_ID, (sensorData) => {
       console.log("[sensor] realtime data received", sensorData);
+      console.log("[sensor] current user", currentUser);
+      setLatestSensorData(sensorData);
 
-      const popups = buildAppliancePopups(sensorData);
-      console.log("[sensor] threshold result", popups);
-
-      if (popups.length === 0) {
-        console.log("[sensor] popup display skipped: no matching rule");
-        return;
-      }
-
-      const now = Date.now();
-      const availablePopups = popups.filter((popup) => {
-        const popupKey = getAppliancePopupKey(popup);
-        const lastClosedAt = sensorPopupCooldownRef.current[popupKey] || 0;
-
-        if (now - lastClosedAt < POPUP_COOLDOWN_MS) {
-          console.log("[sensor] popup display skipped: cooldown", popupKey);
-          return false;
-        }
-
-        return true;
+      const popups = buildRealtimeAppliancePopups(sensorData, {
+        targetUserIds: getRealtimeApplianceTargetUserIds(onboardingSetup.applianceAssignees, activeCalendarUser, currentUser),
       });
+      console.log("[sensor] realtime threshold result", popups);
 
-      if (availablePopups.length === 0) return;
-
-      setSensorPopup((currentPopup) => {
-        const currentPopupKey = currentPopup ? getAppliancePopupKey(currentPopup) : "";
-        const nextPopups = availablePopups.filter((popup) => getAppliancePopupKey(popup) !== currentPopupKey);
-
-        if (nextPopups.length === 0) {
-          console.log("[sensor] popup display skipped: already visible");
-          return currentPopup;
-        }
-
-        if (currentPopup) {
-          setSensorPopupQueue((queue) => appendUniqueSensorPopups(queue, nextPopups));
-          console.log("[sensor] popup queued", nextPopups.map(getAppliancePopupKey));
-          return currentPopup;
-        }
-
-        const [nextPopup, ...queuedPopups] = nextPopups;
-        setSensorPopupQueue((queue) => appendUniqueSensorPopups(queue, queuedPopups));
-        console.log("[sensor] popup displayed", getAppliancePopupKey(nextPopup));
-        return nextPopup;
-      });
+      enqueueSensorPopups(
+        popups.filter((popup) => popup.targetUserId === currentUser.id),
+        "realtime",
+      );
     });
-  }, [currentUser]);
+  }, [activeCalendarUser, currentUser, onboardingSetup.applianceAssignees]);
+
+  useEffect(() => {
+    if (!currentUser || !latestSensorData) return undefined;
+
+    const checkScheduledWasherAlerts = () => {
+      const now = new Date();
+      const today = dateKey(now.getFullYear(), now.getMonth() + 1, now.getDate());
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      const washerCandidates = getDueWasherAlertCandidates(tasks, today, nowMinutes, activeCalendarUser, currentUser);
+
+      console.log("[sensor] washer schedule detected", washerCandidates);
+
+      const popups = washerCandidates
+        .map(({ washerTask, targetUserId, alertMinutes }) => {
+          console.log("[sensor] washer target result", { targetUserId, washerTask, alertMinutes });
+          if (targetUserId !== currentUser.id) return null;
+
+          return buildScheduledWasherPopup(latestSensorData, {
+            washerTask,
+            targetUserId,
+          });
+        })
+        .filter((popup) => {
+          if (!popup) return false;
+          const popupKey = getPopupKey(popup);
+          if (washerPopupShownRef.current[popupKey]) {
+            console.log("[sensor] washer popup skipped: already shown", popupKey);
+            return false;
+          }
+          return true;
+        });
+
+      console.log("[sensor] washer threshold result", popups);
+      enqueueSensorPopups(popups, "washer-schedule");
+    };
+
+    checkScheduledWasherAlerts();
+    const intervalId = window.setInterval(checkScheduledWasherAlerts, 60 * 1000);
+    return () => window.clearInterval(intervalId);
+  }, [activeCalendarUser, currentUser, latestSensorData, tasks]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -688,15 +698,62 @@ export default function App() {
     setDismissedAlerts((current) => [...current, item.id]);
   }
 
+  function enqueueSensorPopups(popups, source = "sensor") {
+    if (popups.length === 0) {
+      console.log("[sensor] popup display skipped: no matching visible rule", source);
+      return;
+    }
+
+    const now = Date.now();
+    const availablePopups = popups.filter((popup) => {
+      const popupKey = getPopupKey(popup);
+      const lastClosedAt = sensorPopupCooldownRef.current[popupKey] || 0;
+
+      if (now - lastClosedAt < POPUP_COOLDOWN_MS) {
+        console.log("[sensor] popup display skipped: cooldown", source, popupKey);
+        return false;
+      }
+
+      return true;
+    });
+
+    if (availablePopups.length === 0) return;
+
+    setSensorPopup((currentPopup) => {
+      const currentPopupKey = currentPopup ? getPopupKey(currentPopup) : "";
+      const nextPopups = availablePopups.filter((popup) => getPopupKey(popup) !== currentPopupKey);
+
+      if (nextPopups.length === 0) {
+        console.log("[sensor] popup display skipped: already visible", source);
+        return currentPopup;
+      }
+
+      if (currentPopup) {
+        setSensorPopupQueue((queue) => appendUniqueSensorPopups(queue, nextPopups));
+        console.log("[sensor] popup queued", source, nextPopups.map(getPopupKey));
+        return currentPopup;
+      }
+
+      const [nextPopup, ...queuedPopups] = nextPopups;
+      setSensorPopupQueue((queue) => appendUniqueSensorPopups(queue, queuedPopups));
+      console.log("[sensor] popup displayed", source, getPopupKey(nextPopup));
+      return nextPopup;
+    });
+  }
+
   function closeSensorPopup() {
     if (sensorPopup) {
-      sensorPopupCooldownRef.current[getAppliancePopupKey(sensorPopup)] = Date.now();
+      const popupKey = getPopupKey(sensorPopup);
+      sensorPopupCooldownRef.current[popupKey] = Date.now();
+      if (sensorPopup.applianceType === "WASHER") {
+        washerPopupShownRef.current[popupKey] = true;
+      }
     }
     setSensorPopupQueue((queue) => {
       const [nextPopup, ...restQueue] = queue;
       setSensorPopup(nextPopup || null);
       if (nextPopup) {
-        console.log("[sensor] popup displayed from queue", getAppliancePopupKey(nextPopup));
+        console.log("[sensor] popup displayed from queue", getPopupKey(nextPopup));
       }
       return restQueue;
     });
@@ -715,6 +772,7 @@ export default function App() {
         applianceType: sensorPopup.applianceType,
         applianceName: sensorPopup.applianceName,
         reason: sensorPopup.message,
+        targetUserId: sensorPopup.targetUserId,
       });
       console.log("[sensor] device command sent", sensorPopup);
     } catch (error) {
@@ -1321,11 +1379,11 @@ function SensorPopupDialog({ popup, onClose, onExecute }) {
 function appendUniqueSensorPopups(queue, popups) {
   if (!popups.length) return queue;
 
-  const existingKeys = new Set(queue.map(getAppliancePopupKey));
+  const existingKeys = new Set(queue.map(getPopupKey));
   const nextQueue = [...queue];
 
   popups.forEach((popup) => {
-    const popupKey = getAppliancePopupKey(popup);
+    const popupKey = getPopupKey(popup);
     if (!existingKeys.has(popupKey)) {
       existingKeys.add(popupKey);
       nextQueue.push(popup);
@@ -1333,6 +1391,65 @@ function appendUniqueSensorPopups(queue, popups) {
   });
 
   return nextQueue;
+}
+
+function getRealtimeApplianceTargetUserIds(applianceAssignees = {}, activeCalendarUser, currentUser) {
+  const fallbackUserId = activeCalendarUser?.id || currentUser?.id || "";
+
+  return {
+    AIR_CONDITIONER:
+      resolveOwnerOrUserIdToUserId(
+        applianceAssignees["air-living"] ||
+          applianceAssignees["air"] ||
+          applianceAssignees["air-conditioner"] ||
+          applianceAssignees.AIR_CONDITIONER,
+      ) || fallbackUserId,
+    AIR_PURIFIER:
+      resolveOwnerOrUserIdToUserId(applianceAssignees["air-purifier"] || applianceAssignees.AIR_PURIFIER) || fallbackUserId,
+  };
+}
+
+function getDueWasherAlertCandidates(tasks, date, nowMinutes, activeCalendarUser, currentUser) {
+  const washerTasks = tasks.filter((task) => isTaskVisibleOnDate(task, date) && isWasherScheduleTask(task));
+
+  return washerTasks
+    .map((washerTask) => {
+      const targetUserId = getTaskUserId(washerTask) || activeCalendarUser?.id || currentUser?.id || "";
+      const alertMinutes = getWasherAlertMinutes(tasks, washerTask, targetUserId, date);
+      return { washerTask, targetUserId, alertMinutes };
+    })
+    .filter(({ alertMinutes }) => Number.isFinite(alertMinutes) && nowMinutes >= alertMinutes);
+}
+
+function getWasherAlertMinutes(tasks, washerTask, targetUserId, date) {
+  const fixedSchedules = tasks
+    .filter((task) => isTaskVisibleOnDate(task, date))
+    .filter((task) => getTaskUserId(task) === targetUserId)
+    .filter(isFixedScheduleTask)
+    .map((task) => getTaskNotificationRange(task)?.startMinutes)
+    .filter(Number.isFinite)
+    .sort((first, second) => first - second);
+
+  if (fixedSchedules.length > 0) {
+    return Math.max(0, fixedSchedules[0] - 60);
+  }
+
+  return getTaskNotificationRange(washerTask)?.startMinutes;
+}
+
+function isWasherScheduleTask(task = {}) {
+  const text = `${task.title || ""} ${task.applianceType || ""} ${task.displayType || ""}`;
+  return task.applianceType === "WASHER" || /세탁|빨래|washer/i.test(text);
+}
+
+function isFixedScheduleTask(task = {}) {
+  return task.displayType === "fixed" || task.place === "고정 일정";
+}
+
+function resolveOwnerOrUserIdToUserId(value) {
+  if (!value) return "";
+  if (findUserById(value)) return value;
+  return OWNER_TO_USER[value] || "";
 }
 
 
@@ -3401,5 +3518,6 @@ function getTaskUserId(task) {
 function userIdToOwner(userId) {
   return USER_TO_OWNER[userId] || "me";
 }
+
 
 
