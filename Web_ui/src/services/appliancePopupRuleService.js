@@ -8,12 +8,25 @@ export const THRESHOLDS = {
 };
 
 export function buildAppliancePopup(sensor = {}) {
-  if (!sensor || typeof sensor !== "object") return null;
+  return buildAppliancePopups(sensor)[0] || null;
+}
 
-  const temperature = toNumber(sensor.temperature);
-  const humidity = toNumber(sensor.humidity);
-  const pm10 = toNumber(sensor.pm10);
-  const pm25 = toNumber(sensor.pm25);
+export function buildAppliancePopups(sensor = {}) {
+  if (!sensor || typeof sensor !== "object") return [];
+
+  return [
+    buildWasherPopup(sensor),
+    buildTemperaturePopup(sensor),
+    buildHumidityPopup(sensor),
+    buildAirQualityPopup(sensor),
+  ].filter(Boolean);
+}
+
+export function getAppliancePopupKey(popup = {}) {
+  return [popup.applianceType, popup.command || "blocked", popup.title].join("|");
+}
+
+function buildWasherPopup(sensor) {
   const weight = toNumber(sensor.weight);
 
   if (sensor.washerDoorOpen === true) {
@@ -48,6 +61,12 @@ export function buildAppliancePopup(sensor = {}) {
     };
   }
 
+  return null;
+}
+
+function buildTemperaturePopup(sensor) {
+  const temperature = toNumber(sensor.temperature);
+
   if (Number.isFinite(temperature) && temperature >= THRESHOLDS.temperaturePowerCooling) {
     return {
       applianceType: "AIR_CONDITIONER",
@@ -80,46 +99,53 @@ export function buildAppliancePopup(sensor = {}) {
     };
   }
 
-  if (Number.isFinite(humidity) && humidity >= THRESHOLDS.humidityDry) {
-    return {
-      applianceType: "AIR_CONDITIONER",
-      applianceName: "에어컨",
-      mode: "제습",
-      command: "dry",
-      title: "실내 습도가 높아요",
-      message: `현재 실내 습도가 ${formatNumber(humidity)}%입니다. 쾌적한 실내 환경을 위해 제습 모드 실행을 추천합니다.`,
-      blocked: false,
-      metricLabel: "현재 습도",
-      metricValue: `${formatNumber(humidity)}%`,
-      thresholdLabel: `${THRESHOLDS.humidityDry}% 이상`,
-      updatedAt: sensor.last_updated || "",
-    };
-  }
-
-  if (
-    (Number.isFinite(pm10) && pm10 >= THRESHOLDS.pm10Bad) ||
-    (Number.isFinite(pm25) && pm25 >= THRESHOLDS.pm25Bad)
-  ) {
-    return {
-      applianceType: "AIR_PURIFIER",
-      applianceName: "공기청정기",
-      mode: "강력",
-      command: "strong",
-      title: "실내 공기질이 좋지 않아요",
-      message: "실내 미세먼지 수치가 높습니다. 공기청정기 강력 모드 실행을 추천합니다.",
-      blocked: false,
-      metricLabel: "미세먼지",
-      metricValue: `PM10 ${formatSensorValue(pm10)} / PM2.5 ${formatSensorValue(pm25)}`,
-      thresholdLabel: `PM10 ${THRESHOLDS.pm10Bad} 또는 PM2.5 ${THRESHOLDS.pm25Bad} 이상`,
-      updatedAt: sensor.last_updated || "",
-    };
-  }
-
   return null;
 }
 
-export function getAppliancePopupKey(popup = {}) {
-  return [popup.applianceType, popup.command || "blocked", popup.title].join("|");
+function buildHumidityPopup(sensor) {
+  const humidity = toNumber(sensor.humidity);
+
+  if (!Number.isFinite(humidity) || humidity < THRESHOLDS.humidityDry) return null;
+
+  return {
+    applianceType: "AIR_CONDITIONER",
+    applianceName: "에어컨",
+    mode: "제습",
+    command: "dry",
+    title: "실내 습도가 높아요",
+    message: `현재 실내 습도가 ${formatNumber(humidity)}%입니다. 쾌적한 실내 환경을 위해 제습 모드 실행을 추천합니다.`,
+    blocked: false,
+    metricLabel: "현재 습도",
+    metricValue: `${formatNumber(humidity)}%`,
+    thresholdLabel: `${THRESHOLDS.humidityDry}% 이상`,
+    updatedAt: sensor.last_updated || "",
+  };
+}
+
+function buildAirQualityPopup(sensor) {
+  const pm10 = toNumber(sensor.pm10);
+  const pm25 = toNumber(sensor.pm25);
+
+  if (
+    (!Number.isFinite(pm10) || pm10 < THRESHOLDS.pm10Bad) &&
+    (!Number.isFinite(pm25) || pm25 < THRESHOLDS.pm25Bad)
+  ) {
+    return null;
+  }
+
+  return {
+    applianceType: "AIR_PURIFIER",
+    applianceName: "공기청정기",
+    mode: "강력",
+    command: "strong",
+    title: "실내 공기질이 좋지 않아요",
+    message: "실내 미세먼지 수치가 높습니다. 공기청정기 강력 모드 실행을 추천합니다.",
+    blocked: false,
+    metricLabel: "미세먼지",
+    metricValue: `PM10 ${formatSensorValue(pm10)} / PM2.5 ${formatSensorValue(pm25)}`,
+    thresholdLabel: `PM10 ${THRESHOLDS.pm10Bad} 또는 PM2.5 ${THRESHOLDS.pm25Bad} 이상`,
+    updatedAt: sensor.last_updated || "",
+  };
 }
 
 function toNumber(value) {

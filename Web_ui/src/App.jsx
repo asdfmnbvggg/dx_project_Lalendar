@@ -28,7 +28,7 @@ import { fetchAirQuality } from "./services/airQualityService.js";
 import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendationService.js";
 import { buildRoutineRecommendations } from "./services/routinePredictionService.js";
 import { sendDeviceCommand, subscribeSensorLatest } from "./services/sensorRealtimeService.js";
-import { buildAppliancePopup, getAppliancePopupKey } from "./services/appliancePopupRuleService.js";
+import { buildAppliancePopups, getAppliancePopupKey } from "./services/appliancePopupRuleService.js";
 
 const ENABLE_ONBOARDING_TASK_GENERATION = false;
 const SENSOR_DEVICE_ID = "living_room_01";
@@ -135,6 +135,7 @@ export default function App() {
   const [calendarWeatherByDate, setCalendarWeatherByDate] = useState({});
   const [weatherApiStatus, setWeatherApiStatus] = useState("loading");
   const [sensorPopup, setSensorPopup] = useState(null);
+  const [sensorPopupQueue, setSensorPopupQueue] = useState([]);
   const sensorPopupCooldownRef = useRef({});
 
   useEffect(() => {
@@ -213,31 +214,48 @@ export default function App() {
     return subscribeSensorLatest(SENSOR_DEVICE_ID, (sensorData) => {
       console.log("[sensor] realtime data received", sensorData);
 
-      const popup = buildAppliancePopup(sensorData);
-      console.log("[sensor] threshold result", popup);
+      const popups = buildAppliancePopups(sensorData);
+      console.log("[sensor] threshold result", popups);
 
-      if (!popup) {
+      if (popups.length === 0) {
         console.log("[sensor] popup display skipped: no matching rule");
         return;
       }
 
-      const popupKey = getAppliancePopupKey(popup);
       const now = Date.now();
-      const lastClosedAt = sensorPopupCooldownRef.current[popupKey] || 0;
-
-      setSensorPopup((currentPopup) => {
-        if (currentPopup && getAppliancePopupKey(currentPopup) === popupKey) {
-          console.log("[sensor] popup display skipped: already visible", popupKey);
-          return currentPopup;
-        }
+      const availablePopups = popups.filter((popup) => {
+        const popupKey = getAppliancePopupKey(popup);
+        const lastClosedAt = sensorPopupCooldownRef.current[popupKey] || 0;
 
         if (now - lastClosedAt < POPUP_COOLDOWN_MS) {
           console.log("[sensor] popup display skipped: cooldown", popupKey);
+          return false;
+        }
+
+        return true;
+      });
+
+      if (availablePopups.length === 0) return;
+
+      setSensorPopup((currentPopup) => {
+        const currentPopupKey = currentPopup ? getAppliancePopupKey(currentPopup) : "";
+        const nextPopups = availablePopups.filter((popup) => getAppliancePopupKey(popup) !== currentPopupKey);
+
+        if (nextPopups.length === 0) {
+          console.log("[sensor] popup display skipped: already visible");
           return currentPopup;
         }
 
-        console.log("[sensor] popup displayed", popupKey);
-        return popup;
+        if (currentPopup) {
+          setSensorPopupQueue((queue) => appendUniqueSensorPopups(queue, nextPopups));
+          console.log("[sensor] popup queued", nextPopups.map(getAppliancePopupKey));
+          return currentPopup;
+        }
+
+        const [nextPopup, ...queuedPopups] = nextPopups;
+        setSensorPopupQueue((queue) => appendUniqueSensorPopups(queue, queuedPopups));
+        console.log("[sensor] popup displayed", getAppliancePopupKey(nextPopup));
+        return nextPopup;
       });
     });
   }, [currentUser]);
@@ -674,7 +692,14 @@ export default function App() {
     if (sensorPopup) {
       sensorPopupCooldownRef.current[getAppliancePopupKey(sensorPopup)] = Date.now();
     }
-    setSensorPopup(null);
+    setSensorPopupQueue((queue) => {
+      const [nextPopup, ...restQueue] = queue;
+      setSensorPopup(nextPopup || null);
+      if (nextPopup) {
+        console.log("[sensor] popup displayed from queue", getAppliancePopupKey(nextPopup));
+      }
+      return restQueue;
+    });
   }
 
   async function executeSensorPopup() {
@@ -1291,6 +1316,23 @@ function SensorPopupDialog({ popup, onClose, onExecute }) {
       </section>
     </div>
   );
+}
+
+function appendUniqueSensorPopups(queue, popups) {
+  if (!popups.length) return queue;
+
+  const existingKeys = new Set(queue.map(getAppliancePopupKey));
+  const nextQueue = [...queue];
+
+  popups.forEach((popup) => {
+    const popupKey = getAppliancePopupKey(popup);
+    if (!existingKeys.has(popupKey)) {
+      existingKeys.add(popupKey);
+      nextQueue.push(popup);
+    }
+  });
+
+  return nextQueue;
 }
 
 
