@@ -1,9 +1,9 @@
 export const THRESHOLDS = {
-  temperatureCooling: 32,
-  temperaturePowerCooling: 35,
-  humidityDry: 70,
-  pm10Bad: 80,
-  pm25Bad: 35,
+  temperatureCooling: 27,
+  temperaturePowerCooling: 30,
+  humidityDry: 60,
+  pm10On: 31,
+  pm10Strong: 81,
   washerEmptyWeight: 0.3,
 };
 
@@ -16,8 +16,7 @@ export function buildAppliancePopups(sensor = {}) {
 
   return [
     buildWasherPopup(sensor),
-    buildTemperaturePopup(sensor),
-    buildHumidityPopup(sensor),
+    buildAirConditionerPopup(sensor),
     buildAirQualityPopup(sensor),
   ].filter(Boolean);
 }
@@ -64,8 +63,9 @@ function buildWasherPopup(sensor) {
   return null;
 }
 
-function buildTemperaturePopup(sensor) {
+function buildAirConditionerPopup(sensor) {
   const temperature = toNumber(sensor.temperature);
+  const humidity = toNumber(sensor.humidity);
 
   if (Number.isFinite(temperature) && temperature >= THRESHOLDS.temperaturePowerCooling) {
     return {
@@ -90,7 +90,7 @@ function buildTemperaturePopup(sensor) {
       mode: "냉방",
       command: "cooling",
       title: "실내 온도가 높아요",
-      message: `현재 실내 온도가 ${formatNumber(temperature)}C입니다. 쾌적한 실내 환경을 위해 에어컨 냉방 모드 실행을 추천합니다.`,
+      message: `현재 실내 온도가 ${formatNumber(temperature)}C입니다. 더위를 느낄 수 있어 에어컨 냉방 모드 실행을 추천합니다.`,
       blocked: false,
       metricLabel: "현재 온도",
       metricValue: `${formatNumber(temperature)}C`,
@@ -99,51 +99,58 @@ function buildTemperaturePopup(sensor) {
     };
   }
 
+  if (Number.isFinite(humidity) && humidity >= THRESHOLDS.humidityDry) {
+    return {
+      applianceType: "AIR_CONDITIONER",
+      applianceName: "에어컨",
+      mode: "제습",
+      command: "dry",
+      title: "실내 습도가 높아요",
+      message: `현재 실내 습도가 ${formatNumber(humidity)}%입니다. 불쾌감을 줄이기 위해 에어컨 제습 모드 실행을 추천합니다.`,
+      blocked: false,
+      metricLabel: "현재 습도",
+      metricValue: `${formatNumber(humidity)}%`,
+      thresholdLabel: `${THRESHOLDS.humidityDry}% 이상`,
+      updatedAt: sensor.last_updated || "",
+    };
+  }
+
   return null;
-}
-
-function buildHumidityPopup(sensor) {
-  const humidity = toNumber(sensor.humidity);
-
-  if (!Number.isFinite(humidity) || humidity < THRESHOLDS.humidityDry) return null;
-
-  return {
-    applianceType: "AIR_CONDITIONER",
-    applianceName: "에어컨",
-    mode: "제습",
-    command: "dry",
-    title: "실내 습도가 높아요",
-    message: `현재 실내 습도가 ${formatNumber(humidity)}%입니다. 쾌적한 실내 환경을 위해 제습 모드 실행을 추천합니다.`,
-    blocked: false,
-    metricLabel: "현재 습도",
-    metricValue: `${formatNumber(humidity)}%`,
-    thresholdLabel: `${THRESHOLDS.humidityDry}% 이상`,
-    updatedAt: sensor.last_updated || "",
-  };
 }
 
 function buildAirQualityPopup(sensor) {
   const pm10 = toNumber(sensor.pm10);
   const pm25 = toNumber(sensor.pm25);
 
-  if (
-    (!Number.isFinite(pm10) || pm10 < THRESHOLDS.pm10Bad) &&
-    (!Number.isFinite(pm25) || pm25 < THRESHOLDS.pm25Bad)
-  ) {
-    return null;
+  if (!Number.isFinite(pm10) || pm10 < THRESHOLDS.pm10On) return null;
+
+  if (pm10 >= THRESHOLDS.pm10Strong) {
+    return {
+      applianceType: "AIR_PURIFIER",
+      applianceName: "공기청정기",
+      mode: "강력",
+      command: "strong",
+      title: "실내 미세먼지가 나쁨 수준이에요",
+      message: `현재 PM10 농도가 ${formatNumber(pm10)}ug/m3입니다. 공기청정기 강력 모드 실행을 추천합니다.`,
+      blocked: false,
+      metricLabel: "미세먼지",
+      metricValue: `PM10 ${formatSensorValue(pm10)} / PM2.5 ${formatSensorValue(pm25)}`,
+      thresholdLabel: `PM10 ${THRESHOLDS.pm10Strong} 이상`,
+      updatedAt: sensor.last_updated || "",
+    };
   }
 
   return {
     applianceType: "AIR_PURIFIER",
     applianceName: "공기청정기",
-    mode: "강력",
-    command: "strong",
-    title: "실내 공기질이 좋지 않아요",
-    message: "실내 미세먼지 수치가 높습니다. 공기청정기 강력 모드 실행을 추천합니다.",
+    mode: "자동",
+    command: "air_purifier_on",
+    title: "실내 미세먼지가 보통 수준이에요",
+    message: `현재 PM10 농도가 ${formatNumber(pm10)}ug/m3입니다. 실내 공기 관리를 위해 공기청정기 실행을 추천합니다.`,
     blocked: false,
     metricLabel: "미세먼지",
     metricValue: `PM10 ${formatSensorValue(pm10)} / PM2.5 ${formatSensorValue(pm25)}`,
-    thresholdLabel: `PM10 ${THRESHOLDS.pm10Bad} 또는 PM2.5 ${THRESHOLDS.pm25Bad} 이상`,
+    thresholdLabel: `PM10 ${THRESHOLDS.pm10On} 이상`,
     updatedAt: sensor.last_updated || "",
   };
 }
