@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   Bell,
@@ -27,8 +27,12 @@ import { fetchMidWeather } from "./services/midWeatherService.js";
 import { fetchAirQuality } from "./services/airQualityService.js";
 import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendationService.js";
 import { buildRoutineRecommendations } from "./services/routinePredictionService.js";
+import { sendDeviceCommand, subscribeSensorLatest } from "./services/sensorRealtimeService.js";
+import { buildAppliancePopup, getAppliancePopupKey } from "./services/appliancePopupRuleService.js";
 
 const ENABLE_ONBOARDING_TASK_GENERATION = false;
+const SENSOR_DEVICE_ID = "living_room_01";
+const POPUP_COOLDOWN_MS = 10 * 60 * 1000;
 const CALENDAR_SCHEDULE_COLORS = ["#ff7976", "#ffd5d6", "#ffc68f", "#ffb063", "#fff294", "#cbf39d", "#95cff5", "#d3b5f3"];
 const LEGACY_CALENDAR_COLOR_MAP = {
   "#fb7185": "#ff7976",
@@ -130,6 +134,8 @@ export default function App() {
   const [calendarView, setCalendarView] = useState(storedSession?.calendarView || DEFAULT_CALENDAR_VIEW);
   const [calendarWeatherByDate, setCalendarWeatherByDate] = useState({});
   const [weatherApiStatus, setWeatherApiStatus] = useState("loading");
+  const [sensorPopup, setSensorPopup] = useState(null);
+  const sensorPopupCooldownRef = useRef({});
 
   useEffect(() => {
     setTasks((current) => {
@@ -200,6 +206,41 @@ export default function App() {
       isActive = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!currentUser) return undefined;
+
+    return subscribeSensorLatest(SENSOR_DEVICE_ID, (sensorData) => {
+      console.log("[sensor] realtime data received", sensorData);
+
+      const popup = buildAppliancePopup(sensorData);
+      console.log("[sensor] threshold result", popup);
+
+      if (!popup) {
+        console.log("[sensor] popup display skipped: no matching rule");
+        return;
+      }
+
+      const popupKey = getAppliancePopupKey(popup);
+      const now = Date.now();
+      const lastClosedAt = sensorPopupCooldownRef.current[popupKey] || 0;
+
+      setSensorPopup((currentPopup) => {
+        if (currentPopup && getAppliancePopupKey(currentPopup) === popupKey) {
+          console.log("[sensor] popup display skipped: already visible", popupKey);
+          return currentPopup;
+        }
+
+        if (now - lastClosedAt < POPUP_COOLDOWN_MS) {
+          console.log("[sensor] popup display skipped: cooldown", popupKey);
+          return currentPopup;
+        }
+
+        console.log("[sensor] popup displayed", popupKey);
+        return popup;
+      });
+    });
+  }, [currentUser]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -629,6 +670,35 @@ export default function App() {
     setDismissedAlerts((current) => [...current, item.id]);
   }
 
+  function closeSensorPopup() {
+    if (sensorPopup) {
+      sensorPopupCooldownRef.current[getAppliancePopupKey(sensorPopup)] = Date.now();
+    }
+    setSensorPopup(null);
+  }
+
+  async function executeSensorPopup() {
+    if (!sensorPopup || sensorPopup.blocked) {
+      closeSensorPopup();
+      return;
+    }
+
+    try {
+      await sendDeviceCommand(SENSOR_DEVICE_ID, {
+        command: sensorPopup.command,
+        mode: sensorPopup.mode,
+        applianceType: sensorPopup.applianceType,
+        applianceName: sensorPopup.applianceName,
+        reason: sensorPopup.message,
+      });
+      console.log("[sensor] device command sent", sensorPopup);
+    } catch (error) {
+      console.warn("[sensor] device command failed", error);
+    } finally {
+      closeSensorPopup();
+    }
+  }
+
   function postponeNotification(item) {
     setNotificationOpen(false);
     setNotificationPrompt(null);
@@ -1050,6 +1120,14 @@ export default function App() {
         </div>
       )}
 
+      {sensorPopup && (
+        <SensorPopupDialog
+          popup={sensorPopup}
+          onClose={closeSensorPopup}
+          onExecute={executeSensorPopup}
+        />
+      )}
+
       {pendingPostpone && (
         <div className="confirm-backdrop" role="presentation">
           <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="postpone-title">
@@ -1166,6 +1244,52 @@ function LoginIntroSplash() {
       <div className="login-intro-glow" aria-hidden="true" />
       <img src={introLogo} alt="Lalendar" />
     </main>
+  );
+}
+
+function SensorPopupDialog({ popup, onClose, onExecute }) {
+  return (
+    <div className="confirm-backdrop sensor-popup-backdrop" role="presentation">
+      <section className="confirm-dialog sensor-popup-dialog" role="dialog" aria-modal="true" aria-labelledby="sensor-popup-title">
+        <p>실시간 센서 알림</p>
+        <h2 id="sensor-popup-title">{popup.title}</h2>
+        <span>{popup.message}</span>
+
+        <div className="sensor-popup-metrics" aria-label="센서 감지 정보">
+          <div>
+            <small>{popup.metricLabel || "현재 값"}</small>
+            <strong>{popup.metricValue || "-"}</strong>
+          </div>
+          <div>
+            <small>기준</small>
+            <strong>{popup.thresholdLabel || "-"}</strong>
+          </div>
+          <div>
+            <small>추천 동작</small>
+            <strong>{popup.applianceName} · {popup.mode}</strong>
+          </div>
+        </div>
+
+        {popup.updatedAt && <small className="sensor-popup-updated">업데이트 {popup.updatedAt}</small>}
+
+        <div className={`confirm-actions ${popup.blocked ? "single" : ""}`}>
+          {popup.blocked ? (
+            <button type="button" onClick={onClose}>
+              확인
+            </button>
+          ) : (
+            <>
+              <button type="button" onClick={onClose}>
+                나중에
+              </button>
+              <button type="button" onClick={onExecute}>
+                실행하기
+              </button>
+            </>
+          )}
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -3235,4 +3359,5 @@ function getTaskUserId(task) {
 function userIdToOwner(userId) {
   return USER_TO_OWNER[userId] || "me";
 }
+
 
