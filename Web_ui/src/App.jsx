@@ -1337,10 +1337,22 @@ function LoginIntroSplash() {
 }
 
 function SensorPopupDialog({ popup, onClose, onExecute }) {
+  const assignee = getPopupAssignee(popup.targetUserId);
+
   return (
     <div className="confirm-backdrop sensor-popup-backdrop" role="presentation">
       <section className="confirm-dialog sensor-popup-dialog" role="dialog" aria-modal="true" aria-labelledby="sensor-popup-title">
-        <p>실시간 센서 알림</p>
+        <div className="sensor-popup-head">
+          <p>실시간 센서 알림</p>
+          {assignee && (
+            <div className="sensor-popup-assignee" aria-label={`담당자 ${assignee.name}`}>
+              <span className="sensor-popup-assignee-text">
+                <small>담당자</small>
+                <strong>{assignee.name}</strong>
+              </span>
+            </div>
+          )}
+        </div>
         <h2 id="sensor-popup-title">{popup.title}</h2>
         <span>{popup.message}</span>
 
@@ -1397,6 +1409,28 @@ function appendUniqueSensorPopups(queue, popups) {
   });
 
   return nextQueue;
+}
+
+function getPopupAssignee(targetUserId) {
+  if (!targetUserId) return null;
+
+  const user = findUserById(targetUserId);
+  const memberId = userIdToOwner(targetUserId);
+  const member = members.find((item) => item.id === memberId || item.id === targetUserId);
+  const name = user?.displayName || user?.name || member?.name || "";
+
+  if (!name) return null;
+
+  return {
+    name,
+    color: member?.color || USER_COLORS[targetUserId] || "#ff7a21",
+    initial: getAssigneeInitial(name),
+  };
+}
+
+function getAssigneeInitial(name) {
+  const text = String(name || "").replace(/님$/, "").trim();
+  return [...text][0] || "?";
 }
 
 function getRealtimeApplianceTargetUserIds(applianceAssignees = {}, activeCalendarUser, currentUser) {
