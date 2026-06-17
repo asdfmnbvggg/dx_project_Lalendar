@@ -1900,17 +1900,18 @@
 
 .daily-context-menu {
   position: fixed;
-  left: var(--context-menu-left, 50%);
-  top: var(--context-menu-top, 50%);
-  z-index: 300;
+  left: 50%;
+  top: 50%;
+  z-index: 2500;
   width: 68px;
+  pointer-events: auto;
   overflow: hidden;
   border: 1px solid #ffd6a6;
   border-radius: 8px;
   background: #fffaf3;
   color: #7a3e0b;
   box-shadow: 0 14px 28px rgba(154, 86, 24, 0.18);
-  transform: none;
+  transform: translateX(-50%);
 }
 
 .daily-context-menu button {

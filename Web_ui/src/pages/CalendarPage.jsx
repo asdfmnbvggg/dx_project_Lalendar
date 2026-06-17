@@ -1,5 +1,6 @@
 ﻿import { CalendarDays, ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Repeat2, Search, Settings, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Bell, CheckCircle2, ChevronDown, Clock3, Home, Info, Power, Shirt, SlidersHorizontal, Thermometer, WashingMachine, Waves } from "lucide-react";
 import { dateKey, members } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
@@ -216,16 +217,9 @@ export default function CalendarPage({
     event?.stopPropagation?.();
 
     const taskKey = getDailyTaskKey(task);
-    setDailyContextTaskId((current) => {
-      const isClosing = current === taskKey;
-      if (isClosing) {
-        setDailyContextMenuPosition(null);
-        return null;
-      }
-
-      setDailyContextMenuPosition(getDailyContextMenuPosition(event?.currentTarget));
-      return taskKey;
-    });
+    const menuPosition = getDailyContextMenuPosition(event?.currentTarget);
+    setDailyContextTaskId(taskKey);
+    setDailyContextMenuPosition(menuPosition);
     setDailyContextAction(null);
   }
 
@@ -1683,20 +1677,105 @@ function getDailyContextMenuPosition(anchor) {
   const menuHeight = 82;
   const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 390;
   const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 720;
-  const openToRight = rect.right + menuWidth + 10 <= viewportWidth;
-  const left = openToRight ? rect.right + 8 : Math.max(8, rect.left - menuWidth - 8);
-  const top = Math.min(Math.max(8, rect.top), Math.max(8, viewportHeight - menuHeight - 8));
+  const left = Math.min(Math.max(menuWidth / 2 + 8, rect.left + rect.width / 2), viewportWidth - menuWidth / 2 - 8);
+  const belowTop = rect.bottom + 6;
+  const aboveTop = rect.top - menuHeight - 6;
+  const top = belowTop + menuHeight <= viewportHeight - 8 ? belowTop : Math.max(8, aboveTop);
+  const position = { left, top };
 
-  return { left, top };
+  console.log("[daily-context-menu] card rect", {
+    left: Math.round(rect.left),
+    top: Math.round(rect.top),
+    right: Math.round(rect.right),
+    bottom: Math.round(rect.bottom),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height),
+  });
+  console.log("[daily-context-menu] computed position", {
+    left: Math.round(position.left),
+    top: Math.round(position.top),
+  });
+
+  return position;
 }
 
 function getDailyContextMenuStyle(position) {
   if (!position) return undefined;
 
   return {
-    "--context-menu-left": `${position.left}px`,
-    "--context-menu-top": `${position.top}px`,
+    left: `${position.left}px`,
+    top: `${position.top}px`,
   };
+}
+
+function DailyContextMenu({ task, variant, activeAction, position, onChooseContextAction, onOpenModeChange }) {
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!menuRef.current || !position) return;
+
+    const style = window.getComputedStyle(menuRef.current);
+    console.log("[daily-context-menu] applied style", {
+      left: style.left,
+      top: style.top,
+      position: style.position,
+    });
+  }, [position]);
+
+  if (typeof document === "undefined" || !position) return null;
+
+  return createPortal(
+    <div
+      ref={menuRef}
+      className="daily-context-menu"
+      role="menu"
+      aria-label={task.title + " options"}
+      style={getDailyContextMenuStyle(position)}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        className={activeAction === "edit" ? "active" : ""}
+        role="menuitem"
+        onClick={(event) => {
+          event.stopPropagation();
+          onChooseContextAction?.("edit", task);
+        }}
+      >
+        수정
+      </button>
+      {variant === "housework" ? (
+        <button
+          type="button"
+          className={activeAction === "mode" ? "active" : ""}
+          role="menuitem"
+          onClick={(event) => {
+            event.stopPropagation();
+            onOpenModeChange?.(task);
+          }}
+        >
+          모드
+        </button>
+      ) : (
+        <button type="button" className="disabled" role="menuitem" disabled aria-disabled="true">
+          복사
+        </button>
+      )}
+      <button
+        type="button"
+        className={activeAction === "delete" ? "active" : ""}
+        role="menuitem"
+        onClick={(event) => {
+          event.stopPropagation();
+          onChooseContextAction?.("delete", task);
+        }}
+      >
+        삭제
+      </button>
+    </div>,
+    document.body,
+  );
 }
 
 function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, activeTaskId, activeAction, contextMenuPosition, onOpenContext, onChooseContextAction, onOpenModeChange }) {
@@ -1748,54 +1827,14 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
               <strong>{getDailyBlockTitle(task, variant)}</strong>
               <span>{formatTaskRange(range)}</span>
               {activeTaskId === taskKey && (
-                <div
-                  className="daily-context-menu"
-                  role="menu"
-                  aria-label={task.title + " options"}
-                  style={getDailyContextMenuStyle(contextMenuPosition)}
-                  onPointerDown={(event) => event.stopPropagation()}
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <button
-                    type="button"
-                    className={activeAction === "edit" ? "active" : ""}
-                    role="menuitem"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onChooseContextAction?.("edit", task);
-                    }}
-                  >
-                    수정
-                  </button>
-                  {variant === "housework" ? (
-                    <button
-                      type="button"
-                      className={activeAction === "mode" ? "active" : ""}
-                      role="menuitem"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onOpenModeChange?.(task);
-                      }}
-                    >
-                      모드
-                    </button>
-                  ) : (
-                    <button type="button" className="disabled" role="menuitem" disabled aria-disabled="true">
-                      복사
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className={activeAction === "delete" ? "active" : ""}
-                    role="menuitem"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onChooseContextAction?.("delete", task);
-                    }}
-                  >
-                    삭제
-                  </button>
-                </div>
+                <DailyContextMenu
+                  task={task}
+                  variant={variant}
+                  activeAction={activeAction}
+                  position={contextMenuPosition}
+                  onChooseContextAction={onChooseContextAction}
+                  onOpenModeChange={onOpenModeChange}
+                />
               )}
             </article>
           );
@@ -1842,54 +1881,14 @@ function DailyListColumn({ title, tasks, memberColors, variant, activeTaskId, ac
                   <span>{formatTaskRange(range)}</span>
                 </div>
                 {activeTaskId === taskKey && (
-                  <div
-                    className="daily-context-menu"
-                    role="menu"
-                    aria-label={task.title + " options"}
-                    style={getDailyContextMenuStyle(contextMenuPosition)}
-                    onPointerDown={(event) => event.stopPropagation()}
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <button
-                      type="button"
-                      className={activeAction === "edit" ? "active" : ""}
-                      role="menuitem"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onChooseContextAction?.("edit", task);
-                      }}
-                    >
-                      수정
-                    </button>
-                    {variant === "housework" ? (
-                      <button
-                        type="button"
-                        className={activeAction === "mode" ? "active" : ""}
-                        role="menuitem"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onOpenModeChange?.(task);
-                        }}
-                      >
-                        모드
-                      </button>
-                    ) : (
-                      <button type="button" className="disabled" role="menuitem" disabled aria-disabled="true">
-                        복사
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className={activeAction === "delete" ? "active" : ""}
-                      role="menuitem"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onChooseContextAction?.("delete", task);
-                      }}
-                    >
-                      삭제
-                    </button>
-                  </div>
+                  <DailyContextMenu
+                    task={task}
+                    variant={variant}
+                    activeAction={activeAction}
+                    position={contextMenuPosition}
+                    onChooseContextAction={onChooseContextAction}
+                    onOpenModeChange={onOpenModeChange}
+                  />
                 )}
               </article>
             );
