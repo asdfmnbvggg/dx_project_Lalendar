@@ -217,6 +217,13 @@ export default function CalendarPage({
     event?.stopPropagation?.();
 
     const taskKey = getDailyTaskKey(task);
+    if (dailyContextTaskId === taskKey) {
+      setDailyContextTaskId(null);
+      setDailyContextMenuPosition(null);
+      setDailyContextAction(null);
+      return;
+    }
+
     const menuPosition = getDailyContextMenuPosition(event?.currentTarget);
     setDailyContextTaskId(taskKey);
     setDailyContextMenuPosition(menuPosition);
