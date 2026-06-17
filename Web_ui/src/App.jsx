@@ -139,6 +139,7 @@ export default function App() {
   const [latestSensorData, setLatestSensorData] = useState(null);
   const sensorPopupCooldownRef = useRef({});
   const washerPopupShownRef = useRef({});
+  const sensorDemoPopupIndexRef = useRef(0);
 
   useEffect(() => {
     setTasks((current) => {
@@ -586,6 +587,9 @@ export default function App() {
 
   function selectMainTab(id) {
     setActiveTab(id);
+    if (id === "menu") {
+      showNextSensorDemoPopup();
+    }
     if (id === "schedule" && !isOnboardingComplete && !hasGeneratedOnboardingTasks) {
       setOnboardingSetup(createDefaultOnboardingSetup());
       setOnboardingComplete(false);
@@ -704,7 +708,29 @@ export default function App() {
     setDismissedAlerts((current) => [...current, item.id]);
   }
 
-  function enqueueSensorPopups(popups, source = "sensor") {
+  function showNextSensorDemoPopup() {
+    if (!currentUser || !isOnboardingComplete) return;
+
+    const demoSensors = [
+      { temperature: 30.5, humidity: 45, pm10: 12, pm25: 8, last_updated: "테스트 알림" },
+      { temperature: 26, humidity: 63, pm10: 12, pm25: 8, last_updated: "테스트 알림" },
+      { temperature: 24, humidity: 45, pm10: 35, pm25: 12, last_updated: "테스트 알림" },
+      { temperature: 24, humidity: 45, pm10: 86, pm25: 38, last_updated: "테스트 알림" },
+    ];
+    const sensor = demoSensors[sensorDemoPopupIndexRef.current % demoSensors.length];
+    sensorDemoPopupIndexRef.current += 1;
+
+    const popups = buildRealtimeAppliancePopups(sensor, {
+      targetUserIds: {
+        AIR_CONDITIONER: currentUser.id,
+        AIR_PURIFIER: currentUser.id,
+      },
+    }).filter((popup) => popup.targetUserId === currentUser.id);
+
+    enqueueSensorPopups(popups.slice(0, 1), "menu-demo", { bypassCooldown: true });
+  }
+
+  function enqueueSensorPopups(popups, source = "sensor", options = {}) {
     if (popups.length === 0) {
       console.log("[sensor] popup display skipped: no matching visible rule", source);
       return;
@@ -715,7 +741,7 @@ export default function App() {
       const popupKey = getPopupKey(popup);
       const lastClosedAt = sensorPopupCooldownRef.current[popupKey] || 0;
 
-      if (now - lastClosedAt < POPUP_COOLDOWN_MS) {
+      if (!options.bypassCooldown && now - lastClosedAt < POPUP_COOLDOWN_MS) {
         console.log("[sensor] popup display skipped: cooldown", source, popupKey);
         return false;
       }
@@ -1362,16 +1388,12 @@ function SensorPopupDialog({ popup, onClose, onExecute }) {
             <strong>{popup.metricValue || "-"}</strong>
           </div>
           <div>
-            <small>기준</small>
-            <strong>{popup.thresholdLabel || "-"}</strong>
-          </div>
-          <div>
-            <small>추천 동작</small>
+            <small>추천 모드</small>
             <strong>{popup.applianceName} · {popup.mode}</strong>
           </div>
         </div>
 
-        {popup.updatedAt && <small className="sensor-popup-updated">업데이트 {popup.updatedAt}</small>}
+        {popup.thresholdLabel && <small className="sensor-popup-updated">기준 {popup.thresholdLabel}</small>}
 
         <div className={`confirm-actions ${popup.blocked ? "single" : ""}`}>
           {popup.blocked ? (
@@ -1479,6 +1501,7 @@ function getWasherAlertMinutes(tasks, washerTask, targetUserId, date) {
 
 function isWasherScheduleTask(task = {}) {
   const text = `${task.title || ""} ${task.applianceType || ""} ${task.displayType || ""}`;
+  if (task.applianceType === "DISHWASHER" || /식기|세척|dishwasher|dish/i.test(text)) return false;
   return task.applianceType === "WASHER" || /세탁|빨래|washer/i.test(text);
 }
 
