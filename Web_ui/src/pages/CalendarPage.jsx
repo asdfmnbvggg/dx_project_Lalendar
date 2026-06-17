@@ -2360,6 +2360,7 @@ function getDailyTaskRange(task, index = 0) {
 
 function layoutDailyTimetableTasks(tasks, displayStartMinutes, displayEndMinutes, totalMinutes, hourRowHeight = DAILY_TIMETABLE_HOUR_HEIGHT) {
   const minuteHeight = hourRowHeight / 60;
+  const minimumBlockHeight = 44;
   const visibleTasks = tasks
     .map((task, index) => {
       const range = getDailyTaskRange(task, index);
@@ -2393,7 +2394,7 @@ function layoutDailyTimetableTasks(tasks, displayStartMinutes, displayEndMinutes
       lane: Math.min(earlierOverlaps.length, overlappingItems.length - 1),
       laneCount: Math.max(1, overlappingItems.length),
       topPx: (item.visibleStartMinutes - displayStartMinutes) * minuteHeight,
-      heightPx: (item.visibleEndMinutes - item.visibleStartMinutes) * minuteHeight,
+      heightPx: Math.max(minimumBlockHeight, (item.visibleEndMinutes - item.visibleStartMinutes) * minuteHeight),
       key: item.task.id || `${item.task.title}-${itemIndex}`,
     };
   });
