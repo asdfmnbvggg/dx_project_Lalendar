@@ -1,5 +1,5 @@
 ﻿import { CalendarDays, ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Repeat2, Search, Settings, Trash2, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bell, CheckCircle2, ChevronDown, Clock3, Home, Info, Power, Shirt, SlidersHorizontal, Thermometer, WashingMachine, Waves } from "lucide-react";
 import { dateKey, members } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
@@ -988,10 +988,16 @@ function getRecommendationsForDate(date, weatherByDate, routineRecommendations) 
 }
 
 function SchedulePlanningLoadingPage({ pendingSave, onComplete }) {
+  const onCompleteRef = useRef(onComplete);
+
   useEffect(() => {
-    const timer = window.setTimeout(() => onComplete(pendingSave), SCHEDULE_PLANNING_DELAY);
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => onCompleteRef.current(pendingSave), SCHEDULE_PLANNING_DELAY);
     return () => window.clearTimeout(timer);
-  }, [pendingSave, onComplete]);
+  }, [pendingSave]);
 
   return (
     <section className="page calendar-page schedule-loading-page" aria-live="polite" aria-label="AI 일정 생성 중">
