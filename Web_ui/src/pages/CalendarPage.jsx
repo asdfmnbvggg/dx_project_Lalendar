@@ -2458,7 +2458,13 @@ function formatMinutes(minutes) {
 }
 
 function getDailyBlockTitle(task, variant) {
-  return variant === "housework" ? getHouseworkDisplayTitle(task) : task.title;
+  if (variant !== "housework") return task.title;
+
+  return `${getHouseworkDisplayTitle(task)} · ${getHouseworkModeLabel(task)}`;
+}
+
+function getHouseworkModeLabel(task = {}) {
+  return task.mode || task.operationMode || task.deviceMode || task.applianceMode || task.currentMode || "표준";
 }
 
 function getDailyBlockColor(task, memberColors, variant, index) {
