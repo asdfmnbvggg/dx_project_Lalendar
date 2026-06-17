@@ -1923,11 +1923,51 @@ function ApplianceModePage({ task, selectedModeId, message, nearestRunText, onSe
   const [waterTemp, setWaterTemp] = useState(40);
   const [ecoMode, setEcoMode] = useState("자동");
   const [dryLevel, setDryLevel] = useState("표준");
+  const [cleanScope, setCleanScope] = useState("전체");
+  const [suctionLevel, setSuctionLevel] = useState("강");
+  const [mopMode, setMopMode] = useState("사용");
+  const [targetTemp, setTargetTemp] = useState(24);
+  const [fanLevel, setFanLevel] = useState("자동");
+  const [airconOperation, setAirconOperation] = useState("냉방");
+  const [airQuality, setAirQuality] = useState("보통");
+  const [purifierFanLevel, setPurifierFanLevel] = useState("자동");
+  const [filterState, setFilterState] = useState("양호");
   const [washCourse, setWashCourse] = useState(currentMode);
   const [careEnabled, setCareEnabled] = useState(false);
   const [options, setOptions] = useState(() => getApplianceModeOptions(applianceType));
   const [activeTab, setActiveTab] = useState("product");
   const [statusText, setStatusText] = useState("");
+  const settingCards = getApplianceSettingCards(applianceType, {
+    rinseCount,
+    setRinseCount,
+    spinLevel,
+    setSpinLevel,
+    waterTemp,
+    setWaterTemp,
+    ecoMode,
+    setEcoMode,
+    dryLevel,
+    setDryLevel,
+    cleanScope,
+    setCleanScope,
+    suctionLevel,
+    setSuctionLevel,
+    mopMode,
+    setMopMode,
+    targetTemp,
+    setTargetTemp,
+    fanLevel,
+    setFanLevel,
+    airconOperation,
+    setAirconOperation,
+    airQuality,
+    setAirQuality,
+    purifierFanLevel,
+    setPurifierFanLevel,
+    filterState,
+    setFilterState,
+  });
+  const careInfo = getApplianceCareInfo(applianceType, applianceName);
 
   function selectMode(mode) {
     onSelectMode(mode.id);
@@ -1939,6 +1979,10 @@ function ApplianceModePage({ task, selectedModeId, message, nearestRunText, onSe
   function toggleOption(label) {
     setOptions((current) => current.map((option) => (option.label === label ? { ...option, active: !option.active } : option)));
   }
+
+  useEffect(() => {
+    setOptions(getApplianceModeOptions(applianceType));
+  }, [applianceType]);
 
   function sendToAppliance() {
     onApply(selectedMode);
@@ -1997,49 +2041,21 @@ function ApplianceModePage({ task, selectedModeId, message, nearestRunText, onSe
           </button>
         </div>
 
-        {isDryer ? (
-          <div className="washer-setting-grid dryer-setting-grid">
-            <button type="button" className="washer-setting-card dryer-saving" onClick={() => setEcoMode((current) => (current === "자동" ? "켜짐" : current === "켜짐" ? "꺼짐" : "자동"))}>
-              <Shirt size={50} strokeWidth={2.2} />
-              <span>절약모드</span>
-              <strong>{ecoMode}</strong>
+        <div className={["washer-setting-grid", isDryer ? "dryer-setting-grid" : ""].filter(Boolean).join(" ")}>
+          {settingCards.map((card) => (
+            <button type="button" className={["washer-setting-card", card.className].filter(Boolean).join(" ")} key={card.label} onClick={card.onClick}>
+              {card.icon}
+              <span>{card.label}</span>
+              <strong>{card.value}</strong>
             </button>
-            <button type="button" className="washer-setting-card dryer-level" onClick={() => setDryLevel((current) => (current === "표준" ? "강력" : current === "강력" ? "약" : "표준"))}>
-              <Shirt size={50} strokeWidth={2.2} />
-              <span>
-                건조정도
-                <i aria-hidden="true" />
-              </span>
-              <strong>{dryLevel}</strong>
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="washer-setting-grid">
-              <button type="button" className="washer-setting-card rinse" onClick={() => setRinseCount((current) => (current >= 5 ? 1 : current + 1))}>
-                <Shirt size={50} strokeWidth={2.2} />
-                <span>헹굼</span>
-                <strong>{rinseCount}회</strong>
-              </button>
-              <button type="button" className="washer-setting-card spin" onClick={() => setSpinLevel((current) => (current === "강" ? "중" : current === "중" ? "약" : "강"))}>
-                <Waves size={50} strokeWidth={2.2} />
-                <span>탈수</span>
-                <strong>{spinLevel}</strong>
-              </button>
-              <button type="button" className="washer-setting-card temp" onClick={() => setWaterTemp((current) => (current >= 60 ? 20 : current + 10))}>
-                <Thermometer size={50} strokeWidth={2.2} />
-                <span>물온도</span>
-                <strong>{waterTemp}도</strong>
-              </button>
-            </div>
+          ))}
+        </div>
 
-            <button type="button" className="washer-cycle-card" onClick={() => setStatusText("세탁 단계 상세를 눌렀어요.")}>
-              <Shirt size={50} strokeWidth={2.2} />
-              <span>세탁</span>
-              <strong>{washCourse || selectedMode?.label || "표준"}</strong>
-            </button>
-          </>
-        )}
+        <button type="button" className="washer-cycle-card" onClick={() => setStatusText(`${applianceName} 실행 모드 상세를 눌렀어요.`)}>
+          {getApplianceMainIcon(applianceType, 50)}
+          <span>실행 모드</span>
+          <strong>{washCourse || selectedMode?.label || "표준"}</strong>
+        </button>
 
         <button type="button" className="washer-send-button" onClick={sendToAppliance}>
           {applianceName}에 전송
@@ -2051,14 +2067,14 @@ function ApplianceModePage({ task, selectedModeId, message, nearestRunText, onSe
         </button>
       </section>
 
-      <section className="washer-care-card" aria-label="종료 후 세탁물 케어">
-        <WashingMachine size={31} strokeWidth={2.2} />
+      <section className="washer-care-card" aria-label={careInfo.title}>
+        {careInfo.icon}
         <div>
           <strong>
-            종료 후 세탁물 케어
+            {careInfo.title}
             <i aria-hidden="true" />
           </strong>
-          <span>원격제어를 켠 뒤 사용할 수 있어요.</span>
+          <span>{careInfo.description}</span>
         </div>
         <button type="button" onClick={() => setCareEnabled((current) => !current)}>
           {careEnabled ? "켜짐" : "꺼짐"}
@@ -2102,7 +2118,212 @@ function getWasherOptionIcon(label) {
   if (label === "터보샷") return <Waves size={26} strokeWidth={2.5} />;
   if (label === "알림") return <Bell size={25} strokeWidth={2.4} />;
   if (label === "구김방지") return <Shirt size={25} strokeWidth={2.3} />;
+  if (/흡입|풍량|필터|공기|청소|예약|절전|쾌속|물걸레/i.test(label)) return <SlidersHorizontal size={24} strokeWidth={2.3} />;
   return <SlidersHorizontal size={24} strokeWidth={2.3} />;
+}
+
+function cycleApplianceValue(current, values) {
+  const currentIndex = values.indexOf(current);
+  return values[(currentIndex + 1) % values.length] || values[0];
+}
+
+function getApplianceMainIcon(applianceType, size = 50) {
+  if (applianceType === "AIR_CONDITIONER") return <Thermometer size={size} strokeWidth={2.2} />;
+  if (applianceType === "AIR_PURIFIER") return <Waves size={size} strokeWidth={2.2} />;
+  if (applianceType === "ROBOT_CLEANER") return <SlidersHorizontal size={size} strokeWidth={2.2} />;
+  if (applianceType === "DRYER") return <Shirt size={size} strokeWidth={2.2} />;
+  if (applianceType === "WASHER") return <Shirt size={size} strokeWidth={2.2} />;
+  return <Power size={size} strokeWidth={2.2} />;
+}
+
+function getApplianceSettingCards(applianceType, state) {
+  if (applianceType === "WASHER") {
+    return [
+      {
+        label: "헹굼",
+        value: `${state.rinseCount}회`,
+        className: "rinse",
+        icon: <Shirt size={50} strokeWidth={2.2} />,
+        onClick: () => state.setRinseCount((current) => (current >= 5 ? 1 : current + 1)),
+      },
+      {
+        label: "탈수",
+        value: state.spinLevel,
+        className: "spin",
+        icon: <Waves size={50} strokeWidth={2.2} />,
+        onClick: () => state.setSpinLevel((current) => cycleApplianceValue(current, ["강", "중", "약"])),
+      },
+      {
+        label: "물온도",
+        value: `${state.waterTemp}도`,
+        className: "temp",
+        icon: <Thermometer size={50} strokeWidth={2.2} />,
+        onClick: () => state.setWaterTemp((current) => (current >= 60 ? 20 : current + 10)),
+      },
+    ];
+  }
+
+  if (applianceType === "DRYER") {
+    return [
+      {
+        label: "절약모드",
+        value: state.ecoMode,
+        className: "dryer-saving",
+        icon: <Shirt size={50} strokeWidth={2.2} />,
+        onClick: () => state.setEcoMode((current) => cycleApplianceValue(current, ["자동", "켜짐", "꺼짐"])),
+      },
+      {
+        label: "건조정도",
+        value: state.dryLevel,
+        className: "dryer-level",
+        icon: <Shirt size={50} strokeWidth={2.2} />,
+        onClick: () => state.setDryLevel((current) => cycleApplianceValue(current, ["표준", "강력", "약"])),
+      },
+    ];
+  }
+
+  if (applianceType === "ROBOT_CLEANER") {
+    return [
+      {
+        label: "청소 범위",
+        value: state.cleanScope,
+        className: "rinse",
+        icon: <SlidersHorizontal size={50} strokeWidth={2.2} />,
+        onClick: () => state.setCleanScope((current) => cycleApplianceValue(current, ["전체", "거실", "선택 구역"])),
+      },
+      {
+        label: "흡입 세기",
+        value: state.suctionLevel,
+        className: "spin",
+        icon: <Waves size={50} strokeWidth={2.2} />,
+        onClick: () => state.setSuctionLevel((current) => cycleApplianceValue(current, ["강", "중", "약"])),
+      },
+      {
+        label: "물걸레",
+        value: state.mopMode,
+        className: "temp",
+        icon: <Shirt size={50} strokeWidth={2.2} />,
+        onClick: () => state.setMopMode((current) => cycleApplianceValue(current, ["사용", "미사용"])),
+      },
+    ];
+  }
+
+  if (applianceType === "AIR_CONDITIONER") {
+    return [
+      {
+        label: "희망 온도",
+        value: `${state.targetTemp}도`,
+        className: "temp",
+        icon: <Thermometer size={50} strokeWidth={2.2} />,
+        onClick: () => state.setTargetTemp((current) => (current >= 28 ? 18 : current + 1)),
+      },
+      {
+        label: "풍량",
+        value: state.fanLevel,
+        className: "spin",
+        icon: <Waves size={50} strokeWidth={2.2} />,
+        onClick: () => state.setFanLevel((current) => cycleApplianceValue(current, ["자동", "강", "중", "약"])),
+      },
+      {
+        label: "운전",
+        value: state.airconOperation,
+        className: "rinse",
+        icon: <Power size={50} strokeWidth={2.2} />,
+        onClick: () => state.setAirconOperation((current) => cycleApplianceValue(current, ["냉방", "제습", "송풍", "자동"])),
+      },
+    ];
+  }
+
+  if (applianceType === "AIR_PURIFIER") {
+    return [
+      {
+        label: "공기질",
+        value: state.airQuality,
+        className: "rinse",
+        icon: <Waves size={50} strokeWidth={2.2} />,
+        onClick: () => state.setAirQuality((current) => cycleApplianceValue(current, ["보통", "좋음", "나쁨"])),
+      },
+      {
+        label: "풍량",
+        value: state.purifierFanLevel,
+        className: "spin",
+        icon: <SlidersHorizontal size={50} strokeWidth={2.2} />,
+        onClick: () => state.setPurifierFanLevel((current) => cycleApplianceValue(current, ["자동", "강풍", "약풍"])),
+      },
+      {
+        label: "필터 상태",
+        value: state.filterState,
+        className: "temp",
+        icon: <Info size={50} strokeWidth={2.2} />,
+        onClick: () => state.setFilterState((current) => cycleApplianceValue(current, ["양호", "점검 필요"])),
+      },
+    ];
+  }
+
+  return [
+    {
+      label: "상태",
+      value: "대기",
+      className: "rinse",
+      icon: <Power size={50} strokeWidth={2.2} />,
+      onClick: () => {},
+    },
+    {
+      label: "모드",
+      value: "표준",
+      className: "spin",
+      icon: <SlidersHorizontal size={50} strokeWidth={2.2} />,
+      onClick: () => {},
+    },
+  ];
+}
+
+function getApplianceCareInfo(applianceType, applianceName) {
+  if (applianceType === "ROBOT_CLEANER") {
+    return {
+      title: "청소 완료 후 도크 복귀",
+      description: "청소가 끝나면 충전 도크로 돌아가요.",
+      icon: <SlidersHorizontal size={31} strokeWidth={2.2} />,
+    };
+  }
+
+  if (applianceType === "AIR_CONDITIONER") {
+    return {
+      title: "쾌적 운전 유지",
+      description: "실내 온도에 맞춰 운전 상태를 조절해요.",
+      icon: <Thermometer size={31} strokeWidth={2.2} />,
+    };
+  }
+
+  if (applianceType === "AIR_PURIFIER") {
+    return {
+      title: "실내 공기 관리",
+      description: "공기질 변화에 맞춰 풍량을 조절해요.",
+      icon: <Waves size={31} strokeWidth={2.2} />,
+    };
+  }
+
+  if (applianceType === "DRYER") {
+    return {
+      title: "건조 후 구김방지",
+      description: "건조가 끝난 뒤 옷감 구김을 줄여요.",
+      icon: <Shirt size={31} strokeWidth={2.2} />,
+    };
+  }
+
+  if (applianceType === "WASHER") {
+    return {
+      title: "종료 후 세탁물 케어",
+      description: "원격제어를 켠 뒤 사용할 수 있어요.",
+      icon: <WashingMachine size={31} strokeWidth={2.2} />,
+    };
+  }
+
+  return {
+    title: `${applianceName} 상태 관리`,
+    description: "현재 선택한 가전의 기본 상태를 확인해요.",
+    icon: <Power size={31} strokeWidth={2.2} />,
+  };
 }
 
 function getApplianceModeOptions(applianceType) {
@@ -2135,6 +2356,14 @@ function getApplianceModeOptions(applianceType) {
     ];
   }
 
+  if (applianceType === "AIR_PURIFIER") {
+    return [
+      { label: "필터 상태", icon: "F", active: true },
+      { label: "공기질 알림", icon: "!", active: false },
+      { label: "쾌속청정", icon: "Q", active: false },
+    ];
+  }
+
   if (applianceType === "REFRIGERATOR") {
     return [
       { label: "절전", icon: "E", active: true },
@@ -2154,7 +2383,7 @@ function buildDailyHours(tasks) {
 }
 
 function normalizeApplianceType(task = {}) {
-  const rawType = String(task.applianceType || "").toUpperCase();
+  const rawType = String(task.applianceType || task.deviceType || task.category || "").toUpperCase();
   if (applianceModeCatalog[rawType]) return rawType;
 
   const text = [task.title, task.place, task.description].filter(Boolean).join(" ");
@@ -2173,7 +2402,7 @@ function getApplianceModeImage(applianceType) {
   if (applianceType === "WASHER") return applianceImages.washer;
   if (applianceType === "DRYER") return applianceImages.dryer;
   if (applianceType === "AIR_CONDITIONER") return applianceImages.air;
-  if (applianceType === "REFRIGERATOR") return applianceImages.fridge;
+  if (applianceType === "REFRIGERATOR") return fridgeImage;
   return lgCharacterImage;
 }
 
