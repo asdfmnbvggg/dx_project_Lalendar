@@ -83,6 +83,7 @@ export default function CalendarPage({
   const [editingTask, setEditingTask] = useState(null);
   const [dailyContextTaskId, setDailyContextTaskId] = useState(null);
   const [dailyContextAction, setDailyContextAction] = useState(null);
+  const [dailyContextMenuPosition, setDailyContextMenuPosition] = useState(null);
   const [dailyDetailView, setDailyDetailView] = useState("timetable");
   const [applianceModeTask, setApplianceModeTask] = useState(null);
   const [selectedApplianceModeId, setSelectedApplianceModeId] = useState("");
@@ -189,6 +190,7 @@ export default function CalendarPage({
     setEditingTask(null);
     setDailyContextTaskId(null);
     setDailyContextAction(null);
+    setDailyContextMenuPosition(null);
     setApplianceModeTask(null);
     setSelectedApplianceModeId("");
     setApplianceModeMessage("");
@@ -209,9 +211,21 @@ export default function CalendarPage({
     setDeleteMode(false);
   }
 
-  function openDailyContext(task) {
+  function openDailyContext(task, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+
     const taskKey = getDailyTaskKey(task);
-    setDailyContextTaskId((current) => (current === taskKey ? null : taskKey));
+    setDailyContextTaskId((current) => {
+      const isClosing = current === taskKey;
+      if (isClosing) {
+        setDailyContextMenuPosition(null);
+        return null;
+      }
+
+      setDailyContextMenuPosition(getDailyContextMenuPosition(event?.currentTarget));
+      return taskKey;
+    });
     setDailyContextAction(null);
   }
 
@@ -231,6 +245,7 @@ export default function CalendarPage({
 
       setDailyContextTaskId(null);
       setDailyContextAction(null);
+      setDailyContextMenuPosition(null);
     }, 140);
   }
 
@@ -245,6 +260,7 @@ export default function CalendarPage({
     setApplianceModeMessage("");
     setDailyContextTaskId(null);
     setDailyContextAction(null);
+    setDailyContextMenuPosition(null);
   }
 
   function openHouseworkComposerFor(member) {
@@ -394,6 +410,7 @@ export default function CalendarPage({
             if (event.target.closest(".daily-time-block") || event.target.closest(".daily-context-menu") || event.target.closest(".appliance-mode-backdrop")) return;
             setDailyContextTaskId(null);
             setDailyContextAction(null);
+            setDailyContextMenuPosition(null);
           }}
         >
           <div className="date-detail-head">
@@ -414,6 +431,7 @@ export default function CalendarPage({
                 setDailyDetailView((current) => (current === "timetable" ? "list" : "timetable"));
                 setDailyContextTaskId(null);
                 setDailyContextAction(null);
+                setDailyContextMenuPosition(null);
               }}
             >
               <Repeat2 size={21} strokeWidth={3} />
@@ -435,6 +453,7 @@ export default function CalendarPage({
                       variant="housework"
                       activeTaskId={dailyContextTaskId}
                       activeAction={dailyContextAction}
+                      contextMenuPosition={dailyContextMenuPosition}
                       onOpenContext={openDailyContext}
                       onChooseContextAction={chooseDailyContextAction}
                       onOpenModeChange={openApplianceMode}
@@ -452,6 +471,7 @@ export default function CalendarPage({
                       variant="housework"
                       activeTaskId={dailyContextTaskId}
                       activeAction={dailyContextAction}
+                      contextMenuPosition={dailyContextMenuPosition}
                       onOpenContext={openDailyContext}
                       onChooseContextAction={chooseDailyContextAction}
                       onOpenModeChange={openApplianceMode}
@@ -472,6 +492,7 @@ export default function CalendarPage({
                 variant="personal"
                 activeTaskId={dailyContextTaskId}
                 activeAction={dailyContextAction}
+                contextMenuPosition={dailyContextMenuPosition}
                 onOpenContext={openDailyContext}
                 onChooseContextAction={chooseDailyContextAction}
                 onOpenModeChange={openApplianceMode}
@@ -484,6 +505,7 @@ export default function CalendarPage({
                 variant="housework"
                 activeTaskId={dailyContextTaskId}
                 activeAction={dailyContextAction}
+                contextMenuPosition={dailyContextMenuPosition}
                 onOpenContext={openDailyContext}
                 onChooseContextAction={chooseDailyContextAction}
                 onOpenModeChange={openApplianceMode}
@@ -499,6 +521,7 @@ export default function CalendarPage({
                 variant="personal"
                 activeTaskId={dailyContextTaskId}
                 activeAction={dailyContextAction}
+                contextMenuPosition={dailyContextMenuPosition}
                 onOpenContext={openDailyContext}
                 onChooseContextAction={chooseDailyContextAction}
                 onOpenModeChange={openApplianceMode}
@@ -510,6 +533,7 @@ export default function CalendarPage({
                 variant="housework"
                 activeTaskId={dailyContextTaskId}
                 activeAction={dailyContextAction}
+                contextMenuPosition={dailyContextMenuPosition}
                 onOpenContext={openDailyContext}
                 onChooseContextAction={chooseDailyContextAction}
                 onOpenModeChange={openApplianceMode}
@@ -1645,7 +1669,31 @@ function DailyTimeRail({ hours }) {
   );
 }
 
-function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, activeTaskId, activeAction, onOpenContext, onChooseContextAction, onOpenModeChange }) {
+function getDailyContextMenuPosition(anchor) {
+  if (!anchor?.getBoundingClientRect) return null;
+
+  const rect = anchor.getBoundingClientRect();
+  const menuWidth = 76;
+  const menuHeight = 82;
+  const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 390;
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 720;
+  const openToRight = rect.right + menuWidth + 10 <= viewportWidth;
+  const left = openToRight ? rect.right + 8 : Math.max(8, rect.left - menuWidth - 8);
+  const top = Math.min(Math.max(8, rect.top), Math.max(8, viewportHeight - menuHeight - 8));
+
+  return { left, top };
+}
+
+function getDailyContextMenuStyle(position) {
+  if (!position) return undefined;
+
+  return {
+    "--context-menu-left": `${position.left}px`,
+    "--context-menu-top": `${position.top}px`,
+  };
+}
+
+function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, activeTaskId, activeAction, contextMenuPosition, onOpenContext, onChooseContextAction, onOpenModeChange }) {
   const startHour = hours[0] ?? DAILY_TIMETABLE_START_HOUR;
   const endHour = hours[hours.length - 1] ?? DAILY_TIMETABLE_END_HOUR;
   const totalMinutes = Math.max(60, (endHour - startHour) * 60);
@@ -1678,12 +1726,11 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
                 "--block-lane-count": laneCount,
               }}
               onContextMenu={(event) => {
-                event.preventDefault();
-                onOpenContext?.(task);
+                onOpenContext?.(task, event);
               }}
               onPointerDown={(event) => {
                 if (event.target.closest(".daily-context-menu")) return;
-                onOpenContext?.(task);
+                onOpenContext?.(task, event);
               }}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
@@ -1699,6 +1746,7 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
                   className="daily-context-menu"
                   role="menu"
                   aria-label={task.title + " options"}
+                  style={getDailyContextMenuStyle(contextMenuPosition)}
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={(event) => event.stopPropagation()}
                 >
@@ -1751,7 +1799,7 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
   );
 }
 
-function DailyListColumn({ title, tasks, memberColors, variant, activeTaskId, activeAction, onOpenContext, onChooseContextAction, onOpenModeChange }) {
+function DailyListColumn({ title, tasks, memberColors, variant, activeTaskId, activeAction, contextMenuPosition, onOpenContext, onChooseContextAction, onOpenModeChange }) {
   return (
     <section className={["daily-list-column", variant].filter(Boolean).join(" ")} aria-label={title}>
       <strong>{title}</strong>
@@ -1773,8 +1821,7 @@ function DailyListColumn({ title, tasks, memberColors, variant, activeTaskId, ac
                 style={{ "--block-color": color }}
                 onPointerDown={(event) => {
                   if (event.target.closest(".daily-context-menu")) return;
-                  event.stopPropagation();
-                  onOpenContext?.(task);
+                  onOpenContext?.(task, event);
                 }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
@@ -1793,6 +1840,7 @@ function DailyListColumn({ title, tasks, memberColors, variant, activeTaskId, ac
                     className="daily-context-menu"
                     role="menu"
                     aria-label={task.title + " options"}
+                    style={getDailyContextMenuStyle(contextMenuPosition)}
                     onPointerDown={(event) => event.stopPropagation()}
                     onClick={(event) => event.stopPropagation()}
                   >

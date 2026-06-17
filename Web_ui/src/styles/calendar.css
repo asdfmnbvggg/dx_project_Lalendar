@@ -1581,10 +1581,6 @@
   scrollbar-color: #d7dbe0 transparent;
 }
 
-.daily-timetable-shell:has(.daily-context-menu) {
-  overflow: visible;
-}
-
 .daily-timetable-shell.housework-detail {
   grid-template-columns: 54px minmax(0, 1fr);
 }
@@ -1663,10 +1659,6 @@
   gap: 8px;
   overflow: auto;
   padding: 8px;
-}
-
-.daily-list-column:has(.daily-context-menu) > div {
-  overflow: visible;
 }
 
 .daily-list-column p {
@@ -1907,9 +1899,9 @@
 }
 
 .daily-context-menu {
-  position: absolute;
-  left: calc(50% + 18px);
-  top: 50%;
+  position: fixed;
+  left: var(--context-menu-left, 50%);
+  top: var(--context-menu-top, 50%);
   z-index: 300;
   width: 68px;
   overflow: hidden;
@@ -1918,11 +1910,7 @@
   background: #fffaf3;
   color: #7a3e0b;
   box-shadow: 0 14px 28px rgba(154, 86, 24, 0.18);
-  transform: translate(-50%, 0);
-}
-
-.daily-time-block .daily-context-menu {
-  top: calc(100% + 4px);
+  transform: none;
 }
 
 .daily-context-menu button {
