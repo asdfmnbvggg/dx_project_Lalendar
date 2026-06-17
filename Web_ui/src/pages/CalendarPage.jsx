@@ -4,6 +4,9 @@ import { createPortal } from "react-dom";
 import { Bell, CheckCircle2, ChevronDown, Clock3, Home, Info, Power, Shirt, SlidersHorizontal, Thermometer, WashingMachine, Waves } from "lucide-react";
 import { dateKey, members } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
+import robotCleanerImage from "../assets/appliances/로봇청소기.png";
+import dishWasherImage from "../assets/appliances/식기세척기.png";
+
 import {
   aiDailyReportImage,
   airConditionerImage,
@@ -2403,6 +2406,8 @@ function getApplianceModeImage(applianceType) {
   if (applianceType === "DRYER") return applianceImages.dryer;
   if (applianceType === "AIR_CONDITIONER") return applianceImages.air;
   if (applianceType === "REFRIGERATOR") return fridgeImage;
+  if (applianceType === "ROBOT_CLEANER") return robotCleanerImage;
+  if (applianceType === "DISHWASHER") return dishWasherImage;
   return lgCharacterImage;
 }
 
