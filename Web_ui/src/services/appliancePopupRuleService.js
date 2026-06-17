@@ -93,6 +93,7 @@ function buildAirConditionerPopup(sensor, context) {
       targetUserId,
       metricLabel: "실내 온도",
       metricValue: `${formatNumber(temperature)}C`,
+      metricParts: [{ value: `${formatNumber(temperature)}C`, isExceeded: true }],
       thresholdLabel: `${THRESHOLDS.temperaturePowerCooling}C 이상`,
       updatedAt: sensor.last_updated || "",
     };
@@ -110,6 +111,7 @@ function buildAirConditionerPopup(sensor, context) {
       targetUserId,
       metricLabel: "실내 온도",
       metricValue: `${formatNumber(temperature)}C`,
+      metricParts: [{ value: `${formatNumber(temperature)}C`, isExceeded: true }],
       thresholdLabel: `${THRESHOLDS.temperatureCooling}C 이상`,
       updatedAt: sensor.last_updated || "",
     };
@@ -127,6 +129,7 @@ function buildAirConditionerPopup(sensor, context) {
       targetUserId,
       metricLabel: "실내 습도",
       metricValue: `${formatNumber(humidity)}%`,
+      metricParts: [{ value: `${formatNumber(humidity)}%`, isExceeded: true }],
       thresholdLabel: `${THRESHOLDS.humidityDry}% 이상`,
       updatedAt: sensor.last_updated || "",
     };
@@ -155,6 +158,7 @@ function buildAirQualityPopup(sensor, context) {
       targetUserId,
       metricLabel: "실내 미세먼지",
       metricValue: `PM10 ${formatSensorValue(pm10)} / PM2.5 ${formatSensorValue(pm25)}`,
+      metricParts: buildAirQualityMetricParts(pm10, pm25, THRESHOLDS.pm10Strong, THRESHOLDS.pm25Strong),
       thresholdLabel: `PM10 ${THRESHOLDS.pm10Strong} 또는 PM2.5 ${THRESHOLDS.pm25Strong} 이상`,
       updatedAt: sensor.last_updated || "",
     };
@@ -175,12 +179,20 @@ function buildAirQualityPopup(sensor, context) {
       targetUserId,
       metricLabel: "실내 미세먼지",
       metricValue: `PM10 ${formatSensorValue(pm10)} / PM2.5 ${formatSensorValue(pm25)}`,
+      metricParts: buildAirQualityMetricParts(pm10, pm25, THRESHOLDS.pm10On, THRESHOLDS.pm25On),
       thresholdLabel: `PM10 ${THRESHOLDS.pm10On} 또는 PM2.5 ${THRESHOLDS.pm25On} 이상`,
       updatedAt: sensor.last_updated || "",
     };
   }
 
   return null;
+}
+
+function buildAirQualityMetricParts(pm10, pm25, pm10Threshold, pm25Threshold) {
+  return [
+    { label: "PM10", value: formatSensorValue(pm10), isExceeded: Number.isFinite(pm10) && pm10 >= pm10Threshold },
+    { label: "PM2.5", value: formatSensorValue(pm25), isExceeded: Number.isFinite(pm25) && pm25 >= pm25Threshold },
+  ];
 }
 
 function getTargetUserId(context, applianceType) {

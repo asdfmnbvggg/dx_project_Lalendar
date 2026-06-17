@@ -1385,7 +1385,9 @@ function SensorPopupDialog({ popup, onClose, onExecute }) {
         <div className="sensor-popup-metrics" aria-label="센서 감지 정보">
           <div>
             <small>{popup.metricLabel || "현재 값"}</small>
-            <strong>{popup.metricValue || "-"}</strong>
+            <strong>
+              <SensorMetricValue popup={popup} />
+            </strong>
           </div>
           <div>
             <small>추천 모드</small>
@@ -1414,6 +1416,20 @@ function SensorPopupDialog({ popup, onClose, onExecute }) {
       </section>
     </div>
   );
+}
+
+function SensorMetricValue({ popup }) {
+  if (!Array.isArray(popup.metricParts) || popup.metricParts.length === 0) {
+    return popup.metricValue || "-";
+  }
+
+  return popup.metricParts.map((part, index) => (
+    <span key={`${part.label || "value"}-${index}`}>
+      {index > 0 && <span className="sensor-popup-metric-separator"> / </span>}
+      {part.label && <span>{part.label} </span>}
+      <span className={part.isExceeded ? "sensor-popup-value-exceeded" : ""}>{part.value}</span>
+    </span>
+  ));
 }
 
 function appendUniqueSensorPopups(queue, popups) {
