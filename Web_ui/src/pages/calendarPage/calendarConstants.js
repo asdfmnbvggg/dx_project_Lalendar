@@ -191,6 +191,7 @@ export const CALENDAR_CELL_COLLAPSED_TASK_LIMIT = 5;
 export const SCHEDULE_PLANNING_DELAY = 3000;
 export const DAILY_TIMETABLE_START_HOUR = 6;
 export const DAILY_TIMETABLE_END_HOUR = 24;
+export const DAILY_TIMETABLE_HOUR_HEIGHT = 52;
 export const DAILY_TIMETABLE_START_TIME = "06:00";
 export const DAILY_TIMETABLE_END_INPUT_TIME = "23:59";
 export const scheduleColorOptions = ["#ff7976", "#ffd5d6", "#ffc68f", "#ffb063", "#fff294", "#cbf39d", "#95cff5", "#d3b5f3"];

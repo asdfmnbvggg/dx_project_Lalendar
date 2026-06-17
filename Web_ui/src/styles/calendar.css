@@ -1745,10 +1745,12 @@
 .daily-time-rail,
 .daily-timetable-column {
   position: relative;
+  --daily-hour-height: 52px;
+  --daily-header-height: 38px;
   min-width: 0;
-  min-height: calc(38px + (var(--hour-count, 24) * 38px));
+  min-height: calc(var(--daily-header-height) + (var(--hour-count, 24) * var(--daily-hour-height)));
   display: grid;
-  grid-template-rows: 38px minmax(0, 1fr);
+  grid-template-rows: var(--daily-header-height) minmax(0, 1fr);
   overflow: visible;
   border: 1px solid #eadfce;
   border-radius: 8px;
@@ -1790,7 +1792,7 @@
 .daily-time-scale,
 .daily-timetable-track {
   position: relative;
-  min-height: calc(var(--hour-count, 24) * 38px);
+  min-height: calc(var(--hour-count, 24) * var(--daily-hour-height));
   overflow: hidden;
 }
 
@@ -1848,12 +1850,12 @@
   width: calc((100% - 16px) / var(--block-lane-count, 1) - 4px);
   right: auto;
   top: var(--block-top);
-  min-height: 42px;
+  min-height: 38px;
   height: var(--block-height);
   display: grid;
   align-content: start;
   gap: 4px;
-  padding: 9px 9px 8px;
+  padding: 7px 9px;
   overflow: visible;
   border-radius: 8px;
   background: var(--block-color);

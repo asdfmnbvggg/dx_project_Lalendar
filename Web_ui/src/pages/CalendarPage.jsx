@@ -19,6 +19,7 @@ import {
   DABIN_TASK_OWNER,
   DAILY_TIMETABLE_END_HOUR,
   DAILY_TIMETABLE_END_INPUT_TIME,
+  DAILY_TIMETABLE_HOUR_HEIGHT,
   DAILY_TIMETABLE_START_HOUR,
   DAILY_TIMETABLE_START_TIME,
   dryerImage,
@@ -1661,7 +1662,7 @@ function DailyTimeRail({ hours }) {
   return (
     <section className="daily-time-rail" aria-label="Time">
       <strong>시간</strong>
-      <div className="daily-time-scale" style={{ "--hour-count": hours.length - 1 }}>
+      <div className="daily-time-scale" style={{ "--hour-count": hours.length - 1, "--daily-hour-height": `${DAILY_TIMETABLE_HOUR_HEIGHT}px` }}>
         {hours.map((hour, index) => (
           <span
             key={hour}
@@ -1791,16 +1792,16 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
   const totalMinutes = Math.max(60, (endHour - startHour) * 60);
   const displayStartMinutes = startHour * 60;
   const displayEndMinutes = endHour * 60;
-  const blockLayouts = layoutDailyTimetableTasks(tasks, displayStartMinutes, displayEndMinutes, totalMinutes);
+  const blockLayouts = layoutDailyTimetableTasks(tasks, displayStartMinutes, displayEndMinutes, totalMinutes, DAILY_TIMETABLE_HOUR_HEIGHT);
 
   return (
     <section className={["daily-timetable-column", variant].filter(Boolean).join(" ")} aria-label={title}>
       <strong>{title}</strong>
-      <div className="daily-timetable-track" style={{ "--hour-count": hours.length - 1 }}>
+      <div className="daily-timetable-track" style={{ "--hour-count": hours.length - 1, "--daily-hour-height": `${DAILY_TIMETABLE_HOUR_HEIGHT}px` }}>
         {hours.slice(0, -1).map((hour, index) => (
           <span className="daily-timetable-line" key={hour} style={{ "--line-index": index }} />
         ))}
-        {blockLayouts.map(({ task, index, range, top, height, lane, laneCount }) => {
+        {blockLayouts.map(({ task, index, range, topPx, heightPx, lane, laneCount }) => {
           const color = getDailyBlockColor(task, memberColors, variant, index);
           const taskKey = getDailyTaskKey(task);
 
@@ -1811,8 +1812,8 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
               role="button"
               tabIndex={0}
               style={{
-                "--block-top": Math.max(0, Math.min(96, top)) + "%",
-                "--block-height": Math.min(100, height) + "%",
+                "--block-top": `${topPx}px`,
+                "--block-height": `${heightPx}px`,
                 "--block-color": color,
                 "--block-lane": lane,
                 "--block-lane-count": laneCount,
@@ -2357,7 +2358,8 @@ function getDailyTaskRange(task, index = 0) {
   return normalizeTimeRange(fallbackHour * 60, fallbackHour * 60 + 60);
 }
 
-function layoutDailyTimetableTasks(tasks, displayStartMinutes, displayEndMinutes, totalMinutes) {
+function layoutDailyTimetableTasks(tasks, displayStartMinutes, displayEndMinutes, totalMinutes, hourRowHeight = DAILY_TIMETABLE_HOUR_HEIGHT) {
+  const minuteHeight = hourRowHeight / 60;
   const visibleTasks = tasks
     .map((task, index) => {
       const range = getDailyTaskRange(task, index);
@@ -2390,8 +2392,8 @@ function layoutDailyTimetableTasks(tasks, displayStartMinutes, displayEndMinutes
       ...item,
       lane: Math.min(earlierOverlaps.length, overlappingItems.length - 1),
       laneCount: Math.max(1, overlappingItems.length),
-      top: ((item.visibleStartMinutes - displayStartMinutes) / totalMinutes) * 100,
-      height: Math.max(7, ((item.visibleEndMinutes - item.visibleStartMinutes) / totalMinutes) * 100),
+      topPx: (item.visibleStartMinutes - displayStartMinutes) * minuteHeight,
+      heightPx: (item.visibleEndMinutes - item.visibleStartMinutes) * minuteHeight,
       key: item.task.id || `${item.task.title}-${itemIndex}`,
     };
   });
