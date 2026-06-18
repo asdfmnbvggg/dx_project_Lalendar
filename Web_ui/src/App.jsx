@@ -1118,9 +1118,12 @@ export default function App() {
 
   function executeNotification(item) {
     if (item.type === "task") {
-      if (isWasherScheduleTask(item.task)) {
-        sendWasherStartCommandFromNotification(item.task).catch((error) => {
-          devWarn("[notification] washer_start command failed", error);
+      const devicePayload = buildDeviceCommandPayloadFromTask(item.task, {
+        requestedBy: currentUser?.id || "",
+      });
+      if (devicePayload) {
+        sendDeviceCommandFromNotification(devicePayload).catch((error) => {
+          devWarn("[notification] device command failed", error);
         });
       }
       if (!item.task.done) toggleTask(item.task.id);
@@ -1221,14 +1224,16 @@ export default function App() {
     }
 
     try {
-      const commandPayload = {
+      const commandPayload = normalizeDeviceCommandPayload({
         command: sensorPopup.command,
         mode: sensorPopup.mode,
         applianceType: sensorPopup.applianceType,
+        applianceId: sensorPopup.applianceId,
         applianceName: sensorPopup.applianceName,
         reason: sensorPopup.reason || sensorPopup.message,
         targetUserId: sensorPopup.targetUserId,
-      };
+        requestedBy: currentUser?.id || "",
+      });
       if (import.meta.env.DEV) console.log("[sensor] execute popup command payload", commandPayload);
       logAnalyticsEvent("device_execute_click", commandPayload);
       logDeviceExecuteEvent(sensorPopup, commandPayload);
@@ -2034,16 +2039,150 @@ function isWasherScheduleTask(task = {}) {
   return task.applianceType === "WASHER" || /세탁|빨래|washer/i.test(text);
 }
 
-async function sendWasherStartCommandFromNotification(task = {}) {
-  const targetUserId = getTaskUserId(task);
+async function sendDeviceCommandFromNotification(payload = {}) {
+  if (import.meta.env.DEV) console.log("[notification] device command payload", payload);
+  logAnalyticsEvent("device_execute_click", payload);
+  logDeviceExecuteEvent(payload, payload);
+  await sendDeviceCommand(SENSOR_DEVICE_ID, payload);
+  if (import.meta.env.DEV) console.log("[notification] device command sent", { deviceId: SENSOR_DEVICE_ID, payload });
+}
+
+function buildDeviceCommandPayloadFromTask(task = {}, context = {}) {
+  if (!isExecutableApplianceTask(task)) return null;
+
+  if (task.applianceType === "AIR_CONDITIONER" || /에어컨|냉방|제습/i.test(`${task.title || ""} ${task.place || ""} ${task.applianceName || ""}`)) {
+    return buildAirConditionerCommandPayload(task, context);
+  }
+
+  if (task.applianceType === "AIR_PURIFIER" || /공기청정|미세먼지/i.test(`${task.title || ""} ${task.place || ""} ${task.applianceName || ""}`)) {
+    return {
+      applianceType: "AIR_PURIFIER",
+      applianceName: task.applianceName || "공기청정기",
+      command: "air_purifier_on",
+      mode: task.applianceMode || task.currentMode || "자동",
+      reason: "캘린더 가전 실행 확인 알림에서 공기청정기 실행을 요청했습니다.",
+      targetUserId: getTaskUserId(task),
+    };
+  }
+
+  if (isWasherScheduleTask(task)) {
+    return {
+      applianceType: "WASHER",
+      applianceName: "세탁기",
+      command: "washer_start",
+      mode: task.applianceMode || task.currentMode || "표준",
+      reason: "캘린더 세탁 일정 실행 확인 알림에서 세탁기 실행을 요청했습니다.",
+      targetUserId: getTaskUserId(task),
+    };
+  }
+
+  return null;
+}
+
+function isExecutableApplianceTask(task = {}) {
+  return task.displayType === "appliance" || Boolean(task.applianceType);
+}
+
+function normalizeDeviceCommandPayload(payload = {}) {
+  if (payload.applianceType !== "AIR_CONDITIONER") return payload;
+  return buildAirConditionerCommandPayload(payload, { requestedBy: payload.requestedBy });
+}
+
+function buildAirConditionerCommandPayload(source = {}, context = {}) {
+  const target = resolveAirConditionerTarget(source);
+  const commandMode = resolveAirConditionerCommandMode(source);
+  const requestedBy = context.requestedBy || source.requestedBy || "";
   const payload = {
-    applianceType: "WASHER",
-    applianceName: "세탁기",
-    command: "washer_start",
-    mode: task.applianceMode || task.currentMode || "표준",
-    reason: "캘린더 세탁 일정 실행 확인 알림에서 세탁기 실행을 요청했습니다.",
-    targetUserId,
+    applianceType: "AIR_CONDITIONER",
+    applianceId: target.applianceId,
+    applianceName: target.applianceName,
+    command: `${target.commandPrefix}_aircon_${commandMode.commandSuffix}`,
+    mode: commandMode.mode,
+    reason: buildAirConditionerCommandReason(target, commandMode.mode, requestedBy),
+    targetUserId: target.targetUserId,
   };
+
+  if (target.targetUserId === "shared" && requestedBy && requestedBy !== "shared") {
+    payload.requestedBy = requestedBy;
+  }
+
+  return payload;
+}
+
+function resolveAirConditionerTarget(source = {}) {
+  const text = `${source.applianceId || ""} ${source.applianceName || ""} ${source.title || ""} ${source.place || ""} ${source.userId || ""} ${source.owner || ""} ${source.targetUserId || ""}`.toLowerCase();
+  const explicitId = String(source.applianceId || "").toLowerCase();
+
+  if (/shared|living|air-living|거실|공동/.test(text)) {
+    return AIR_CONDITIONER_TARGETS.shared;
+  }
+  if (/aircon_sumin|air-sumin|sumin|수민|theresa/.test(explicitId) || /sumin|수민/.test(text)) {
+    return AIR_CONDITIONER_TARGETS.sumin;
+  }
+  if (/aircon_dada|air-dabin|air-dada|dada|dabin|다빈|minsu/.test(explicitId) || /dada|dabin|다빈/.test(text)) {
+    return AIR_CONDITIONER_TARGETS.dada;
+  }
+  if (/aircon_jea|air-jaehyeok|air-jea|jea|jaehyeok|재혁|\bme\b/.test(explicitId) || /jea|jaehyeok|재혁/.test(text)) {
+    return AIR_CONDITIONER_TARGETS.jea;
+  }
+
+  return AIR_CONDITIONER_TARGETS.shared;
+}
+
+function resolveAirConditionerCommandMode(source = {}) {
+  const text = `${source.command || ""} ${source.mode || ""} ${source.applianceMode || ""} ${source.currentMode || ""} ${source.title || ""}`.toLowerCase();
+  if (/dry|제습/.test(text)) {
+    return { commandSuffix: "dry", mode: "제습" };
+  }
+
+  return { commandSuffix: "power_cooling", mode: "파워냉방" };
+}
+
+function buildAirConditionerCommandReason(target, mode, requestedBy) {
+  const requestedByName = getCommandRequesterName(requestedBy);
+  if (target.targetUserId === "shared" && requestedByName) {
+    return `${requestedByName}이 공동 에어컨 ${mode} 실행을 요청했습니다.`;
+  }
+
+  return `${target.applianceName} ${mode} 실행을 요청했습니다.`;
+}
+
+function getCommandRequesterName(userId) {
+  if (!userId || userId === "shared") return "";
+  const user = findUserById(userId);
+  return user?.name?.replace(/^김다빈$/, "다빈").replace(/^한수민$/, "수민").replace(/^최재혁$/, "재혁") || userId;
+}
+
+const AIR_CONDITIONER_TARGETS = {
+  shared: {
+    applianceId: "aircon_shared",
+    applianceName: "공동 에어컨",
+    commandPrefix: "shared",
+    targetUserId: "shared",
+  },
+  sumin: {
+    applianceId: "aircon_sumin",
+    applianceName: "수민 에어컨",
+    commandPrefix: "sumin",
+    targetUserId: "sumin",
+  },
+  dada: {
+    applianceId: "aircon_dada",
+    applianceName: "다빈 에어컨",
+    commandPrefix: "dada",
+    targetUserId: "dada",
+  },
+  jea: {
+    applianceId: "aircon_jea",
+    applianceName: "재혁 에어컨",
+    commandPrefix: "jea",
+    targetUserId: "jea",
+  },
+};
+
+async function sendWasherStartCommandFromNotification(task = {}) {
+  const payload = buildDeviceCommandPayloadFromTask(task);
+  if (!payload) return;
 
   if (import.meta.env.DEV) console.log("[notification] washer_start command payload", payload);
   logAnalyticsEvent("device_execute_click", payload);
@@ -2657,13 +2796,15 @@ function buildAirConditionerTasksForLastSchedules(date, fixedTasks, startId) {
         userId: fixedTask.userId,
         repeat: `${endTime}-${addMinutesToTime(endTime, applianceCalendarRules.airconDurationMinutes)}`,
         applianceType: "AIR_CONDITIONER",
+        applianceId: `aircon_${fixedTask.userId}`,
+        applianceName: `${room.name} 에어컨`,
         applianceMode: "냉방",
         sortOrder: 90 + index,
       });
     });
 }
 
-function createApplianceCalendarTask({ id, date, title, place, owner, userId, repeat, applianceType, applianceMode, sortOrder }) {
+function createApplianceCalendarTask({ id, date, title, place, owner, userId, repeat, applianceType, applianceId, applianceName, applianceMode, sortOrder }) {
   return {
     id,
     date,
@@ -2677,6 +2818,8 @@ function createApplianceCalendarTask({ id, date, title, place, owner, userId, re
     source: "auto",
     displayType: "appliance",
     applianceType,
+    applianceId,
+    applianceName,
     applianceMode,
     currentMode: applianceMode,
     color: applianceCalendarColors[applianceType],

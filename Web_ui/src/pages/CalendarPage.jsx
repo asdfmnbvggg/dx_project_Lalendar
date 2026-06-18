@@ -1116,6 +1116,8 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
       endDate: scheduleDates.endDate,
       displayType: isHouseworkSchedule ? "appliance" : "manual",
       applianceType: isHouseworkSchedule ? applianceType : undefined,
+      applianceId: isHouseworkSchedule ? selectedAppliance?.id : undefined,
+      applianceName: isHouseworkSchedule ? selectedAppliance?.label : undefined,
       applianceMode: isHouseworkSchedule ? getDefaultApplianceModeLabel(applianceType) : undefined,
       currentMode: isHouseworkSchedule ? getDefaultApplianceModeLabel(applianceType) : undefined,
     });

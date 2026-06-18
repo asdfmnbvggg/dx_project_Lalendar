@@ -31,6 +31,13 @@ float calibration_factor = -7050.0;
 // 공기청정기 실행 확인용 LED
 #define AIR_PURIFIER_LED 2
 
+// 가전 실행 확인용 GPIO
+#define SHARED_AIRCON_LED 18
+#define WASHER_LED 19
+#define SUMIN_AIRCON_LED 27
+#define DADA_AIRCON_LED 32
+#define JEA_AIRCON_LED 23
+
 // 센서 출력 주기
 unsigned long lastSensorPrintTime = 0;
 const unsigned long SENSOR_PRINT_INTERVAL = 3000;
@@ -162,15 +169,58 @@ void handleCommand(String command) {
   // =========================
   // 에어컨
   // =========================
+  else if (command == "shared_aircon_power_cooling") {
+    digitalWrite(SHARED_AIRCON_LED, HIGH);
+    Serial.println("공동 에어컨 파워냉방 실행 완료");
+  }
+
+  else if (command == "shared_aircon_dry") {
+    digitalWrite(SHARED_AIRCON_LED, HIGH);
+    Serial.println("공동 에어컨 제습 실행 완료");
+  }
+
+  else if (command == "sumin_aircon_power_cooling") {
+    digitalWrite(SUMIN_AIRCON_LED, HIGH);
+    Serial.println("수민 에어컨 파워냉방 실행 완료");
+  }
+
+  else if (command == "sumin_aircon_dry") {
+    digitalWrite(SUMIN_AIRCON_LED, HIGH);
+    Serial.println("수민 에어컨 제습 실행 완료");
+  }
+
+  else if (command == "dada_aircon_power_cooling") {
+    digitalWrite(DADA_AIRCON_LED, HIGH);
+    Serial.println("다빈 에어컨 파워냉방 실행 완료");
+  }
+
+  else if (command == "dada_aircon_dry") {
+    digitalWrite(DADA_AIRCON_LED, HIGH);
+    Serial.println("다빈 에어컨 제습 실행 완료");
+  }
+
+  else if (command == "jea_aircon_power_cooling") {
+    digitalWrite(JEA_AIRCON_LED, HIGH);
+    Serial.println("재혁 에어컨 파워냉방 실행 완료");
+  }
+
+  else if (command == "jea_aircon_dry") {
+    digitalWrite(JEA_AIRCON_LED, HIGH);
+    Serial.println("재혁 에어컨 제습 실행 완료");
+  }
+
   else if (command == "power_cooling") {
+    digitalWrite(SHARED_AIRCON_LED, HIGH);
     Serial.println("에어컨 파워냉방 실행 완료");
   }
 
   else if (command == "dry") {
+    digitalWrite(SHARED_AIRCON_LED, HIGH);
     Serial.println("에어컨 제습 모드 실행 완료");
   }
 
   else if (command == "cooling") {
+    digitalWrite(SHARED_AIRCON_LED, HIGH);
     Serial.println("에어컨 냉방 실행 완료");
   }
 
@@ -178,6 +228,7 @@ void handleCommand(String command) {
   // 세탁기
   // =========================
   else if (command == "washer_start") {
+    digitalWrite(WASHER_LED, HIGH);
     Serial.println("세탁기 표준 모드 실행 완료");
   }
 
@@ -207,7 +258,18 @@ void setup() {
   Serial.begin(SERIAL_BAUD);
 
   pinMode(AIR_PURIFIER_LED, OUTPUT);
+  pinMode(SHARED_AIRCON_LED, OUTPUT);
+  pinMode(WASHER_LED, OUTPUT);
+  pinMode(SUMIN_AIRCON_LED, OUTPUT);
+  pinMode(DADA_AIRCON_LED, OUTPUT);
+  pinMode(JEA_AIRCON_LED, OUTPUT);
+
   digitalWrite(AIR_PURIFIER_LED, LOW);
+  digitalWrite(SHARED_AIRCON_LED, LOW);
+  digitalWrite(WASHER_LED, LOW);
+  digitalWrite(SUMIN_AIRCON_LED, LOW);
+  digitalWrite(DADA_AIRCON_LED, LOW);
+  digitalWrite(JEA_AIRCON_LED, LOW);
 
   dht.begin();
 
