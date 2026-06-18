@@ -1,7 +1,23 @@
 export const DAILY_REPORT_FALLBACK_TEXT =
-  "오늘의 일정과 가사일을 확인했어요. 남은 가사일을 차례대로 진행해보세요.";
+  "AI 데일리 리포트를 불러오지 못했어요. 잠시 후 다시 확인해 주세요.";
+
+export function createDailyReportFallback() {
+  return {
+    title: "리포트를 준비하지 못했어요",
+    summary: DAILY_REPORT_FALLBACK_TEXT,
+    detail: "",
+    weatherTip: "",
+    taskTip: "",
+    imageTheme: "homecare_default",
+    tags: ["다시 시도"],
+    priority: "normal",
+    source: "fallback",
+  };
+}
 
 export async function fetchDailyReport(input, options = {}) {
+  if (import.meta.env.DEV) console.log("[daily-report] request input", input);
+
   const response = await fetch("/api/daily-report", {
     method: "POST",
     headers: {
@@ -18,9 +34,10 @@ export async function fetchDailyReport(input, options = {}) {
     throw error;
   }
 
-  if (!payload?.cardText) {
-    throw new Error("Daily Report response is missing cardText");
+  if (!payload?.title || !payload?.summary) {
+    throw new Error("Daily Report response is missing title or summary");
   }
 
+  if (import.meta.env.DEV) console.log("[daily-report] response", payload);
   return payload;
 }

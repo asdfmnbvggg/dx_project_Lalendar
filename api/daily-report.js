@@ -2,17 +2,25 @@ const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const TOGETHER_CHAT_COMPLETIONS_URL = "https://api.together.xyz/v1/chat/completions";
 const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
 const DEFAULT_TOGETHER_MODEL = "Qwen/Qwen3.5-9B";
-const FALLBACK_CARD_TEXT = "오늘의 일정과 가사일을 확인했어요. 남은 가사일을 차례대로 진행해보세요.";
 const PRIORITIES = ["weather", "schedule", "chore", "normal"];
 
 const REPORT_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["cardText", "weatherNotice", "choreNotice", "priority"],
+  required: ["title", "summary", "detail", "weatherTip", "taskTip", "imageTheme", "tags", "priority"],
   properties: {
-    cardText: { type: "string" },
-    weatherNotice: { type: "string" },
-    choreNotice: { type: "string" },
+    title: { type: "string" },
+    summary: { type: "string" },
+    detail: { type: "string" },
+    weatherTip: { type: "string" },
+    taskTip: { type: "string" },
+    imageTheme: { type: "string" },
+    tags: {
+      type: "array",
+      items: { type: "string" },
+      minItems: 1,
+      maxItems: 3,
+    },
     priority: { type: "string", enum: PRIORITIES },
   },
 };
@@ -26,29 +34,28 @@ export default async function dailyReportHandler(request, response) {
 
   try {
     const input = validateReportInput(await readJsonBody(request));
+    devLog("GPT daily report input", input);
     const report = await generateDailyReport(input);
     response.setHeader("Cache-Control", "no-store");
-    response.status(200).json(report);
+    response.status(200).json({ ...report, source: "gpt" });
   } catch (error) {
-    console.error("Daily AI Report generation failed", error);
+    console.error("GPT daily report generation failed", error);
     response.status(502).json({
       code: "DAILY_REPORT_GENERATION_FAILED",
-      message: FALLBACK_CARD_TEXT,
+      message: "AI 데일리 리포트를 생성하지 못했어요. 잠시 후 다시 시도해 주세요.",
     });
   }
 }
 
 async function generateDailyReport(input) {
   const provider = normalizeSecret(process.env.LLM_PROVIDER).toLowerCase() || "openai";
-
-  if (provider === "together") {
-    return requestTogetherReport(input);
-  }
+  if (provider === "together") return requestTogetherReport(input);
 
   try {
     return await requestOpenAiReport(input);
   } catch (openAiError) {
-    console.warn("OpenAI Daily Report failed; falling back to Together", openAiError);
+    if (!normalizeSecret(process.env.TOGETHER_API_KEY)) throw openAiError;
+    console.warn("OpenAI Daily Report failed; trying Together provider", openAiError);
     return requestTogetherReport(input);
   }
 }
@@ -65,7 +72,7 @@ async function requestOpenAiReport(input) {
     },
     body: JSON.stringify({
       model: normalizeSecret(process.env.OPENAI_MODEL) || DEFAULT_OPENAI_MODEL,
-      max_output_tokens: 350,
+      max_output_tokens: 650,
       input: [
         { role: "system", content: buildSystemPrompt() },
         { role: "user", content: JSON.stringify(input) },
@@ -86,7 +93,9 @@ async function requestOpenAiReport(input) {
     throw new Error(payload?.error?.message || `OpenAI request failed: ${response.status}`);
   }
 
-  return parseAndValidateReport(extractOpenAiText(payload));
+  const rawText = extractOpenAiText(payload);
+  devLog("GPT daily report raw response", rawText);
+  return parseAndValidateReport(rawText);
 }
 
 async function requestTogetherReport(input) {
@@ -101,8 +110,8 @@ async function requestTogetherReport(input) {
     },
     body: JSON.stringify({
       model: normalizeSecret(process.env.TOGETHER_MODEL) || DEFAULT_TOGETHER_MODEL,
-      temperature: 0.2,
-      max_tokens: 450,
+      temperature: 0.25,
+      max_tokens: 700,
       reasoning: { enabled: false },
       messages: [
         { role: "system", content: buildSystemPrompt() },
@@ -123,19 +132,25 @@ async function requestTogetherReport(input) {
     throw new Error(payload?.error?.message || payload?.message || `Together request failed: ${response.status}`);
   }
 
-  return parseAndValidateReport(extractTogetherText(payload));
+  const rawText = extractTogetherText(payload);
+  devLog("Together daily report raw response", rawText);
+  return parseAndValidateReport(rawText);
 }
 
 function buildSystemPrompt() {
   return [
-    "너는 가족 캘린더 앱의 Daily AI Report 작성자다.",
-    "선택 날짜부터 3일 동안의 일정, 가사일, 날씨 데이터만 사용해 한국어 보고서를 작성한다.",
-    "말투는 다정하지만 과하지 않게 하고, 모바일 카드에 자연스럽게 들어가도록 cardText를 짧은 1~2문장으로 작성한다.",
-    "우산, 미세먼지, 습도, 남은 가사일 개수, 다음 가사일 시간 중 실제 데이터에서 가장 중요한 내용만 언급한다.",
-    "입력에 없는 일정, 시간, 날씨, 가사일, 수치, 인물은 절대 지어내지 않는다.",
-    "값이 null이거나 빈 문자열이면 그 정보는 언급하지 않는다.",
-    "weatherNotice와 choreNotice도 입력 데이터에 근거한 짧은 문장으로 작성하고, 해당 정보가 없으면 빈 문자열로 둔다.",
-    "priority는 가장 중요한 내용에 따라 weather, schedule, chore, normal 중 하나만 선택한다.",
+    "너는 가족 캘린더 앱의 모바일용 Daily AI Report 작성자다.",
+    "오늘을 포함한 3일치 가족 일정, 가사일, 가전 작업, 날씨, To-do 진행률을 모두 참고해 한국어 보고서를 작성한다.",
+    "입력 데이터에 있는 사실만 사용하고, 없는 일정·시간·사람·날씨·수치를 지어내지 않는다.",
+    "일정이 있으면 시간대와 구성원 이름을 자연스럽게 반영하고, 가전 작업이 있으면 가전명과 모드를 반영한다.",
+    "비·습도·미세먼지·더위·추위 정보가 있으면 실제 데이터에 맞는 생활 팁을 작성한다.",
+    "오늘 해야 할 일뿐 아니라 내일과 모레 미리 확인할 내용도 필요한 경우 포함한다.",
+    "title은 짧은 제목, summary는 메인 카드용 1~2문장, detail은 상세 설명으로 작성한다.",
+    "weatherTip과 taskTip은 해당 근거가 없으면 빈 문자열로 둔다.",
+    "imageTheme은 homecare_laundry, homecare_cleaning, homecare_air, homecare_weather, homecare_schedule, homecare_default 중 하나로 작성한다.",
+    "tags는 입력에 맞는 짧은 한국어 태그 1~3개로 작성한다.",
+    "같은 상투적 문구를 반복하지 말고 입력 데이터의 차이가 문구에 드러나게 한다.",
+    "priority는 가장 중요한 내용에 따라 weather, schedule, chore, normal 중 하나를 선택한다.",
     "설명이나 마크다운 없이 지정된 JSON만 반환한다.",
   ].join("\n");
 }
@@ -165,24 +180,26 @@ function parseAndValidateReport(content) {
   }
 
   const report = {
-    cardText: normalizeCardText(value.cardText),
-    weatherNotice: String(value.weatherNotice || "").trim(),
-    choreNotice: String(value.choreNotice || "").trim(),
+    title: normalizeTextField(value.title, 80),
+    summary: normalizeTextField(value.summary, 220),
+    detail: normalizeTextField(value.detail, 360),
+    weatherTip: normalizeTextField(value.weatherTip, 220),
+    taskTip: normalizeTextField(value.taskTip, 220),
+    imageTheme: normalizeTextField(value.imageTheme, 60) || "homecare_default",
+    tags: sanitizeTags(value.tags),
     priority: String(value.priority || "").trim(),
   };
 
-  if (!report.cardText) throw new Error("Daily Report cardText is empty");
+  if (!report.title || !report.summary) throw new Error("Daily Report title or summary is empty");
+  if (report.tags.length === 0) report.tags = ["오늘의 리포트"];
   if (!PRIORITIES.includes(report.priority)) report.priority = "normal";
+  devLog("GPT daily report parsed result", report);
   return report;
 }
 
-function normalizeCardText(value) {
-  const text = String(value || "")
-    .replace(/\s+/g, " ")
-    .trim();
-  const sentences = (text.match(/[^.!?。！？]+[.!?。！？]?/g) || []).map((sentence) => sentence.trim());
-  const limited = sentences.slice(0, 2).join(" ").trim() || text;
-  return limited.length <= 180 ? limited : `${limited.slice(0, 177).trim()}…`;
+function normalizeTextField(value, limit) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  return text.length <= limit ? text : `${text.slice(0, Math.max(0, limit - 3)).trim()}...`;
 }
 
 function validateReportInput(value) {
@@ -191,15 +208,25 @@ function validateReportInput(value) {
   }
 
   return {
-    selectedDate: String(value.selectedDate || ""),
-    schedules: sanitizeArray(value.schedules, 60),
-    chores: sanitizeArray(value.chores, 60),
+    today: String(value.today || value.selectedDate || ""),
+    dateRange: sanitizeObject(value.dateRange),
     weather: sanitizeArray(value.weather, 3),
+    events: sanitizeArray(value.events || value.schedules, 60),
+    houseworkTasks: sanitizeArray(value.houseworkTasks || value.chores, 60),
+    todoProgress: sanitizeObject(value.todoProgress),
   };
 }
 
 function sanitizeArray(value, limit) {
   return Array.isArray(value) ? value.slice(0, limit) : [];
+}
+
+function sanitizeObject(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function sanitizeTags(value) {
+  return [...new Set(sanitizeArray(value, 3).map((tag) => String(tag || "").trim()).filter(Boolean))];
 }
 
 async function readJsonBody(request) {
@@ -223,4 +250,9 @@ function normalizeSecret(value) {
   return String(value || "")
     .trim()
     .replace(/^["']|["']$/g, "");
+}
+
+function devLog(label, value) {
+  if (process.env.NODE_ENV === "production") return;
+  console.log(label, value);
 }

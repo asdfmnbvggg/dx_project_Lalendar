@@ -155,7 +155,7 @@ export default function CalendarPage({
     : HOUSEWORK_MEMBER_TABS;
   const canEditPersonalCalendar = !isHouseCalendar && Boolean(currentUser?.id) && (isMaster || activeCalendarOwnerId === currentUser.id);
   const canUseCalendarAdd = isHouseCalendar ? Boolean(selectedHouseworkMember) : canEditPersonalCalendar;
-  const reportText = dailyAiReport?.cardText || dailyAiReportText || buildAiReport(reportDate, reportVisibleTasks, mainCalendarTasksByDate);
+  const reportText = dailyAiReport?.summary || dailyAiReportText || buildAiReport(reportDate, reportVisibleTasks, mainCalendarTasksByDate);
   const todayDailyReport = useMemo(
     () =>
       createTodayDailyReport({
@@ -164,10 +164,14 @@ export default function CalendarPage({
         fallbackText: buildAiReport(reportDate, reportVisibleTasks, mainCalendarTasksByDate),
         tasks: filteredTasksByDate[reportDate] || [],
         weather: reportWeather,
-        tags: buildAiReportTags(reportDate, reportVisibleTasks, mainCalendarTasksByDate),
-        weatherNotice: dailyAiReport?.weatherNotice,
-        choreNotice: dailyAiReport?.choreNotice,
+        title: dailyAiReport?.title,
+        detail: dailyAiReport?.detail,
+        tags: dailyAiReport?.tags?.length ? dailyAiReport.tags : buildAiReportTags(reportDate, reportVisibleTasks, mainCalendarTasksByDate),
+        weatherNotice: dailyAiReport?.weatherTip,
+        choreNotice: dailyAiReport?.taskTip,
+        imageTheme: dailyAiReport?.imageTheme,
         priority: dailyAiReport?.priority,
+        source: dailyAiReport?.source,
       }),
     [dailyAiReport, filteredTasksByDate, mainCalendarTasksByDate, reportDate, reportText, reportVisibleTasks, reportWeather],
   );

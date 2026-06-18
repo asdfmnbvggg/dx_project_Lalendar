@@ -28,7 +28,7 @@ import { fetchAirQuality } from "./services/airQualityService.js";
 import { logAnalyticsEvent } from "./firebase.js";
 import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendationService.js";
 import { buildRoutineRecommendations } from "./services/routinePredictionService.js";
-import { DAILY_REPORT_FALLBACK_TEXT, fetchDailyReport } from "./services/dailyReportService.js";
+import { DAILY_REPORT_FALLBACK_TEXT, createDailyReportFallback, fetchDailyReport } from "./services/dailyReportService.js";
 import { predictHouseworkTask } from "./services/taskPredictionService.js";
 import { sendDeviceCommand, subscribeSensorLatest } from "./services/sensorRealtimeService.js";
 import { THRESHOLDS, buildRealtimeAppliancePopups, buildScheduledWasherPopup, getPopupKey } from "./services/appliancePopupRuleService.js";
@@ -157,10 +157,15 @@ export default function App() {
   const [aiRecommendationNotice, setAiRecommendationNotice] = useState("");
   const [aiRecommendationRequestCount, setAiRecommendationRequestCount] = useState(0);
   const [dailyAiReport, setDailyAiReport] = useState(() => ({
-    cardText: DAILY_REPORT_FALLBACK_TEXT,
-    weatherNotice: "",
-    choreNotice: "",
+    title: "",
+    summary: "",
+    detail: "",
+    weatherTip: "",
+    taskTip: "",
+    imageTheme: "homecare_default",
+    tags: [],
     priority: "normal",
+    source: "loading",
   }));
   const [isDailyAiReportLoading, setDailyAiReportLoading] = useState(false);
   const [dailyReportCreationToken, setDailyReportCreationToken] = useState("initial");
@@ -543,20 +548,27 @@ export default function App() {
     () => collectDailyReportTasks(tasks, selectedDate, dailyReportUserId),
     [dailyReportUserId, selectedDate, tasks],
   );
-  const dailyReportSchedules = dailyReportTaskData.schedules;
-  const dailyReportChores = dailyReportTaskData.chores;
   const dailyReportWeather = useMemo(
     () => collectDailyReportWeather(selectedDate, calendarWeatherByDate, airQualityPm10),
     [airQualityPm10, calendarWeatherByDate, selectedDate],
   );
+  const dailyReportInput = useMemo(
+    () => ({
+      today: selectedDate,
+      dateRange: {
+        start: selectedDate,
+        end: addDays(selectedDate, 2),
+      },
+      weather: dailyReportWeather,
+      events: dailyReportTaskData.events,
+      houseworkTasks: dailyReportTaskData.houseworkTasks,
+      todoProgress: dailyReportTaskData.todoProgress,
+    }),
+    [dailyReportTaskData, dailyReportWeather, selectedDate],
+  );
   const dailyReportRequestKey = useMemo(
-    () =>
-      JSON.stringify({
-        selectedDate,
-        userId: dailyReportUserId,
-        creationToken: dailyReportCreationToken,
-      }),
-    [dailyReportCreationToken, dailyReportUserId, selectedDate],
+    () => JSON.stringify({ version: 2, userId: dailyReportUserId, creationToken: dailyReportCreationToken, input: dailyReportInput }),
+    [dailyReportCreationToken, dailyReportInput, dailyReportUserId],
   );
 
   useEffect(() => {
@@ -583,26 +595,14 @@ export default function App() {
     const timer = window.setTimeout(async () => {
       dailyReportGeneratedKeyRef.current = dailyReportRequestKey;
       try {
-        const report = await fetchDailyReport(
-          {
-            selectedDate,
-            schedules: dailyReportSchedules,
-            chores: dailyReportChores,
-            weather: dailyReportWeather,
-          },
-          { signal: controller.signal },
-        );
+        const report = await fetchDailyReport(dailyReportInput, { signal: controller.signal });
         setDailyAiReport(report);
         writeCachedDailyReport(dailyReportRequestKey, report);
       } catch (error) {
         if (error?.name === "AbortError") return;
         console.error("Daily AI Report request failed", error);
-        setDailyAiReport({
-          cardText: DAILY_REPORT_FALLBACK_TEXT,
-          weatherNotice: "",
-          choreNotice: "",
-          priority: "normal",
-        });
+        console.warn("GPT daily report generation failed, using fallback");
+        setDailyAiReport(createDailyReportFallback());
       } finally {
         if (!controller.signal.aborted) setDailyAiReportLoading(false);
       }
@@ -617,6 +617,7 @@ export default function App() {
     aiRecommendationRequestCount,
     currentUser,
     dailyReportRequestKey,
+    dailyReportInput,
     weatherApiStatus,
   ]);
 
@@ -1352,7 +1353,7 @@ export default function App() {
     onOpenPanel: setPanel,
     onOpenNotifications: openNotificationPopover,
     isAiRecommendationLoading: aiRecommendationRequestCount > 0,
-    dailyAiReportText: isDailyAiReportLoading ? DAILY_REPORT_LOADING_TEXT : dailyAiReport.cardText,
+    dailyAiReportText: isDailyAiReportLoading ? DAILY_REPORT_LOADING_TEXT : dailyAiReport.summary || DAILY_REPORT_FALLBACK_TEXT,
     dailyAiReport,
     isDailyAiReportLoading,
     calendarView,
@@ -4345,35 +4346,50 @@ function isPersonalScheduleTask(task) {
 function collectDailyReportTasks(tasks = [], selectedDate, activeCalendarUserId) {
   const dates = [0, 1, 2].map((offset) => addDays(selectedDate, offset));
   const scoped = tasks.filter((task) => !activeCalendarUserId || getTaskUserId(task) === activeCalendarUserId);
-  const schedules = [];
-  const chores = [];
+  const events = [];
+  const houseworkTasks = [];
+  const todos = [];
 
   dates.forEach((date) => {
     scoped.filter((task) => isTaskVisibleOnDate(task, date)).forEach((task) => {
       const timeRange = getDailyReportTaskTimeRange(task);
+      const owner = findUserById(getTaskUserId(task));
+      const common = {
+        id: String(task.id),
+        date,
+        title: String(task.title || "").trim(),
+        startTime: timeRange.startTime,
+        endTime: timeRange.endTime,
+        memberName: owner?.displayName || owner?.name || "",
+        status: task.done ? "completed" : "pending",
+      };
+
+      todos.push(common);
 
       if (isPersonalScheduleTask(task)) {
-        schedules.push({
-          event_title: String(task.title || "").trim(),
-          event_date: date,
-          event_start_time: timeRange.startTime,
-          event_end_time: timeRange.endTime,
-        });
+        events.push(common);
         return;
       }
 
-      if (task.done) return;
-      chores.push({
-        task_appliance: getDailyReportAppliance(task),
-        task_appliance_mode: String(task.applianceMode || task.currentMode || "").trim(),
-        task_date: date,
-        task_start_time: timeRange.startTime,
-        task_end_time: timeRange.endTime,
+      houseworkTasks.push({
+        ...common,
+        appliance: getDailyReportAppliance(task),
+        mode: String(task.applianceMode || task.currentMode || "").trim(),
+        priority: Number.isFinite(task.sortOrder) ? task.sortOrder : null,
       });
     });
   });
 
-  return { schedules, chores };
+  const completed = todos.filter((task) => task.status === "completed").length;
+  return {
+    events,
+    houseworkTasks,
+    todoProgress: {
+      total: todos.length,
+      completed,
+      remaining: todos.length - completed,
+    },
+  };
 }
 
 function readCachedDailyReport(key) {
@@ -4381,13 +4397,14 @@ function readCachedDailyReport(key) {
     const value = sessionStorage.getItem(`${DAILY_REPORT_CACHE_PREFIX}${key}`);
     if (!value) return null;
     const report = JSON.parse(value);
-    return report?.cardText ? report : null;
+    return report?.source === "gpt" && report?.title && report?.summary ? report : null;
   } catch {
     return null;
   }
 }
 
 function writeCachedDailyReport(key, report) {
+  if (report?.source !== "gpt") return;
   try {
     sessionStorage.setItem(`${DAILY_REPORT_CACHE_PREFIX}${key}`, JSON.stringify(report));
   } catch {

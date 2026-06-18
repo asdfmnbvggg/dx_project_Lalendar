@@ -64,19 +64,23 @@ export function createTodayDailyReport({
   date,
   cardText,
   fallbackText,
+  title = "",
+  detail = "",
   tasks = [],
   weather,
   tags = [],
   weatherNotice = "",
   choreNotice = "",
+  imageTheme = "homecare_default",
   priority = "normal",
+  source = "gpt",
 }) {
   const normalizedText = String(cardText || fallbackText || "").trim();
   const scheduleItems = tasks.filter((task) => !isApplianceTask(task)).map(toReportItem);
   const applianceItems = tasks.filter(isApplianceTask).map(toReportItem);
   const todoItems = tasks.map(toReportItem);
   const completedCount = todoItems.filter((item) => item.done).length;
-  const imageText = [normalizedText, weatherNotice, choreNotice, tasks.map((task) => task.title).join(" ")].join(" ");
+  const imageText = [normalizedText, getImageThemeKeywords(imageTheme), weatherNotice, choreNotice, tasks.map((task) => task.title).join(" ")].join(" ");
   const heroImageUrl = getDailyReportImage(imageText) || fallbackImage;
   const resolvedWeatherNotice = weatherNotice || buildWeatherNote(weather);
   const resolvedChoreNotice = choreNotice || buildChoreNote(applianceItems);
@@ -87,13 +91,15 @@ export function createTodayDailyReport({
     date: formatDate(date),
     dayLabel: formatDayLabel(date),
     cardText: normalizedText,
-    title: normalizedText,
+    title: String(title || normalizedText).trim(),
     subtitle: getPriorityNotice(priority, resolvedWeatherNotice, resolvedChoreNotice),
-    summary: detailNotices.length > 0
+    summary: String(detail || "").trim() || (detailNotices.length > 0
       ? detailNotices.join(" ")
-      : "GPT가 오늘의 일정과 가사일 데이터를 바탕으로 리포트를 정리했어요.",
+      : "오늘의 일정과 가사일 데이터를 바탕으로 리포트를 정리했어요."),
     aiNarrative: normalizedText,
+    imageTheme,
     priority,
+    source,
     heroImageUrl,
     characterImageUrl: lgCharacterImage,
     tags: tags.length > 0 ? tags : ["가전 관리", "일정 연결", "자동 저장"],
@@ -106,6 +112,18 @@ export function createTodayDailyReport({
     totalTodoCount: todoItems.length,
     imageRecords: buildImageRecords(date, heroImageUrl, tasks),
   };
+}
+
+function getImageThemeKeywords(imageTheme) {
+  const themes = {
+    homecare_laundry: "세탁기 빨래 건조기",
+    homecare_cleaning: "로봇청소기 청소",
+    homecare_air: "공기청정기 에어컨 공기질",
+    homecare_weather: "날씨 비 습도",
+    homecare_schedule: "개인 일정 바쁜 날",
+    homecare_default: "홈케어",
+  };
+  return themes[imageTheme] || themes.homecare_default;
 }
 
 function getPriorityNotice(priority, weatherNotice, choreNotice) {
