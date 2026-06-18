@@ -251,6 +251,127 @@
   box-shadow: 0 7px 15px rgba(15, 23, 42, 0.14);
 }
 
+/* Keep onboarding speech bubbles from resizing or pushing the character. */
+.onboarding-character-scene.onboarding-visual.intro,
+.onboarding-character-scene.onboarding-visual.info,
+.onboarding-character-scene.onboarding-visual.google-confirm {
+  position: absolute;
+  left: 50%;
+  top: clamp(118px, 24svh, 236px);
+  width: min(360px, 96vw);
+  min-height: clamp(350px, 62svh, 430px);
+  height: clamp(350px, 62svh, 430px);
+  display: block;
+  overflow: visible;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble,
+.onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble {
+  position: absolute;
+  left: 50%;
+  top: auto;
+  bottom: clamp(150px, 34vw, 184px);
+  z-index: 3;
+  width: min(305px, calc(100vw - 78px));
+  min-height: 118px;
+  height: auto;
+  max-height: calc(100% - 176px);
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-wrap: break-word;
+  transform: translateX(-50%);
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-character,
+.onboarding-character-scene.onboarding-visual.info .onboarding-character,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-character {
+  position: absolute;
+  left: auto;
+  right: 50%;
+  bottom: 8px;
+  z-index: 2;
+  width: clamp(138px, 39vw, 168px);
+  height: clamp(138px, 39vw, 168px);
+  min-width: 0;
+  min-height: 0;
+  display: block;
+  flex: 0 0 auto;
+  flex-grow: 0;
+  flex-shrink: 0;
+  align-self: auto;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  transform: translateX(50%);
+  pointer-events: none;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-character::before,
+.onboarding-character-scene.onboarding-visual.intro .onboarding-character::after,
+.onboarding-character-scene.onboarding-visual.info .onboarding-character::before,
+.onboarding-character-scene.onboarding-visual.info .onboarding-character::after,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-character::before,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-character::after {
+  content: none;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-character-image,
+.onboarding-character-scene.onboarding-visual.info .onboarding-character-image,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-character-image {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  animation: none;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-floating-star.star-a,
+.onboarding-character-scene.onboarding-visual.info .onboarding-floating-star.star-a,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-floating-star.star-a {
+  left: -22px;
+  top: 8px;
+  width: 42px;
+  height: 42px;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-floating-star.star-b,
+.onboarding-character-scene.onboarding-visual.info .onboarding-floating-star.star-b,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-floating-star.star-b {
+  right: -12px;
+  top: 52px;
+  width: 28px;
+  height: 28px;
+}
+
+@media (max-width: 420px) {
+  .onboarding-character-scene.onboarding-visual.intro,
+  .onboarding-character-scene.onboarding-visual.info,
+  .onboarding-character-scene.onboarding-visual.google-confirm {
+    top: clamp(108px, 19svh, 176px);
+    min-height: clamp(330px, 62svh, 400px);
+    height: clamp(330px, 62svh, 400px);
+  }
+
+  .onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble,
+  .onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble,
+  .onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble {
+    bottom: 146px;
+    width: min(305px, calc(100vw - 54px));
+  }
+
+  .onboarding-character-scene.onboarding-visual.intro .onboarding-character,
+  .onboarding-character-scene.onboarding-visual.info .onboarding-character,
+  .onboarding-character-scene.onboarding-visual.google-confirm .onboarding-character {
+    width: 142px;
+    height: 142px;
+  }
+}
+
 .calendar-page-month .house-calendar-toggle.active {
   border-color: #ff8a2a;
   background: #fff;
@@ -1111,6 +1232,636 @@
   }
 }
 
+/* Absolute final lock: speech bubble must never auto-size while typing. */
+.onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble,
+.onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble {
+  width: min(292px, calc(100vw - 58px)) !important;
+  max-width: min(292px, calc(100vw - 58px)) !important;
+  min-width: 0 !important;
+  height: 216px !important;
+  min-height: 216px !important;
+  max-height: 216px !important;
+  overflow: visible !important;
+}
+
+@media (max-width: 380px) {
+  .onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble,
+  .onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble,
+  .onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble {
+    width: min(292px, calc(100vw - 42px)) !important;
+    max-width: min(292px, calc(100vw - 42px)) !important;
+    height: 216px !important;
+    min-height: 216px !important;
+    max-height: 216px !important;
+  }
+}
+
+/* Absolute final lock: speech bubble must never auto-size while typing. */
+.onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble,
+.onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble {
+  width: min(292px, calc(100vw - 58px)) !important;
+  max-width: min(292px, calc(100vw - 58px)) !important;
+  min-width: 0 !important;
+  height: 216px !important;
+  min-height: 216px !important;
+  max-height: 216px !important;
+  overflow: visible !important;
+}
+
+@media (max-width: 380px) {
+  .onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble,
+  .onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble,
+  .onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble {
+    width: min(292px, calc(100vw - 42px)) !important;
+    max-width: min(292px, calc(100vw - 42px)) !important;
+    height: 216px !important;
+    min-height: 216px !important;
+    max-height: 216px !important;
+  }
+}
+
+/* Ready/analyzing screen: match character scale with the onboarding character and type all text. */
+.onboarding-ai-wait {
+  align-items: start !important;
+  padding: clamp(58px, 12svh, 92px) 18px 0 !important;
+  overflow: visible !important;
+}
+
+.onboarding-ai-wait-card {
+  width: min(320px, calc(100vw - 58px)) !important;
+  min-height: 238px !important;
+  overflow: visible !important;
+}
+
+.onboarding-ai-wait-card p {
+  top: 64px !important;
+  min-height: 124px !important;
+  display: grid;
+  place-items: center;
+  color: #6b4420 !important;
+  font-size: clamp(16px, 4.7vw, 18px) !important;
+  font-weight: 850 !important;
+  line-height: 1.32 !important;
+}
+
+.onboarding-ai-wait-card p i {
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  background: #ff862f;
+  display: inline-block;
+  vertical-align: -0.15em;
+  animation: onboarding-caret 780ms steps(1) infinite;
+}
+
+.onboarding-ai-wait-card .onboarding-highlight-name {
+  color: #ff7a1a !important;
+  font-weight: 950 !important;
+}
+
+.onboarding-ai-character-wrap {
+  left: 50% !important;
+  bottom: -314px !important;
+  width: clamp(220px, 64vw, 270px) !important;
+  height: clamp(220px, 64vw, 270px) !important;
+  min-width: 220px !important;
+  min-height: 220px !important;
+  transform: translateX(-50%) !important;
+}
+
+.onboarding-ai-character-wrap .onboarding-character-image {
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  object-fit: contain;
+}
+
+.onboarding-ai-character-wrap .onboarding-floating-star.star-a {
+  left: -20px !important;
+  top: 18px !important;
+  width: 48px !important;
+  height: 48px !important;
+}
+
+.onboarding-ai-character-wrap .onboarding-floating-star.star-b {
+  right: -14px !important;
+  top: 70px !important;
+  width: 32px !important;
+  height: 32px !important;
+}
+
+@media (max-width: 380px) {
+  .onboarding-ai-wait {
+    padding-top: 58px !important;
+  }
+
+  .onboarding-ai-wait-card {
+    width: min(320px, calc(100vw - 48px)) !important;
+    min-height: 238px !important;
+  }
+
+  .onboarding-ai-character-wrap {
+    bottom: -286px !important;
+    width: 220px !important;
+    height: 220px !important;
+  }
+}
+
+/* Fixed speech-bubble size: prevent typing text from resizing the bubble. */
+.onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble,
+.onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble {
+  width: min(292px, calc(100vw - 58px)) !important;
+  max-width: min(292px, calc(100vw - 58px)) !important;
+  min-height: 216px !important;
+  height: 216px !important;
+  padding: 20px 22px 18px !important;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-bubble-content,
+.onboarding-character-scene.onboarding-visual.info .onboarding-bubble-content,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-bubble-content {
+  height: 100% !important;
+}
+
+@media (max-width: 380px) {
+  .onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble,
+  .onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble,
+  .onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble {
+    width: min(292px, calc(100vw - 42px)) !important;
+    max-width: min(292px, calc(100vw - 42px)) !important;
+    min-height: 216px !important;
+    height: 216px !important;
+  }
+}
+
+/* Final onboarding visual layout lock: bubble grows upward, character stays fixed. */
+.onboarding-character-scene.onboarding-visual.intro,
+.onboarding-character-scene.onboarding-visual.info,
+.onboarding-character-scene.onboarding-visual.google-confirm {
+  position: absolute !important;
+  left: 50% !important;
+  top: clamp(118px, 24svh, 236px) !important;
+  width: min(360px, 96vw) !important;
+  max-width: min(360px, 96vw) !important;
+  min-height: clamp(350px, 62svh, 430px) !important;
+  height: clamp(350px, 62svh, 430px) !important;
+  display: block !important;
+  overflow: visible !important;
+  transform: translateX(-50%) !important;
+  pointer-events: none;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble,
+.onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble {
+  position: absolute !important;
+  left: 50% !important;
+  top: auto !important;
+  bottom: clamp(150px, 34vw, 184px) !important;
+  z-index: 3;
+  width: min(305px, calc(100vw - 78px)) !important;
+  max-width: min(305px, calc(100vw - 78px)) !important;
+  min-height: 118px !important;
+  height: auto !important;
+  max-height: calc(100% - 176px) !important;
+  box-sizing: border-box;
+  overflow-y: auto !important;
+  overflow-wrap: break-word;
+  transform: translateX(-50%) !important;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-character,
+.onboarding-character-scene.onboarding-visual.info .onboarding-character,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-character {
+  position: absolute !important;
+  left: auto !important;
+  right: 50% !important;
+  bottom: 8px !important;
+  z-index: 2;
+  width: clamp(138px, 39vw, 168px) !important;
+  height: clamp(138px, 39vw, 168px) !important;
+  min-width: 0 !important;
+  min-height: 168px !important;
+  max-width: none !important;
+  display: block !important;
+  flex: 0 0 auto !important;
+  flex-grow: 0 !important;
+  flex-shrink: 0 !important;
+  align-self: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  transform: translateX(50%) !important;
+  pointer-events: none;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-character::before,
+.onboarding-character-scene.onboarding-visual.intro .onboarding-character::after,
+.onboarding-character-scene.onboarding-visual.info .onboarding-character::before,
+.onboarding-character-scene.onboarding-visual.info .onboarding-character::after,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-character::before,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-character::after {
+  content: none !important;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-character-image,
+.onboarding-character-scene.onboarding-visual.info .onboarding-character-image,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-character-image {
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  object-fit: contain;
+  display: block;
+  animation: none !important;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-floating-star.star-a,
+.onboarding-character-scene.onboarding-visual.info .onboarding-floating-star.star-a,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-floating-star.star-a {
+  left: -22px !important;
+  top: 8px !important;
+  width: 42px !important;
+  height: 42px !important;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-floating-star.star-b,
+.onboarding-character-scene.onboarding-visual.info .onboarding-floating-star.star-b,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-floating-star.star-b {
+  right: -12px !important;
+  top: 52px !important;
+  width: 28px !important;
+  height: 28px !important;
+}
+
+@media (max-width: 420px) {
+  .onboarding-character-scene.onboarding-visual.intro,
+  .onboarding-character-scene.onboarding-visual.info,
+  .onboarding-character-scene.onboarding-visual.google-confirm {
+    top: clamp(108px, 19svh, 176px) !important;
+    min-height: clamp(330px, 62svh, 400px) !important;
+    height: clamp(330px, 62svh, 400px) !important;
+  }
+
+  .onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble,
+  .onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble,
+  .onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble {
+    bottom: 146px !important;
+    width: min(305px, calc(100vw - 54px)) !important;
+    max-width: min(305px, calc(100vw - 54px)) !important;
+  }
+
+  .onboarding-character-scene.onboarding-visual.intro .onboarding-character,
+  .onboarding-character-scene.onboarding-visual.info .onboarding-character,
+  .onboarding-character-scene.onboarding-visual.google-confirm .onboarding-character {
+    width: 142px !important;
+    height: 142px !important;
+  }
+}
+
+/* Onboarding visual redesign: large fixed character + compact floating speech bubble. */
+.onboarding-character-scene.onboarding-visual.intro,
+.onboarding-character-scene.onboarding-visual.info,
+.onboarding-character-scene.onboarding-visual.google-confirm {
+  position: absolute !important;
+  left: 50% !important;
+  top: clamp(86px, 14svh, 128px) !important;
+  width: min(100%, 430px) !important;
+  max-width: min(100%, 430px) !important;
+  min-height: 520px !important;
+  height: 520px !important;
+  display: block !important;
+  overflow: visible !important;
+  transform: translateX(-50%) !important;
+  pointer-events: none;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-character,
+.onboarding-character-scene.onboarding-visual.info .onboarding-character,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-character {
+  position: absolute !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: 28px !important;
+  z-index: 2;
+  width: clamp(190px, 58vw, 240px) !important;
+  height: clamp(190px, 58vw, 240px) !important;
+  min-width: 190px !important;
+  min-height: 190px !important;
+  max-width: none !important;
+  max-height: none !important;
+  display: block !important;
+  flex: none !important;
+  flex-grow: 0 !important;
+  flex-shrink: 0 !important;
+  align-self: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  transform: translateX(-50%) !important;
+  pointer-events: none;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-character-image,
+.onboarding-character-scene.onboarding-visual.info .onboarding-character-image,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-character-image {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain;
+  display: block;
+  animation: onboarding-character-float 2.6s ease-in-out infinite !important;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble,
+.onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble {
+  position: absolute !important;
+  left: 50% !important;
+  top: auto !important;
+  bottom: 250px !important;
+  z-index: 3;
+  width: min(300px, 84vw) !important;
+  max-width: min(300px, 84vw) !important;
+  min-height: 92px !important;
+  height: auto !important;
+  max-height: 230px !important;
+  box-sizing: border-box;
+  display: block !important;
+  padding: 20px 22px 18px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overflow-wrap: break-word;
+  word-break: keep-all;
+  text-align: center;
+  border: 2px solid rgba(255, 184, 62, 0.45) !important;
+  border-radius: 26px !important;
+  background: #fff3bf !important;
+  box-shadow: 0 12px 28px rgba(120, 78, 20, 0.18) !important;
+  transform: translateX(-50%) !important;
+  pointer-events: auto;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble::after,
+.onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble::after,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 50% !important;
+  bottom: -14px !important;
+  width: 26px !important;
+  height: 26px !important;
+  border-right: 2px solid rgba(255, 184, 62, 0.45) !important;
+  border-bottom: 2px solid rgba(255, 184, 62, 0.45) !important;
+  border-bottom-right-radius: 6px !important;
+  background: #fff3bf !important;
+  clip-path: none !important;
+  filter: none !important;
+  transform: translateX(-50%) rotate(45deg) !important;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-bubble-content,
+.onboarding-character-scene.onboarding-visual.info .onboarding-bubble-content,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-bubble-content {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0 !important;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-intro-type,
+.onboarding-character-scene.onboarding-visual.info .onboarding-intro-type,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-intro-type,
+.onboarding-character-scene.onboarding-visual.info .onboarding-info-type,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-info-type {
+  position: static !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  color: #6b4420 !important;
+  font-size: clamp(19px, 5.3vw, 22px) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.4px;
+  line-height: 1.28 !important;
+  text-align: center;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-highlight-name,
+.onboarding-character-scene.onboarding-visual.info .onboarding-highlight-name,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-highlight-name {
+  color: #ff7a1a !important;
+  font-weight: 900 !important;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-next-button,
+.onboarding-character-scene.onboarding-visual.info .onboarding-next-button,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-next-button,
+.onboarding-character-scene.onboarding-visual.info .onboarding-info-next-button {
+  position: static !important;
+  inset: auto !important;
+  min-width: 104px !important;
+  width: auto !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  margin-top: 16px !important;
+  padding: 0 18px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  color: #fff !important;
+  background: #ff862f !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  transform: none !important;
+  pointer-events: auto;
+}
+
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-google-actions {
+  position: static !important;
+  width: 100% !important;
+  margin-top: 16px !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px !important;
+  pointer-events: auto;
+}
+
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-google-actions button {
+  min-height: 42px !important;
+  border-radius: 999px !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-floating-star.star-a,
+.onboarding-character-scene.onboarding-visual.info .onboarding-floating-star.star-a,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-floating-star.star-a {
+  left: -20px !important;
+  top: 18px !important;
+  width: 48px !important;
+  height: 48px !important;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-floating-star.star-b,
+.onboarding-character-scene.onboarding-visual.info .onboarding-floating-star.star-b,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-floating-star.star-b {
+  right: -14px !important;
+  top: 70px !important;
+  width: 32px !important;
+  height: 32px !important;
+}
+
+@media (max-width: 380px) {
+  .onboarding-character-scene.onboarding-visual.intro,
+  .onboarding-character-scene.onboarding-visual.info,
+  .onboarding-character-scene.onboarding-visual.google-confirm {
+    top: clamp(74px, 10svh, 104px) !important;
+    min-height: 500px !important;
+    height: 500px !important;
+  }
+
+  .onboarding-character-scene.onboarding-visual.intro .onboarding-character,
+  .onboarding-character-scene.onboarding-visual.info .onboarding-character,
+  .onboarding-character-scene.onboarding-visual.google-confirm .onboarding-character {
+    bottom: 24px !important;
+    width: 200px !important;
+    height: 200px !important;
+  }
+
+  .onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble,
+  .onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble,
+  .onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble {
+    bottom: 238px !important;
+    width: min(300px, calc(100vw - 38px)) !important;
+    max-width: min(300px, calc(100vw - 38px)) !important;
+    padding: 18px 18px 16px !important;
+  }
+}
+
+/* Final fix: character anchored low, speech bubble restored as a real bubble. */
+.onboarding-character-scene.onboarding-visual.intro,
+.onboarding-character-scene.onboarding-visual.info,
+.onboarding-character-scene.onboarding-visual.google-confirm {
+  top: auto !important;
+  bottom: 82px !important;
+  min-height: 500px !important;
+  height: 500px !important;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-character,
+.onboarding-character-scene.onboarding-visual.info .onboarding-character,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-character {
+  left: 50% !important;
+  right: auto !important;
+  bottom: 0 !important;
+  width: clamp(220px, 64vw, 270px) !important;
+  height: clamp(220px, 64vw, 270px) !important;
+  min-width: 220px !important;
+  min-height: 220px !important;
+  transform: translateX(-50%) !important;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble,
+.onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble {
+  left: 50% !important;
+  bottom: 262px !important;
+  width: min(292px, 78vw) !important;
+  max-width: min(292px, 78vw) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 18px 20px 16px !important;
+  overflow: visible !important;
+  border: 2px solid rgba(255, 176, 46, 0.5) !important;
+  border-radius: 30px !important;
+  background: #fff4bd !important;
+  box-shadow:
+    0 12px 24px rgba(128, 82, 18, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+  transform: translateX(-50%) !important;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble::before,
+.onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble::before,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble::before {
+  content: "" !important;
+  position: absolute !important;
+  left: 50% !important;
+  bottom: -20px !important;
+  width: 34px !important;
+  height: 24px !important;
+  background: #fff4bd !important;
+  border-left: 2px solid rgba(255, 176, 46, 0.5) !important;
+  border-bottom: 2px solid rgba(255, 176, 46, 0.5) !important;
+  border-bottom-left-radius: 8px !important;
+  clip-path: polygon(0 0, 100% 0, 50% 100%) !important;
+  transform: translateX(-50%) !important;
+  z-index: -1;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble::after,
+.onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble::after,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble::after {
+  content: none !important;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-intro-type,
+.onboarding-character-scene.onboarding-visual.info .onboarding-intro-type,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-intro-type,
+.onboarding-character-scene.onboarding-visual.info .onboarding-info-type,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-info-type {
+  font-size: clamp(18px, 5vw, 22px) !important;
+  line-height: 1.25 !important;
+}
+
+.onboarding-character-scene.onboarding-visual.intro .onboarding-next-button,
+.onboarding-character-scene.onboarding-visual.info .onboarding-next-button,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-next-button,
+.onboarding-character-scene.onboarding-visual.info .onboarding-info-next-button {
+  margin-top: 14px !important;
+}
+
+@media (max-width: 380px) {
+  .onboarding-character-scene.onboarding-visual.intro,
+  .onboarding-character-scene.onboarding-visual.info,
+  .onboarding-character-scene.onboarding-visual.google-confirm {
+    bottom: 76px !important;
+    min-height: 480px !important;
+    height: 480px !important;
+  }
+
+  .onboarding-character-scene.onboarding-visual.intro .onboarding-character,
+  .onboarding-character-scene.onboarding-visual.info .onboarding-character,
+  .onboarding-character-scene.onboarding-visual.google-confirm .onboarding-character {
+    width: 220px !important;
+    height: 220px !important;
+  }
+
+  .onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble,
+  .onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble,
+  .onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble {
+    bottom: 224px !important;
+    width: min(286px, calc(100vw - 42px)) !important;
+    max-width: min(286px, calc(100vw - 42px)) !important;
+    min-height: 154px !important;
+  }
+}
+
 @supports (-webkit-touch-callout: none) {
   @media (max-width: 640px) {
     .app-frame.onboarding-frame {
@@ -1391,5 +2142,30 @@
   .onboarding-info-type,
   .onboarding-google-confirm .onboarding-intro-type {
     font-size: clamp(20px, 5.6vw, 28px);
+  }
+}
+
+/* Absolute final lock: speech bubble must never auto-size while typing. */
+.onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble,
+.onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble,
+.onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble {
+  width: min(292px, calc(100vw - 58px)) !important;
+  max-width: min(292px, calc(100vw - 58px)) !important;
+  min-width: 0 !important;
+  height: 216px !important;
+  min-height: 216px !important;
+  max-height: 216px !important;
+  overflow: visible !important;
+}
+
+@media (max-width: 380px) {
+  .onboarding-character-scene.onboarding-visual.intro .onboarding-speech-bubble,
+  .onboarding-character-scene.onboarding-visual.info .onboarding-speech-bubble,
+  .onboarding-character-scene.onboarding-visual.google-confirm .onboarding-speech-bubble {
+    width: min(292px, calc(100vw - 42px)) !important;
+    max-width: min(292px, calc(100vw - 42px)) !important;
+    height: 216px !important;
+    min-height: 216px !important;
+    max-height: 216px !important;
   }
 }
