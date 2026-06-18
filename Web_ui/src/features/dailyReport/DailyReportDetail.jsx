@@ -176,7 +176,7 @@ function DailyBriefingCard({ scheduleItems, applianceItems, choreNote, weatherNo
   );
 }
 
-function BriefingSection({ icon, title, items, emptyText, note = "" }) {
+function BriefingSection({ icon, title, items, emptyText }) {
   return (
     <section className="daily-report-briefing-section">
       <div className="daily-report-briefing-title">
@@ -194,7 +194,6 @@ function BriefingSection({ icon, title, items, emptyText, note = "" }) {
           ))}
         </ul>
       ) : <p className="daily-report-empty">{emptyText}</p>}
-      {note && <p className="daily-report-gpt-note">{note}</p>}
     </section>
   );
 }
