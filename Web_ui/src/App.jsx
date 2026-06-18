@@ -140,6 +140,7 @@ export default function App() {
   const [airQualityPm10, setAirQualityPm10] = useState(null);
   const [aiRecommendationNotice, setAiRecommendationNotice] = useState("");
   const [aiRecommendationRequestCount, setAiRecommendationRequestCount] = useState(0);
+  const [aiAssignmentPopup, setAiAssignmentPopup] = useState(null);
   const [sensorPopup, setSensorPopup] = useState(null);
   const [sensorPopupQueue, setSensorPopupQueue] = useState([]);
   const [latestSensorData, setLatestSensorData] = useState(null);
@@ -650,6 +651,14 @@ export default function App() {
       );
 
       setTasks((current) => [aiTask, ...current]);
+      const assignee = findUserById(assignedUserId);
+      setAiAssignmentPopup({
+        assigneeName: assignee?.displayName || assignee?.name || "담당자",
+        taskTitle: aiTask.title,
+        date: aiTask.date,
+        startTime: aiTask.startTime,
+        endTime: aiTask.endTime,
+      });
     } catch (error) {
       console.error("AI housework recommendation failed", error);
       setAiRecommendationNotice("AI 가사일 추천을 생성하지 못했어요.");
@@ -1449,6 +1458,25 @@ export default function App() {
                 }}
               >
                 미루기
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {aiAssignmentPopup && (
+        <div className="confirm-backdrop ai-assignment-backdrop" role="presentation">
+          <section className="confirm-dialog ai-assignment-dialog" role="dialog" aria-modal="true" aria-labelledby="ai-assignment-title">
+            <p>AI 가사일 할당 완료</p>
+            <h2 id="ai-assignment-title">
+              {aiAssignmentPopup.assigneeName}에게 {aiAssignmentPopup.taskTitle} 일정이 새로 할당되었어요.
+            </h2>
+            <span>
+              {aiAssignmentPopup.date} · {aiAssignmentPopup.startTime}-{aiAssignmentPopup.endTime}
+            </span>
+            <div className="confirm-actions ai-assignment-actions">
+              <button type="button" onClick={() => setAiAssignmentPopup(null)}>
+                확인
               </button>
             </div>
           </section>

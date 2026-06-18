@@ -2989,6 +2989,26 @@
   background: #ff7a21;
 }
 
+.ai-assignment-backdrop {
+  z-index: 1400;
+}
+
+.ai-assignment-dialog h2 {
+  font-size: 23px;
+  line-height: 1.3;
+  word-break: keep-all;
+}
+
+.ai-assignment-actions {
+  grid-template-columns: 1fr;
+}
+
+.ai-assignment-actions button:first-child,
+.ai-assignment-actions button:last-child {
+  color: #fff;
+  background: #ff7a21;
+}
+
 .sensor-popup-backdrop {
   z-index: 1300;
 }
