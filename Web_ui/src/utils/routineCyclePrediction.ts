@@ -36,6 +36,7 @@ export type RoutineCyclePrediction = {
 
 export type RoutineCyclePredictionOptions = {
   minRecentCount?: number;
+  recentWindowSize?: number;
   diffThresholdDays?: number;
   maxRecentStd?: number;
   dailyFrequencyThreshold?: number;
@@ -91,8 +92,9 @@ type NormalizedUsageLog = ApplianceUsageLog & {
 
 const DEFAULT_OPTIONS: Required<RoutineCyclePredictionOptions> = {
   minRecentCount: 3,
-  diffThresholdDays: 1.5,
-  maxRecentStd: 1.2,
+  recentWindowSize: 8,
+  diffThresholdDays: 0.75,
+  maxRecentStd: 2.0,
   dailyFrequencyThreshold: 0.5,
   alpha: 0.6,
 };
@@ -307,7 +309,7 @@ export function predictRoutineCycle(
   const usageDates = uniqueSortedUsageDates(startLogs);
   const intervals = calculateIntervals(usageDates);
   const base_cycle_days = predictBaseCycle(intervals);
-  const recentIntervals = intervals.slice(-resolvedOptions.minRecentCount);
+  const recentIntervals = intervals.slice(-resolvedOptions.recentWindowSize);
   const cycleDetection = detectCycleChange(
     base_cycle_days,
     recentIntervals,
@@ -517,6 +519,10 @@ function resolveOptions(
     minRecentCount: Math.max(
       1,
       Math.floor(options.minRecentCount ?? DEFAULT_OPTIONS.minRecentCount),
+    ),
+    recentWindowSize: Math.max(
+      1,
+      Math.floor(options.recentWindowSize ?? DEFAULT_OPTIONS.recentWindowSize),
     ),
     diffThresholdDays: Math.max(
       0,
