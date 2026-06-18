@@ -1,16 +1,70 @@
 const TOGETHER_CHAT_COMPLETIONS_URL = "https://api.together.xyz/v1/chat/completions";
 const DEFAULT_MODEL = "Qwen/Qwen3.5-9B";
 const LEGACY_NON_SERVERLESS_MODELS = new Set(["Qwen/Qwen3-8B"]);
-const ALLOWED_APPLIANCES = [
-  "washer",
-  "dryer",
-  "dishwasher",
-  "robot_cleaner",
-  "air_purifier",
-  "dehumidifier",
-  "air_conditioner",
-  "none",
-];
+const APPLIANCE_MODES = {
+  washer: ["표준", "울", "이불", "삶음", "아기옷", "조용조용", "스피드", "기능성", "통살균", "헹굼+탈수"],
+  dryer: ["표준", "타월", "셔츠", "울", "이불", "소량급속", "기능성", "선반건조", "패딩케어"],
+  air_conditioner: ["냉방", "파워", "제습", "송풍", "취침"],
+  dishwasher: ["표준", "강력", "급속", "섬세", "살균", "통살균"],
+  air_purifier: ["자동", "터보", "취침", "에코", "펫", "순환"],
+  robot_cleaner: ["자동", "구역", "스팟", "물걸레"],
+};
+const MODE_GUIDANCE = {
+  washer: {
+    표준: "일상복, 면, 청바지, 양말 등 일반 세탁",
+    울: "스웨터, 가디건, 니트, 실크, 란제리 등 손상에 취약한 옷",
+    이불: "차렵이불, 담요, 침대커버 등 부피가 큰 침구",
+    삶음: "땀, 기름, 찌든 때가 심하거나 수건·행주 등 살균이 필요한 면 소재",
+    아기옷: "배냇저고리, 아기 내복, 턱받이 등 영유아 의류의 살균과 오염 제거",
+    조용조용: "밤이나 새벽에 소음을 줄여 세탁해야 하는 오염이 심하지 않은 옷",
+    스피드: "오염이 적고 급하게 세탁해야 하는 소량의 옷",
+    기능성: "등산복, 레깅스, 골프웨어, 바람막이, 고어텍스 등 스포츠·아웃도어 의류",
+    통살균: "세탁물 없이 세탁조 내부를 청소하는 월간 관리",
+    "헹굼+탈수": "수영복, 비 맞은 옷, 손빨래한 옷처럼 세제 없이 헹구고 탈수할 때",
+  },
+  dryer: {
+    표준: "일상복과 면·마·혼방 의류의 일반 건조",
+    타월: "수건을 풍성하게 고온 건조하거나 살균이 필요할 때",
+    셔츠: "와이셔츠, 남방, 교복 등 구김을 줄여야 하는 의류",
+    울: "울, 니트, 란제리 등 열과 변형에 취약한 소재",
+    이불: "이불과 담요 등 부피가 큰 침구",
+    소량급속: "1kg 미만의 소량 빨래를 빠르게 건조할 때",
+    기능성: "등산복, 고어텍스, 스키복 등 기능성 의류의 발수력 관리",
+    선반건조: "운동화, 모자, 니트처럼 회전 건조 시 변형되기 쉬운 물건",
+    패딩케어: "숨이 죽은 패딩과 구스다운의 볼륨 회복",
+  },
+  air_conditioner: {
+    냉방: "일상적으로 실내 온도를 24~26도로 낮출 때",
+    파워: "귀가 직후처럼 실내 온도를 빠르게 낮춰야 할 때",
+    제습: "장마철이나 높은 습도로 실내가 눅눅할 때",
+    송풍: "온도와 습도는 적당하지만 공기 순환이 필요할 때",
+    취침: "수면 중 약풍으로 시원함을 유지할 때",
+  },
+  dishwasher: {
+    표준: "밥그릇, 국그릇, 접시 등 일반 식기",
+    강력: "고기·기름 요리 후 프라이팬, 불판, 냄비 등 오염이 심한 식기",
+    급속: "커피잔, 디저트 접시 등 오염이 적은 소량 식기",
+    섬세: "와인잔, 얇은 유리컵, 도자기처럼 깨지기 쉬운 식기",
+    살균: "아기 젖병, 도마 등 고온 살균이 필요한 식기",
+    통살균: "식기 없이 식기세척기 내부를 청소하는 월간 관리",
+  },
+  air_purifier: {
+    자동: "평상시 오염도에 따라 풍량을 자동 조절할 때",
+    터보: "청소·환기·외출 후 먼지와 냄새가 많을 때",
+    취침: "수면 중 소음을 최소화하며 공기를 관리할 때",
+    에코: "공기가 비교적 깨끗하고 절전이 중요할 때",
+    펫: "반려동물의 털과 바닥 냄새를 집중 관리할 때",
+    순환: "에어컨과 함께 쓰거나 넓은 공간의 공기를 순환할 때",
+  },
+  robot_cleaner: {
+    자동: "외출 중 집 전체를 일반 청소할 때",
+    구역: "주방이나 특정 방 등 선택한 공간만 청소할 때",
+    스팟: "과자 부스러기, 고양이 모래 등 특정 지점을 집중 청소할 때",
+    물걸레: "흡입 없이 바닥의 찌든 때를 닦거나 조용히 청소할 때",
+  },
+};
+const ALLOWED_APPLIANCES = Object.keys(APPLIANCE_MODES);
+const ALLOWED_MODES = [...new Set(Object.values(APPLIANCE_MODES).flat())];
 
 const INPUT_FIELDS = [
   "event_title",
@@ -33,6 +87,7 @@ const OUTPUT_SCHEMA = {
     },
     task_appliance_mode: {
       type: "string",
+      enum: ALLOWED_MODES,
     },
     task_date: {
       type: "string",
@@ -136,11 +191,12 @@ async function requestTogetherPrediction({ apiKey, model, input }) {
     } catch (error) {
       lastError = error;
       const wasTruncated = choice?.finish_reason === "length" || isLikelyTruncatedJson(content, error);
-      if (!wasTruncated) throw error;
-      console.warn("Together JSON response was truncated; retrying with a larger token budget", {
+      console.warn("Together returned an invalid prediction; retrying", {
         finishReason: choice?.finish_reason,
         maxTokens,
         contentLength: content.length,
+        reason: error instanceof Error ? error.message : String(error),
+        wasTruncated,
       });
     }
   }
@@ -173,11 +229,27 @@ function isLikelyTruncatedJson(content, error) {
 function buildSystemPrompt() {
   return [
     "너는 L-lander 앱의 가사일 추천 모델이다.",
-    "사용자의 일정과 날씨 정보를 보고 적절한 가전 작업 하나를 추천한다.",
-    "task_start_time과 task_end_time은 사용자의 일정이 끝난 뒤 수행 가능한 시간으로 정한다.",
-    "task_date는 기본적으로 event_date와 같게 한다.",
-    `task_appliance는 다음 값 중 하나만 사용한다: ${ALLOWED_APPLIANCES.join(", ")}.`,
-    "추천할 작업이 적절하지 않으면 task_appliance를 none으로 설정한다.",
+    "입력된 일정과 당일 날씨를 깊이 분석해 가장 상식적이고 필요한 가전 작업 정확히 하나를 추천한다.",
+    "가전과 모드는 반드시 아래 목록에서 서로 맞는 조합으로만 선택한다. 목록에 없는 가전이나 모드는 절대 만들지 않는다.",
+    ...Object.entries(MODE_GUIDANCE).flatMap(([appliance, modes]) => [
+      `[${appliance}]`,
+      ...Object.entries(modes).map(([mode, guidance]) => `- ${mode}: ${guidance}`),
+    ]),
+    "",
+    "[일정 유형별 최우선 매칭]",
+    "1. 탐방, 서핑, 등산, 산책, 운동회 등 야외 활동: 귀가 후에는 세탁기 기능성 계열을 우선한다. 더위나 습도가 높으면 귀가 전 에어컨 냉방/제습, 외출 중에는 로봇청소기도 고려한다.",
+    "2. 손님 방문, 지인 초대, 홈파티: 손님 도착 전 로봇청소기 또는 공기청정기를 우선하고, 식사 종료 후에는 식기세척기 강력/살균을 우선한다.",
+    "3. 장보기, 영화, 외식 등 일반 외출: 외출복 관리는 세탁기 또는 건조기를 고려하고, 덥거나 습하면 귀가 전 에어컨 냉방/제습을 우선한다.",
+    "",
+    "[시간 배치 규칙]",
+    "- 사전 준비는 event_start_time 전에 끝낸다.",
+    "- 외출 중 청소는 event_start_time과 event_end_time 사이에 배치한다.",
+    "- 사후 작업은 event_end_time 이후에 시작한다.",
+    "- task_date는 event_date와 같게 하고 시작 시간은 종료 시간보다 빨라야 한다.",
+    "- 일정과 날씨에 가장 자연스러운 타이밍 하나를 선택한다.",
+    "",
+    "날씨 근거를 반드시 판단에 반영한다. 고온이면 에어컨 냉방/파워, 높은 습도면 에어컨 제습 또는 건조기, 미세먼지가 높으면 공기청정기를 우선 고려한다.",
+    "항상 제공된 6종 중 하나를 선택하며 dehumidifier, none 또는 다른 가전 이름은 절대 출력하지 않는다.",
     "출력은 반드시 JSON만 반환하고 설명이나 마크다운을 포함하지 않는다.",
     `반드시 다음 JSON Schema를 따른다: ${JSON.stringify(OUTPUT_SCHEMA)}`,
   ].join("\n");
@@ -238,23 +310,18 @@ function validatePredictionOutput(value, input) {
   if (!ALLOWED_APPLIANCES.includes(prediction.task_appliance)) {
     throw new Error("Together API returned an unsupported appliance");
   }
-  if (!prediction.task_appliance_mode) {
-    prediction.task_appliance_mode = prediction.task_appliance === "none" ? "추천 없음" : "자동";
+  if (!APPLIANCE_MODES[prediction.task_appliance].includes(prediction.task_appliance_mode)) {
+    throw new Error("Together API returned a mode that does not belong to the selected appliance");
   }
-  if (!isDateKey(prediction.task_date)) prediction.task_date = input.event_date;
+  if (!isDateKey(prediction.task_date) || prediction.task_date !== input.event_date) {
+    throw new Error("Together API returned a task date different from the event date");
+  }
   if (!isTimeValue(prediction.task_start_time) || !isTimeValue(prediction.task_end_time)) {
     throw new Error("Together API returned an invalid task time");
   }
   if (timeToMinutes(prediction.task_start_time) >= timeToMinutes(prediction.task_end_time)) {
     throw new Error("Together API returned a reversed task time range");
   }
-  if (prediction.task_date < input.event_date) {
-    throw new Error("Together API returned a task date before the event");
-  }
-  if (prediction.task_date === input.event_date && timeToMinutes(prediction.task_start_time) < timeToMinutes(input.event_end_time)) {
-    throw new Error("Together API returned a task time before the event ends");
-  }
-
   return prediction;
 }
 
