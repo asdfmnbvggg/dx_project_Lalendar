@@ -11,7 +11,7 @@ Configure these server-side environment variables in Vercel:
 
 ```text
 TOGETHER_API_KEY=your_together_api_key
-TOGETHER_MODEL=Qwen/Qwen3-8B
+TOGETHER_MODEL=Qwen/Qwen3.5-9B
 ```
 
 `TOGETHER_MODEL` can be replaced with a fine-tuned Together model name.
