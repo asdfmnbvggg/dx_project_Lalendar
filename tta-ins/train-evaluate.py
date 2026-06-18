@@ -8,6 +8,7 @@ from statistics import mean, median, pstdev
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 RESULT_DIR = BASE_DIR / "results"
+CONFIG_PATH = BASE_DIR / "routine_cycle_config.json"
 
 TRAIN_PATH = DATA_DIR / "train.csv"
 VALIDATION_PATH = DATA_DIR / "validation.csv"
@@ -18,66 +19,59 @@ VALIDATION_PREDICTIONS_PATH = RESULT_DIR / "validation_predictions.csv"
 TEST_PREDICTIONS_PATH = RESULT_DIR / "test_predictions.csv"
 METRICS_PATH = RESULT_DIR / "metrics.json"
 
-MIN_RECENT_COUNT = 3
-RECENT_WINDOW_SIZE = 8
-DIFF_THRESHOLD_DAYS = 0.75
-MAX_RECENT_STD = 2.0
-DAILY_FREQUENCY_THRESHOLD = 0.5
-ALPHA = 0.6
-
 EXPECTED_TEST_PATTERNS = {
-    "robot_cleaner": {
-        "actual_cycle_days": 2,
-        "actual_daily_frequency": 1,
-        "actual_changed": True,
-        "expected_change_type": "interval_change",
-    },
-    "dishwasher": {
-        "actual_cycle_days": 1,
-        "actual_daily_frequency": 2,
-        "actual_changed": True,
-        "expected_change_type": "frequency_change",
-    },
-    "washer": {
-        "actual_cycle_days": 4,
-        "actual_daily_frequency": 1,
-        "actual_changed": True,
-        "expected_change_type": "interval_change",
-    },
-    "dryer": {
-        "actual_cycle_days": 4,
-        "actual_daily_frequency": 1,
-        "actual_changed": True,
-        "expected_change_type": "interval_change",
-    },
+    "robot_cleaner": {"actual_cycle_days": 2, "actual_daily_frequency": 1, "actual_changed": True, "expected_change_type": "interval_change"},
+    "dishwasher": {"actual_cycle_days": 1, "actual_daily_frequency": 2, "actual_changed": True, "expected_change_type": "frequency_change"},
+    "washer": {"actual_cycle_days": 4, "actual_daily_frequency": 1, "actual_changed": True, "expected_change_type": "interval_change"},
+    "dryer": {"actual_cycle_days": 4, "actual_daily_frequency": 1, "actual_changed": True, "expected_change_type": "interval_change"},
 }
 
 EXPECTED_VALIDATION_PATTERNS = {
-    "robot_cleaner": {
-        "actual_cycle_days": 1,
-        "actual_daily_frequency": 1,
-        "actual_changed": False,
-        "expected_change_type": "none",
-    },
-    "dishwasher": {
-        "actual_cycle_days": 1,
-        "actual_daily_frequency": 1,
-        "actual_changed": False,
-        "expected_change_type": "none",
-    },
-    "washer": {
-        "actual_cycle_days": 3,
-        "actual_daily_frequency": 1,
-        "actual_changed": False,
-        "expected_change_type": "none",
-    },
-    "dryer": {
-        "actual_cycle_days": 3,
-        "actual_daily_frequency": 1,
-        "actual_changed": False,
-        "expected_change_type": "none",
-    },
+    "robot_cleaner": {"actual_cycle_days": 1, "actual_daily_frequency": 1, "actual_changed": False, "expected_change_type": "none"},
+    "dishwasher": {"actual_cycle_days": 1, "actual_daily_frequency": 1, "actual_changed": False, "expected_change_type": "none"},
+    "washer": {"actual_cycle_days": 3, "actual_daily_frequency": 1, "actual_changed": False, "expected_change_type": "none"},
+    "dryer": {"actual_cycle_days": 3, "actual_daily_frequency": 1, "actual_changed": False, "expected_change_type": "none"},
 }
+
+
+def load_config(profile="default"):
+    config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    return config[profile]
+
+
+CONFIG = load_config("default")
+MIN_RECENT_COUNT = CONFIG["minRecentCount"]
+RECENT_WINDOW_SIZE = CONFIG["recentWindowSize"]
+DIFF_THRESHOLD_DAYS = CONFIG["diffThresholdDays"]
+MAX_RECENT_STD = CONFIG["maxRecentStd"]
+FREQUENCY_DIFF_THRESHOLD = CONFIG["frequencyDiffThreshold"]
+FREQUENCY_RECENT_WINDOW_DAYS = CONFIG["frequencyRecentWindowDays"]
+ALPHA = CONFIG["alpha"]
+
+
+def apply_config(config):
+    global MIN_RECENT_COUNT, RECENT_WINDOW_SIZE, DIFF_THRESHOLD_DAYS
+    global MAX_RECENT_STD, FREQUENCY_DIFF_THRESHOLD, FREQUENCY_RECENT_WINDOW_DAYS, ALPHA
+
+    MIN_RECENT_COUNT = config["minRecentCount"]
+    RECENT_WINDOW_SIZE = config.get("recentWindowSize", max(3, config["minRecentCount"]))
+    DIFF_THRESHOLD_DAYS = config["diffThresholdDays"]
+    MAX_RECENT_STD = config["maxRecentStd"]
+    FREQUENCY_DIFF_THRESHOLD = config["frequencyDiffThreshold"]
+    FREQUENCY_RECENT_WINDOW_DAYS = config["frequencyRecentWindowDays"]
+    ALPHA = config["alpha"]
+
+
+def active_config():
+    return {
+        "minRecentCount": MIN_RECENT_COUNT,
+        "recentWindowSize": RECENT_WINDOW_SIZE,
+        "diffThresholdDays": DIFF_THRESHOLD_DAYS,
+        "maxRecentStd": MAX_RECENT_STD,
+        "alpha": ALPHA,
+        "frequencyDiffThreshold": FREQUENCY_DIFF_THRESHOLD,
+        "frequencyRecentWindowDays": FREQUENCY_RECENT_WINDOW_DAYS,
+    }
 
 
 def read_logs(path):
@@ -100,7 +94,6 @@ def group_by_appliance(logs):
             continue
         key = (log.get("appliance_id") or "unknown", log.get("appliance_type") or "unknown")
         grouped[key].append(log)
-
     return grouped
 
 
@@ -123,7 +116,21 @@ def daily_usage_counts(logs):
         key = date_key(log)
         if key:
             counts[key] += 1
-    return [counts[key] for key in sorted(counts)]
+    return [{"date": key, "count": counts[key]} for key in sorted(counts)]
+
+
+def count_values(counts):
+    return [item["count"] for item in counts]
+
+
+def split_recent_frequency_counts(counts):
+    if not counts:
+        return [], []
+    last_date = date.fromisoformat(counts[-1]["date"])
+    start_date = last_date - timedelta(days=FREQUENCY_RECENT_WINDOW_DAYS - 1)
+    base_counts = [item for item in counts if date.fromisoformat(item["date"]) < start_date]
+    recent_counts = [item for item in counts if date.fromisoformat(item["date"]) >= start_date]
+    return base_counts, recent_counts
 
 
 def safe_median(values):
@@ -163,7 +170,7 @@ def build_base_model(train_logs):
             "appliance_id": appliance_id,
             "appliance_type": appliance_type,
             "base_cycle_days": safe_median(intervals),
-            "base_daily_frequency": safe_mean(frequencies),
+            "base_daily_frequency": safe_mean(count_values(frequencies)),
             "train_log_count": len(logs),
             "train_active_days": len(dates),
         }
@@ -196,18 +203,22 @@ def reason_for(result):
     return "최근 사용 패턴은 기존 루틴과 크게 다르지 않아요."
 
 
+def confidence(value):
+    return round(max(0, min(1, value)), 4)
+
+
 def predict_with_model(model_entry, logs):
     dates = usage_dates(logs)
     intervals = calculate_intervals(dates)
     recent_intervals = intervals[-RECENT_WINDOW_SIZE:]
-    frequencies = daily_usage_counts(logs)
-    recent_frequencies = frequencies[-MIN_RECENT_COUNT:]
+    frequency_counts = daily_usage_counts(logs)
+    base_frequency_counts, recent_frequency_counts = split_recent_frequency_counts(frequency_counts)
 
     base_cycle = model_entry.get("base_cycle_days")
     base_frequency = model_entry.get("base_daily_frequency")
     recent_cycle = safe_median(recent_intervals)
     recent_interval_std = safe_std(recent_intervals)
-    recent_frequency = safe_mean(recent_frequencies)
+    recent_frequency = safe_mean(count_values(recent_frequency_counts))
 
     interval_changed = (
         base_cycle is not None
@@ -220,19 +231,26 @@ def predict_with_model(model_entry, logs):
     frequency_changed = (
         base_frequency is not None
         and recent_frequency is not None
-        and len(recent_frequencies) >= MIN_RECENT_COUNT
-        and abs(recent_frequency - base_frequency) >= DAILY_FREQUENCY_THRESHOLD
+        and len(recent_frequency_counts) >= MIN_RECENT_COUNT
+        and abs(recent_frequency - base_frequency) >= FREQUENCY_DIFF_THRESHOLD
     )
 
-    adapted_cycle = (
-        round(ALPHA * recent_cycle + (1 - ALPHA) * base_cycle, 2)
-        if interval_changed
-        else base_cycle
-    )
+    adapted_cycle = round(ALPHA * recent_cycle + (1 - ALPHA) * base_cycle, 2) if interval_changed else base_cycle
     adapted_frequency = (
         round(ALPHA * recent_frequency + (1 - ALPHA) * base_frequency, 2)
         if frequency_changed
         else base_frequency
+    )
+    interval_confidence = (
+        confidence(0.55 * min(abs(recent_cycle - base_cycle) / max(DIFF_THRESHOLD_DAYS * 2, 1), 1)
+                   + 0.45 * max(0, 1 - recent_interval_std / max(MAX_RECENT_STD, 0.1)))
+        if interval_changed
+        else 0
+    )
+    frequency_confidence = (
+        confidence(abs(recent_frequency - base_frequency) / max(FREQUENCY_DIFF_THRESHOLD * 2, 1))
+        if frequency_changed
+        else 0
     )
     result = {
         "appliance_id": model_entry["appliance_id"],
@@ -246,6 +264,7 @@ def predict_with_model(model_entry, logs):
         "adapted_daily_frequency": adapted_frequency,
         "frequency_changed": frequency_changed,
         "change_type": change_type(interval_changed, frequency_changed),
+        "change_confidence": max(interval_confidence, frequency_confidence),
         "last_usage_date": dates[-1] if dates else None,
         "next_expected_date": add_days(dates[-1], adapted_cycle) if dates else None,
         "recent_interval_std": recent_interval_std,
@@ -293,7 +312,6 @@ def evaluate(predictions):
         if row.get("adapted_daily_frequency") is not None
         and row.get("actual_daily_frequency") is not None
     ]
-
     next_date_errors = []
     for row in predictions:
         actual_cycle = row.get("actual_cycle_days")
@@ -303,30 +321,12 @@ def evaluate(predictions):
             if error is not None:
                 next_date_errors.append(error)
 
-    true_positive = sum(
-        row["change_type"] != "none" and bool(row.get("actual_changed")) for row in predictions
-    )
-    false_positive = sum(
-        row["change_type"] != "none" and not bool(row.get("actual_changed")) for row in predictions
-    )
-    false_negative = sum(
-        row["change_type"] == "none" and bool(row.get("actual_changed")) for row in predictions
-    )
-    precision = (
-        true_positive / (true_positive + false_positive)
-        if true_positive + false_positive
-        else None
-    )
-    recall = (
-        true_positive / (true_positive + false_negative)
-        if true_positive + false_negative
-        else None
-    )
-    f1 = (
-        2 * precision * recall / (precision + recall)
-        if precision is not None and recall is not None and precision + recall
-        else None
-    )
+    true_positive = sum(row["change_type"] != "none" and bool(row.get("actual_changed")) for row in predictions)
+    false_positive = sum(row["change_type"] != "none" and not bool(row.get("actual_changed")) for row in predictions)
+    false_negative = sum(row["change_type"] == "none" and bool(row.get("actual_changed")) for row in predictions)
+    precision = true_positive / (true_positive + false_positive) if true_positive + false_positive else None
+    recall = true_positive / (true_positive + false_negative) if true_positive + false_negative else None
+    f1 = 2 * precision * recall / (precision + recall) if precision is not None and recall is not None and precision + recall else None
 
     return {
         "cycle_mae": safe_mean(cycle_errors),
@@ -351,6 +351,7 @@ def write_predictions(path, rows):
         "adapted_daily_frequency",
         "frequency_changed",
         "change_type",
+        "change_confidence",
         "last_usage_date",
         "next_expected_date",
         "actual_cycle_days",
@@ -368,43 +369,28 @@ def write_predictions(path, rows):
         writer.writerows(rows)
 
 
-def main():
-    RESULT_DIR.mkdir(parents=True, exist_ok=True)
-
+def run_training_evaluation():
     train_logs = read_logs(TRAIN_PATH)
     validation_logs = read_logs(VALIDATION_PATH)
     test_logs = read_logs(TEST_PATH)
-
     model = build_base_model(train_logs)
-    validation_predictions = predict_split(
-        model,
-        validation_logs,
-        EXPECTED_VALIDATION_PATTERNS,
-    )
+    validation_predictions = predict_split(model, validation_logs, EXPECTED_VALIDATION_PATTERNS)
     test_predictions = predict_split(model, test_logs, EXPECTED_TEST_PATTERNS)
     metrics = {
         "validation": evaluate(validation_predictions),
         "changed_routine_test": evaluate(test_predictions),
-        "config": {
-            "min_recent_count": MIN_RECENT_COUNT,
-            "recent_window_size": RECENT_WINDOW_SIZE,
-            "diff_threshold_days": DIFF_THRESHOLD_DAYS,
-            "max_recent_std": MAX_RECENT_STD,
-            "daily_frequency_threshold": DAILY_FREQUENCY_THRESHOLD,
-            "alpha": ALPHA,
-        },
+        "config": active_config(),
     }
+    return model, validation_predictions, test_predictions, metrics
 
-    MODEL_PATH.write_text(
-        json.dumps(model, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+
+def main():
+    RESULT_DIR.mkdir(parents=True, exist_ok=True)
+    model, validation_predictions, test_predictions, metrics = run_training_evaluation()
+    MODEL_PATH.write_text(json.dumps(model, ensure_ascii=False, indent=2), encoding="utf-8")
     write_predictions(VALIDATION_PREDICTIONS_PATH, validation_predictions)
     write_predictions(TEST_PREDICTIONS_PATH, test_predictions)
-    METRICS_PATH.write_text(
-        json.dumps(metrics, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    METRICS_PATH.write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
 
     print("Saved model:", MODEL_PATH)
     print("Saved validation predictions:", VALIDATION_PREDICTIONS_PATH)

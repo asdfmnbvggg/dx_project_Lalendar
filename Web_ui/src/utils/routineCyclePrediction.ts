@@ -1,11 +1,27 @@
+import { DEFAULT_ROUTINE_TTA_OPTIONS } from "./routineCycleConfig.js";
+
 export type ApplianceUsageLog = {
   id?: string;
+  log_id?: string;
+  user_id?: string;
+  family_id?: string;
   appliance_id: string;
   appliance_type: string;
+  device_name?: string;
+  event_type?: string;
   action_type: "start" | "end" | "pause" | "error";
+  operation_state?: string;
+  mode?: string;
   started_at: string;
   ended_at?: string;
-  mode?: string;
+  usage_date?: string;
+  duration_minutes?: number;
+  energy_kwh?: number;
+  error_code?: string;
+  source?: string;
+  dataset_split?: "train" | "validation" | "test";
+  period_label?: "base_routine" | "changed_routine";
+  created_at?: string;
 };
 
 export type RoutineChangeType =
@@ -29,7 +45,6 @@ export type RoutineCyclePrediction = {
   change_confidence: number;
   next_expected_date: string | null;
   reason: string;
-  // Backward-compatible aliases from the first implementation.
   base_daily_usage_count: number | null;
   recent_daily_usage_count: number | null;
 };
@@ -39,8 +54,10 @@ export type RoutineCyclePredictionOptions = {
   recentWindowSize?: number;
   diffThresholdDays?: number;
   maxRecentStd?: number;
-  dailyFrequencyThreshold?: number;
   alpha?: number;
+  frequencyDiffThreshold?: number;
+  frequencyRecentWindowDays?: number;
+  dailyFrequencyThreshold?: number;
 };
 
 export type TimeBasedUsageLogSplit = {
@@ -62,6 +79,16 @@ export type RoutinePredictionEvaluationMetrics = {
   change_detection_precision: number | null;
   change_detection_recall: number | null;
   change_detection_f1: number | null;
+};
+
+type ResolvedRoutineCyclePredictionOptions = {
+  minRecentCount: number;
+  recentWindowSize: number;
+  diffThresholdDays: number;
+  maxRecentStd: number;
+  alpha: number;
+  frequencyDiffThreshold: number;
+  frequencyRecentWindowDays: number;
 };
 
 type CycleChangeDetection = {
@@ -90,14 +117,7 @@ type NormalizedUsageLog = ApplianceUsageLog & {
   started_date: string;
 };
 
-const DEFAULT_OPTIONS: Required<RoutineCyclePredictionOptions> = {
-  minRecentCount: 3,
-  recentWindowSize: 8,
-  diffThresholdDays: 0.75,
-  maxRecentStd: 2.0,
-  dailyFrequencyThreshold: 0.5,
-  alpha: 0.6,
-};
+const DEFAULT_OPTIONS = DEFAULT_ROUTINE_TTA_OPTIONS;
 
 const TIME_SPLIT_BOUNDARIES = {
   trainEnd: "2025-10-31",
@@ -126,15 +146,12 @@ export function median(values: number[]): number | null {
 /** Calculates population standard deviation for recent interval stability. */
 export function std(values: number[]): number | null {
   const numericValues = values.filter((value) => Number.isFinite(value));
-  if (numericValues.length === 0) return null;
-
   const averageValue = average(numericValues);
   if (averageValue == null) return null;
 
   const variance =
     numericValues.reduce((sum, value) => sum + (value - averageValue) ** 2, 0) /
     numericValues.length;
-
   return Math.sqrt(variance);
 }
 
@@ -196,7 +213,7 @@ export function detectCycleChange(
   };
 }
 
-/** Detects same-day frequency changes, such as 1 use/day to 2 uses/day. */
+/** Detects same-day frequency changes, such as dishwasher 1 use/day to 2 uses/day. */
 export function detectDailyUsageFrequencyChange(
   dailyUsageCounts: DailyUsageCount[],
   options: RoutineCyclePredictionOptions = {},
@@ -206,8 +223,16 @@ export function detectDailyUsageFrequencyChange(
     .filter((item) => isDateKey(item.date) && Number.isFinite(item.count))
     .slice()
     .sort((a, b) => a.date.localeCompare(b.date));
-  const recentCounts = sortedCounts.slice(-resolvedOptions.minRecentCount);
-  const baseCounts = sortedCounts.slice(0, -resolvedOptions.minRecentCount);
+  const recentStartDate = getRecentWindowStartDate(
+    sortedCounts,
+    resolvedOptions.frequencyRecentWindowDays,
+  );
+  const recentCounts = recentStartDate
+    ? sortedCounts.filter((item) => item.date >= recentStartDate)
+    : sortedCounts.slice(-resolvedOptions.minRecentCount);
+  const baseCounts = recentStartDate
+    ? sortedCounts.filter((item) => item.date < recentStartDate)
+    : sortedCounts.slice(0, -resolvedOptions.minRecentCount);
   const base_daily_frequency = roundDays(
     average(
       baseCounts.length > 0
@@ -238,7 +263,7 @@ export function detectDailyUsageFrequencyChange(
     Math.abs(recent_daily_frequency - base_daily_frequency),
   );
   const frequency_changed =
-    frequency_diff >= resolvedOptions.dailyFrequencyThreshold;
+    frequency_diff >= resolvedOptions.frequencyDiffThreshold;
   const adapted_daily_frequency = frequency_changed
     ? adaptFrequency(
         base_daily_frequency,
@@ -514,7 +539,12 @@ function uniqueSortedUsageDates(logs: NormalizedUsageLog[]): string[] {
 
 function resolveOptions(
   options: RoutineCyclePredictionOptions = {},
-): Required<RoutineCyclePredictionOptions> {
+): ResolvedRoutineCyclePredictionOptions {
+  const frequencyDiffThreshold =
+    options.frequencyDiffThreshold ??
+    options.dailyFrequencyThreshold ??
+    DEFAULT_OPTIONS.frequencyDiffThreshold;
+
   return {
     minRecentCount: Math.max(
       1,
@@ -529,11 +559,14 @@ function resolveOptions(
       options.diffThresholdDays ?? DEFAULT_OPTIONS.diffThresholdDays,
     ),
     maxRecentStd: Math.max(0, options.maxRecentStd ?? DEFAULT_OPTIONS.maxRecentStd),
-    dailyFrequencyThreshold: Math.max(
-      0,
-      options.dailyFrequencyThreshold ?? DEFAULT_OPTIONS.dailyFrequencyThreshold,
-    ),
     alpha: clamp(options.alpha ?? DEFAULT_OPTIONS.alpha, 0, 1),
+    frequencyDiffThreshold: Math.max(0, frequencyDiffThreshold),
+    frequencyRecentWindowDays: Math.max(
+      1,
+      Math.floor(
+        options.frequencyRecentWindowDays ?? DEFAULT_OPTIONS.frequencyRecentWindowDays,
+      ),
+    ),
   };
 }
 
@@ -594,23 +627,22 @@ function createEmptyPrediction(
 function calculateIntervalConfidence(
   diffDays: number,
   recentStd: number | null,
-  options: Required<RoutineCyclePredictionOptions>,
+  options: ResolvedRoutineCyclePredictionOptions,
 ): number {
   if (recentStd == null) return 0;
 
   const diffScore = clamp(diffDays / Math.max(options.diffThresholdDays * 2, 1), 0, 1);
   const stabilityScore = clamp(1 - recentStd / Math.max(options.maxRecentStd, 0.1), 0, 1);
-
   return roundNumber(0.55 * diffScore + 0.45 * stabilityScore);
 }
 
 function calculateFrequencyConfidence(
   frequencyDiff: number,
-  options: Required<RoutineCyclePredictionOptions>,
+  options: ResolvedRoutineCyclePredictionOptions,
 ): number {
   return roundNumber(
     clamp(
-      frequencyDiff / Math.max(options.dailyFrequencyThreshold * 2, 1),
+      frequencyDiff / Math.max(options.frequencyDiffThreshold * 2, 1),
       0,
       1,
     ),
@@ -641,6 +673,18 @@ function getLogValue(log: ApplianceUsageLog, ...keys: string[]): string | undefi
   }
 
   return undefined;
+}
+
+function getRecentWindowStartDate(
+  dailyUsageCounts: DailyUsageCount[],
+  frequencyRecentWindowDays: number,
+): string | null {
+  const lastDate = dailyUsageCounts[dailyUsageCounts.length - 1]?.date;
+  if (!lastDate) return null;
+
+  const startDate = new Date(`${lastDate}T00:00:00`);
+  startDate.setDate(startDate.getDate() - frequencyRecentWindowDays + 1);
+  return toLocalDateKey(startDate);
 }
 
 function daysBetween(startDateKey: string, endDateKey: string): number {

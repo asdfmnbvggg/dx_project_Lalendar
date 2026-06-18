@@ -1,5 +1,5 @@
-﻿appliance_id,appliance_type,base_cycle_days,recent_cycle_days,adapted_cycle_days,cycle_changed,base_daily_frequency,recent_daily_frequency,adapted_daily_frequency,frequency_changed,change_type,last_usage_date,next_expected_date,actual_cycle_days,actual_daily_frequency,actual_changed,expected_change_type,recent_interval_std,log_count,active_days,reason
-DW001,dishwasher,1.0,1.0,1.0,False,1.0,1.0,1.0,False,none,2025-12-31,2026-01-01,1,1,False,none,0.0,57,57,최근 사용 패턴은 기존 루틴과 크게 다르지 않아요.
-DR001,dryer,3.0,3.0,3.0,False,1.0,1.0,1.0,False,none,2025-12-29,2026-01-01,3,1,False,none,0.6,21,21,최근 사용 패턴은 기존 루틴과 크게 다르지 않아요.
-RC001,robot_cleaner,1.0,1.0,1.0,False,1.0,1.0,1.0,False,none,2025-12-31,2026-01-01,1,1,False,none,0.0,46,46,최근 사용 패턴은 기존 루틴과 크게 다르지 않아요.
-WM001,washer,3.0,3.5,3.0,False,1.0,1.0,1.0,False,none,2025-12-29,2026-01-01,3,1,False,none,1.48,18,18,최근 사용 패턴은 기존 루틴과 크게 다르지 않아요.
+﻿appliance_id,appliance_type,base_cycle_days,recent_cycle_days,adapted_cycle_days,cycle_changed,base_daily_frequency,recent_daily_frequency,adapted_daily_frequency,frequency_changed,change_type,change_confidence,last_usage_date,next_expected_date,actual_cycle_days,actual_daily_frequency,actual_changed,expected_change_type,recent_interval_std,log_count,active_days,reason
+DW001,dishwasher,1.0,1.0,1.0,False,1.0,1.0,1.0,False,none,0,2025-12-31,2026-01-01,1,1,False,none,0.0,57,57,최근 사용 패턴은 기존 루틴과 크게 다르지 않아요.
+DR001,dryer,3.0,3.0,3.0,False,1.0,1.0,1.0,False,none,0,2025-12-29,2026-01-01,3,1,False,none,0.6,21,21,최근 사용 패턴은 기존 루틴과 크게 다르지 않아요.
+RC001,robot_cleaner,1.0,1.0,1.0,False,1.0,1.0,1.0,False,none,0,2025-12-31,2026-01-01,1,1,False,none,0.0,46,46,최근 사용 패턴은 기존 루틴과 크게 다르지 않아요.
+WM001,washer,3.0,3.5,3.0,False,1.0,1.0,1.0,False,none,0,2025-12-29,2026-01-01,3,1,False,none,1.48,18,18,최근 사용 패턴은 기존 루틴과 크게 다르지 않아요.

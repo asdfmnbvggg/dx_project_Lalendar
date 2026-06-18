@@ -1,0 +1,79 @@
+# Routine Hyperparameter Search Report
+
+## Best Overall
+
+```json
+{
+  "params_id": "params_0386",
+  "minRecentCount": 2,
+  "diffThresholdDays": 0.5,
+  "maxRecentStd": 2.0,
+  "alpha": 0.9,
+  "frequencyDiffThreshold": 0.3,
+  "frequencyRecentWindowDays": 14,
+  "change_type_accuracy": 1.0,
+  "overall_change_precision": 1.0,
+  "overall_change_recall": 1.0,
+  "overall_change_f1": 1.0,
+  "interval_change_f1": 1.0,
+  "frequency_change_f1": 1.0,
+  "cycle_mae": 0.08,
+  "daily_frequency_mae": 0.04,
+  "score": 0.98312
+}
+```
+
+## Best By Appliance
+
+```json
+{
+  "dishwasher": {
+    "params_id": "params_0386",
+    "params": {
+      "minRecentCount": 2,
+      "diffThresholdDays": 0.5,
+      "maxRecentStd": 2.0,
+      "alpha": 0.9,
+      "frequencyDiffThreshold": 0.3,
+      "frequencyRecentWindowDays": 14
+    },
+    "score": 0.98312
+  },
+  "dryer": {
+    "params_id": "params_0386",
+    "params": {
+      "minRecentCount": 2,
+      "diffThresholdDays": 0.5,
+      "maxRecentStd": 2.0,
+      "alpha": 0.9,
+      "frequencyDiffThreshold": 0.3,
+      "frequencyRecentWindowDays": 14
+    },
+    "score": 0.98312
+  },
+  "robot_cleaner": {
+    "params_id": "params_0386",
+    "params": {
+      "minRecentCount": 2,
+      "diffThresholdDays": 0.5,
+      "maxRecentStd": 2.0,
+      "alpha": 0.9,
+      "frequencyDiffThreshold": 0.3,
+      "frequencyRecentWindowDays": 14
+    },
+    "score": 0.98312
+  },
+  "washer": {
+    "params_id": "params_0386",
+    "params": {
+      "minRecentCount": 2,
+      "diffThresholdDays": 0.5,
+      "maxRecentStd": 2.0,
+      "alpha": 0.9,
+      "frequencyDiffThreshold": 0.3,
+      "frequencyRecentWindowDays": 14
+    },
+    "score": 0.98312
+  }
+}
+```
