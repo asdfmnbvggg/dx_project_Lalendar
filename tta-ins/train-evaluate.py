@@ -203,6 +203,22 @@ def reason_for(result):
     return "최근 사용 패턴은 기존 루틴과 크게 다르지 않아요."
 
 
+def reason_for(result):
+    if result["change_type"] == "interval_change":
+        return (
+            f"최근 사용 주기가 바뀐 것 같아요. 기존에는 약 {result['base_cycle_days']}일마다 "
+            f"사용했지만, 최근에는 약 {result['recent_cycle_days']}일 간격으로 사용되고 있어요."
+        )
+    if result["change_type"] == "frequency_change":
+        return (
+            f"최근 하루 사용 횟수가 늘어난 것 같아요. 기존에는 하루 {result['base_daily_frequency']}회 "
+            f"사용했지만, 최근에는 하루 {result['recent_daily_frequency']}회 사용하는 패턴이 보여요."
+        )
+    if result["change_type"] == "interval_and_frequency_change":
+        return "최근 사용 간격과 하루 사용 횟수가 모두 바뀐 것 같아요."
+    return "최근 사용 패턴은 기존 루틴과 크게 다르지 않아요."
+
+
 def confidence(value):
     return round(max(0, min(1, value)), 4)
 

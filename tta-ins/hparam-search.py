@@ -276,12 +276,24 @@ def main():
     print(f"Best score: {best['score'] if best else None}")
     print("Best params:")
     print(json.dumps(best, ensure_ascii=False, indent=2))
-    print("Expected vs actual change_type by appliance:")
-    for prediction in best_predictions:
-        print(
-            f"- {prediction['appliance_type']}: expected={prediction['expected_change_type']} "
-            f"actual={prediction['change_type']}"
+    print("Expected vs actual change_type by appliance_type:")
+    for line in summarize_expected_actual(best_predictions):
+        print(line)
+
+
+def summarize_expected_actual(predictions):
+    counts = {}
+    for prediction in predictions:
+        key = (
+            prediction["appliance_type"],
+            prediction["expected_change_type"],
+            prediction["change_type"],
         )
+        counts[key] = counts.get(key, 0) + 1
+    return [
+        f"- {appliance_type}: expected={expected} actual={actual} count={count}"
+        for (appliance_type, expected, actual), count in sorted(counts.items())
+    ]
 
 
 def predict_with_expected_metadata(train_module, model, split_logs, expected_by_appliance):
@@ -428,6 +440,222 @@ def build_report(best, best_by_appliance, top10, best_predictions, search_space)
         "## 최종 해석",
         "",
         "현재 최적 조합은 로봇청소기, 식기세척기, 세탁기, 건조기의 기대 변화 유형을 모두 맞추며, full retraining 없이 최근 로그의 interval/frequency 분포 변화만 반영한다.",
+    ]
+    return "\n".join(lines)
+
+
+def build_report(best, best_by_appliance, top10, best_predictions, search_space):
+    dishwasher = next((row for row in best_predictions if row["appliance_type"] == "dishwasher"), None)
+    top_headers = [
+        "params_id",
+        "score",
+        "change_type_accuracy",
+        "overall_change_f1",
+        "cycle_mae",
+        "daily_frequency_mae",
+    ]
+    expected_headers = [
+        "appliance_type",
+        "expected_change_type",
+        "change_type",
+        "base_cycle_days",
+        "recent_cycle_days",
+        "base_daily_frequency",
+        "recent_daily_frequency",
+    ]
+    lines = [
+        "# Routine Hyperparameter Search Report",
+        "",
+        "## 실험 목적",
+        "",
+        "가전 사용 로그 기반 사용 주기 예측과 TTA-inspired Adaptive Cycle Recalibration의 interval/frequency 변화 감지 성능을 하이퍼파라미터 조합별로 비교한다.",
+        "",
+        "## 데이터 split 설명",
+        "",
+        "- 2025-01-01 ~ 2025-10-31: train",
+        "- 2025-11-01 ~ 2025-12-31: validation",
+        "- 2026-01-01 이후: changed routine test",
+        "",
+        "## train/test 데이터 의미",
+        "",
+        "`appliance_usage_train_1year.csv`는 2025년 기본 루틴 데이터이며, `appliance_usage_test_changed_routine.csv`는 학습 이후 새롭게 유입되는 changed routine test 데이터다. test는 validation이 아니라 TTA-inspired adaptation 성능 확인용이다.",
+        "",
+        "## 탐색한 하이퍼파라미터 후보",
+        "",
+        "```json",
+        json.dumps(search_space, ensure_ascii=False, indent=2),
+        "```",
+        "",
+        "## score 계산식",
+        "",
+        "`score = 0.45 * overall_change_f1 + 0.25 * change_type_accuracy + 0.15 * normalized_cycle_score + 0.15 * normalized_frequency_score`",
+        "",
+        "`normalized_cycle_score = 1 / (1 + cycle_mae)`",
+        "",
+        "`normalized_frequency_score = 1 / (1 + daily_frequency_mae)`",
+        "",
+        "## best hyperparameters",
+        "",
+        "```json",
+        json.dumps(best, ensure_ascii=False, indent=2),
+        "```",
+        "",
+        "## 상위 10개 조합",
+        "",
+        markdown_table(top_headers, top10),
+        "",
+        "## 가전별 best params",
+        "",
+        "```json",
+        json.dumps(best_by_appliance, ensure_ascii=False, indent=2),
+        "```",
+        "",
+        "## 가전별 expected vs actual change_type",
+        "",
+        markdown_table(expected_headers, best_predictions),
+        "",
+        "## dishwasher frequency_change 확인",
+        "",
+        "dishwasher는 interval_days가 1일로 유지되므로 daily_usage_count 기반 frequency 변화가 핵심이다.",
+        f"최적 조합에서 dishwasher actual change_type은 `{dishwasher['change_type'] if dishwasher else 'unknown'}`이며, frequency_change 감지는 {'정상' if dishwasher and dishwasher['change_type'] == 'frequency_change' else '실패'}이다.",
+        "",
+        "## 최종 해석",
+        "",
+        "현재 최적 조합은 multi-family 데이터에서 전반적으로 높은 change detection 성능을 보이며, full retraining 없이 최근 로그의 interval/frequency 분포 변화만 반영한다.",
+    ]
+    return "\n".join(lines)
+
+
+def build_report_clean(best, best_by_appliance, top10, best_predictions, search_space):
+    dishwasher = next((row for row in best_predictions if row["appliance_type"] == "dishwasher"), None)
+    top_headers = ["params_id", "score", "change_type_accuracy", "overall_change_f1", "cycle_mae", "daily_frequency_mae"]
+    expected_headers = ["appliance_type", "expected_change_type", "change_type", "base_cycle_days", "recent_cycle_days", "base_daily_frequency", "recent_daily_frequency"]
+    lines = [
+        "# Routine Hyperparameter Search Report",
+        "",
+        "## 실험 목적",
+        "",
+        "가전 사용 로그 기반 사용 주기 예측과 TTA-inspired Adaptive Cycle Recalibration의 interval/frequency 변화 감지 성능을 하이퍼파라미터 조합별로 비교한다.",
+        "",
+        "## 데이터 split 설명",
+        "",
+        "- 2025-01-01 ~ 2025-10-31: train",
+        "- 2025-11-01 ~ 2025-12-31: validation",
+        "- 2026-01-01 이후: changed routine test",
+        "",
+        "## train/test 데이터 의미",
+        "",
+        "`appliance_usage_train_1year.csv`는 2025년 기본 루틴 데이터이며, `appliance_usage_test_changed_routine.csv`는 학습 이후 새롭게 유입되는 changed routine test 데이터다. test는 validation이 아니라 TTA-inspired adaptation 성능 확인용이다.",
+        "",
+        "## 탐색한 하이퍼파라미터 후보",
+        "",
+        "```json",
+        json.dumps(search_space, ensure_ascii=False, indent=2),
+        "```",
+        "",
+        "## score 계산식",
+        "",
+        "`score = 0.45 * overall_change_f1 + 0.25 * change_type_accuracy + 0.15 * normalized_cycle_score + 0.15 * normalized_frequency_score`",
+        "",
+        "`normalized_cycle_score = 1 / (1 + cycle_mae)`",
+        "",
+        "`normalized_frequency_score = 1 / (1 + daily_frequency_mae)`",
+        "",
+        "## best hyperparameters",
+        "",
+        "```json",
+        json.dumps(best, ensure_ascii=False, indent=2),
+        "```",
+        "",
+        "## 상위 10개 조합",
+        "",
+        markdown_table(top_headers, top10),
+        "",
+        "## 가전별 best params",
+        "",
+        "```json",
+        json.dumps(best_by_appliance, ensure_ascii=False, indent=2),
+        "```",
+        "",
+        "## 가전별 expected vs actual change_type",
+        "",
+        markdown_table(expected_headers, best_predictions),
+        "",
+        "## dishwasher frequency_change 확인",
+        "",
+        "dishwasher는 interval_days가 1일로 유지되므로 daily_usage_count 기반 frequency 변화가 핵심이다.",
+        f"최적 조합에서 dishwasher actual change_type은 `{dishwasher['change_type'] if dishwasher else 'unknown'}`이며, frequency_change 감지는 {'정상' if dishwasher and dishwasher['change_type'] == 'frequency_change' else '실패'}이다.",
+        "",
+        "## 최종 해석",
+        "",
+        "현재 최적 조합은 multi-family 데이터에서 전반적으로 높은 change detection 성능을 보이며, full retraining 없이 최근 로그의 interval/frequency 분포 변화만 반영한다.",
+    ]
+    return "\n".join(lines)
+
+
+def build_report(best, best_by_appliance, top10, best_predictions, search_space):
+    dishwasher = next((row for row in best_predictions if row["appliance_type"] == "dishwasher"), None)
+    top_headers = ["params_id", "score", "change_type_accuracy", "overall_change_f1", "cycle_mae", "daily_frequency_mae"]
+    expected_headers = ["appliance_type", "expected_change_type", "change_type", "base_cycle_days", "recent_cycle_days", "base_daily_frequency", "recent_daily_frequency"]
+    lines = [
+        "# Routine Hyperparameter Search Report",
+        "",
+        "## Experiment Purpose",
+        "",
+        "Compare hyperparameter combinations for appliance routine cycle prediction and TTA-inspired Adaptive Cycle Recalibration using interval and daily-frequency change detection.",
+        "",
+        "## Data Split",
+        "",
+        "- 2025-01-01 to 2025-10-31: train",
+        "- 2025-11-01 to 2025-12-31: validation",
+        "- 2026-01-01 and later: changed routine test",
+        "",
+        "## Train/Test Meaning",
+        "",
+        "`appliance_usage_train_1year.csv` is the 2025 base-routine dataset. `appliance_usage_test_changed_routine.csv` is not validation data; it represents changed routine logs arriving after training and is used to evaluate TTA-inspired adaptation.",
+        "",
+        "## Hyperparameter Search Space",
+        "",
+        "```json",
+        json.dumps(search_space, ensure_ascii=False, indent=2),
+        "```",
+        "",
+        "## Score Formula",
+        "",
+        "`score = 0.45 * overall_change_f1 + 0.25 * change_type_accuracy + 0.15 * normalized_cycle_score + 0.15 * normalized_frequency_score`",
+        "",
+        "`normalized_cycle_score = 1 / (1 + cycle_mae)`",
+        "",
+        "`normalized_frequency_score = 1 / (1 + daily_frequency_mae)`",
+        "",
+        "## Best Hyperparameters",
+        "",
+        "```json",
+        json.dumps(best, ensure_ascii=False, indent=2),
+        "```",
+        "",
+        "## Top 10 Combinations",
+        "",
+        markdown_table(top_headers, top10),
+        "",
+        "## Best Params By Appliance",
+        "",
+        "```json",
+        json.dumps(best_by_appliance, ensure_ascii=False, indent=2),
+        "```",
+        "",
+        "## Expected vs Actual Change Type By Appliance",
+        "",
+        markdown_table(expected_headers, best_predictions),
+        "",
+        "## Dishwasher Frequency Change Check",
+        "",
+        "Dishwasher interval_days stays near 1 day, so daily_usage_count frequency detection is required.",
+        f"For the best combination, dishwasher actual change_type is `{dishwasher['change_type'] if dishwasher else 'unknown'}`; frequency_change detection is {'PASS' if dishwasher and dishwasher['change_type'] == 'frequency_change' else 'FAIL'}.",
+        "",
+        "## Final Interpretation",
+        "",
+        "The best combination shows strong multi-family change detection performance while keeping the implementation as TTA-inspired adaptive cycle/frequency recalibration, not full model retraining.",
     ]
     return "\n".join(lines)
 
