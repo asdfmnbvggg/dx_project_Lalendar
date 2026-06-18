@@ -27,13 +27,16 @@ const dailyReportImageKeywords = {
   비오는날: ["비 예보", "비가", "비 오는", "비올", "우산", "강수"],
   생일: ["생일", "생신", "기념일"],
   세탁기: ["세탁기", "세탁", "빨래"],
+  소풍: ["소풍", "나들이", "피크닉", "공원 방문", "야외 나들이"],
   습도높은날: ["습도가 높", "높은 습도", "습한", "습기", "눅눅", "제습"],
   식기세척기: ["식기세척기", "식기 세척", "설거지"],
   에어컨: ["에어컨", "냉방", "예냉"],
   운동회: ["운동회", "체육대회", "운동", "조깅", "등산", "축구"],
   추운날: ["추운", "추위", "한파", "기온이 낮", "기온 낮"],
+  필라테스: ["필라테스", "요가", "코어 운동", "스트레칭", "체형 교정"],
   회사: ["회사", "출근", "퇴근", "근무", "회의"],
   회식: ["회식", "술자리", "단체 식사"],
+  흐린날: ["흐린", "흐림", "구름 많음", "구름이 많", "날씨가 흐"],
 };
 
 export function getDailyReportImage(reportText = "") {
@@ -43,7 +46,7 @@ export function getDailyReportImage(reportText = "") {
 
   dailyReportImages.forEach((image) => {
     if (image.name === "기본") return;
-    const keywords = dailyReportImageKeywords[image.name] || [image.name.replace(/날$/, "")];
+    const keywords = getDailyReportImageKeywords(image.name);
     const score = keywords.reduce((total, keyword) => {
       const normalizedKeyword = normalizeDailyReportText(keyword);
       if (!normalizedKeyword || !normalizedText.includes(normalizedKeyword)) return total;
@@ -57,6 +60,11 @@ export function getDailyReportImage(reportText = "") {
   });
 
   return bestImage || dailyReportDefaultImage;
+}
+
+function getDailyReportImageKeywords(imageName) {
+  const compactName = imageName.replace(/많은날$|없는날$|오는날$|높은날$|운날$|날$/g, "");
+  return [...new Set([imageName, compactName, ...(dailyReportImageKeywords[imageName] || [])])].filter(Boolean);
 }
 
 function normalizeDailyReportText(value) {
