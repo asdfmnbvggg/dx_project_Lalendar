@@ -69,30 +69,36 @@ export function createTodayDailyReport({
   tags = [],
   weatherNotice = "",
   choreNotice = "",
+  priority = "normal",
 }) {
   const normalizedText = String(cardText || fallbackText || "").trim();
-  const sentences = normalizedText.split(/(?<=[.!?요])\s+/).filter(Boolean);
-  const title = sentences[0] || "오늘 홈케어 일정을 정리했어요!";
-  const subtitle = sentences.slice(1).join(" ") || choreNotice || "오늘의 일정과 가사일을 확인해 주세요.";
   const scheduleItems = tasks.filter((task) => !isApplianceTask(task)).map(toReportItem);
   const applianceItems = tasks.filter(isApplianceTask).map(toReportItem);
   const todoItems = tasks.map(toReportItem);
   const completedCount = todoItems.filter((item) => item.done).length;
   const imageText = [normalizedText, weatherNotice, choreNotice, tasks.map((task) => task.title).join(" ")].join(" ");
   const heroImageUrl = getDailyReportImage(imageText) || fallbackImage;
+  const resolvedWeatherNotice = weatherNotice || buildWeatherNote(weather);
+  const resolvedChoreNotice = choreNotice || buildChoreNote(applianceItems);
+  const detailNotices = [weatherNotice, choreNotice].filter(Boolean);
 
   return {
     id: date,
     date: formatDate(date),
     dayLabel: formatDayLabel(date),
-    title,
-    subtitle,
-    summary: "오늘의 일정과 가사일을 바탕으로 홈케어 리포트를 만들었어요.",
+    cardText: normalizedText,
+    title: normalizedText,
+    subtitle: getPriorityNotice(priority, resolvedWeatherNotice, resolvedChoreNotice),
+    summary: detailNotices.length > 0
+      ? detailNotices.join(" ")
+      : "GPT가 오늘의 일정과 가사일 데이터를 바탕으로 리포트를 정리했어요.",
+    aiNarrative: normalizedText,
+    priority,
     heroImageUrl,
     characterImageUrl: lgCharacterImage,
     tags: tags.length > 0 ? tags : ["가전 관리", "일정 연결", "자동 저장"],
-    weatherNote: weatherNotice || buildWeatherNote(weather),
-    choreNote: choreNotice || buildChoreNote(applianceItems),
+    weatherNote: resolvedWeatherNotice,
+    choreNote: resolvedChoreNotice,
     scheduleItems,
     todoItems,
     applianceItems,
@@ -100,6 +106,12 @@ export function createTodayDailyReport({
     totalTodoCount: todoItems.length,
     imageRecords: buildImageRecords(date, heroImageUrl, tasks),
   };
+}
+
+function getPriorityNotice(priority, weatherNotice, choreNotice) {
+  if (priority === "weather" && weatherNotice) return weatherNotice;
+  if (priority === "chore" && choreNotice) return choreNotice;
+  return choreNotice || weatherNotice || "오늘의 세부 일정과 진행 상황을 아래에서 확인해 주세요.";
 }
 
 function buildImageRecords(date, heroImageUrl, tasks) {
@@ -180,4 +192,3 @@ function addDays(date, amount) {
   next.setDate(next.getDate() + amount);
   return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-${String(next.getDate()).padStart(2, "0")}`;
 }
-

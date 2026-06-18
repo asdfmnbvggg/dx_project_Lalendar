@@ -850,11 +850,20 @@
   text-align: center;
   word-break: keep-all;
   white-space: normal;
+  font-family: inherit;
+  font-style: normal;
+}
+
+.onboarding-intro-type > span {
+  display: block;
 }
 
 .onboarding-highlight-name {
+  display: inline;
   color: #ff6b1a;
   font-weight: 950;
+  font-family: inherit;
+  font-style: normal;
 }
 
 .onboarding-intro-type i {
@@ -907,8 +916,11 @@
   display: grid;
   align-content: center;
   color: #6d4a20;
-  font-weight: 700;
-  font-style: italic;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 850;
+  font-style: normal;
+  line-height: 1.35;
   text-align: center;
 }
 
@@ -1593,7 +1605,16 @@
   color: #616161;
   font-size: 12px;
   font-weight: 900;
+  font-family: inherit;
+  font-style: normal;
   touch-action: manipulation;
+}
+
+.onboarding-google-confirm .onboarding-intro-type {
+  font-family: inherit;
+  font-weight: 850;
+  font-style: normal;
+  line-height: 1.4;
 }
 
 .onboarding-google-actions button.active,
