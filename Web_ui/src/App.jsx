@@ -1118,6 +1118,11 @@ export default function App() {
 
   function executeNotification(item) {
     if (item.type === "task") {
+      if (isWasherScheduleTask(item.task)) {
+        sendWasherStartCommandFromNotification(item.task).catch((error) => {
+          devWarn("[notification] washer_start command failed", error);
+        });
+      }
       if (!item.task.done) toggleTask(item.task.id);
       return;
     }
@@ -2027,6 +2032,24 @@ function isWasherScheduleTask(task = {}) {
   const text = `${task.title || ""} ${task.applianceType || ""} ${task.displayType || ""}`;
   if (task.applianceType === "DISHWASHER" || /식기|세척|dishwasher|dish/i.test(text)) return false;
   return task.applianceType === "WASHER" || /세탁|빨래|washer/i.test(text);
+}
+
+async function sendWasherStartCommandFromNotification(task = {}) {
+  const targetUserId = getTaskUserId(task);
+  const payload = {
+    applianceType: "WASHER",
+    applianceName: "세탁기",
+    command: "washer_start",
+    mode: task.applianceMode || task.currentMode || "표준",
+    reason: "캘린더 세탁 일정 실행 확인 알림에서 세탁기 실행을 요청했습니다.",
+    targetUserId,
+  };
+
+  if (import.meta.env.DEV) console.log("[notification] washer_start command payload", payload);
+  logAnalyticsEvent("device_execute_click", payload);
+  logAnalyticsEvent("washer_execute", payload);
+  await sendDeviceCommand(SENSOR_DEVICE_ID, payload);
+  if (import.meta.env.DEV) console.log("[notification] washer_start command sent", { deviceId: SENSOR_DEVICE_ID, payload });
 }
 
 function isUserWasherScheduleTask(task = {}) {
