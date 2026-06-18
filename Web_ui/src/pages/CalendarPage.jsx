@@ -135,13 +135,17 @@ export default function CalendarPage({
   const selectedMemberName = calendarProfileNames[selectedMemberProfile.id] || selectedMemberProfile.name;
   const calendarOwnerTitle = isHouseCalendar ? "가사 캘린더" : `${activeCalendarUser?.displayName || selectedMemberName + "님"}의 캘린더`;
   const calendarOwnerDesignName = getCalendarOwnerDesignName(activeCalendarUser?.displayName || selectedMemberName);
+  const activeCalendarOwnerId = activeCalendarUser?.id || selectedMemberProfile.id;
   const currentHouseworkMember = HOUSEWORK_MEMBER_TABS.find((member) => member.userId === currentUser?.id || member.ownerId === currentUser?.id);
+  const isMaster = currentUser?.role === "master";
+  const selectedHouseworkMember = isMaster
+    ? HOUSEWORK_MEMBER_TABS.find((member) => member.userId === activeCalendarOwnerId)
+    : currentHouseworkMember;
   const orderedHouseworkMembers = currentHouseworkMember
     ? [currentHouseworkMember, ...HOUSEWORK_MEMBER_TABS.filter((member) => member.userId !== currentHouseworkMember.userId)]
     : HOUSEWORK_MEMBER_TABS;
-  const activeCalendarOwnerId = activeCalendarUser?.id || selectedMemberProfile.id;
-  const canEditPersonalCalendar = !isHouseCalendar && Boolean(currentUser?.id) && activeCalendarOwnerId === currentUser.id;
-  const canUseCalendarAdd = isHouseCalendar ? Boolean(currentHouseworkMember) : canEditPersonalCalendar;
+  const canEditPersonalCalendar = !isHouseCalendar && Boolean(currentUser?.id) && (isMaster || activeCalendarOwnerId === currentUser.id);
+  const canUseCalendarAdd = isHouseCalendar ? Boolean(selectedHouseworkMember) : canEditPersonalCalendar;
 
   useEffect(() => {
     onSelectedDetailDateChange?.(selectedDetailDate);
@@ -275,20 +279,20 @@ export default function CalendarPage({
   }
 
   function openHouseworkComposerFor(member) {
-    if (!currentUser || member?.userId !== currentUser.id) return;
+    if (!currentUser || (!isMaster && member?.userId !== currentUser.id)) return;
 
     setSelectedDate(detailDate);
-    onActiveCalendarUserChange?.(currentUser);
-    setSelectedMember(currentUser.id);
+    onActiveCalendarUserChange?.(member.userId);
+    setSelectedMember(member.userId);
     setActiveAddColumn("housework");
   }
 
   function openCalendarComposer() {
     if (isHouseCalendar && currentUser) {
-      const member = HOUSEWORK_MEMBER_TABS.find((item) => item.userId === currentUser.id);
+      const member = isMaster ? selectedHouseworkMember : HOUSEWORK_MEMBER_TABS.find((item) => item.userId === currentUser.id);
       if (!member) return;
-      onActiveCalendarUserChange?.(currentUser);
-      setSelectedMember(currentUser.id);
+      onActiveCalendarUserChange?.(member.userId);
+      setSelectedMember(member.userId);
       setSelectedDetailDate(selectedDate);
       setActiveAddColumn("housework");
       return;
@@ -393,7 +397,9 @@ export default function CalendarPage({
   }
 
   if (selectedDetailDate && (activeAddColumn === "personal" || activeAddColumn === "housework") && (isHouseCalendar || canEditPersonalCalendar)) {
-    const houseworkMember = HOUSEWORK_MEMBER_TABS.find((member) => member.userId === currentUser?.id || member.ownerId === currentUser?.id);
+    const houseworkMember = isMaster
+      ? HOUSEWORK_MEMBER_TABS.find((member) => member.userId === selectedMember || member.userId === activeCalendarOwnerId)
+      : HOUSEWORK_MEMBER_TABS.find((member) => member.userId === currentUser?.id || member.ownerId === currentUser?.id);
 
     return (
       <DailyScheduleAddPage
@@ -562,12 +568,12 @@ export default function CalendarPage({
                 <>
                   {dailyDetailView === "timetable" && <span aria-hidden="true" />}
                   {orderedHouseworkMembers.map((member) =>
-                    member.userId === currentHouseworkMember?.userId ? (
+                    isMaster || member.userId === currentHouseworkMember?.userId ? (
                       <button
                         type="button"
                         key={member.userId}
                         className={["date-detail-add", "housework", activeAddColumn === "housework" ? "active" : ""].filter(Boolean).join(" ")}
-                        aria-label="내 가사 일정 추가"
+                        aria-label={`${member.memberName} 가사 일정 추가`}
                         onClick={() => openHouseworkComposerFor(member)}
                       >
                         <Plus size={24} strokeWidth={2.4} />
