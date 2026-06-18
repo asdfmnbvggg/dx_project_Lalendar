@@ -39,6 +39,10 @@ void loop() {
       Serial.println("에어컨 제습 모드 실행 완료");
     }
 
+    else if (command == "washer_start") {
+     Serial.println("세탁기 표준 모드 실행 완료");
+    }
+
     else {
       Serial.println("알 수 없는 명령입니다.");
     }
