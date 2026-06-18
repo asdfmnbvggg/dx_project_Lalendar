@@ -23,9 +23,9 @@ export default function LoginPage({ onLogin }) {
     <main className="login-page">
       <form className="login-card" onSubmit={submit}>
         <div className="login-brand">
-          <span>L</span>
+          <span><img src="/icons/icon-192.png" alt="" aria-hidden="true" /></span>
           <div>
-            <strong>Lalendar</strong>
+            <strong>L-lander</strong>
             <small>우리 가족 일정과 가사를 함께 정리해요</small>
           </div>
         </div>

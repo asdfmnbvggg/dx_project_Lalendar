@@ -21,7 +21,7 @@ import DetailPanel from "./components/DetailPanel.jsx";
 import introLogo from "./assets/intro.png";
 import lgCharacter from "./assets/lg-character.png";
 import floatingStar from "./assets/floating-star.svg";
-import { CURRENT_USER_STORAGE_KEY, USERS, findUserById } from "./constants/users.js";
+import { CURRENT_USER_STORAGE_KEY, LEGACY_CURRENT_USER_STORAGE_KEY, USERS, findUserById, isMasterUser } from "./constants/users.js";
 import { fetchCalendarWeather, fetchShortWeather } from "./services/weatherService.js";
 import { fetchMidWeather } from "./services/midWeatherService.js";
 import { fetchAirQuality } from "./services/airQualityService.js";
@@ -79,7 +79,8 @@ const USER_TO_OWNER = {
   dada: "minsu",
 };
 const OWNER_TO_USER = Object.fromEntries(Object.entries(USER_TO_OWNER).map(([userId, ownerId]) => [ownerId, userId]));
-const APP_SESSION_STORAGE_KEY = "lalendarAppSession";
+const APP_SESSION_STORAGE_KEY = "l-landerAppSession";
+const LEGACY_APP_SESSION_STORAGE_KEY = "lalendarAppSession";
 const DEFAULT_TAB = "schedule";
 const DEFAULT_CALENDAR_VIEW = "month";
 const DEFAULT_ONBOARDING_APPLIANCE_TYPES = [];
@@ -91,7 +92,7 @@ export default function App() {
   const initialSelectedDate = isDateKey(storedSession?.selectedDate) ? storedSession.selectedDate : getTodayKey();
   const initialVisibleMonth = visibleMonthFromDate(initialSelectedDate);
   const [currentUser, setCurrentUser] = useState(storedUser);
-  const [activeCalendarUser, setActiveCalendarUser] = useState(() => findUserById(storedSession?.activeCalendarUserId) || storedUser);
+  const [activeCalendarUser, setActiveCalendarUser] = useState(() => getInitialCalendarUser(storedUser, storedSession?.activeCalendarUserId));
   const [tasks, setTasks] = useState(() => normalizeCalendarTaskColors(normalizeTasksForUsers(normalizeGeneratedTaskTitles([...initialTasks, ...buildDefaultCalendarTasks()]))));
   const [memberColors, setMemberColors] = useState(() => ({
     ...Object.fromEntries(members.map((member) => [member.id, member.color])),
@@ -227,10 +228,7 @@ export default function App() {
       if (import.meta.env.DEV) console.log("[sensor] realtime threshold result", popups);
       if (import.meta.env.DEV) console.log("[sensor] realtime schedule filtered result", scheduleFilteredPopups);
 
-      enqueueSensorPopups(
-        scheduleFilteredPopups.filter((popup) => popup.targetUserId === currentUser.id),
-        "realtime",
-      );
+      enqueueSensorPopups(scheduleFilteredPopups.filter((popup) => isMasterUser(currentUser) || popup.targetUserId === currentUser.id), "realtime");
     });
   }, [activeCalendarUser, currentUser, isOnboardingComplete, onboardingSetup.applianceAssignees, tasks]);
 
@@ -248,7 +246,7 @@ export default function App() {
       const popups = washerCandidates
         .map(({ washerTask, targetUserId, alertMinutes }) => {
           if (import.meta.env.DEV) console.log("[sensor] washer target result", { targetUserId, washerTask, alertMinutes });
-          if (targetUserId !== currentUser.id) return null;
+          if (!isMasterUser(currentUser) && targetUserId !== currentUser.id) return null;
 
           return buildScheduledWasherPopup(latestSensorData, {
             washerTask,
@@ -282,8 +280,9 @@ export default function App() {
 
   useEffect(() => {
     if (!currentUser) return;
-    setActiveCalendarUser((current) => current || currentUser);
-    setSelectedMember((current) => current || currentUser.id);
+    const fallbackCalendarUser = getInitialCalendarUser(currentUser);
+    setActiveCalendarUser((current) => current || fallbackCalendarUser);
+    setSelectedMember((current) => current || fallbackCalendarUser.id);
   }, [currentUser]);
 
   useEffect(() => {
@@ -327,11 +326,14 @@ export default function App() {
 
   const sortedCalendarUsers = useMemo(() => {
     if (!currentUser) return USERS;
+    if (isMasterUser(currentUser)) return USERS;
     return [currentUser, ...USERS.filter((user) => user.id !== currentUser.id)];
   }, [currentUser]);
   const activeCalendarUserId = activeCalendarUser?.id || currentUser?.id || "";
   const scopedTasks = tasks.filter((task) => !activeCalendarUserId || getTaskUserId(task) === activeCalendarUserId);
-  const notificationScopedTasks = tasks.filter((task) => !currentUser?.id || getTaskUserId(task) === currentUser.id);
+  const notificationScopedTasks = isMasterUser(currentUser)
+    ? tasks.filter((task) => USERS.some((user) => user.id === getTaskUserId(task)))
+    : tasks.filter((task) => !currentUser?.id || getTaskUserId(task) === currentUser.id);
   const selectedTasks = sortTasks(
     scopedTasks
       .filter((task) => isTaskVisibleOnDate(task, selectedDate))
@@ -367,16 +369,21 @@ export default function App() {
       .filter((alert) => alert.date === notificationDemoDate)
       .filter((alert) => !dismissedAlerts.includes(alert.id))
       .map((alert) => ({ ...alert, type: "automation" }));
-    const taskItems = pendingTasksForNotification(notificationScopedTasks, notificationContext).map((task) => ({
-      id: `task-${task.id}`,
-      type: "task",
-      task,
-      title: buildTaskNotificationTitle(task, notificationContext),
-      detail: buildTaskNotificationDetail(task, notificationContext),
-      scheduledTime: getTaskNotificationScheduledTime(task),
-      date: task.date,
-    }));
-    return [...automationItems, ...savedAutomationItems, ...taskItems].slice(0, 8);
+    const taskItems = pendingTasksForNotification(notificationScopedTasks, notificationContext, isMasterUser(currentUser) ? 24 : 5).map((task) => {
+      const owner = findUserById(getTaskUserId(task));
+      const ownerPrefix = isMasterUser(currentUser) && owner ? `${owner.displayName || owner.name} · ` : "";
+
+      return {
+        id: `task-${task.id}`,
+        type: "task",
+        task,
+        title: buildTaskNotificationTitle(task, notificationContext),
+        detail: `${ownerPrefix}${buildTaskNotificationDetail(task, notificationContext)}`,
+        scheduledTime: getTaskNotificationScheduledTime(task),
+        date: task.date,
+      };
+    });
+    return [...automationItems, ...savedAutomationItems, ...taskItems].slice(0, isMasterUser(currentUser) ? 24 : 8);
   }, [calendarWeatherByDate, currentUser, dismissedAlerts, notificationDemoDate, notificationDemoTime, notificationScopedTasks]);
 
   useEffect(() => {
@@ -604,7 +611,7 @@ export default function App() {
     const savedSession = readStoredAppSession();
     const nextSelectedDate = isDateKey(savedSession?.selectedDate) ? savedSession.selectedDate : selectedDate;
     const nextVisibleMonth = savedSession?.visibleMonth || visibleMonthFromDate(nextSelectedDate);
-    const nextCalendarUser = findUserById(savedSession?.activeCalendarUserId) || user;
+    const nextCalendarUser = getInitialCalendarUser(user, savedSession?.activeCalendarUserId);
 
     localStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(user));
     setLoginIntroOpen(true);
@@ -633,7 +640,9 @@ export default function App() {
 
   function handleLogout() {
     localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_CURRENT_USER_STORAGE_KEY);
     localStorage.removeItem(APP_SESSION_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_APP_SESSION_STORAGE_KEY);
     setCurrentUser(null);
     setActiveCalendarUser(null);
     setSelectedMember("jea");
@@ -666,8 +675,8 @@ export default function App() {
 
   function openTaskComposer(options = {}) {
     const currentOwnerId = currentUser?.id ? userIdToOwner(currentUser.id) : "";
-    if (options.ownerId && options.ownerId !== currentOwnerId) return;
-    if (!options.ownerId && activeCalendarUserId && currentUser?.id && activeCalendarUserId !== currentUser.id) return;
+    if (!isMasterUser(currentUser) && options.ownerId && options.ownerId !== currentOwnerId) return;
+    if (!isMasterUser(currentUser) && !options.ownerId && activeCalendarUserId && currentUser?.id && activeCalendarUserId !== currentUser.id) return;
 
     setComposerOwnerLock(options.ownerId || null);
     setComposerOpen(true);
@@ -948,9 +957,9 @@ export default function App() {
         {activeTab !== "home" && !(activeTab === "schedule" && !isOnboardingComplete) && (
         <header className="topbar">
           <div className="brand">
-            <span>L</span>
+            <span><img src="/icons/icon-192.png" alt="" aria-hidden="true" /></span>
             <div>
-              <strong>Lalendar</strong>
+              <strong>L-lander</strong>
               <small>housework calendar</small>
             </div>
           </div>
@@ -1358,9 +1367,9 @@ export default function App() {
 
 function LoginIntroSplash() {
   return (
-    <main className="login-intro-splash" aria-label="Lalendar 시작 중">
+    <main className="login-intro-splash" aria-label="L-lander 시작 중">
       <div className="login-intro-glow" aria-hidden="true" />
-      <img src={introLogo} alt="Lalendar" />
+      <img src={introLogo} alt="L-lander" />
     </main>
   );
 }
@@ -3385,7 +3394,7 @@ function shouldSuggestAutomation(task) {
   return task.source !== "auto" && /(회식|약속|여행|출근|수업|퇴근|귀가)/.test(`${task.title} ${task.place} ${task.repeat}`);
 }
 
-function pendingTasksForNotification(tasks, context = {}) {
+function pendingTasksForNotification(tasks, context = {}, limit = 5) {
   const currentMinutes = timeValueToMinutes(context.time);
   return tasks
     .filter((task) => !task.done)
@@ -3397,7 +3406,7 @@ function pendingTasksForNotification(tasks, context = {}) {
       return range.startMinutes <= currentMinutes + 30 && range.endMinutes >= currentMinutes - 10;
     })
     .sort(taskSorter)
-    .slice(0, 5);
+    .slice(0, limit);
 }
 
 function buildConditionalNotifications(tasks, context = {}) {
@@ -3628,10 +3637,16 @@ function readStoredCurrentUser() {
   if (typeof localStorage === "undefined") return null;
 
   try {
-    const savedUser = JSON.parse(localStorage.getItem(CURRENT_USER_STORAGE_KEY) || "null");
-    return findUserById(savedUser?.id);
+    const storedValue = localStorage.getItem(CURRENT_USER_STORAGE_KEY) || localStorage.getItem(LEGACY_CURRENT_USER_STORAGE_KEY);
+    const savedUser = JSON.parse(storedValue || "null");
+    const user = findUserById(savedUser?.id);
+    if (user && !localStorage.getItem(CURRENT_USER_STORAGE_KEY)) {
+      localStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(user));
+    }
+    return user;
   } catch {
     localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_CURRENT_USER_STORAGE_KEY);
     return null;
   }
 }
@@ -3640,13 +3655,24 @@ function readStoredAppSession() {
   if (typeof localStorage === "undefined") return null;
 
   try {
-    const session = JSON.parse(localStorage.getItem(APP_SESSION_STORAGE_KEY) || "null");
+    const storedValue = localStorage.getItem(APP_SESSION_STORAGE_KEY) || localStorage.getItem(LEGACY_APP_SESSION_STORAGE_KEY);
+    const session = JSON.parse(storedValue || "null");
     if (!session || typeof session !== "object") return null;
+    if (!localStorage.getItem(APP_SESSION_STORAGE_KEY)) {
+      localStorage.setItem(APP_SESSION_STORAGE_KEY, JSON.stringify(session));
+    }
     return session;
   } catch {
     localStorage.removeItem(APP_SESSION_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_APP_SESSION_STORAGE_KEY);
     return null;
   }
+}
+
+function getInitialCalendarUser(user, savedCalendarUserId) {
+  const savedCalendarUser = USERS.find((candidate) => candidate.id === savedCalendarUserId);
+  if (isMasterUser(user)) return savedCalendarUser || USERS[0];
+  return USERS.find((candidate) => candidate.id === user?.id) || USERS[0];
 }
 
 function isDateKey(value) {

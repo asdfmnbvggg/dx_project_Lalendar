@@ -1,4 +1,4 @@
-const WEATHER_CACHE_PREFIX = "lalendar-short-weather-v1";
+const WEATHER_CACHE_PREFIX = "l-lander-short-weather-v1";
 const VILAGE_FCST_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst";
 const BASE_TIMES = ["0200", "0500", "0800", "1100", "1400", "1700", "2000", "2300"];
 const NO_INFO = "정보 없음";

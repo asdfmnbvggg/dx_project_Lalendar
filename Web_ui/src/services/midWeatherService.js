@@ -1,4 +1,4 @@
-const MID_WEATHER_CACHE_PREFIX = "lalendar-mid-weather-v1";
+const MID_WEATHER_CACHE_PREFIX = "l-lander-mid-weather-v1";
 const MID_LAND_FCST_URL = "https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst";
 const MID_TEMP_FCST_URL = "https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa";
 const NO_INFO = "정보 없음";

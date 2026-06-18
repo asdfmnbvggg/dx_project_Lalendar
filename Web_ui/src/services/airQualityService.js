@@ -1,4 +1,4 @@
-const AIR_QUALITY_CACHE_KEY = "lalendar-air-quality-v1";
+const AIR_QUALITY_CACHE_KEY = "l-lander-air-quality-v1";
 const AIR_QUALITY_URL = "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty";
 
 export async function fetchAirQuality({

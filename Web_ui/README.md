@@ -1,4 +1,4 @@
-# Lalendar Web UI
+# L-lander Web UI
 
 ## Environment Variables
 
