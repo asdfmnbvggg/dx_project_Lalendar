@@ -1,4 +1,5 @@
 import csv
+import argparse
 import importlib.util
 import itertools
 import json
@@ -6,12 +7,9 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 ROOT_DIR = BASE_DIR.parent
-DATA_DIR = BASE_DIR / "data"
+DEFAULT_DATA_DIR = BASE_DIR / "data"
 CONFIG_PATH = BASE_DIR / "routine_cycle_config.json"
 OUTPUT_DIR = ROOT_DIR / "outputs" / "routine_hparam_search"
-
-TRAIN_1YEAR_PATH = DATA_DIR / "appliance_usage_train_1year.csv"
-CHANGED_TEST_PATH = DATA_DIR / "appliance_usage_test_changed_routine.csv"
 
 RESULTS_PATH = OUTPUT_DIR / "hyperparameter_search_results.csv"
 RESULTS_JSON_PATH = OUTPUT_DIR / "hyperparameter_search_results.json"
@@ -97,6 +95,28 @@ def split_train_year_logs(logs):
     return train, validation
 
 
+def appliance_expected_metadata(logs):
+    expected = {}
+    for log in logs:
+        appliance_id = log.get("appliance_id")
+        if not appliance_id or appliance_id in expected:
+            continue
+        expected[appliance_id] = {
+            "actual_cycle_days": parse_float(log.get("expected_changed_cycle_days")),
+            "actual_daily_frequency": parse_float(log.get("expected_changed_daily_frequency")),
+            "actual_changed": log.get("expected_change_type") != "none",
+            "expected_change_type": log.get("expected_change_type") or "none",
+        }
+    return expected
+
+
+def parse_float(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def safe(value, fallback=0):
     return fallback if value is None else value
 
@@ -149,24 +169,27 @@ def required_data_path(path, fallback_paths):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Run routine cycle hyperparameter search.")
+    parser.add_argument(
+        "--data-dir",
+        default=str(DEFAULT_DATA_DIR),
+        help="Directory containing appliance_usage_train_1year.csv and appliance_usage_test_changed_routine.csv.",
+    )
+    args = parser.parse_args()
+    data_dir = Path(args.data_dir)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     train_module = load_train_module()
     config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
     default_config = config["default"]
     search_space = config["hyperparameterSearchSpace"]
     all_params = list(product_dict(search_space))
-    train_1year_path = required_data_path(
-        TRAIN_1YEAR_PATH,
-        [DATA_DIR / "train.csv"],
-    )
-    changed_test_path = required_data_path(
-        CHANGED_TEST_PATH,
-        [DATA_DIR / "test.csv"],
-    )
+    train_1year_path = required_data_path(data_dir / "appliance_usage_train_1year.csv", [data_dir / "appliance_usage_train.csv", data_dir / "train.csv"])
+    changed_test_path = required_data_path(data_dir / "appliance_usage_test_changed_routine.csv", [data_dir / "test.csv"])
     train_1year_logs = train_module.read_logs(train_1year_path)
     train_logs, _validation_logs = split_train_year_logs(train_1year_logs)
     test_logs = train_module.read_logs(changed_test_path)
     model = train_module.build_base_model(train_logs)
+    expected_by_appliance = appliance_expected_metadata(test_logs)
 
     result_rows = []
     appliance_rows = []
@@ -178,11 +201,7 @@ def main():
         run_config = {**default_config, **params}
         run_config["recentWindowSize"] = default_config.get("recentWindowSize", 8)
         train_module.apply_config(run_config)
-        predictions = train_module.predict_split(
-            model,
-            test_logs,
-            train_module.EXPECTED_TEST_PATTERNS,
-        )
+        predictions = predict_with_expected_metadata(train_module, model, test_logs, expected_by_appliance)
         metrics = train_module.evaluate(predictions)
         pass_count = sum(row["change_type"] == row["expected_change_type"] for row in predictions)
         change_type_accuracy = pass_count / len(predictions) if predictions else 0
@@ -253,6 +272,7 @@ def main():
     )
 
     print(f"Saved output directory: {OUTPUT_DIR}")
+    print(f"Data directory: {data_dir}")
     print(f"Best score: {best['score'] if best else None}")
     print("Best params:")
     print(json.dumps(best, ensure_ascii=False, indent=2))
@@ -262,6 +282,23 @@ def main():
             f"- {prediction['appliance_type']}: expected={prediction['expected_change_type']} "
             f"actual={prediction['change_type']}"
         )
+
+
+def predict_with_expected_metadata(train_module, model, split_logs, expected_by_appliance):
+    predictions = []
+    grouped = train_module.group_by_appliance(split_logs)
+    for appliance_id, model_entry in model.items():
+        key = (appliance_id, model_entry["appliance_type"])
+        result = train_module.predict_with_model(model_entry, grouped.get(key, []))
+        expected = expected_by_appliance.get(appliance_id) or {
+            "actual_cycle_days": None,
+            "actual_daily_frequency": None,
+            "actual_changed": False,
+            "expected_change_type": "none",
+        }
+        result.update(expected)
+        predictions.append(result)
+    return sorted(predictions, key=lambda item: (item["appliance_type"], item["appliance_id"]))
 
 
 def build_best_by_appliance(appliance_rows, result_rows):
