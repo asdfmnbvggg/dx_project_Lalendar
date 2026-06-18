@@ -2,9 +2,69 @@
 import dryerImage from "../../assets/appliances/건조기.png";
 import washerImage from "../../assets/appliances/세탁기.png";
 import lgCharacterImage from "../../assets/lg-character.png";
-import aiDailyReportImage from "../../assets/ai-daily-report.png";
 
 const fridgeImage = airConditionerImage;
+const dailyReportImageModules = import.meta.glob("../../assets/ai_daily_report/*.{png,jpg,jpeg,webp}", {
+  eager: true,
+  query: "?url",
+  import: "default",
+});
+const dailyReportImages = Object.entries(dailyReportImageModules).map(([path, src]) => ({
+  name: decodeURIComponent(path.split("/").pop().replace(/\.[^.]+$/, "")),
+  src,
+}));
+const dailyReportDefaultImage = dailyReportImages.find((image) => image.name === "기본")?.src || "";
+const dailyReportImageKeywords = {
+  개인일정많은날: ["일정이 많", "일정 여러", "바쁜", "바쁘", "연속 일정"],
+  개인일정없는날: ["일정이 없", "일정 없", "여유", "한가"],
+  건조기: ["건조기", "건조", "빨래 말리"],
+  공기청정기: ["공기청정기", "공기 청정", "공기질"],
+  더운날: ["더운", "더위", "고온", "폭염", "기온이 높", "기온 높"],
+  데이트: ["데이트", "연인", "남편과", "아내와"],
+  로봇청소기: ["로봇청소기", "로봇 청소기"],
+  맑은날: ["맑은", "맑음", "화창", "햇살"],
+  미세먼지많은날: ["미세먼지", "초미세먼지", "pm10", "pm2.5", "공기질 나쁨"],
+  비오는날: ["비 예보", "비가", "비 오는", "비올", "우산", "강수"],
+  생일: ["생일", "생신", "기념일"],
+  세탁기: ["세탁기", "세탁", "빨래"],
+  습도높은날: ["습도가 높", "높은 습도", "습한", "습기", "눅눅", "제습"],
+  식기세척기: ["식기세척기", "식기 세척", "설거지"],
+  에어컨: ["에어컨", "냉방", "예냉"],
+  운동회: ["운동회", "체육대회", "운동", "조깅", "등산", "축구"],
+  추운날: ["추운", "추위", "한파", "기온이 낮", "기온 낮"],
+  회사: ["회사", "출근", "퇴근", "근무", "회의"],
+  회식: ["회식", "술자리", "단체 식사"],
+};
+
+export function getDailyReportImage(reportText = "") {
+  const normalizedText = normalizeDailyReportText(reportText);
+  let bestImage = null;
+  let bestScore = 0;
+
+  dailyReportImages.forEach((image) => {
+    if (image.name === "기본") return;
+    const keywords = dailyReportImageKeywords[image.name] || [image.name.replace(/날$/, "")];
+    const score = keywords.reduce((total, keyword) => {
+      const normalizedKeyword = normalizeDailyReportText(keyword);
+      if (!normalizedKeyword || !normalizedText.includes(normalizedKeyword)) return total;
+      return total + normalizedKeyword.length;
+    }, 0);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestImage = image.src;
+    }
+  });
+
+  return bestImage || dailyReportDefaultImage;
+}
+
+function normalizeDailyReportText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[^\p{L}\p{N}.]/gu, "");
+}
 
 import jaehyeokImage from "../../assets/people/재혁님.png";
 import suminImage from "../../assets/people/수민님.png";
@@ -262,4 +322,4 @@ export const HOUSEWORK_MEMBER_TABS = [
 export const DABIN_MEMBER_IDS = new Set(["dada", "minsu"]);
 export const DABIN_TASK_OWNER = "minsu";
 
-export { aiDailyReportImage, lgCharacterImage, airConditionerImage, dryerImage, fridgeImage, washerImage };
+export { lgCharacterImage, airConditionerImage, dryerImage, fridgeImage, washerImage };

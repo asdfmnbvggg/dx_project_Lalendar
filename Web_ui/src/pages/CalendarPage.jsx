@@ -8,7 +8,6 @@ import robotCleanerImage from "../assets/appliances/로봇청소기.png";
 import dishWasherImage from "../assets/appliances/식기세척기.png";
 
 import {
-  aiDailyReportImage,
   airConditionerImage,
   applianceImages,
   applianceModeCatalog,
@@ -27,6 +26,7 @@ import {
   DAILY_TIMETABLE_START_TIME,
   dryerImage,
   fridgeImage,
+  getDailyReportImage,
   houseCalendarTodayAirQuality,
   houseCalendarWeatherByDate,
   HOUSEWORK_MEMBER_TABS,
@@ -851,7 +851,7 @@ export default function CalendarPage({
           <h3>Daily AI Report</h3>
           <div>
             <p aria-busy={isDailyAiReportLoading}>{dailyAiReportText || buildAiReport(selectedDate, selectedVisibleTasks, mainCalendarTasksByDate)}</p>
-            <img src={aiDailyReportImage} alt="" aria-hidden="true" />
+            <img src={getDailyReportImage(dailyAiReportText)} alt="" aria-hidden="true" />
             <div className="calendar-ai-report-tags" aria-hidden="true">
               {buildAiReportTags(selectedDate, selectedVisibleTasks, mainCalendarTasksByDate).map((tag) => (
                 <span key={tag}>{tag}</span>
