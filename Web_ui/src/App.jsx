@@ -623,8 +623,7 @@ export default function App() {
 
       const applianceType = toCalendarApplianceType(prediction.task_appliance);
       const eventUserId = getTaskUserId(eventTask);
-      const assignedOwner = getAiTaskApplianceAssignee(prediction.task_appliance, onboardingSetup.applianceAssignees);
-      const assignedUserId = resolveOwnerOrUserIdToUserId(assignedOwner) || eventUserId;
+      const assignment = resolveAiTaskAssignment(prediction.task_appliance, eventUserId, onboardingSetup.applianceAssignees);
       const applianceDisplayName = getAiTaskApplianceDisplayName(prediction.task_appliance);
       const aiTask = normalizeTaskForUser(
         {
@@ -636,23 +635,25 @@ export default function App() {
           startTime: prediction.task_start_time,
           endTime: prediction.task_end_time,
           repeat: `${prediction.task_start_time} ~ ${prediction.task_end_time}`,
-          place: appliancePlaceLabel[applianceType] || "가전 자동화",
+          place: getAiTaskPlace(applianceType, assignment.applianceSettingKey),
           tag: "house",
-          owner: assignedOwner || eventTask.owner,
-          userId: assignedUserId,
+          owner: assignment.ownerId,
+          userId: assignment.userId,
           done: false,
           displayType: "appliance",
           appliance: prediction.task_appliance,
+          applianceSettingKey: assignment.applianceSettingKey,
           applianceType,
           applianceMode: prediction.task_appliance_mode,
           currentMode: prediction.task_appliance_mode,
+          requestedByUserId: eventUserId,
           aiInput: input,
         },
-        assignedUserId,
+        assignment.userId,
       );
 
       setTasks((current) => [aiTask, ...current]);
-      const assignee = findUserById(assignedUserId);
+      const assignee = findUserById(assignment.userId);
       setAiAssignmentPopup({
         assigneeName: assignee?.displayName || assignee?.name || "담당자",
         taskTitle: aiTask.title,
@@ -670,6 +671,12 @@ export default function App() {
 
   function updateOnboardingProfile(field, value) {
     setOnboardingProfile((current) => ({ ...current, [field]: value }));
+  }
+
+  function updateOnboardingSetup(nextSetup) {
+    const normalizedSetup = normalizeOnboardingSetup(nextSetup);
+    setOnboardingSetup(normalizedSetup);
+    setTasks((current) => current.map((task) => reassignTogetherAiTask(task, normalizedSetup.applianceAssignees)));
   }
 
   function completeOnboarding(onboardingSetup = {}) {
@@ -1289,7 +1296,7 @@ export default function App() {
         selectedMember={selectedMember}
         currentUser={currentUser}
         onboardingSetup={onboardingSetup}
-        onOnboardingSetupChange={setOnboardingSetup}
+        onOnboardingSetupChange={updateOnboardingSetup}
         onOpenComposer={() => openTaskComposer()}
         onLogout={handleLogout}
       />
@@ -1804,7 +1811,18 @@ function toCalendarApplianceType(appliance) {
   return types[appliance] || "ETC";
 }
 
-function getAiTaskApplianceAssignee(appliance, applianceAssignees = {}) {
+function getAiTaskApplianceSettingKeys(appliance, requestedByUserId) {
+  if (appliance === "air_conditioner") {
+    const personalAirConditionerKeys = {
+      sumin: "air-sumin",
+      dada: "air-dabin",
+      jea: "air-jaehyeok",
+    };
+    const personalKey = personalAirConditionerKeys[requestedByUserId];
+    if (personalKey) return [personalKey];
+    return ["air-living", "air", "air-conditioner", "AIR_CONDITIONER"];
+  }
+
   const settingKeys = {
     washer: ["washer", "WASHER"],
     dryer: ["dryer", "DRYER"],
@@ -1812,10 +1830,49 @@ function getAiTaskApplianceAssignee(appliance, applianceAssignees = {}) {
     robot_cleaner: ["robot", "robot-cleaner", "ROBOT_CLEANER"],
     air_purifier: ["air-purifier", "AIR_PURIFIER"],
     dehumidifier: ["dehumidifier", "DEHUMIDIFIER"],
-    air_conditioner: ["air-living", "air", "air-conditioner", "AIR_CONDITIONER"],
   };
 
-  return (settingKeys[appliance] || []).map((key) => applianceAssignees[key]).find(Boolean) || "";
+  return settingKeys[appliance] || [];
+}
+
+function resolveAiTaskAssignment(appliance, requestedByUserId, applianceAssignees = {}) {
+  const settingKeys = getAiTaskApplianceSettingKeys(appliance, requestedByUserId);
+  const applianceSettingKey = settingKeys.find((key) => applianceAssignees[key]) || settingKeys[0] || "";
+  const configuredOwner = applianceSettingKey ? applianceAssignees[applianceSettingKey] : "";
+  const userId = resolveOwnerOrUserIdToUserId(configuredOwner) || requestedByUserId || USERS[0].id;
+
+  return {
+    applianceSettingKey,
+    ownerId: configuredOwner || userIdToOwner(userId),
+    userId,
+  };
+}
+
+function reassignTogetherAiTask(task, applianceAssignees = {}) {
+  if (task.source !== "together_ai" || !task.appliance) return task;
+
+  const requestedByUserId = task.requestedByUserId || getTaskUserId(task);
+  const assignment = resolveAiTaskAssignment(task.appliance, requestedByUserId, applianceAssignees);
+  return normalizeTaskForUser(
+    {
+      ...task,
+      owner: assignment.ownerId,
+      userId: assignment.userId,
+      applianceSettingKey: assignment.applianceSettingKey,
+      requestedByUserId,
+      place: getAiTaskPlace(task.applianceType || toCalendarApplianceType(task.appliance), assignment.applianceSettingKey),
+    },
+    assignment.userId,
+  );
+}
+
+function getAiTaskPlace(applianceType, applianceSettingKey) {
+  const personalAirConditionerPlaces = {
+    "air-sumin": "수민 방",
+    "air-dabin": "다빈 방",
+    "air-jaehyeok": "재혁 방",
+  };
+  return personalAirConditionerPlaces[applianceSettingKey] || appliancePlaceLabel[applianceType] || "가전 자동화";
 }
 
 function getAiTaskApplianceDisplayName(appliance) {
