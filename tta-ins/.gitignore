@@ -1,0 +1,6 @@
+data/*.csv
+data/*.zip
+outputs/
+results/
+__pycache__/
+*.py[cod]
