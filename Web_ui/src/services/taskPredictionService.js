@@ -9,7 +9,9 @@ export async function predictHouseworkTask(input) {
 
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(payload?.message || `AI task prediction failed: ${response.status}`);
+    const error = new Error(payload?.message || `AI task prediction failed: ${response.status}`);
+    error.code = payload?.code || "AI_TASK_PREDICTION_FAILED";
+    throw error;
   }
 
   return payload;

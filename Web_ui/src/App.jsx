@@ -684,7 +684,11 @@ export default function App() {
       });
     } catch (error) {
       console.error("AI housework recommendation failed", error);
-      setAiRecommendationNotice("AI 가사일 추천을 생성하지 못했어요.");
+      setAiRecommendationNotice(
+        error?.code === "TOGETHER_API_KEY_MISSING"
+          ? "AI API 설정이 필요해요. Vercel 환경변수를 확인해 주세요."
+          : "AI 가사일 추천을 생성하지 못했어요.",
+      );
     } finally {
       setAiRecommendationRequestCount((current) => Math.max(0, current - 1));
     }

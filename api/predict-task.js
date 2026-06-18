@@ -57,7 +57,10 @@ export default async function predictTaskHandler(request, response) {
 
   const apiKey = normalizeSecret(process.env.TOGETHER_API_KEY);
   if (!apiKey) {
-    response.status(500).json({ message: "TOGETHER_API_KEY is not configured" });
+    response.status(500).json({
+      code: "TOGETHER_API_KEY_MISSING",
+      message: "TOGETHER_API_KEY is not configured",
+    });
     return;
   }
 
@@ -74,7 +77,6 @@ export default async function predictTaskHandler(request, response) {
         model,
         temperature: 0.2,
         max_tokens: 300,
-        reasoning: { enabled: false },
         messages: [
           {
             role: "system",
@@ -113,6 +115,7 @@ export default async function predictTaskHandler(request, response) {
     console.error("Together task prediction failed", error);
     const status = error instanceof InputValidationError ? 400 : 502;
     response.status(status).json({
+      code: status === 400 ? "INVALID_PREDICTION_INPUT" : "TOGETHER_REQUEST_FAILED",
       message: status === 400 ? error.message : "AI 가사일 추천을 생성하지 못했어요.",
     });
   }
