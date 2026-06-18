@@ -8,6 +8,12 @@ export type ApplianceUsageLog = {
   mode?: string;
 };
 
+export type RoutineChangeType =
+  | "none"
+  | "interval_change"
+  | "frequency_change"
+  | "interval_and_frequency_change";
+
 export type RoutineCyclePrediction = {
   appliance_id: string;
   appliance_type: string;
@@ -15,12 +21,17 @@ export type RoutineCyclePrediction = {
   recent_cycle_days: number | null;
   adapted_cycle_days: number | null;
   cycle_changed: boolean;
-  base_daily_usage_count: number | null;
-  recent_daily_usage_count: number | null;
+  base_daily_frequency: number | null;
+  recent_daily_frequency: number | null;
+  adapted_daily_frequency: number | null;
   frequency_changed: boolean;
+  change_type: RoutineChangeType;
   change_confidence: number;
   next_expected_date: string | null;
   reason: string;
+  // Backward-compatible aliases from the first implementation.
+  base_daily_usage_count: number | null;
+  recent_daily_usage_count: number | null;
 };
 
 export type RoutineCyclePredictionOptions = {
@@ -31,6 +42,27 @@ export type RoutineCyclePredictionOptions = {
   alpha?: number;
 };
 
+export type TimeBasedUsageLogSplit = {
+  train: ApplianceUsageLog[];
+  validation: ApplianceUsageLog[];
+  changedRoutineTest: ApplianceUsageLog[];
+};
+
+export type RoutinePredictionEvaluationSample = {
+  prediction: RoutineCyclePrediction;
+  actual_cycle_days?: number | null;
+  actual_next_expected_date?: string | null;
+  actual_changed?: boolean;
+};
+
+export type RoutinePredictionEvaluationMetrics = {
+  cycle_mae: number | null;
+  next_expected_date_error_days: number | null;
+  change_detection_precision: number | null;
+  change_detection_recall: number | null;
+  change_detection_f1: number | null;
+};
+
 type CycleChangeDetection = {
   cycle_changed: boolean;
   recent_cycle_days: number | null;
@@ -39,8 +71,13 @@ type CycleChangeDetection = {
   recent_std: number | null;
 };
 
-type NormalizedUsageLog = ApplianceUsageLog & {
-  started_date: string;
+type FrequencyChangeDetection = {
+  frequency_changed: boolean;
+  base_daily_frequency: number | null;
+  recent_daily_frequency: number | null;
+  adapted_daily_frequency: number | null;
+  frequency_diff: number | null;
+  frequency_confidence: number;
 };
 
 type DailyUsageCount = {
@@ -48,12 +85,8 @@ type DailyUsageCount = {
   count: number;
 };
 
-type FrequencyChangeDetection = {
-  frequency_changed: boolean;
-  base_daily_usage_count: number | null;
-  recent_daily_usage_count: number | null;
-  frequency_diff: number | null;
-  frequency_confidence: number;
+type NormalizedUsageLog = ApplianceUsageLog & {
+  started_date: string;
 };
 
 const DEFAULT_OPTIONS: Required<RoutineCyclePredictionOptions> = {
@@ -62,6 +95,13 @@ const DEFAULT_OPTIONS: Required<RoutineCyclePredictionOptions> = {
   maxRecentStd: 1.2,
   dailyFrequencyThreshold: 0.5,
   alpha: 0.6,
+};
+
+const TIME_SPLIT_BOUNDARIES = {
+  trainEnd: "2025-10-31",
+  validationStart: "2025-11-01",
+  validationEnd: "2025-12-31",
+  changedRoutineTestStart: "2026-01-01",
 };
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -86,10 +126,11 @@ export function std(values: number[]): number | null {
   const numericValues = values.filter((value) => Number.isFinite(value));
   if (numericValues.length === 0) return null;
 
-  const average =
-    numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length;
+  const averageValue = average(numericValues);
+  if (averageValue == null) return null;
+
   const variance =
-    numericValues.reduce((sum, value) => sum + (value - average) ** 2, 0) /
+    numericValues.reduce((sum, value) => sum + (value - averageValue) ** 2, 0) /
     numericValues.length;
 
   return Math.sqrt(variance);
@@ -112,7 +153,7 @@ export function predictBaseCycle(intervals: number[]): number | null {
   return roundDays(median(intervals));
 }
 
-/** Detects TTA-inspired cycle changes from recent unlabeled service-time logs. */
+/** Detects TTA-inspired interval cycle changes from recent unlabeled logs. */
 export function detectCycleChange(
   baseCycle: number | null,
   recentIntervals: number[],
@@ -136,31 +177,24 @@ export function detectCycleChange(
     };
   }
 
-  const diff_days = roundFiniteDays(Math.abs(recent_cycle_days - baseCycle));
-  const isMeaningfullyDifferent = diff_days >= resolvedOptions.diffThresholdDays;
-  const isRecentPatternStable =
-    recent_std != null && recent_std <= resolvedOptions.maxRecentStd;
-  const cycle_changed = isMeaningfullyDifferent && isRecentPatternStable;
-  const change_confidence =
-    cycle_changed && recent_std != null
-      ? calculateChangeConfidence(
-          diff_days,
-          recent_std,
-          resolvedOptions,
-          cycle_changed,
-        )
-      : 0;
+  const diff_days = roundNumber(Math.abs(recent_cycle_days - baseCycle));
+  const cycle_changed =
+    diff_days >= resolvedOptions.diffThresholdDays &&
+    recent_std != null &&
+    recent_std <= resolvedOptions.maxRecentStd;
 
   return {
     cycle_changed,
     recent_cycle_days,
-    change_confidence,
+    change_confidence: cycle_changed
+      ? calculateIntervalConfidence(diff_days, recent_std, resolvedOptions)
+      : 0,
     diff_days,
     recent_std,
   };
 }
 
-/** Detects daily frequency changes such as dishwasher 1 use/day to 2 uses/day. */
+/** Detects same-day frequency changes, such as 1 use/day to 2 uses/day. */
 export function detectDailyUsageFrequencyChange(
   dailyUsageCounts: DailyUsageCount[],
   options: RoutineCyclePredictionOptions = {},
@@ -172,43 +206,53 @@ export function detectDailyUsageFrequencyChange(
     .sort((a, b) => a.date.localeCompare(b.date));
   const recentCounts = sortedCounts.slice(-resolvedOptions.minRecentCount);
   const baseCounts = sortedCounts.slice(0, -resolvedOptions.minRecentCount);
-  const base_daily_usage_count = roundDays(
-    average(baseCounts.length > 0 ? baseCounts.map((item) => item.count) : sortedCounts.map((item) => item.count)),
+  const base_daily_frequency = roundDays(
+    average(
+      baseCounts.length > 0
+        ? baseCounts.map((item) => item.count)
+        : sortedCounts.map((item) => item.count),
+    ),
   );
-  const recent_daily_usage_count = roundDays(average(recentCounts.map((item) => item.count)));
+  const recent_daily_frequency = roundDays(
+    average(recentCounts.map((item) => item.count)),
+  );
 
   if (
-    base_daily_usage_count == null ||
-    recent_daily_usage_count == null ||
+    base_daily_frequency == null ||
+    recent_daily_frequency == null ||
     recentCounts.length < resolvedOptions.minRecentCount
   ) {
     return {
       frequency_changed: false,
-      base_daily_usage_count,
-      recent_daily_usage_count,
+      base_daily_frequency,
+      recent_daily_frequency,
+      adapted_daily_frequency: base_daily_frequency,
       frequency_diff: null,
       frequency_confidence: 0,
     };
   }
 
-  const frequency_diff = roundFiniteDays(
-    Math.abs(recent_daily_usage_count - base_daily_usage_count),
+  const frequency_diff = roundNumber(
+    Math.abs(recent_daily_frequency - base_daily_frequency),
   );
-  const frequency_changed = frequency_diff >= resolvedOptions.dailyFrequencyThreshold;
+  const frequency_changed =
+    frequency_diff >= resolvedOptions.dailyFrequencyThreshold;
+  const adapted_daily_frequency = frequency_changed
+    ? adaptFrequency(
+        base_daily_frequency,
+        recent_daily_frequency,
+        resolvedOptions.alpha,
+      )
+    : base_daily_frequency;
 
   return {
     frequency_changed,
-    base_daily_usage_count,
-    recent_daily_usage_count,
+    base_daily_frequency,
+    recent_daily_frequency,
+    adapted_daily_frequency,
     frequency_diff,
     frequency_confidence: frequency_changed
-      ? roundFiniteDays(
-          clamp(
-            frequency_diff / Math.max(resolvedOptions.dailyFrequencyThreshold * 2, 1),
-            0,
-            1,
-          ),
-        )
+      ? calculateFrequencyConfidence(frequency_diff, resolvedOptions)
       : 0,
   };
 }
@@ -226,7 +270,22 @@ export function adaptCycle(
   return roundDays(clampedAlpha * recentCycle + (1 - clampedAlpha) * baseCycle);
 }
 
-/** Predicts one appliance's cycle and applies TTA-inspired adaptive cycle recalibration. */
+/** Blends base and recent daily frequency for TTA-inspired adaptation. */
+export function adaptFrequency(
+  baseFrequency: number | null,
+  recentFrequency: number | null,
+  alpha: number = DEFAULT_OPTIONS.alpha,
+): number | null {
+  if (baseFrequency == null) return null;
+  if (recentFrequency == null) return roundDays(baseFrequency);
+
+  const clampedAlpha = clamp(alpha, 0, 1);
+  return roundDays(
+    clampedAlpha * recentFrequency + (1 - clampedAlpha) * baseFrequency,
+  );
+}
+
+/** Predicts one appliance's routine and applies TTA-inspired recalibration. */
 export function predictRoutineCycle(
   logs: ApplianceUsageLog[],
   options: RoutineCyclePredictionOptions = {},
@@ -239,7 +298,7 @@ export function predictRoutineCycle(
     return createEmptyPrediction(
       fallbackIdentity.appliance_id,
       fallbackIdentity.appliance_type,
-      "사용 시작 로그가 부족해 아직 주기를 예측할 수 없습니다.",
+      "사용 시작 로그가 부족해 아직 주기 변화를 판단하지 않았습니다.",
     );
   }
 
@@ -249,40 +308,56 @@ export function predictRoutineCycle(
   const intervals = calculateIntervals(usageDates);
   const base_cycle_days = predictBaseCycle(intervals);
   const recentIntervals = intervals.slice(-resolvedOptions.minRecentCount);
-  const detection = detectCycleChange(base_cycle_days, recentIntervals, resolvedOptions);
+  const cycleDetection = detectCycleChange(
+    base_cycle_days,
+    recentIntervals,
+    resolvedOptions,
+  );
   const frequencyDetection = detectDailyUsageFrequencyChange(
     calculateDailyUsageCounts(startLogs),
     resolvedOptions,
   );
-  const adapted_cycle_days = detection.cycle_changed
-    ? adaptCycle(base_cycle_days, detection.recent_cycle_days, resolvedOptions.alpha)
+  const adapted_cycle_days = cycleDetection.cycle_changed
+    ? adaptCycle(
+        base_cycle_days,
+        cycleDetection.recent_cycle_days,
+        resolvedOptions.alpha,
+      )
     : base_cycle_days;
   const next_expected_date =
     adapted_cycle_days == null || usageDates.length === 0
       ? null
       : addDays(usageDates[usageDates.length - 1], adapted_cycle_days);
+  const change_type = getChangeType(
+    cycleDetection.cycle_changed,
+    frequencyDetection.frequency_changed,
+  );
 
   return {
     appliance_id,
     appliance_type,
     base_cycle_days,
-    recent_cycle_days: detection.recent_cycle_days,
+    recent_cycle_days: cycleDetection.recent_cycle_days,
     adapted_cycle_days,
-    cycle_changed: detection.cycle_changed,
-    base_daily_usage_count: frequencyDetection.base_daily_usage_count,
-    recent_daily_usage_count: frequencyDetection.recent_daily_usage_count,
+    cycle_changed: cycleDetection.cycle_changed,
+    base_daily_frequency: frequencyDetection.base_daily_frequency,
+    recent_daily_frequency: frequencyDetection.recent_daily_frequency,
+    adapted_daily_frequency: frequencyDetection.adapted_daily_frequency,
     frequency_changed: frequencyDetection.frequency_changed,
+    change_type,
     change_confidence: Math.max(
-      detection.change_confidence,
+      cycleDetection.change_confidence,
       frequencyDetection.frequency_confidence,
     ),
     next_expected_date,
     reason: buildReason(
+      change_type,
       base_cycle_days,
-      detection.recent_cycle_days,
-      detection.cycle_changed,
+      cycleDetection.recent_cycle_days,
       frequencyDetection,
     ),
+    base_daily_usage_count: frequencyDetection.base_daily_frequency,
+    recent_daily_usage_count: frequencyDetection.recent_daily_frequency,
   };
 }
 
@@ -296,7 +371,8 @@ export function predictAllApplianceCycles(
   logs.forEach((log) => {
     const applianceId = getLogValue(log, "appliance_id", "deviceId") ?? "unknown";
     const applianceType =
-      getLogValue(log, "appliance_type", "applianceType", "deviceType") ?? "unknown";
+      getLogValue(log, "appliance_type", "applianceType", "deviceType") ??
+      "unknown";
     const key = `${applianceId}:${applianceType}`;
     groupedLogs.set(key, [...(groupedLogs.get(key) ?? []), log]);
   });
@@ -306,12 +382,96 @@ export function predictAllApplianceCycles(
     .sort((a, b) => b.change_confidence - a.change_confidence);
 }
 
+/** Splits ThinQ-like logs by fixed dates, not by random sampling. */
+export function splitUsageLogsByTime(logs: ApplianceUsageLog[]): TimeBasedUsageLogSplit {
+  return logs.reduce<TimeBasedUsageLogSplit>(
+    (split, log) => {
+      const dateKey = toDateKey(getLogValue(log, "started_at", "startedAt") ?? "");
+      if (!isDateKey(dateKey)) return split;
+
+      if (dateKey <= TIME_SPLIT_BOUNDARIES.trainEnd) {
+        split.train.push(log);
+      } else if (
+        dateKey >= TIME_SPLIT_BOUNDARIES.validationStart &&
+        dateKey <= TIME_SPLIT_BOUNDARIES.validationEnd
+      ) {
+        split.validation.push(log);
+      } else if (dateKey >= TIME_SPLIT_BOUNDARIES.changedRoutineTestStart) {
+        split.changedRoutineTest.push(log);
+      }
+
+      return split;
+    },
+    { train: [], validation: [], changedRoutineTest: [] },
+  );
+}
+
+/** Calculates routine prediction metrics for validation/test reporting. */
+export function evaluateRoutineCyclePredictions(
+  samples: RoutinePredictionEvaluationSample[],
+): RoutinePredictionEvaluationMetrics {
+  const cycleErrors = samples
+    .map((sample) =>
+      sample.actual_cycle_days != null && sample.prediction.adapted_cycle_days != null
+        ? Math.abs(sample.prediction.adapted_cycle_days - sample.actual_cycle_days)
+        : null,
+    )
+    .filter(isNumber);
+  const dateErrors = samples
+    .map((sample) =>
+      sample.actual_next_expected_date && sample.prediction.next_expected_date
+        ? Math.abs(
+            daysBetween(
+              sample.prediction.next_expected_date,
+              sample.actual_next_expected_date,
+            ),
+          )
+        : null,
+    )
+    .filter(isNumber);
+  const detectionSamples = samples.filter(
+    (sample) => typeof sample.actual_changed === "boolean",
+  );
+  const truePositive = detectionSamples.filter(
+    (sample) => sample.prediction.change_type !== "none" && sample.actual_changed,
+  ).length;
+  const falsePositive = detectionSamples.filter(
+    (sample) => sample.prediction.change_type !== "none" && !sample.actual_changed,
+  ).length;
+  const falseNegative = detectionSamples.filter(
+    (sample) => sample.prediction.change_type === "none" && sample.actual_changed,
+  ).length;
+  const precision =
+    truePositive + falsePositive === 0
+      ? null
+      : truePositive / (truePositive + falsePositive);
+  const recall =
+    truePositive + falseNegative === 0
+      ? null
+      : truePositive / (truePositive + falseNegative);
+  const f1 =
+    precision == null || recall == null || precision + recall === 0
+      ? null
+      : (2 * precision * recall) / (precision + recall);
+
+  return {
+    cycle_mae: roundDays(average(cycleErrors)),
+    next_expected_date_error_days: roundDays(average(dateErrors)),
+    change_detection_precision: roundDays(precision),
+    change_detection_recall: roundDays(recall),
+    change_detection_f1: roundDays(f1),
+  };
+}
+
 function normalizeStartLogs(logs: ApplianceUsageLog[]): NormalizedUsageLog[] {
   return logs
     .map(normalizeLog)
     .filter((log): log is NormalizedUsageLog => Boolean(log))
     .filter((log) => log.action_type === "start")
-    .sort((a, b) => a.started_date.localeCompare(b.started_date));
+    .sort((a, b) => {
+      const dateCompare = a.started_date.localeCompare(b.started_date);
+      return dateCompare || a.started_at.localeCompare(b.started_at);
+    });
 }
 
 function normalizeLog(log: ApplianceUsageLog): NormalizedUsageLog | null {
@@ -334,11 +494,6 @@ function normalizeLog(log: ApplianceUsageLog): NormalizedUsageLog | null {
   };
 }
 
-function uniqueSortedUsageDates(logs: NormalizedUsageLog[]): string[] {
-  return Array.from(new Set(logs.map((log) => log.started_date))).sort();
-}
-
-/** Counts start logs per active date without collapsing multiple same-day uses. */
 function calculateDailyUsageCounts(logs: NormalizedUsageLog[]): DailyUsageCount[] {
   const countsByDate = new Map<string, number>();
 
@@ -349,6 +504,10 @@ function calculateDailyUsageCounts(logs: NormalizedUsageLog[]): DailyUsageCount[
   return Array.from(countsByDate.entries())
     .map(([date, count]) => ({ date, count }))
     .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function uniqueSortedUsageDates(logs: NormalizedUsageLog[]): string[] {
+  return Array.from(new Set(logs.map((log) => log.started_date))).sort();
 }
 
 function resolveOptions(
@@ -372,43 +531,33 @@ function resolveOptions(
   };
 }
 
-function buildReason(
-  baseCycle: number | null,
-  recentCycle: number | null,
+function getChangeType(
   cycleChanged: boolean,
-  frequencyDetection: FrequencyChangeDetection,
-): string {
-  if (cycleChanged && frequencyDetection.frequency_changed) {
-    return `최근 사용 주기와 하루 사용 횟수가 함께 바뀐 것 같아요. 기존에는 약 ${formatDays(baseCycle ?? 0)}마다 사용했지만 최근에는 약 ${formatDays(recentCycle ?? 0)} 간격으로 사용되고, 하루 평균 사용 횟수도 ${formatCount(frequencyDetection.base_daily_usage_count)}회에서 ${formatCount(frequencyDetection.recent_daily_usage_count)}회로 달라졌어요. 최근 패턴을 반영해 다음 예상 사용일을 다시 계산했습니다.`;
-  }
-
-  if (frequencyDetection.frequency_changed) {
-    return `최근 하루 사용 횟수가 바뀐 것 같아요. 기존에는 하루 평균 ${formatCount(frequencyDetection.base_daily_usage_count)}회 사용했지만, 최근에는 하루 평균 ${formatCount(frequencyDetection.recent_daily_usage_count)}회 사용되고 있어요. 주기 변화와 별도로 사용 빈도 변화를 감지했습니다.`;
-  }
-
-  if (baseCycle == null || recentCycle == null) {
-    return "사용 간격 데이터가 부족해 아직 주기 변화를 판단하지 않았습니다.";
-  }
-
-  if (cycleChanged) {
-    return `최근 사용 주기가 바뀐 것 같아요. 기존에는 약 ${formatDays(baseCycle)}마다 사용했지만, 최근에는 약 ${formatDays(recentCycle)} 간격으로 사용되고 있어요. 최근 패턴을 반영해 다음 예상 사용일을 다시 계산했습니다.`;
-  }
-
-  return "최근 사용 간격이 기존 주기와 크게 다르지 않아 기존 예측 주기를 유지했습니다.";
+  frequencyChanged: boolean,
+): RoutineChangeType {
+  if (cycleChanged && frequencyChanged) return "interval_and_frequency_change";
+  if (cycleChanged) return "interval_change";
+  if (frequencyChanged) return "frequency_change";
+  return "none";
 }
 
-function calculateChangeConfidence(
-  diffDays: number,
-  recentStd: number | null,
-  options: Required<RoutineCyclePredictionOptions>,
-  cycleChanged: boolean,
-): number {
-  if (!cycleChanged || recentStd == null) return 0;
-
-  const diffScore = clamp(diffDays / Math.max(options.diffThresholdDays * 2, 1), 0, 1);
-  const stabilityScore = clamp(1 - recentStd / Math.max(options.maxRecentStd, 0.1), 0, 1);
-
-  return Math.round((0.55 * diffScore + 0.45 * stabilityScore) * 100) / 100;
+function buildReason(
+  changeType: RoutineChangeType,
+  baseCycle: number | null,
+  recentCycle: number | null,
+  frequencyDetection: FrequencyChangeDetection,
+): string {
+  switch (changeType) {
+    case "interval_change":
+      return `최근 사용 주기가 바뀐 것 같아요. 기존에는 약 ${formatDays(baseCycle)}마다 사용했지만, 최근에는 약 ${formatDays(recentCycle)} 간격으로 사용되고 있어요.`;
+    case "frequency_change":
+      return `최근 하루 사용 횟수가 늘어난 것 같아요. 기존에는 하루 ${formatCount(frequencyDetection.base_daily_frequency)}회 사용했지만, 최근에는 하루 ${formatCount(frequencyDetection.recent_daily_frequency)}회 사용하는 패턴이 보여요.`;
+    case "interval_and_frequency_change":
+      return "최근 사용 간격과 하루 사용 횟수가 모두 바뀐 것 같아요.";
+    case "none":
+    default:
+      return "최근 사용 패턴은 기존 루틴과 크게 다르지 않아요.";
+  }
 }
 
 function createEmptyPrediction(
@@ -423,13 +572,43 @@ function createEmptyPrediction(
     recent_cycle_days: null,
     adapted_cycle_days: null,
     cycle_changed: false,
-    base_daily_usage_count: null,
-    recent_daily_usage_count: null,
+    base_daily_frequency: null,
+    recent_daily_frequency: null,
+    adapted_daily_frequency: null,
     frequency_changed: false,
+    change_type: "none",
     change_confidence: 0,
     next_expected_date: null,
     reason,
+    base_daily_usage_count: null,
+    recent_daily_usage_count: null,
   };
+}
+
+function calculateIntervalConfidence(
+  diffDays: number,
+  recentStd: number | null,
+  options: Required<RoutineCyclePredictionOptions>,
+): number {
+  if (recentStd == null) return 0;
+
+  const diffScore = clamp(diffDays / Math.max(options.diffThresholdDays * 2, 1), 0, 1);
+  const stabilityScore = clamp(1 - recentStd / Math.max(options.maxRecentStd, 0.1), 0, 1);
+
+  return roundNumber(0.55 * diffScore + 0.45 * stabilityScore);
+}
+
+function calculateFrequencyConfidence(
+  frequencyDiff: number,
+  options: Required<RoutineCyclePredictionOptions>,
+): number {
+  return roundNumber(
+    clamp(
+      frequencyDiff / Math.max(options.dailyFrequencyThreshold * 2, 1),
+      0,
+      1,
+    ),
+  );
 }
 
 function getFallbackIdentity(logs: ApplianceUsageLog[]): {
@@ -438,11 +617,13 @@ function getFallbackIdentity(logs: ApplianceUsageLog[]): {
 } {
   const firstLog = logs[0];
   return {
-    appliance_id: firstLog ? getLogValue(firstLog, "appliance_id", "deviceId") ?? "unknown" : "unknown",
-    appliance_type:
-      firstLog
-        ? getLogValue(firstLog, "appliance_type", "applianceType", "deviceType") ?? "unknown"
-        : "unknown",
+    appliance_id: firstLog
+      ? getLogValue(firstLog, "appliance_id", "deviceId") ?? "unknown"
+      : "unknown",
+    appliance_type: firstLog
+      ? getLogValue(firstLog, "appliance_type", "applianceType", "deviceType") ??
+        "unknown"
+      : "unknown",
   };
 }
 
@@ -487,13 +668,8 @@ function isDateKey(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
-function roundDays(value: number | null): number | null {
-  if (value == null || !Number.isFinite(value)) return null;
-  return Math.round(value * 100) / 100;
-}
-
-function roundFiniteDays(value: number): number {
-  return Math.round(value * 100) / 100;
+function isNumber(value: number | null): value is number {
+  return value != null && Number.isFinite(value);
 }
 
 function average(values: number[]): number | null {
@@ -503,15 +679,25 @@ function average(values: number[]): number | null {
   return numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length;
 }
 
+function roundDays(value: number | null): number | null {
+  if (value == null || !Number.isFinite(value)) return null;
+  return roundNumber(value);
+}
+
+function roundNumber(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
-function formatDays(days: number): string {
+function formatDays(days: number | null): string {
+  if (days == null) return "알 수 없는 기간";
   return Number.isInteger(days) ? `${days}일` : `${roundDays(days)}일`;
 }
 
 function formatCount(count: number | null): string {
-  if (count == null) return "0";
+  if (count == null) return "알 수 없는 횟수";
   return Number.isInteger(count) ? `${count}` : `${roundDays(count)}`;
 }
