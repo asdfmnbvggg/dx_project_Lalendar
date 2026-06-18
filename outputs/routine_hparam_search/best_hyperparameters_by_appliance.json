@@ -1,6 +1,9 @@
 {
   "dishwasher": {
     "params_id": "params_0386",
+    "expected_change_type": "frequency_change",
+    "actual_change_type": "frequency_change",
+    "score": 0.98312,
     "params": {
       "minRecentCount": 2,
       "diffThresholdDays": 0.5,
@@ -8,11 +11,13 @@
       "alpha": 0.9,
       "frequencyDiffThreshold": 0.3,
       "frequencyRecentWindowDays": 14
-    },
-    "score": 0.98312
+    }
   },
   "dryer": {
     "params_id": "params_0386",
+    "expected_change_type": "interval_change",
+    "actual_change_type": "interval_change",
+    "score": 0.98312,
     "params": {
       "minRecentCount": 2,
       "diffThresholdDays": 0.5,
@@ -20,11 +25,13 @@
       "alpha": 0.9,
       "frequencyDiffThreshold": 0.3,
       "frequencyRecentWindowDays": 14
-    },
-    "score": 0.98312
+    }
   },
   "robot_cleaner": {
     "params_id": "params_0386",
+    "expected_change_type": "interval_change",
+    "actual_change_type": "interval_change",
+    "score": 0.98312,
     "params": {
       "minRecentCount": 2,
       "diffThresholdDays": 0.5,
@@ -32,11 +39,13 @@
       "alpha": 0.9,
       "frequencyDiffThreshold": 0.3,
       "frequencyRecentWindowDays": 14
-    },
-    "score": 0.98312
+    }
   },
   "washer": {
     "params_id": "params_0386",
+    "expected_change_type": "interval_change",
+    "actual_change_type": "interval_change",
+    "score": 0.98312,
     "params": {
       "minRecentCount": 2,
       "diffThresholdDays": 0.5,
@@ -44,7 +53,6 @@
       "alpha": 0.9,
       "frequencyDiffThreshold": 0.3,
       "frequencyRecentWindowDays": 14
-    },
-    "score": 0.98312
+    }
   }
 }

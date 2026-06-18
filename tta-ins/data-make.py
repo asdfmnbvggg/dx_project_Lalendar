@@ -14,6 +14,8 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 TRAIN_PATH = OUT_DIR / "train.csv"
 VALIDATION_PATH = OUT_DIR / "validation.csv"
 TEST_PATH = OUT_DIR / "test.csv"
+TRAIN_1YEAR_PATH = OUT_DIR / "appliance_usage_train_1year.csv"
+CHANGED_TEST_PATH = OUT_DIR / "appliance_usage_test_changed_routine.csv"
 SCHEMA_PATH = OUT_DIR / "schema.md"
 ZIP_PATH = OUT_DIR / "appliance_usage_dummy_dataset.zip"
 
@@ -266,10 +268,12 @@ def main():
     write_csv(TRAIN_PATH, train_rows)
     write_csv(VALIDATION_PATH, validation_rows)
     write_csv(TEST_PATH, test_rows)
+    write_csv(TRAIN_1YEAR_PATH, sorted(train_rows + validation_rows, key=lambda row: (row["started_at"], row["appliance_id"])))
+    write_csv(CHANGED_TEST_PATH, test_rows)
     write_schema(train_rows, validation_rows, test_rows)
 
     with zipfile.ZipFile(ZIP_PATH, "w", zipfile.ZIP_DEFLATED) as archive:
-        for path in (TRAIN_PATH, VALIDATION_PATH, TEST_PATH, SCHEMA_PATH):
+        for path in (TRAIN_PATH, VALIDATION_PATH, TEST_PATH, TRAIN_1YEAR_PATH, CHANGED_TEST_PATH, SCHEMA_PATH):
             archive.write(path, arcname=path.name)
 
     print(
