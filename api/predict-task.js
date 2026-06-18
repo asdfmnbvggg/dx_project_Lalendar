@@ -69,6 +69,24 @@ export default async function predictTaskHandler(request, response) {
     const input = validatePredictionInput(await readJsonBody(request));
     const configuredModel = normalizeSecret(process.env.TOGETHER_MODEL);
     const model = !configuredModel || LEGACY_NON_SERVERLESS_MODELS.has(configuredModel) ? DEFAULT_MODEL : configuredModel;
+    const prediction = await requestTogetherPrediction({ apiKey, model, input });
+    response.setHeader("Cache-Control", "no-store");
+    response.status(200).json(prediction);
+  } catch (error) {
+    console.error("Together task prediction failed", error);
+    const status = error instanceof InputValidationError ? 400 : 502;
+    response.status(status).json({
+      code: status === 400 ? "INVALID_PREDICTION_INPUT" : "TOGETHER_REQUEST_FAILED",
+      message: status === 400 ? error.message : "AI 가사일 추천을 생성하지 못했어요.",
+    });
+  }
+}
+
+async function requestTogetherPrediction({ apiKey, model, input }) {
+  const tokenBudgets = [800, 1600];
+  let lastError;
+
+  for (const maxTokens of tokenBudgets) {
     const togetherResponse = await fetch(TOGETHER_CHAT_COMPLETIONS_URL, {
       method: "POST",
       headers: {
@@ -77,8 +95,9 @@ export default async function predictTaskHandler(request, response) {
       },
       body: JSON.stringify({
         model,
-        temperature: 0.2,
-        max_tokens: 300,
+        temperature: 0.1,
+        max_tokens: maxTokens,
+        reasoning: { enabled: false },
         messages: [
           {
             role: "system",
@@ -105,22 +124,50 @@ export default async function predictTaskHandler(request, response) {
       throw new Error(reason);
     }
 
-    const content = payload?.choices?.[0]?.message?.content;
-    if (typeof content !== "string") {
-      throw new Error("Together API returned an empty completion");
+    const choice = payload?.choices?.[0];
+    const content = extractMessageContent(choice?.message?.content);
+    if (!content) {
+      lastError = new Error("Together API returned an empty completion");
+      continue;
     }
 
-    const prediction = validatePredictionOutput(JSON.parse(content), input);
-    response.setHeader("Cache-Control", "no-store");
-    response.status(200).json(prediction);
-  } catch (error) {
-    console.error("Together task prediction failed", error);
-    const status = error instanceof InputValidationError ? 400 : 502;
-    response.status(status).json({
-      code: status === 400 ? "INVALID_PREDICTION_INPUT" : "TOGETHER_REQUEST_FAILED",
-      message: status === 400 ? error.message : "AI 가사일 추천을 생성하지 못했어요.",
-    });
+    try {
+      return validatePredictionOutput(JSON.parse(stripJsonFence(content)), input);
+    } catch (error) {
+      lastError = error;
+      const wasTruncated = choice?.finish_reason === "length" || isLikelyTruncatedJson(content, error);
+      if (!wasTruncated) throw error;
+      console.warn("Together JSON response was truncated; retrying with a larger token budget", {
+        finishReason: choice?.finish_reason,
+        maxTokens,
+        contentLength: content.length,
+      });
+    }
   }
+
+  throw lastError || new Error("Together API did not return valid JSON");
+}
+
+function extractMessageContent(content) {
+  if (typeof content === "string") return content.trim();
+  if (!Array.isArray(content)) return "";
+  return content
+    .map((part) => (typeof part === "string" ? part : part?.text || ""))
+    .join("")
+    .trim();
+}
+
+function stripJsonFence(content) {
+  return content
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim();
+}
+
+function isLikelyTruncatedJson(content, error) {
+  if (!(error instanceof SyntaxError)) return false;
+  const trimmed = content.trim();
+  return !trimmed.endsWith("}") || /unexpected end/i.test(error.message);
 }
 
 function buildSystemPrompt() {
