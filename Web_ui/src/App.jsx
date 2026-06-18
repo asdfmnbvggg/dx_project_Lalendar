@@ -1893,6 +1893,10 @@ function getRealtimeApplianceTargetUserIds(applianceAssignees = {}, activeCalend
 
 function filterRealtimePopupsBySchedule(popups = [], tasks = [], now = new Date()) {
   return popups.filter((popup) => {
+    if (popup.applianceType === "WASHER") {
+      if (import.meta.env.DEV) console.log("[sensor] realtime washer popup skipped: washer is schedule-only", popup);
+      return false;
+    }
     if (popup.applianceType !== "AIR_CONDITIONER") return true;
     return canSendAirConditionerAlert(popup, tasks, now);
   });
@@ -1950,7 +1954,7 @@ function getFixedScheduleEndMinutes(task = {}) {
 }
 
 function getDueWasherAlertCandidates(tasks, date, nowMinutes, activeCalendarUser, currentUser) {
-  const washerTasks = tasks.filter((task) => isTaskVisibleOnDate(task, date) && isWasherScheduleTask(task));
+  const washerTasks = tasks.filter((task) => isTaskVisibleOnDate(task, date) && isUserWasherScheduleTask(task));
 
   return washerTasks
     .map((washerTask) => {
@@ -1981,6 +1985,19 @@ function isWasherScheduleTask(task = {}) {
   const text = `${task.title || ""} ${task.applianceType || ""} ${task.displayType || ""}`;
   if (task.applianceType === "DISHWASHER" || /식기|세척|dishwasher|dish/i.test(text)) return false;
   return task.applianceType === "WASHER" || /세탁|빨래|washer/i.test(text);
+}
+
+function isUserWasherScheduleTask(task = {}) {
+  if (!isWasherScheduleTask(task)) return false;
+  if (task.firestoreSchedule) return true;
+
+  return (
+    task.source === "manual" &&
+    task.type !== "ai_task" &&
+    task.tag !== "house" &&
+    task.displayType !== "appliance" &&
+    !task.applianceType
+  );
 }
 
 function isFixedScheduleTask(task = {}) {
