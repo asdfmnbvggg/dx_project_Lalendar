@@ -262,13 +262,6 @@ export default function CalendarPage({
     setDailyReportRouteId("");
   }
 
-  function openReportSchedule(view = "timetable") {
-    window.history.replaceState({}, "", "/");
-    setDailyReportRouteId("");
-    setDailyDetailView(view);
-    setSelectedDetailDate(todayDailyReport.id);
-  }
-
   function toggleDeleteMode() {
     setDeleteMode((current) => !current);
     setSelectedDeleteTaskIds([]);
@@ -402,8 +395,33 @@ export default function CalendarPage({
       <DailyReportDetail
         report={todayDailyReport}
         onBack={closeDailyReport}
-        onOpenSchedule={() => openReportSchedule("timetable")}
-        onOpenTodo={() => openReportSchedule("list")}
+        onAddTodo={({ title, time }) => {
+          const endTime = addMinutesToTime(time, 60);
+          onAddTask?.({
+            date: todayDailyReport.id,
+            title,
+            place: "To-do",
+            tag: "plan",
+            type: "personal",
+            owner: selectedMember === "all" ? activeCalendarOwnerId : selectedMember,
+            done: false,
+            startTime: time,
+            endTime,
+            repeat: `${time} ~ ${endTime}`,
+            source: "manual",
+          });
+        }}
+        onUpdateTodo={(id, updates) => {
+          const taskUpdates = { ...updates };
+          if (updates.time) {
+            const endTime = addMinutesToTime(updates.time, 60);
+            taskUpdates.startTime = updates.time;
+            taskUpdates.endTime = endTime;
+            taskUpdates.repeat = `${updates.time} ~ ${endTime}`;
+            delete taskUpdates.time;
+          }
+          updateTask?.(id, taskUpdates);
+        }}
       />
     );
   }
@@ -3273,6 +3291,12 @@ function addDays(date, amount) {
   const next = new Date(date + "T00:00:00");
   next.setDate(next.getDate() + amount);
   return toDateKey(next);
+}
+
+function addMinutesToTime(value, amount) {
+  const [hour, minute] = String(value || "09:00").split(":").map(Number);
+  const total = Math.min(23 * 60 + 59, (Number(hour) || 0) * 60 + (Number(minute) || 0) + amount);
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 
 function getDailyReportRouteId() {

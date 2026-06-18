@@ -1,6 +1,6 @@
-export default function ReportImageRecord({ records = [], sectionRef }) {
+export default function ReportImageRecord({ records = [] }) {
   return (
-    <section className="daily-report-section daily-report-album" ref={sectionRef} aria-labelledby="daily-report-album-title">
+    <section className="daily-report-section daily-report-album" aria-labelledby="daily-report-album-title">
       <div className="daily-report-section-head">
         <div>
           <span>AI IMAGE RECORD</span>
@@ -24,4 +24,3 @@ export default function ReportImageRecord({ records = [], sectionRef }) {
     </section>
   );
 }
-
