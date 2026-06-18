@@ -1832,7 +1832,6 @@ function toCalendarApplianceType(appliance) {
     dishwasher: "DISHWASHER",
     robot_cleaner: "ROBOT_CLEANER",
     air_purifier: "AIR_PURIFIER",
-    dehumidifier: "DEHUMIDIFIER",
     air_conditioner: "AIR_CONDITIONER",
   };
   return types[appliance] || "ETC";
@@ -1856,7 +1855,6 @@ function getAiTaskApplianceSettingKeys(appliance, requestedByUserId) {
     dishwasher: ["dishwasher", "DISHWASHER"],
     robot_cleaner: ["robot", "robot-cleaner", "ROBOT_CLEANER"],
     air_purifier: ["air-purifier", "AIR_PURIFIER"],
-    dehumidifier: ["dehumidifier", "DEHUMIDIFIER"],
   };
 
   return settingKeys[appliance] || [];
@@ -1909,9 +1907,7 @@ function getAiTaskApplianceDisplayName(appliance) {
     dishwasher: "식기세척기",
     robot_cleaner: "로봇청소기",
     air_purifier: "공기청정기",
-    dehumidifier: "제습기",
     air_conditioner: "에어컨",
-    none: "추천 없음",
   };
   return labels[appliance] || "가전";
 }
