@@ -618,6 +618,9 @@ export default function App() {
       if (prediction.task_appliance === "none") return;
 
       const applianceType = toCalendarApplianceType(prediction.task_appliance);
+      const eventUserId = getTaskUserId(eventTask);
+      const assignedOwner = getAiTaskApplianceAssignee(prediction.task_appliance, onboardingSetup.applianceAssignees);
+      const assignedUserId = resolveOwnerOrUserIdToUserId(assignedOwner) || eventUserId;
       const aiTask = normalizeTaskForUser(
         {
           id: createTaskId(),
@@ -630,8 +633,8 @@ export default function App() {
           repeat: `${prediction.task_start_time} ~ ${prediction.task_end_time}`,
           place: appliancePlaceLabel[applianceType] || "가전 자동화",
           tag: "house",
-          owner: eventTask.owner,
-          userId: getTaskUserId(eventTask),
+          owner: assignedOwner || eventTask.owner,
+          userId: assignedUserId,
           done: false,
           displayType: "appliance",
           appliance: prediction.task_appliance,
@@ -640,7 +643,7 @@ export default function App() {
           currentMode: prediction.task_appliance_mode,
           aiInput: input,
         },
-        getTaskUserId(eventTask),
+        assignedUserId,
       );
 
       setTasks((current) => [aiTask, ...current]);
@@ -1764,6 +1767,20 @@ function toCalendarApplianceType(appliance) {
     air_conditioner: "AIR_CONDITIONER",
   };
   return types[appliance] || "ETC";
+}
+
+function getAiTaskApplianceAssignee(appliance, applianceAssignees = {}) {
+  const settingKeys = {
+    washer: ["washer", "WASHER"],
+    dryer: ["dryer", "DRYER"],
+    dishwasher: ["dishwasher", "DISHWASHER"],
+    robot_cleaner: ["robot", "robot-cleaner", "ROBOT_CLEANER"],
+    air_purifier: ["air-purifier", "AIR_PURIFIER"],
+    dehumidifier: ["dehumidifier", "DEHUMIDIFIER"],
+    air_conditioner: ["air-living", "air", "air-conditioner", "AIR_CONDITIONER"],
+  };
+
+  return (settingKeys[appliance] || []).map((key) => applianceAssignees[key]).find(Boolean) || "";
 }
 
 function createTaskId() {
