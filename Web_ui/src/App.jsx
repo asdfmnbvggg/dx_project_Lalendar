@@ -141,6 +141,7 @@ export default function App() {
   const [calendarWeatherByDate, setCalendarWeatherByDate] = useState({});
   const [weatherApiStatus, setWeatherApiStatus] = useState("loading");
   const [airQualityPm10, setAirQualityPm10] = useState(null);
+  const [airQualityApiStatus, setAirQualityApiStatus] = useState("loading");
   const [aiRecommendationNotice, setAiRecommendationNotice] = useState("");
   const [aiRecommendationRequestCount, setAiRecommendationRequestCount] = useState(0);
   const [dailyAiReport, setDailyAiReport] = useState(() => ({
@@ -157,6 +158,7 @@ export default function App() {
   const sensorPopupCooldownRef = useRef({});
   const washerPopupShownRef = useRef({});
   const sensorDemoPopupIndexRef = useRef(0);
+  const dailyReportGeneratedKeyRef = useRef("");
 
   useEffect(() => {
     setTasks((current) => {
@@ -233,11 +235,17 @@ export default function App() {
 
     fetchAirQuality()
       .then((result) => {
-        if (isActive) setAirQualityPm10(getAirQualityPm10(result));
+        if (isActive) {
+          setAirQualityPm10(getAirQualityPm10(result));
+          setAirQualityApiStatus("ready");
+        }
       })
       .catch((error) => {
         devWarn("Air quality data unavailable for AI recommendation", error);
-        if (isActive) setAirQualityPm10(null);
+        if (isActive) {
+          setAirQualityPm10(null);
+          setAirQualityApiStatus("ready");
+        }
       });
 
     return () => {
@@ -421,13 +429,18 @@ export default function App() {
   const dailyReportSchedules = dailyReportTaskData.schedules;
   const dailyReportChores = dailyReportTaskData.chores;
   const dailyReportWeather = useMemo(
+    () => collectDailyReportWeather(selectedDate, calendarWeatherByDate, airQualityPm10),
+    [airQualityPm10, calendarWeatherByDate, selectedDate],
+  );
+  const dailyReportRequestKey = useMemo(
     () =>
-      collectDailyReportWeather(
+      JSON.stringify({
         selectedDate,
-        calendarWeatherByDate,
-        toNullableFiniteNumber(latestSensorData?.pm10) ?? airQualityPm10,
-      ),
-    [airQualityPm10, calendarWeatherByDate, latestSensorData?.pm10, selectedDate],
+        activeCalendarUserId,
+        schedules: dailyReportSchedules,
+        chores: dailyReportChores,
+      }),
+    [activeCalendarUserId, dailyReportChores, dailyReportSchedules, selectedDate],
   );
 
   useEffect(() => {
@@ -435,11 +448,14 @@ export default function App() {
       setDailyAiReportLoading(false);
       return undefined;
     }
+    if (weatherApiStatus === "loading" || airQualityApiStatus === "loading") return undefined;
+    if (dailyReportGeneratedKeyRef.current === dailyReportRequestKey) return undefined;
 
     const controller = new AbortController();
     setDailyAiReportLoading(true);
 
     const timer = window.setTimeout(async () => {
+      dailyReportGeneratedKeyRef.current = dailyReportRequestKey;
       try {
         const report = await fetchDailyReport(
           {
@@ -469,7 +485,12 @@ export default function App() {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [currentUser, dailyReportChores, dailyReportSchedules, dailyReportWeather, selectedDate]);
+  }, [
+    airQualityApiStatus,
+    currentUser,
+    dailyReportRequestKey,
+    weatherApiStatus,
+  ]);
 
   const notificationItems = useMemo(() => {
     const notificationContext = {
