@@ -422,9 +422,10 @@ export default function App() {
       return map;
     }, {});
   }, [tasks]);
+  const dailyReportUserId = currentUser?.id || "";
   const dailyReportTaskData = useMemo(
-    () => collectDailyReportTasks(tasks, selectedDate, activeCalendarUserId),
-    [activeCalendarUserId, selectedDate, tasks],
+    () => collectDailyReportTasks(tasks, selectedDate, dailyReportUserId),
+    [dailyReportUserId, selectedDate, tasks],
   );
   const dailyReportSchedules = dailyReportTaskData.schedules;
   const dailyReportChores = dailyReportTaskData.chores;
@@ -436,11 +437,11 @@ export default function App() {
     () =>
       JSON.stringify({
         selectedDate,
-        activeCalendarUserId,
+        userId: dailyReportUserId,
         schedules: dailyReportSchedules,
         chores: dailyReportChores,
       }),
-    [activeCalendarUserId, dailyReportChores, dailyReportSchedules, selectedDate],
+    [dailyReportChores, dailyReportSchedules, dailyReportUserId, selectedDate],
   );
 
   useEffect(() => {
