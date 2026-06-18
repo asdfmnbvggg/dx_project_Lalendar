@@ -729,6 +729,7 @@ export default function CalendarPage({
             onNextWeek={() => moveCalendar(1)}
             onSelectDate={(date) => {
               if (!canEditPersonalCalendar) return;
+              notifyCalendarDateClick(onSelectCalendarDate, date);
               setSelectedDate(date);
               setSelectedDetailDate(date);
             }}
@@ -773,6 +774,7 @@ export default function CalendarPage({
                     onClick={() => {
                       if (!isHouseCalendar && !isCurrentMonth) return;
                       if (!isHouseCalendar && !canEditPersonalCalendar) return;
+                      notifyCalendarDateClick(onSelectCalendarDate, key);
                       setSelectedDate(key);
                       setSelectedDetailDate(key);
                     }}
@@ -2510,6 +2512,12 @@ function hideFixedTasksByDate(tasksByDate) {
       tasks.filter((task) => task.displayType !== "fixed"),
     ]),
   );
+}
+
+function notifyCalendarDateClick(callback, date) {
+  if (!callback || !/^\d{4}-\d{2}-\d{2}$/.test(String(date || ""))) return;
+  const [year, month, day] = date.split("-").map(Number);
+  callback(year, month, day);
 }
 
 function getMemberFilterIds(memberId) {

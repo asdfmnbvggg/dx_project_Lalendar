@@ -12,7 +12,7 @@ import {
   Pencil,
   Plus,
 } from "lucide-react";
-import { automationAlerts, dateKey, initialTasks, isRainyDate, members, tagLabel, weatherByDate } from "./data.js";
+import { automationAlerts, dateKey, isRainyDate, members, tagLabel, weatherByDate } from "./data.js";
 import CalendarPage from "./pages/CalendarPage.jsx";
 import CrewPage from "./pages/CrewPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
@@ -25,12 +25,14 @@ import { CURRENT_USER_STORAGE_KEY, LEGACY_CURRENT_USER_STORAGE_KEY, USERS, findU
 import { fetchCalendarWeather, fetchShortWeather } from "./services/weatherService.js";
 import { fetchMidWeather } from "./services/midWeatherService.js";
 import { fetchAirQuality } from "./services/airQualityService.js";
+import { logAnalyticsEvent } from "./firebase.js";
 import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendationService.js";
 import { buildRoutineRecommendations } from "./services/routinePredictionService.js";
 import { DAILY_REPORT_FALLBACK_TEXT, fetchDailyReport } from "./services/dailyReportService.js";
 import { predictHouseworkTask } from "./services/taskPredictionService.js";
 import { sendDeviceCommand, subscribeSensorLatest } from "./services/sensorRealtimeService.js";
 import { THRESHOLDS, buildRealtimeAppliancePopups, buildScheduledWasherPopup, getPopupKey } from "./services/appliancePopupRuleService.js";
+import { createUserSchedule, deleteUserSchedule, getUserSchedules, isFirestoreScheduleUser, updateUserSchedule } from "./services/taskService.js";
 
 const ENABLE_ONBOARDING_TASK_GENERATION = false;
 const SENSOR_DEVICE_ID = "living_room_01";
@@ -90,6 +92,15 @@ const DEFAULT_ONBOARDING_APPLIANCE_ASSIGNEES = {};
 const DAILY_REPORT_LOADING_TEXT = "오늘의 일정을 정리하고 있어요...";
 const DAILY_REPORT_DEBOUNCE_MS = 400;
 const DAILY_REPORT_CACHE_PREFIX = "l-landerDailyReport:";
+const DAY_OF_WEEK_INDEX = {
+  sun: 0,
+  mon: 1,
+  tue: 2,
+  wed: 3,
+  thu: 4,
+  fri: 5,
+  sat: 6,
+};
 
 export default function App() {
   const storedUser = readStoredCurrentUser();
@@ -98,7 +109,7 @@ export default function App() {
   const initialVisibleMonth = visibleMonthFromDate(initialSelectedDate);
   const [currentUser, setCurrentUser] = useState(storedUser);
   const [activeCalendarUser, setActiveCalendarUser] = useState(() => getInitialCalendarUser(storedUser, storedSession?.activeCalendarUserId));
-  const [tasks, setTasks] = useState(() => normalizeCalendarTaskColors(normalizeTasksForUsers(normalizeGeneratedTaskTitles([...initialTasks, ...buildDefaultCalendarTasks()]))));
+  const [tasks, setTasks] = useState(() => normalizeCalendarTaskColors(normalizeTasksForUsers(normalizeGeneratedTaskTitles(buildDefaultCalendarTasks()))));
   const [memberColors, setMemberColors] = useState(() => ({
     ...Object.fromEntries(members.map((member) => [member.id, member.color])),
     ...USER_COLORS,
@@ -171,6 +182,34 @@ export default function App() {
       return normalized.some((task, index) => task !== current[index]) ? normalized : current;
     });
   }, []);
+
+  useEffect(() => {
+    if (!currentUser) return undefined;
+
+    let isActive = true;
+    const userIds = getFirestoreScheduleUserIds(currentUser);
+
+    Promise.all(
+      userIds.map((userId) =>
+        getUserSchedules(userId).catch((error) => {
+          devWarn("[firestore] user schedules unavailable", { userId, error });
+          return [];
+        }),
+      ),
+    ).then((scheduleGroups) => {
+      if (!isActive) return;
+      const firestoreTasks = normalizeCalendarTaskColors(
+        normalizeTasksForUsers(
+          normalizeGeneratedTaskTitles(scheduleGroups.flat().map((schedule) => firestoreScheduleToTask(schedule))),
+        ),
+      );
+      setTasks((current) => [...firestoreTasks, ...current.filter((task) => !task.firestoreSchedule)]);
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [currentUser]);
 
   useEffect(() => {
     const selectors = [
@@ -611,8 +650,10 @@ export default function App() {
   }
 
   function selectCalendarDate(year, month, day) {
+    const selectedDateKey = dateKey(year, month, day);
     setVisibleMonth({ year, month });
-    setSelectedDate(dateKey(year, month, day));
+    setSelectedDate(selectedDateKey);
+    logAnalyticsEvent("calendar_date_click", { date: selectedDateKey, userId: activeCalendarUserId || currentUser?.id || "" });
   }
 
   function startNotificationDrag(event) {
@@ -639,11 +680,22 @@ export default function App() {
   }
 
   function toggleTask(id) {
-    setTasks((current) => current.map((task) => (task.id === id ? { ...task, done: !task.done } : task)));
+    const task = tasks.find((item) => item.id === id);
+    const updates = { done: !task?.done };
+    setTasks((current) => current.map((item) => (item.id === id ? { ...item, ...updates } : item)));
+    if (task?.firestoreSchedule) {
+      updateUserSchedule(task.userId, task.scheduleId || task.id, updates).catch((error) => devWarn("[firestore] schedule toggle failed", error));
+    }
   }
 
   function deleteTask(id) {
+    const task = tasks.find((item) => item.id === id);
     setTasks((current) => current.filter((task) => task.id !== id));
+    if (task?.firestoreSchedule) {
+      deleteUserSchedule(task.userId, task.scheduleId || task.id)
+        .then(() => logAnalyticsEvent("schedule_delete", { userId: task.userId, scheduleId: task.scheduleId || task.id }))
+        .catch((error) => devWarn("[firestore] schedule delete failed", error));
+    }
   }
 
   function changeTaskOwner(id, owner) {
@@ -651,9 +703,16 @@ export default function App() {
   }
 
   function updateTask(id, updates) {
+    const existingTask = tasks.find((task) => task.id === id);
     setTasks((current) =>
       current.map((task) => (task.id === id ? normalizeTaskForUser({ ...task, ...updates }, getTaskUserId(task) || activeCalendarUserId) : task)),
     );
+    if (existingTask?.firestoreSchedule) {
+      const nextTask = normalizeTaskForUser({ ...existingTask, ...updates }, getTaskUserId(existingTask) || activeCalendarUserId);
+      updateUserSchedule(nextTask.userId, nextTask.scheduleId || nextTask.id, taskToFirestoreSchedule(nextTask))
+        .then(() => logAnalyticsEvent("schedule_update", { userId: nextTask.userId, scheduleId: nextTask.scheduleId || nextTask.id }))
+        .catch((error) => devWarn("[firestore] schedule update failed", error));
+    }
   }
 
   function updateApplianceCalendarColor(applianceType, color) {
@@ -693,25 +752,36 @@ export default function App() {
   }
 
   function moveTaskDate(id, date, startTime) {
+    const task = tasks.find((item) => item.id === id);
+    const updates = {
+      date,
+      repeat: startTime ? buildPostponedRepeat(task || {}, startTime) : appendPostponeLabel(task?.repeat, "미룸"),
+    };
     setTasks((current) =>
       current.map((task) =>
         task.id === id
-          ? {
-              ...task,
-              date,
-              repeat: startTime ? buildPostponedRepeat(task, startTime) : appendPostponeLabel(task.repeat, "미룸"),
-            }
+          ? { ...task, ...updates }
           : task,
       ),
     );
+    if (task?.firestoreSchedule) {
+      updateUserSchedule(task.userId, task.scheduleId || task.id, taskToFirestoreSchedule({ ...task, ...updates }))
+        .then(() => logAnalyticsEvent("schedule_update", { userId: task.userId, scheduleId: task.scheduleId || task.id }))
+        .catch((error) => devWarn("[firestore] schedule move failed", error));
+    }
     setSelectedDate(date);
   }
 
   function moveTaskTime(id, startTime) {
     const normalizedStartTime = normalizeEditableTimeValue(startTime);
-    setTasks((current) =>
-      current.map((task) => (task.id === id ? { ...task, repeat: buildPostponedRepeat(task, normalizedStartTime) } : task)),
-    );
+    const task = tasks.find((item) => item.id === id);
+    const updates = { repeat: buildPostponedRepeat(task || {}, normalizedStartTime), startTime: normalizedStartTime };
+    setTasks((current) => current.map((task) => (task.id === id ? { ...task, ...updates } : task)));
+    if (task?.firestoreSchedule) {
+      updateUserSchedule(task.userId, task.scheduleId || task.id, taskToFirestoreSchedule({ ...task, ...updates }))
+        .then(() => logAnalyticsEvent("schedule_update", { userId: task.userId, scheduleId: task.scheduleId || task.id }))
+        .catch((error) => devWarn("[firestore] schedule time update failed", error));
+    }
   }
 
   function moveTaskToPerson(id, targetUserId) {
@@ -732,11 +802,32 @@ export default function App() {
     );
   }
 
-  function addTask(task) {
-    const nextTask = normalizeTaskForUser(
-      normalizeGeneratedTaskTitle({ id: task.id || Date.now() + (task.copyIndex || 0), source: "manual", ...task }),
+  async function addTask(task) {
+    let nextTask = normalizeTaskForUser(
+      normalizeGeneratedTaskTitle({ id: task.id || createTaskId() + (task.copyIndex || 0), source: "manual", ...task }),
       activeCalendarUserId,
     );
+    if (shouldPersistUserSchedule(nextTask)) {
+      try {
+        const scheduleId = await createUserSchedule(nextTask.userId, taskToFirestoreSchedule(nextTask));
+        nextTask = {
+          ...nextTask,
+          id: scheduleId,
+          scheduleId,
+          firestoreSchedule: true,
+          repeat: formatScheduleDisplayRepeat({
+            repeat: normalizeFirestoreRepeat(nextTask.repeat, nextTask.type),
+            type: nextTask.type,
+            daysOfWeek: nextTask.daysOfWeek,
+            startTime: nextTask.startTime,
+            endTime: nextTask.endTime,
+          }),
+        };
+        logAnalyticsEvent("schedule_create", { userId: nextTask.userId, scheduleId });
+      } catch (error) {
+        devWarn("[firestore] schedule create failed", error);
+      }
+    }
     setTasks((current) => [nextTask, ...current]);
     if (nextTask.date) {
       const [year, month] = nextTask.date.split("-").map(Number);
@@ -1088,6 +1179,8 @@ export default function App() {
         targetUserId: sensorPopup.targetUserId,
       };
       if (import.meta.env.DEV) console.log("[sensor] execute popup command payload", commandPayload);
+      logAnalyticsEvent("device_execute_click", commandPayload);
+      logDeviceExecuteEvent(sensorPopup, commandPayload);
       await sendDeviceCommand(SENSOR_DEVICE_ID, commandPayload);
       if (import.meta.env.DEV) console.log("[sensor] device command sent", { deviceId: SENSOR_DEVICE_ID, payload: commandPayload, popup: sensorPopup });
     } catch (error) {
@@ -1937,6 +2030,138 @@ const fixedScheduleColorByTitle = {
 
 function devWarn(...args) {
   if (isDev) console.warn(...args);
+}
+
+function getFirestoreScheduleUserIds(currentUser) {
+  if (isMasterUser(currentUser)) return USERS.map((user) => user.id).filter(isFirestoreScheduleUser);
+  return isFirestoreScheduleUser(currentUser?.id) ? [currentUser.id] : [];
+}
+
+function firestoreScheduleToTask(schedule = {}) {
+  const userId = schedule.userId || "";
+  const startTime = schedule.startTime || "";
+  const endTime = schedule.endTime || "";
+  const repeat = formatScheduleDisplayRepeat({
+    repeat: schedule.repeat,
+    type: schedule.type,
+    daysOfWeek: schedule.daysOfWeek,
+    startTime,
+    endTime,
+  });
+
+  return {
+    id: schedule.scheduleId || schedule.id,
+    scheduleId: schedule.scheduleId || schedule.id,
+    firestoreSchedule: true,
+    date: schedule.date || "",
+    title: schedule.title || "개인 일정",
+    place: schedule.place || "개인 일정",
+    tag: "plan",
+    owner: userIdToOwner(userId),
+    userId,
+    done: Boolean(schedule.done),
+    repeat,
+    startTime,
+    endTime,
+    type: schedule.type || "personal",
+    daysOfWeek: Array.isArray(schedule.daysOfWeek) ? schedule.daysOfWeek : [],
+    source: "manual",
+    displayType: schedule.type === "fixed" ? "fixed" : "manual",
+    description: schedule.description || "",
+    reminder: schedule.reminder || "off",
+  };
+}
+
+function taskToFirestoreSchedule(task = {}) {
+  const repeatValue = normalizeFirestoreRepeat(task.repeat, task.type);
+  const timeRange = getTaskNotificationRange(task);
+
+  return {
+    title: task.title || "개인 일정",
+    date: task.type === "fixed" ? undefined : task.date,
+    startTime: task.startTime || timeRange?.startTime || "",
+    endTime: task.endTime || timeRange?.endTime || "",
+    type: task.type === "fixed" ? "fixed" : "personal",
+    repeat: repeatValue,
+    daysOfWeek: task.type === "fixed" ? task.daysOfWeek || [] : undefined,
+    place: task.place || "",
+    description: task.description || "",
+    reminder: task.reminder || "off",
+    done: Boolean(task.done),
+  };
+}
+
+function shouldPersistUserSchedule(task = {}) {
+  return (
+    task.source === "manual" &&
+    task.type !== "ai_task" &&
+    task.tag !== "house" &&
+    task.displayType !== "appliance" &&
+    !task.applianceType &&
+    isFirestoreScheduleUser(getTaskUserId(task))
+  );
+}
+
+function normalizeScheduleRepeatLabel(repeat) {
+  if (!repeat || repeat === "none") return "없음";
+  if (repeat === "daily") return "매일";
+  if (repeat === "weekly") return "매주";
+  if (repeat === "monthly") return "매월";
+  return repeat;
+}
+
+function normalizeFirestoreRepeat(repeat, type) {
+  if (type === "fixed") return "weekly";
+  const text = String(repeat || "").split("·")[0].trim();
+  if (isTimeRangeText(text) || isTimeText(text) || text === "하루종일") return "none";
+  if (!text || text === "없음") return "none";
+  if (text === "매일") return "daily";
+  if (text === "매주") return "weekly";
+  if (text === "매월") return "monthly";
+  if (text === "daily" || text === "weekly" || text === "none") return text;
+  return text;
+}
+
+function formatScheduleDisplayRepeat({ repeat, type, daysOfWeek, startTime, endTime }) {
+  const repeatLabel = type === "fixed" && repeat === "weekly"
+    ? `매주 ${formatDaysOfWeek(daysOfWeek)}`
+    : normalizeScheduleRepeatLabel(repeat);
+  const timeLabel = startTime && endTime ? `${startTime} ~ ${endTime}` : "";
+
+  if (repeat === "none" || !repeat) return timeLabel || "없음";
+  return [repeatLabel, timeLabel].filter(Boolean).join(" · ");
+}
+
+function isTimeRangeText(text) {
+  return /^\d{1,2}:\d{2}\s*(?:~|-)\s*\d{1,2}:\d{2}$/.test(String(text || ""));
+}
+
+function isTimeText(text) {
+  return /^\d{1,2}:\d{2}$/.test(String(text || ""));
+}
+
+function formatDaysOfWeek(daysOfWeek = []) {
+  const labels = {
+    sun: "일",
+    mon: "월",
+    tue: "화",
+    wed: "수",
+    thu: "목",
+    fri: "금",
+    sat: "토",
+  };
+
+  return daysOfWeek.map((day) => labels[day] || day).filter(Boolean).join("/");
+}
+
+function logDeviceExecuteEvent(popup = {}, payload = {}) {
+  const eventByApplianceType = {
+    AIR_PURIFIER: "air_purifier_execute",
+    AIR_CONDITIONER: "aircon_execute",
+    WASHER: "washer_execute",
+  };
+  const eventName = eventByApplianceType[popup.applianceType];
+  if (eventName) logAnalyticsEvent(eventName, payload);
 }
 
 function shouldRequestAiHouseworkTask(task = {}) {
@@ -3574,6 +3799,9 @@ function isTaskVisibleOnDate(task, date) {
 
 function getTaskDateKeys(task) {
   const startDate = normalizeTaskDateKey(task.date);
+  if (!startDate && task.type === "fixed" && Array.isArray(task.daysOfWeek)) {
+    return getWeeklyFixedTaskDateKeys(task.daysOfWeek);
+  }
   if (!startDate) return [];
 
   const endDate = normalizeTaskDateKey(task.endDate) || startDate;
@@ -3585,6 +3813,24 @@ function getTaskDateKeys(task) {
     dates.push(currentDate);
     if (currentDate === toDate) break;
     currentDate = addDays(currentDate, 1);
+  }
+
+  return dates;
+}
+
+function getWeeklyFixedTaskDateKeys(daysOfWeek = []) {
+  const targetDayIndexes = new Set(daysOfWeek.map((day) => DAY_OF_WEEK_INDEX[day]).filter((dayIndex) => Number.isInteger(dayIndex)));
+  if (targetDayIndexes.size === 0) return [];
+
+  const today = new Date(`${getTodayKey()}T00:00:00`);
+  const start = new Date(today.getFullYear(), 0, 1);
+  const end = new Date(today.getFullYear() + 1, 11, 31);
+  const dates = [];
+
+  for (let current = new Date(start); current <= end; current.setDate(current.getDate() + 1)) {
+    if (targetDayIndexes.has(current.getDay())) {
+      dates.push(dateKey(current.getFullYear(), current.getMonth() + 1, current.getDate()));
+    }
   }
 
   return dates;

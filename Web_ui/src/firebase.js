@@ -1,6 +1,7 @@
 // src/firebase.js
 
 import { initializeApp } from "firebase/app";
+import { getAnalytics, isSupported, logEvent } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
 
@@ -16,6 +17,26 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+let analyticsPromise = null;
 
 export const db = getFirestore(app);
 export const realtimeDb = getDatabase(app);
+
+function getAnalyticsInstance() {
+  if (!analyticsPromise) {
+    analyticsPromise = isSupported()
+      .then((supported) => (supported ? getAnalytics(app) : null))
+      .catch((error) => {
+        if (import.meta.env.DEV) console.warn("[analytics] init skipped", error);
+        return null;
+      });
+  }
+
+  return analyticsPromise;
+}
+
+export async function logAnalyticsEvent(eventName, params = {}) {
+  const analytics = await getAnalyticsInstance();
+  if (!analytics) return;
+  logEvent(analytics, eventName, params);
+}
