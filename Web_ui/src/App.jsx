@@ -151,6 +151,7 @@ export default function App() {
     priority: "normal",
   }));
   const [isDailyAiReportLoading, setDailyAiReportLoading] = useState(false);
+  const [dailyReportCreationVersion, setDailyReportCreationVersion] = useState(0);
   const [aiAssignmentPopup, setAiAssignmentPopup] = useState(null);
   const [sensorPopup, setSensorPopup] = useState(null);
   const [sensorPopupQueue, setSensorPopupQueue] = useState([]);
@@ -159,6 +160,8 @@ export default function App() {
   const washerPopupShownRef = useRef({});
   const sensorDemoPopupIndexRef = useRef(0);
   const dailyReportGeneratedKeyRef = useRef("");
+  const dailyReportKnownTaskIdsRef = useRef(null);
+  const dailyReportKnownUserIdRef = useRef("");
 
   useEffect(() => {
     setTasks((current) => {
@@ -423,6 +426,32 @@ export default function App() {
     }, {});
   }, [tasks]);
   const dailyReportUserId = currentUser?.id || "";
+  useEffect(() => {
+    const currentIds = new Set(
+      tasks
+        .filter((task) => !dailyReportUserId || getTaskUserId(task) === dailyReportUserId)
+        .map((task) => String(task.id)),
+    );
+
+    if (dailyReportKnownUserIdRef.current !== dailyReportUserId || dailyReportKnownTaskIdsRef.current === null) {
+      dailyReportKnownUserIdRef.current = dailyReportUserId;
+      dailyReportKnownTaskIdsRef.current = currentIds;
+      return;
+    }
+
+    const knownIds = dailyReportKnownTaskIdsRef.current;
+    const hasNewTaskInReportRange = tasks.some((task) => {
+      if (dailyReportUserId && getTaskUserId(task) !== dailyReportUserId) return false;
+      if (knownIds.has(String(task.id))) return false;
+      return [0, 1, 2].some((offset) => isTaskVisibleOnDate(task, addDays(selectedDate, offset)));
+    });
+
+    dailyReportKnownTaskIdsRef.current = currentIds;
+    if (hasNewTaskInReportRange) {
+      setDailyReportCreationVersion((version) => version + 1);
+    }
+  }, [dailyReportUserId, selectedDate, tasks]);
+
   const dailyReportTaskData = useMemo(
     () => collectDailyReportTasks(tasks, selectedDate, dailyReportUserId),
     [dailyReportUserId, selectedDate, tasks],
@@ -438,10 +467,9 @@ export default function App() {
       JSON.stringify({
         selectedDate,
         userId: dailyReportUserId,
-        schedules: dailyReportSchedules,
-        chores: dailyReportChores,
+        creationVersion: dailyReportCreationVersion,
       }),
-    [dailyReportChores, dailyReportSchedules, dailyReportUserId, selectedDate],
+    [dailyReportCreationVersion, dailyReportUserId, selectedDate],
   );
 
   useEffect(() => {
