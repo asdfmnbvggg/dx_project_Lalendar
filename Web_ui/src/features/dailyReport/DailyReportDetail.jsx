@@ -68,18 +68,12 @@ export default function DailyReportDetail({ report, onBack, onAddTodo, onUpdateT
         </section>
 
         <div className="daily-report-summary-grid">
-          <ReportListCard icon={<CalendarDays />} title="오늘 일정 요약" items={report.scheduleItems} emptyText="등록된 개인 일정이 없어요." />
-          <ReportListCard
-            icon={<WashingMachine />}
-            title="가사일 · 가전 일정"
-            items={report.applianceItems}
-            emptyText="예정된 가전 작업이 없어요."
-            note={report.choreNote}
+          <DailyBriefingCard
+            scheduleItems={report.scheduleItems}
+            applianceItems={report.applianceItems}
+            choreNote={report.choreNote}
+            weatherNote={report.weatherNote}
           />
-          <article className="daily-report-info-card weather">
-            <CloudSun />
-            <div><span>날씨 기반 안내</span><p>{report.weatherNote}</p></div>
-          </article>
           <button
             type="button"
             className="daily-report-info-card progress daily-report-todo-trigger"
@@ -153,10 +147,50 @@ export default function DailyReportDetail({ report, onBack, onAddTodo, onUpdateT
   );
 }
 
-function ReportListCard({ icon, title, items, emptyText, note = "" }) {
+function DailyBriefingCard({ scheduleItems, applianceItems, choreNote, weatherNote }) {
   return (
-    <article className="daily-report-list-card">
-      <div className="daily-report-list-title">{icon}<h2>{title}</h2></div>
+    <article className="daily-report-briefing-card" aria-labelledby="daily-report-briefing-title">
+      <div className="daily-report-briefing-head">
+        <div>
+          <span>오늘 브리핑</span>
+          <h2 id="daily-report-briefing-title">일정 · 가사일 · 날씨를 한눈에</h2>
+        </div>
+        <b>{scheduleItems.length + applianceItems.length}개 항목</b>
+      </div>
+
+      <div className="daily-report-briefing-sections">
+        <BriefingSection
+          icon={<CalendarDays />}
+          title="오늘 일정 요약"
+          items={scheduleItems}
+          emptyText="등록된 개인 일정이 없어요."
+        />
+        <BriefingSection
+          icon={<WashingMachine />}
+          title="가사일 · 가전 일정"
+          items={applianceItems}
+          emptyText="예정된 가전 작업이 없어요."
+          note={choreNote}
+        />
+        <section className="daily-report-briefing-section weather">
+          <div className="daily-report-briefing-title">
+            <CloudSun />
+            <h3>날씨 기반 안내</h3>
+          </div>
+          <p className="daily-report-briefing-note">{weatherNote}</p>
+        </section>
+      </div>
+    </article>
+  );
+}
+
+function BriefingSection({ icon, title, items, emptyText, note = "" }) {
+  return (
+    <section className="daily-report-briefing-section">
+      <div className="daily-report-briefing-title">
+        {icon}
+        <h3>{title}</h3>
+      </div>
       {items.length > 0 ? (
         <ul>
           {items.slice(0, 4).map((item) => (
@@ -169,6 +203,6 @@ function ReportListCard({ icon, title, items, emptyText, note = "" }) {
         </ul>
       ) : <p className="daily-report-empty">{emptyText}</p>}
       {note && <p className="daily-report-gpt-note">{note}</p>}
-    </article>
+    </section>
   );
 }

@@ -192,10 +192,12 @@
 
 .daily-report-summary-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.55fr);
   gap: 14px;
+  align-items: stretch;
 }
 
+.daily-report-briefing-card,
 .daily-report-list-card,
 .daily-report-info-card,
 .daily-report-section {
@@ -205,6 +207,112 @@
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 12px 30px rgba(49, 44, 39, 0.07);
+}
+
+.daily-report-briefing-card {
+  padding: 20px;
+}
+
+.daily-report-briefing-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 2px 2px 15px;
+  border-bottom: 1px solid rgba(255, 109, 31, 0.12);
+}
+
+.daily-report-briefing-head span {
+  color: #ff6d1f;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+}
+
+.daily-report-briefing-head h2 {
+  margin: 5px 0 0;
+  color: #24211f;
+  font-size: 18px;
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+.daily-report-briefing-head b {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: #ff6d1f;
+  background: #fff1e6;
+  font-size: 12px;
+}
+
+.daily-report-briefing-sections {
+  display: grid;
+  gap: 0;
+}
+
+.daily-report-briefing-section {
+  padding: 15px 2px;
+  border-bottom: 1px solid rgba(45, 39, 33, 0.08);
+}
+
+.daily-report-briefing-section:last-child {
+  padding-bottom: 2px;
+  border-bottom: 0;
+}
+
+.daily-report-briefing-title {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  color: #ff6d1f;
+}
+
+.daily-report-briefing-title svg {
+  width: 20px;
+  flex: 0 0 auto;
+}
+
+.daily-report-briefing-title h3 {
+  margin: 0;
+  color: #24211f;
+  font-size: 15px;
+}
+
+.daily-report-briefing-section ul {
+  display: grid;
+  gap: 9px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.daily-report-briefing-section li {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: center;
+  color: #37322e;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.daily-report-briefing-section time {
+  color: #ff6d1f;
+  font-weight: 900;
+}
+
+.daily-report-briefing-section li svg {
+  color: #63a571;
+}
+
+.daily-report-briefing-note {
+  margin: 9px 0 0;
+  color: #625a53;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.55;
+  word-break: keep-all;
 }
 
 .daily-report-list-title {
@@ -629,11 +737,20 @@
     gap: 10px;
   }
 
+  .daily-report-briefing-card,
   .daily-report-list-card,
   .daily-report-info-card,
   .daily-report-section {
     padding: 18px;
     border-radius: 20px;
+  }
+
+  .daily-report-briefing-head {
+    padding-bottom: 13px;
+  }
+
+  .daily-report-briefing-head h2 {
+    font-size: 17px;
   }
 
   .daily-report-records {
