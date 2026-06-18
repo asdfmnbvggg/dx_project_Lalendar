@@ -33,7 +33,6 @@ import {
   legacyScheduleColorMap,
   lgCharacterImage,
   memberImages,
-  SCHEDULE_PLANNING_DELAY,
   scheduleColorOptions,
   washerImage,
   weatherIcon,
@@ -82,6 +81,7 @@ export default function CalendarPage({
   openComposer,
   onOpenPanel,
   onOpenNotifications,
+  isAiRecommendationLoading = false,
   calendarView = "month",
   setCalendarView,
 }) {
@@ -100,7 +100,6 @@ export default function CalendarPage({
   const [selectedApplianceModeId, setSelectedApplianceModeId] = useState("");
   const [applianceModeMessage, setApplianceModeMessage] = useState("");
   const [isDatePickerOpen, setDatePickerOpen] = useState(false);
-  const [pendingScheduleSave, setPendingScheduleSave] = useState(null);
   const [draftDate, setDraftDate] = useState(() => parseDateKey(selectedDate));
   const selectedDay = Number(selectedDate.slice(-2));
   const isHouseCalendar = calendarTaskMode === "house";
@@ -335,31 +334,8 @@ export default function CalendarPage({
     });
   }
 
-  function startSchedulePlanning(nextSave) {
-    setPendingScheduleSave({ ...nextSave, startedAt: Date.now() });
-  }
-
-  function completeSchedulePlanning(nextSave) {
-    setPendingScheduleSave(null);
-
-    if (nextSave.type === "edit") {
-      const updatedTask = { ...nextSave.task, ...nextSave.updates };
-      updateTask?.(nextSave.task.id, nextSave.updates);
-      setEditingTask(null);
-      const nextDate = updatedTask.date || detailDate;
-      setSelectedDate(nextDate);
-      setSelectedDetailDate(nextDate);
-      return;
-    }
-
-    onAddTask?.(nextSave.task);
-    setActiveAddColumn(null);
-    setSelectedDate(nextSave.task.date);
-    setSelectedDetailDate(nextSave.task.date);
-  }
-
-  if (pendingScheduleSave) {
-    return <SchedulePlanningLoadingPage pendingSave={pendingScheduleSave} onComplete={completeSchedulePlanning} />;
+  if (isAiRecommendationLoading) {
+    return <SchedulePlanningLoadingPage />;
   }
 
   if (applianceModeTask) {
@@ -390,7 +366,12 @@ export default function CalendarPage({
         onApplianceColorChange={onUpdateApplianceColor}
         onClose={() => setEditingTask(null)}
         onSave={(updates) => {
-          startSchedulePlanning({ type: "edit", task: editingTask, updates });
+          const updatedTask = { ...editingTask, ...updates };
+          updateTask?.(editingTask.id, updates);
+          setEditingTask(null);
+          const nextDate = updatedTask.date || detailDate;
+          setSelectedDate(nextDate);
+          setSelectedDetailDate(nextDate);
         }}
       />
     );
@@ -411,7 +392,10 @@ export default function CalendarPage({
         onApplianceColorChange={onUpdateApplianceColor}
         onClose={() => setActiveAddColumn(null)}
         onSave={(task) => {
-          startSchedulePlanning({ type: "add", task });
+          onAddTask?.(task);
+          setActiveAddColumn(null);
+          setSelectedDate(task.date);
+          setSelectedDetailDate(task.date);
         }}
       />
     );
@@ -1004,18 +988,7 @@ function getRecommendationsForDate(date, weatherByDate, routineRecommendations) 
   return weatherByDate[date]?.applianceRecommendations || [];
 }
 
-function SchedulePlanningLoadingPage({ pendingSave, onComplete }) {
-  const onCompleteRef = useRef(onComplete);
-
-  useEffect(() => {
-    onCompleteRef.current = onComplete;
-  }, [onComplete]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => onCompleteRef.current(pendingSave), SCHEDULE_PLANNING_DELAY);
-    return () => window.clearTimeout(timer);
-  }, [pendingSave]);
-
+function SchedulePlanningLoadingPage() {
   return (
     <section className="page calendar-page schedule-loading-page" aria-live="polite" aria-label="AI 일정 생성 중">
       <div className="schedule-loading-stage" aria-hidden="true">
@@ -1028,9 +1001,9 @@ function SchedulePlanningLoadingPage({ pendingSave, onComplete }) {
       </div>
 
       <div className="schedule-loading-copy">
-        <span>AI 루틴 정리 중</span>
-        <strong>새로운 하루 계획을 만드는 중</strong>
-        <p>입력한 일정을 반영해 AI가 가사 계획을 다시 정리하고 있어요</p>
+        <span>AI 일정 추천</span>
+        <strong>추천 가사일을 만드는 중</strong>
+        <p>입력한 일정과 날씨를 분석해 적절한 가사일을 추천하고 있어요</p>
         <div className="schedule-loading-progress" aria-hidden="true">
           <i />
         </div>

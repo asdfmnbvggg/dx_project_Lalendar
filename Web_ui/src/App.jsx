@@ -139,6 +139,7 @@ export default function App() {
   const [weatherApiStatus, setWeatherApiStatus] = useState("loading");
   const [airQualityPm10, setAirQualityPm10] = useState(null);
   const [aiRecommendationNotice, setAiRecommendationNotice] = useState("");
+  const [aiRecommendationRequestCount, setAiRecommendationRequestCount] = useState(0);
   const [sensorPopup, setSensorPopup] = useState(null);
   const [sensorPopupQueue, setSensorPopupQueue] = useState([]);
   const [latestSensorData, setLatestSensorData] = useState(null);
@@ -613,6 +614,8 @@ export default function App() {
       day_dust: toNullableFiniteNumber(latestSensorData?.pm10) ?? airQualityPm10,
     };
 
+    setAiRecommendationRequestCount((current) => current + 1);
+
     try {
       const prediction = await predictHouseworkTask(input);
       if (prediction.task_appliance === "none") return;
@@ -650,6 +653,8 @@ export default function App() {
     } catch (error) {
       console.error("AI housework recommendation failed", error);
       setAiRecommendationNotice("AI 가사일 추천을 생성하지 못했어요.");
+    } finally {
+      setAiRecommendationRequestCount((current) => Math.max(0, current - 1));
     }
   }
 
@@ -1017,6 +1022,7 @@ export default function App() {
     openComposer: openTaskComposer,
     onOpenPanel: setPanel,
     onOpenNotifications: openNotificationPopover,
+    isAiRecommendationLoading: aiRecommendationRequestCount > 0,
     calendarView,
     setCalendarView,
   };
