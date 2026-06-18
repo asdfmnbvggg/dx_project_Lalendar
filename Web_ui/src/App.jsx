@@ -627,23 +627,25 @@ export default function App() {
       userName: currentUser?.displayName || currentUser?.name || "사용자",
       weather: calendarWeatherByDate[notificationDemoDate] || weatherByDate[notificationDemoDate],
     };
-    const taskItems = pendingTasksForNotification(notificationScopedTasks, notificationContext, isMasterUser(currentUser) ? 24 : 5)
+    const taskItems = tasksForNotification(notificationScopedTasks, notificationContext)
       .filter(isExecutionNotificationTask)
       .map((task) => {
-      const owner = findUserById(getTaskUserId(task));
-      const ownerPrefix = isMasterUser(currentUser) && owner ? `${owner.displayName || owner.name} · ` : "";
+        const owner = findUserById(getTaskUserId(task));
+        const ownerPrefix = isMasterUser(currentUser) && owner ? `${owner.displayName || owner.name} · ` : "";
+        const completed = isNotificationTaskCompleted(task, notificationContext);
 
-      return {
-        id: `task-${task.id}`,
-        type: "task",
-        task,
-        title: buildTaskNotificationTitle(task, notificationContext),
-        detail: `${ownerPrefix}${buildTaskNotificationDetail(task, notificationContext)}`,
-        scheduledTime: getTaskNotificationScheduledTime(task),
-        date: task.date,
-      };
-    });
-    return taskItems.slice(0, isMasterUser(currentUser) ? 24 : 8);
+        return {
+          id: `task-${task.id}`,
+          type: "task",
+          task,
+          completed,
+          title: completed ? `${getNotificationActionName({ task })} 실행 완료` : buildTaskNotificationTitle(task, notificationContext),
+          detail: `${ownerPrefix}${buildTaskNotificationDetail(task, notificationContext)}`,
+          scheduledTime: getTaskNotificationScheduledTime(task),
+          date: task.date,
+        };
+      });
+    return taskItems.sort(notificationItemSorter);
   }, [calendarWeatherByDate, currentUser, notificationDemoDate, notificationDemoTime, notificationScopedTasks]);
 
   useEffect(() => {
@@ -651,6 +653,7 @@ export default function App() {
 
     const currentMinutes = timeValueToMinutes(notificationDemoTime);
     const dueItem = notificationItems.find((item) => {
+      if (item.completed) return false;
       const triggerMinutes = getNotificationTriggerMinutes(item);
       return Number.isFinite(triggerMinutes) && triggerMinutes === currentMinutes;
     });
@@ -1546,18 +1549,22 @@ export default function App() {
             </div>
             <div className="notification-popover-list">
               {notificationItems.map((item) => (
-                <article className="notification-popover-item" key={item.id}>
+                <article className={["notification-popover-item", item.completed ? "completed" : ""].filter(Boolean).join(" ")} key={item.id}>
                   <span className="notification-schedule-time">{getNotificationScheduleLabel(item)}</span>
                   <strong>{item.title}</strong>
                   <p>{item.detail}</p>
-                  <div>
-                    <button type="button" onClick={() => postponeNotification(item)}>
-                      미루기
-                    </button>
-                    <button type="button" onClick={() => executeNotification(item)}>
-                      실행
-                    </button>
-                  </div>
+                  {item.completed ? (
+                    <div className="notification-completed-label">실행 완료</div>
+                  ) : (
+                    <div>
+                      <button type="button" onClick={() => postponeNotification(item)}>
+                        미루기
+                      </button>
+                      <button type="button" onClick={() => executeNotification(item)}>
+                        실행
+                      </button>
+                    </div>
+                  )}
                 </article>
               ))}
               {notificationItems.length === 0 && <p className="notification-popover-empty">표시할 알림이 없습니다.</p>}
@@ -4264,19 +4271,27 @@ function shouldSuggestAutomation(task) {
   return task.source !== "auto" && /(회식|약속|여행|출근|수업|퇴근|귀가)/.test(`${task.title} ${task.place} ${task.repeat}`);
 }
 
-function pendingTasksForNotification(tasks, context = {}, limit = 5) {
-  const currentMinutes = timeValueToMinutes(context.time);
+function tasksForNotification(tasks, context = {}) {
   return tasks
-    .filter((task) => !task.done)
     .filter((task) => isTaskVisibleOnDate(task, context.date))
     .filter((task) => !isPersonalScheduleTask(task))
-    .filter((task) => {
-      const range = getTaskNotificationRange(task);
-      if (!range) return true;
-      return range.startMinutes <= currentMinutes + 30 && range.endMinutes >= currentMinutes - 10;
-    })
-    .sort(taskSorter)
-    .slice(0, limit);
+    .sort(taskSorter);
+}
+
+function isNotificationTaskCompleted(task, context = {}) {
+  if (task.done) return true;
+  const range = getTaskNotificationRange(task);
+  if (!range) return false;
+  return range.endMinutes <= timeValueToMinutes(context.time);
+}
+
+function notificationItemSorter(a, b) {
+  if (a.completed !== b.completed) return Number(a.completed) - Number(b.completed);
+  const aMinutes = getNotificationTriggerMinutes(a);
+  const bMinutes = getNotificationTriggerMinutes(b);
+  if (!Number.isFinite(aMinutes)) return 1;
+  if (!Number.isFinite(bMinutes)) return -1;
+  return a.completed ? bMinutes - aMinutes : aMinutes - bMinutes;
 }
 
 function buildConditionalNotifications(tasks, context = {}) {
@@ -4357,8 +4372,8 @@ function getNotificationTriggerMinutes(item = {}) {
 
 function getNotificationScheduleLabel(item = {}) {
   const triggerMinutes = getNotificationTriggerMinutes(item);
-  if (!Number.isFinite(triggerMinutes)) return "시간 미정";
-  return `${formatTimeValue(triggerMinutes)} 알림 예정`;
+  if (!Number.isFinite(triggerMinutes)) return item.completed ? "실행 완료" : "시간 미정";
+  return `${formatTimeValue(triggerMinutes)} ${item.completed ? "실행 완료" : "실행 예정"}`;
 }
 
 function getNotificationExecuteTitle(item = {}) {

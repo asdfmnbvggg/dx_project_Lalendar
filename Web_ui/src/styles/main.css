@@ -2838,6 +2838,20 @@
   align-items: start;
 }
 
+.notice-row.completed {
+  align-items: start;
+  opacity: 0.72;
+  background: #f5f6f8;
+}
+
+.notice-completed-label {
+  display: inline-block;
+  margin-top: 8px;
+  color: #68717d;
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .notice-actions {
   display: flex;
   flex-wrap: wrap;

@@ -78,19 +78,23 @@ export default function DetailPanel({
         {panel.type === "notifications" && (
           <section className="detail-list">
             {notifications.map((item) => (
-              <article className="notice-row actionable" key={item.id}>
-                <ClipboardList size={18} />
+              <article className={["notice-row", item.completed ? "completed" : "actionable"].join(" ")} key={item.id}>
+                {item.completed ? <Check size={18} /> : <ClipboardList size={18} />}
                 <div>
                   <strong>{item.title}</strong>
                   <p>{item.detail}</p>
-                  <div className="notice-actions">
-                    <button type="button" onClick={() => onPostponeNotification(item)}>
-                      미루기
-                    </button>
-                    <button type="button" onClick={() => onExecuteNotification(item)}>
-                      실행하기
-                    </button>
-                  </div>
+                  {item.completed ? (
+                    <span className="notice-completed-label">실행 완료</span>
+                  ) : (
+                    <div className="notice-actions">
+                      <button type="button" onClick={() => onPostponeNotification(item)}>
+                        미루기
+                      </button>
+                      <button type="button" onClick={() => onExecuteNotification(item)}>
+                        실행하기
+                      </button>
+                    </div>
+                  )}
                 </div>
               </article>
             ))}
