@@ -4,64 +4,16 @@
 
 .daily-report-preview {
   width: 100%;
+  font: inherit;
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: transform 140ms ease, box-shadow 140ms ease;
+  appearance: none;
+  transition: transform 120ms ease;
 }
 
 .daily-report-preview:active {
-  transform: scale(0.985);
-}
-
-.daily-report-preview-body {
-  position: relative;
-}
-
-.daily-report-preview-copy {
-  min-width: 0;
-  display: block;
-  min-height: 0;
-  padding: 0;
-  overflow: visible;
-  border-radius: 0;
-  background: transparent;
-}
-
-.daily-report-preview-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 5px;
-  color: #ff6d1f;
-  font-size: 10px;
-  font-weight: 900;
-}
-
-.daily-report-preview-copy strong {
-  display: block;
-  color: #242424;
-  font-size: 13px;
-  font-weight: 950;
-  line-height: 1.35;
-  word-break: keep-all;
-}
-
-.daily-report-preview .calendar-ai-report-tags {
-  display: flex;
-  place-items: initial;
-  min-height: 0;
-  padding: 0;
-  overflow: visible;
-  border-radius: 0;
-  background: transparent;
-}
-
-.daily-report-preview-arrow {
-  position: absolute;
-  right: -5px;
-  bottom: -4px;
-  color: #ff7a21;
+  transform: scale(0.99);
 }
 
 .daily-report-detail-page {

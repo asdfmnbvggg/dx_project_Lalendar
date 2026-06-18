@@ -85,6 +85,7 @@ export function createTodayDailyReport({
     id: date,
     date: formatDate(date),
     dayLabel: formatDayLabel(date),
+    cardText: normalizedText,
     title,
     subtitle,
     summary: "오늘의 일정과 가사일을 바탕으로 홈케어 리포트를 만들었어요.",
@@ -180,4 +181,3 @@ function addDays(date, amount) {
   next.setDate(next.getDate() + amount);
   return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-${String(next.getDate()).padStart(2, "0")}`;
 }
-
