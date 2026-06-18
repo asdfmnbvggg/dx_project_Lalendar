@@ -74,6 +74,7 @@ export default function CalendarPage({
   deleteTask,
   changeTaskOwner,
   updateTask,
+  validateTaskUpdate,
   postponeTask,
   onAddWeatherRecommendation,
   onAddTask,
@@ -366,6 +367,7 @@ export default function CalendarPage({
         task={editingTask}
         selectedDate={detailDate}
         onApplianceColorChange={onUpdateApplianceColor}
+        validateTaskUpdate={validateTaskUpdate}
         onClose={() => setEditingTask(null)}
         onSave={(updates) => {
           const updatedTask = { ...editingTask, ...updates };
@@ -1293,7 +1295,7 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
   );
 }
 
-function DailyScheduleEditPage({ task, selectedDate, onClose, onSave, onApplianceColorChange }) {
+function DailyScheduleEditPage({ task, selectedDate, onClose, onSave, onApplianceColorChange, validateTaskUpdate }) {
   const parsedDate = parseDateKey(task.date || selectedDate);
   const parsedEndDate = parseDateKey(task.endDate || task.date || selectedDate);
   const colorOptions = scheduleColorOptions;
@@ -1329,16 +1331,24 @@ function DailyScheduleEditPage({ task, selectedDate, onClose, onSave, onApplianc
     }
 
     const scheduleDates = orderScheduleDates(startDate, endDate);
-    if (pendingApplianceColor && task.applianceType) {
-      onApplianceColorChange?.(task.applianceType, pendingApplianceColor);
-    }
-    onSave({
+    const updates = {
       title: trimmedTitle,
       date: scheduleDates.date,
       color,
       endDate: scheduleDates.endDate,
       repeat: isAllDay ? "하루종일" : startTime + " ~ " + endTime,
-    });
+    };
+    if (scheduleDates.date !== task.date) {
+      const restriction = validateTaskUpdate?.(task, updates);
+      if (restriction) {
+        setError(restriction);
+        return;
+      }
+    }
+    if (pendingApplianceColor && task.applianceType) {
+      onApplianceColorChange?.(task.applianceType, pendingApplianceColor);
+    }
+    onSave(updates);
   }
 
   return (

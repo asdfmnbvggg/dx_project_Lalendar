@@ -12,7 +12,7 @@ import {
   Pencil,
   Plus,
 } from "lucide-react";
-import { automationAlerts, dateKey, isRainyDate, members, tagLabel, weatherByDate } from "./data.js";
+import { dateKey, members, tagLabel, weatherByDate } from "./data.js";
 import CalendarPage from "./pages/CalendarPage.jsx";
 import CrewPage from "./pages/CrewPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
@@ -175,6 +175,7 @@ export default function App() {
   const dailyReportKnownTaskIdsRef = useRef(null);
   const dailyReportKnownUserIdRef = useRef("");
   const dailyReportTaskChangePendingRef = useRef(false);
+  const weatherAdjustedTaskIdsRef = useRef(new Set());
 
   useEffect(() => {
     setTasks((current) => {
@@ -273,6 +274,47 @@ export default function App() {
       isActive = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (Object.keys(calendarWeatherByDate).length === 0) return;
+
+    const today = getTodayKey();
+    const adjustments = tasks
+      .filter((task) => !task.done && task.date >= today && isLaundryTask(task))
+      .filter((task) => !weatherAdjustedTaskIdsRef.current.has(String(task.id)))
+      .filter((task) => isRainyWeatherLike(calendarWeatherByDate[task.date] || weatherByDate[task.date]))
+      .map((task) => {
+        const nextDate = findNextAvailableLaundryDate(task, tasks, calendarWeatherByDate);
+        return nextDate ? { task, nextDate } : null;
+      })
+      .filter(Boolean);
+
+    if (adjustments.length === 0) return;
+
+    adjustments.forEach(({ task }) => weatherAdjustedTaskIdsRef.current.add(String(task.id)));
+    setTasks((current) =>
+      current.map((task) => {
+        const adjustment = adjustments.find((item) => item.task.id === task.id);
+        return adjustment
+          ? {
+              ...task,
+              date: adjustment.nextDate,
+              repeat: appendPostponeLabel(task.repeat, "날씨 자동 조정"),
+            }
+          : task;
+      }),
+    );
+
+    adjustments.forEach(({ task, nextDate }) => {
+      if (!task.firestoreSchedule) return;
+      const updates = {
+        date: nextDate,
+        repeat: appendPostponeLabel(task.repeat, "날씨 자동 조정"),
+      };
+      updateUserSchedule(task.userId, task.scheduleId || task.id, taskToFirestoreSchedule({ ...task, ...updates }))
+        .catch((error) => devWarn("[firestore] weather schedule adjustment failed", error));
+    });
+  }, [calendarWeatherByDate, tasks]);
 
   useEffect(() => {
     let isActive = true;
@@ -585,14 +627,9 @@ export default function App() {
       userName: currentUser?.displayName || currentUser?.name || "사용자",
       weather: calendarWeatherByDate[notificationDemoDate] || weatherByDate[notificationDemoDate],
     };
-    const automationItems = buildConditionalNotifications(notificationScopedTasks, notificationContext)
-      .filter((alert) => !dismissedAlerts.includes(alert.id))
-      .map((alert) => ({ ...alert, type: "automation" }));
-    const savedAutomationItems = automationAlerts
-      .filter((alert) => alert.date === notificationDemoDate)
-      .filter((alert) => !dismissedAlerts.includes(alert.id))
-      .map((alert) => ({ ...alert, type: "automation" }));
-    const taskItems = pendingTasksForNotification(notificationScopedTasks, notificationContext, isMasterUser(currentUser) ? 24 : 5).map((task) => {
+    const taskItems = pendingTasksForNotification(notificationScopedTasks, notificationContext, isMasterUser(currentUser) ? 24 : 5)
+      .filter(isExecutionNotificationTask)
+      .map((task) => {
       const owner = findUserById(getTaskUserId(task));
       const ownerPrefix = isMasterUser(currentUser) && owner ? `${owner.displayName || owner.name} · ` : "";
 
@@ -606,8 +643,8 @@ export default function App() {
         date: task.date,
       };
     });
-    return [...automationItems, ...savedAutomationItems, ...taskItems].slice(0, isMasterUser(currentUser) ? 24 : 8);
-  }, [calendarWeatherByDate, currentUser, dismissedAlerts, notificationDemoDate, notificationDemoTime, notificationScopedTasks]);
+    return taskItems.slice(0, isMasterUser(currentUser) ? 24 : 8);
+  }, [calendarWeatherByDate, currentUser, notificationDemoDate, notificationDemoTime, notificationScopedTasks]);
 
   useEffect(() => {
     if (activeTab !== "home" && !isNotificationOpen) return;
@@ -743,8 +780,14 @@ export default function App() {
   }
 
   function requestMoveTask(task, date, startTime) {
-    if (isLaundryTask(task) && isRainyDate(date)) {
-      setPendingPostpone({ task, nextDate: date, nextTime: startTime });
+    const restriction = getTaskDateRestriction(
+      task,
+      { date, startTime, repeat: startTime ? buildPostponedRepeat(task, startTime) : task.repeat },
+      tasks,
+      calendarWeatherByDate,
+    );
+    if (restriction) {
+      setPendingPostpone({ task, nextDate: date, nextTime: startTime, reason: restriction });
       return;
     }
 
@@ -1287,6 +1330,7 @@ export default function App() {
     deleteTask,
     changeTaskOwner,
     updateTask,
+    validateTaskUpdate: (task, updates) => getTaskDateRestriction(task, updates, tasks, calendarWeatherByDate),
     onUpdateApplianceColor: updateApplianceCalendarColor,
     postponeTask,
     onAddWeatherRecommendation: addWeatherRecommendationTask,
@@ -1625,23 +1669,14 @@ export default function App() {
       {pendingPostpone && (
         <div className="confirm-backdrop" role="presentation">
           <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="postpone-title">
-            <p>비 예보 확인</p>
-            <h2 id="postpone-title">정말 다음날로 미룰까요?</h2>
+            <p>날짜 변경 불가</p>
+            <h2 id="postpone-title">{pendingPostpone.nextDate}로 변경할 수 없어요.</h2>
             <span>
-              {pendingPostpone.task.title}을 {pendingPostpone.nextDate}로 미루면 비 오는 날과 겹쳐요.
+              {pendingPostpone.reason}
             </span>
             <div className="confirm-actions">
               <button type="button" onClick={() => setPendingPostpone(null)}>
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  moveTaskDate(pendingPostpone.task.id, pendingPostpone.nextDate, pendingPostpone.nextTime);
-                  setPendingPostpone(null);
-                }}
-              >
-                그래도 미루기
+                확인
               </button>
             </div>
           </section>
@@ -4056,7 +4091,49 @@ const appliancePlaceLabel = {
 };
 
 function isLaundryTask(task) {
-  return /세탁|빨래/.test(task.title);
+  return /세탁|빨래/.test(`${task?.title || ""} ${task?.place || ""}`) || ["WASHER", "NATURAL_DRY"].includes(task?.applianceType);
+}
+
+function isExecutionNotificationTask(task = {}) {
+  if (task.displayType === "appliance" || task.applianceType) return true;
+  return /세탁기|건조기|에어컨|공기청정기|로봇청소기|식기세척기|제습기/.test(`${task.title || ""} ${task.place || ""}`);
+}
+
+function findNextAvailableLaundryDate(task, tasks, calendarWeatherByDate) {
+  for (let offset = 1; offset <= 7; offset += 1) {
+    const date = addDays(task.date, offset);
+    const weather = calendarWeatherByDate[date] || weatherByDate[date];
+    if (!weather || isRainyWeatherLike(weather)) continue;
+    if (!getTaskDateRestriction(task, { date }, tasks, calendarWeatherByDate, { ignoreWeather: true })) return date;
+  }
+  return "";
+}
+
+function getTaskDateRestriction(task = {}, updates = {}, tasks = [], calendarWeatherByDate = {}, options = {}) {
+  const candidate = { ...task, ...updates };
+  const date = candidate.date;
+  if (!date) return "변경할 날짜를 선택해 주세요.";
+
+  const weather = calendarWeatherByDate[date] || weatherByDate[date];
+  if (!options.ignoreWeather && isLaundryTask(candidate) && isRainyWeatherLike(weather)) {
+    return "비가 오는 날에는 세탁물을 말리기 어려워 세탁 일정을 잡을 수 없어요.";
+  }
+
+  const candidateRange = getTaskNotificationRange(candidate);
+  if (!candidateRange) return "";
+
+  const conflict = tasks.find((other) => {
+    if (other.id === task.id || other.done || other.date !== date) return false;
+    if (getTaskUserId(other) !== getTaskUserId(candidate)) return false;
+    const otherRange = getTaskNotificationRange(other);
+    return otherRange && candidateRange.startMinutes < otherRange.endMinutes && candidateRange.endMinutes > otherRange.startMinutes;
+  });
+
+  if (conflict) {
+    return `같은 시간에 '${conflict.title}' 일정이 있어 변경할 수 없어요.`;
+  }
+
+  return "";
 }
 
 function isCalendarHouseworkTask(task) {
