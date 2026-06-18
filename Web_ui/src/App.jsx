@@ -1225,7 +1225,7 @@ export default function App() {
     }
 
     try {
-      const commandPayload = normalizeDeviceCommandPayload({
+      const commandPayload = buildDeviceCommandPayloadFromRealtimePopup({
         command: sensorPopup.command,
         mode: sensorPopup.mode,
         applianceType: sensorPopup.applianceType,
@@ -2057,14 +2057,11 @@ function buildDeviceCommandPayloadFromTask(task = {}, context = {}) {
   }
 
   if (task.applianceType === "AIR_PURIFIER" || /공기청정|미세먼지/i.test(`${task.title || ""} ${task.place || ""} ${task.applianceName || ""}`)) {
-    return {
-      applianceType: "AIR_PURIFIER",
-      applianceName: task.applianceName || "공기청정기",
-      command: "air_purifier_on",
-      mode: task.applianceMode || task.currentMode || "자동",
+    return buildAirPurifierCommandPayload({
+      ...task,
       reason: "캘린더 가전 실행 확인 알림에서 공기청정기 실행을 요청했습니다.",
       targetUserId: getTaskUserId(task),
-    };
+    });
   }
 
   if (isWasherScheduleTask(task)) {
@@ -2110,8 +2107,35 @@ function isExecutableApplianceTask(task = {}) {
 }
 
 function normalizeDeviceCommandPayload(payload = {}) {
-  if (payload.applianceType !== "AIR_CONDITIONER") return payload;
-  return buildAirConditionerCommandPayload(payload, { requestedBy: payload.requestedBy });
+  if (payload.applianceType === "AIR_CONDITIONER") {
+    return buildAirConditionerCommandPayload(payload, { requestedBy: payload.requestedBy });
+  }
+
+  if (payload.applianceType === "AIR_PURIFIER") {
+    return buildAirPurifierCommandPayload(payload);
+  }
+
+  return payload;
+}
+
+function buildDeviceCommandPayloadFromRealtimePopup(popup = {}) {
+  return normalizeDeviceCommandPayload({
+    ...popup,
+    source: popup.source || "realtime-sensor-popup",
+  });
+}
+
+function buildAirPurifierCommandPayload(source = {}) {
+  return {
+    applianceType: "AIR_PURIFIER",
+    applianceId: "air_purifier",
+    applianceName: source.applianceName || "공기청정기",
+    command: "air_purifier_on",
+    mode: "자동",
+    reason: source.reason || "실시간 센서 임계치 초과로 공기청정기 실행을 요청했습니다.",
+    targetUserId: source.targetUserId || "",
+    requestedBy: source.requestedBy || "",
+  };
 }
 
 function buildAirConditionerCommandPayload(source = {}, context = {}) {

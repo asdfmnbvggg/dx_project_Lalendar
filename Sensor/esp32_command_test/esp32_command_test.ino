@@ -286,9 +286,13 @@ void turnOffAllApplianceLeds() {
   }
 }
 
-void turnOnOnlyApplianceLed(int ledPin) {
+void turnOnOnlyApplianceLed(int ledPin, const char* applianceLabel) {
   turnOffAllApplianceLeds();
   digitalWrite(ledPin, HIGH);
+  Serial.print("LED ON GPIO");
+  Serial.print(ledPin);
+  Serial.print(": ");
+  Serial.println(applianceLabel);
 }
 
 
@@ -306,7 +310,7 @@ void handleCommand(String command) {
   // 공기청정기
   // =========================
   if (command == "air_purifier_on") {
-    turnOnOnlyApplianceLed(AIR_PURIFIER_LED);
+    turnOnOnlyApplianceLed(AIR_PURIFIER_LED, "air purifier");
     Serial.println("공기청정기 자동 모드 실행 완료");
   }
 
@@ -315,8 +319,8 @@ void handleCommand(String command) {
     Serial.println("공기청정기 종료 완료");
   }
 
-  else if (command == "air_purifier_power") {
-    turnOnOnlyApplianceLed(AIR_PURIFIER_LED);
+  else if (command == "air_purifier_power" || command == "strong") {
+    turnOnOnlyApplianceLed(AIR_PURIFIER_LED, "air purifier");
     Serial.println("공기청정기 강력 모드 실행 완료");
   }
 
@@ -324,57 +328,57 @@ void handleCommand(String command) {
   // 에어컨
   // =========================
   else if (command == "shared_aircon_power_cooling") {
-    turnOnOnlyApplianceLed(SHARED_AIRCON_LED);
+    turnOnOnlyApplianceLed(SHARED_AIRCON_LED, "shared aircon");
     Serial.println("공동 에어컨 파워냉방 실행 완료");
   }
 
   else if (command == "shared_aircon_dry") {
-    turnOnOnlyApplianceLed(SHARED_AIRCON_LED);
+    turnOnOnlyApplianceLed(SHARED_AIRCON_LED, "shared aircon");
     Serial.println("공동 에어컨 제습 실행 완료");
   }
 
   else if (command == "sumin_aircon_power_cooling") {
-    turnOnOnlyApplianceLed(SUMIN_AIRCON_LED);
+    turnOnOnlyApplianceLed(SUMIN_AIRCON_LED, "sumin aircon");
     Serial.println("수민 에어컨 파워냉방 실행 완료");
   }
 
   else if (command == "sumin_aircon_dry") {
-    turnOnOnlyApplianceLed(SUMIN_AIRCON_LED);
+    turnOnOnlyApplianceLed(SUMIN_AIRCON_LED, "sumin aircon");
     Serial.println("수민 에어컨 제습 실행 완료");
   }
 
   else if (command == "dada_aircon_power_cooling") {
-    turnOnOnlyApplianceLed(DADA_AIRCON_LED);
+    turnOnOnlyApplianceLed(DADA_AIRCON_LED, "dada aircon");
     Serial.println("다빈 에어컨 파워냉방 실행 완료");
   }
 
   else if (command == "dada_aircon_dry") {
-    turnOnOnlyApplianceLed(DADA_AIRCON_LED);
+    turnOnOnlyApplianceLed(DADA_AIRCON_LED, "dada aircon");
     Serial.println("다빈 에어컨 제습 실행 완료");
   }
 
   else if (command == "jea_aircon_power_cooling") {
-    turnOnOnlyApplianceLed(JEA_AIRCON_LED);
+    turnOnOnlyApplianceLed(JEA_AIRCON_LED, "jea aircon");
     Serial.println("재혁 에어컨 파워냉방 실행 완료");
   }
 
   else if (command == "jea_aircon_dry") {
-    turnOnOnlyApplianceLed(JEA_AIRCON_LED);
+    turnOnOnlyApplianceLed(JEA_AIRCON_LED, "jea aircon");
     Serial.println("재혁 에어컨 제습 실행 완료");
   }
 
   else if (command == "power_cooling") {
-    turnOnOnlyApplianceLed(SHARED_AIRCON_LED);
+    turnOnOnlyApplianceLed(SHARED_AIRCON_LED, "shared aircon");
     Serial.println("에어컨 파워냉방 실행 완료");
   }
 
   else if (command == "dry") {
-    turnOnOnlyApplianceLed(SHARED_AIRCON_LED);
+    turnOnOnlyApplianceLed(SHARED_AIRCON_LED, "shared aircon");
     Serial.println("에어컨 제습 모드 실행 완료");
   }
 
   else if (command == "cooling") {
-    turnOnOnlyApplianceLed(SHARED_AIRCON_LED);
+    turnOnOnlyApplianceLed(SHARED_AIRCON_LED, "shared aircon");
     Serial.println("에어컨 냉방 실행 완료");
   }
 
@@ -382,17 +386,17 @@ void handleCommand(String command) {
   // 세탁기
   // =========================
   else if (command == "washer_start") {
-    turnOnOnlyApplianceLed(WASHER_LED);
+    turnOnOnlyApplianceLed(WASHER_LED, "washer");
     Serial.println("세탁기 표준 모드 실행 완료");
   }
 
   else if (command == "washer_quick") {
-    turnOnOnlyApplianceLed(WASHER_LED);
+    turnOnOnlyApplianceLed(WASHER_LED, "washer");
     Serial.println("세탁기 빠른 세탁 모드 실행 완료");
   }
 
   else if (command == "washer_dry") {
-    turnOnOnlyApplianceLed(WASHER_LED);
+    turnOnOnlyApplianceLed(WASHER_LED, "washer");
     Serial.println("세탁기 건조 모드 실행 완료");
   }
 
@@ -400,7 +404,7 @@ void handleCommand(String command) {
   // 로봇청소기
   // =========================
   else if (command == "robot_cleaner_start") {
-    turnOnOnlyApplianceLed(ROBOT_CLEANER_LED);
+    turnOnOnlyApplianceLed(ROBOT_CLEANER_LED, "robot cleaner");
     Serial.println("로봇청소기 실행 완료");
   }
 
@@ -408,7 +412,7 @@ void handleCommand(String command) {
   // 식기세척기
   // =========================
   else if (command == "dishwasher_start") {
-    turnOnOnlyApplianceLed(DISHWASHER_LED);
+    turnOnOnlyApplianceLed(DISHWASHER_LED, "dishwasher");
     Serial.println("식기세척기 표준 모드 실행 완료");
   }
 
@@ -416,7 +420,7 @@ void handleCommand(String command) {
   // 건조기
   // =========================
   else if (command == "dryer_start") {
-    turnOnOnlyApplianceLed(DRYER_LED);
+    turnOnOnlyApplianceLed(DRYER_LED, "dryer");
     Serial.println("건조기 실행 완료");
   }
 
@@ -424,7 +428,7 @@ void handleCommand(String command) {
   // 알 수 없는 명령
   // =========================
   else {
-    Serial.print("알 수 없는 명령입니다: ");
+    Serial.print("Unknown command: ");
     Serial.println(command);
   }
 }
