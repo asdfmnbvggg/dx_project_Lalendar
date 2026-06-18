@@ -49,6 +49,8 @@ export default function TaskComposer({ selectedDate, selectedMember, lockedOwner
         owner,
         done: false,
         repeat: `${repeat}${startTime && endTime ? ` · ${startTime}-${endTime}` : ""}`,
+        startTime,
+        endTime,
         source: "manual",
         description: memo.trim(),
         reminder: reminder === "OFF" ? "off" : reminder,

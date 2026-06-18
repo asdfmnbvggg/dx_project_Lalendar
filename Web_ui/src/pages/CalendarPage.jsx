@@ -1130,6 +1130,8 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
       owner: initialOwner,
       done: false,
       repeat: isAllDay ? "하루종일" : startTime + " ~ " + endTime,
+      startTime: isAllDay ? undefined : startTime,
+      endTime: isAllDay ? undefined : endTime,
       source: "manual",
       color: selectedColor,
       endDate: scheduleDates.endDate,

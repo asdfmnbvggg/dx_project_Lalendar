@@ -27,6 +27,7 @@ import { fetchMidWeather } from "./services/midWeatherService.js";
 import { fetchAirQuality } from "./services/airQualityService.js";
 import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendationService.js";
 import { buildRoutineRecommendations } from "./services/routinePredictionService.js";
+import { predictHouseworkTask } from "./services/taskPredictionService.js";
 import { sendDeviceCommand, subscribeSensorLatest } from "./services/sensorRealtimeService.js";
 import { buildRealtimeAppliancePopups, buildScheduledWasherPopup, getPopupKey } from "./services/appliancePopupRuleService.js";
 
@@ -136,6 +137,8 @@ export default function App() {
   const [calendarView, setCalendarView] = useState(storedSession?.calendarView || DEFAULT_CALENDAR_VIEW);
   const [calendarWeatherByDate, setCalendarWeatherByDate] = useState({});
   const [weatherApiStatus, setWeatherApiStatus] = useState("loading");
+  const [airQualityPm10, setAirQualityPm10] = useState(null);
+  const [aiRecommendationNotice, setAiRecommendationNotice] = useState("");
   const [sensorPopup, setSensorPopup] = useState(null);
   const [sensorPopupQueue, setSensorPopupQueue] = useState([]);
   const [latestSensorData, setLatestSensorData] = useState(null);
@@ -212,6 +215,29 @@ export default function App() {
       isActive = false;
     };
   }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    fetchAirQuality()
+      .then((result) => {
+        if (isActive) setAirQualityPm10(getAirQualityPm10(result));
+      })
+      .catch((error) => {
+        devWarn("Air quality data unavailable for AI recommendation", error);
+        if (isActive) setAirQualityPm10(null);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!aiRecommendationNotice) return undefined;
+    const timerId = window.setTimeout(() => setAiRecommendationNotice(""), 3200);
+    return () => window.clearTimeout(timerId);
+  }, [aiRecommendationNotice]);
 
   useEffect(() => {
     if (!currentUser || !isOnboardingComplete) return undefined;
@@ -563,6 +589,64 @@ export default function App() {
     }
     if (shouldSuggestAutomation(nextTask)) {
       setAutomationPrompt(nextTask);
+    }
+    if (shouldRequestAiHouseworkTask(nextTask)) {
+      requestAiHouseworkTask(nextTask);
+    }
+  }
+
+  async function requestAiHouseworkTask(eventTask) {
+    const timeRange = getTaskNotificationRange(eventTask);
+    if (!timeRange) {
+      devWarn("AI task prediction skipped: event time range is missing", eventTask);
+      return;
+    }
+
+    const weather = calendarWeatherByDate[eventTask.date] || weatherByDate[eventTask.date] || {};
+    const input = {
+      event_title: eventTask.title,
+      event_date: eventTask.date,
+      event_start_time: formatTimeValue(timeRange.startMinutes),
+      event_end_time: formatTimeValue(timeRange.endMinutes),
+      day_temp: getPredictionTemperature(weather),
+      day_humidity: toNullableFiniteNumber(weather.humidity),
+      day_dust: toNullableFiniteNumber(latestSensorData?.pm10) ?? airQualityPm10,
+    };
+
+    try {
+      const prediction = await predictHouseworkTask(input);
+      if (prediction.task_appliance === "none") return;
+
+      const applianceType = toCalendarApplianceType(prediction.task_appliance);
+      const aiTask = normalizeTaskForUser(
+        {
+          id: createTaskId(),
+          type: "ai_task",
+          source: "together_ai",
+          title: `${prediction.task_appliance_mode} · ${prediction.task_appliance}`,
+          date: prediction.task_date,
+          startTime: prediction.task_start_time,
+          endTime: prediction.task_end_time,
+          repeat: `${prediction.task_start_time} ~ ${prediction.task_end_time}`,
+          place: appliancePlaceLabel[applianceType] || "가전 자동화",
+          tag: "house",
+          owner: eventTask.owner,
+          userId: getTaskUserId(eventTask),
+          done: false,
+          displayType: "appliance",
+          appliance: prediction.task_appliance,
+          applianceType,
+          applianceMode: prediction.task_appliance_mode,
+          currentMode: prediction.task_appliance_mode,
+          aiInput: input,
+        },
+        getTaskUserId(eventTask),
+      );
+
+      setTasks((current) => [aiTask, ...current]);
+    } catch (error) {
+      console.error("AI housework recommendation failed", error);
+      setAiRecommendationNotice("AI 가사일 추천을 생성하지 못했어요.");
     }
   }
 
@@ -1361,6 +1445,12 @@ export default function App() {
           </section>
         </div>
       )}
+
+      {aiRecommendationNotice && (
+        <div className="ai-recommendation-toast" role="status">
+          {aiRecommendationNotice}
+        </div>
+      )}
     </main>
   );
 }
@@ -1638,6 +1728,46 @@ const fixedScheduleColorByTitle = {
 
 function devWarn(...args) {
   if (isDev) console.warn(...args);
+}
+
+function shouldRequestAiHouseworkTask(task = {}) {
+  return task.source === "manual" && task.type !== "ai_task" && task.tag !== "house" && task.displayType !== "appliance";
+}
+
+function getPredictionTemperature(weather = {}) {
+  const minTemp = toNullableFiniteNumber(weather.minTemp);
+  const maxTemp = toNullableFiniteNumber(weather.maxTemp ?? weather.high);
+  if (minTemp !== null && maxTemp !== null) return Math.round(((minTemp + maxTemp) / 2) * 10) / 10;
+  return maxTemp ?? minTemp;
+}
+
+function getAirQualityPm10(result = {}) {
+  const items = Array.isArray(result.data) ? result.data : [];
+  const item = items.find((candidate) => toNullableFiniteNumber(candidate.pm10Value ?? candidate.pm10) !== null);
+  return toNullableFiniteNumber(item?.pm10Value ?? item?.pm10);
+}
+
+function toNullableFiniteNumber(value) {
+  if (value === null || value === undefined || value === "" || value === "-") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function toCalendarApplianceType(appliance) {
+  const types = {
+    washer: "WASHER",
+    dryer: "DRYER",
+    dishwasher: "DISHWASHER",
+    robot_cleaner: "ROBOT_CLEANER",
+    air_purifier: "AIR_PURIFIER",
+    dehumidifier: "DEHUMIDIFIER",
+    air_conditioner: "AIR_CONDITIONER",
+  };
+  return types[appliance] || "ETC";
+}
+
+function createTaskId() {
+  return globalThis.crypto?.randomUUID?.() || `ai-task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 const fallbackFixedScheduleColors = CALENDAR_SCHEDULE_COLORS;
 
@@ -3376,6 +3506,7 @@ const appliancePlaceLabel = {
   AIR_CONDITIONER: "거실",
   AIR_PURIFIER: "거실",
   ROBOT_CLEANER: "현관",
+  DISHWASHER: "주방",
 };
 
 function isLaundryTask(task) {

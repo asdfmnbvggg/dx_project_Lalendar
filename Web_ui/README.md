@@ -1,5 +1,22 @@
 # L-lander Web UI
 
+## Together AI task recommendations
+
+When a user adds a personal calendar event, the app sends the event time and
+available weather/PM10 values to `/api/predict-task`. The Vercel serverless
+function calls Together AI and adds the returned housework task to the
+calendar.
+
+Configure these server-side environment variables in Vercel:
+
+```text
+TOGETHER_API_KEY=your_together_api_key
+TOGETHER_MODEL=Qwen/Qwen3-8B
+```
+
+`TOGETHER_MODEL` can be replaced with a fine-tuned Together model name.
+Do not use a `VITE_` prefix for the API key.
+
 ## Environment Variables
 
 The weather and air-quality services are called from the Vite frontend with public `VITE_` variables:

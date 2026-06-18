@@ -1,6 +1,7 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+import predictTaskHandler from "../api/predict-task.js";
 import weatherHandler from "../server/weatherHandler.js";
 
 export default defineConfig(({ mode }) => {
@@ -11,7 +12,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
-      localWeatherApiPlugin(),
+      localServerlessApiPlugin(),
       react(),
       VitePWA({
         registerType: "autoUpdate",
@@ -50,11 +51,16 @@ export default defineConfig(({ mode }) => {
   };
 });
 
-function localWeatherApiPlugin() {
+function localServerlessApiPlugin() {
   return {
-    name: "local-weather-api",
+    name: "local-serverless-api",
     configureServer(server) {
-      const weatherMiddleware = async (request, response, next) => {
+      const apiMiddleware = async (request, response, next) => {
+        if (request.url?.startsWith("/api/predict-task")) {
+          await predictTaskHandler(request, createNodeResponseAdapter(response));
+          return;
+        }
+
         if (!request.url?.startsWith("/api/weather")) {
           next();
           return;
@@ -69,7 +75,7 @@ function localWeatherApiPlugin() {
         );
       };
 
-      server.middlewares.use(weatherMiddleware);
+      server.middlewares.use(apiMiddleware);
       server.middlewares.stack.unshift(server.middlewares.stack.pop());
     },
   };
