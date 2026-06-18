@@ -144,8 +144,11 @@ function buildSystemPrompt() {
     "입력 데이터에 있는 사실만 사용하고, 없는 일정·시간·사람·날씨·수치를 지어내지 않는다.",
     "일정이 있으면 시간대와 구성원 이름을 자연스럽게 반영하고, 가전 작업이 있으면 가전명과 모드를 반영한다.",
     "비·습도·미세먼지·더위·추위 정보가 있으면 실제 데이터에 맞는 생활 팁을 작성한다.",
-    "오늘 해야 할 일뿐 아니라 내일과 모레 미리 확인할 내용도 필요한 경우 포함한다.",
-    "title은 짧은 제목, summary는 메인 카드용 1~2문장, detail은 상세 설명으로 작성한다.",
+    "오늘 내용을 우선하고, 내일과 모레 내용은 정말 필요할 때만 한 줄 안에 짧게 포함한다.",
+    "title은 일반 제목 대신 summary와 같은 한 줄 핵심 문장으로 작성한다.",
+    "summary는 1문장, 45자 이내로 작성한다. GPT DAILY NOTE에 그대로 들어갈 짧은 문장이다.",
+    "detail은 1문장, 80자 이내로 아주 짧게 작성한다.",
+    "반복 일정은 여러 날짜를 풀어 쓰지 말고 '매주 월~금 09:00-18:00 회사'처럼 한 줄 규칙으로만 요약한다.",
     "weatherTip과 taskTip은 해당 근거가 없으면 빈 문자열로 둔다.",
     "imageTheme은 homecare_laundry, homecare_cleaning, homecare_air, homecare_weather, homecare_schedule, homecare_default 중 하나로 작성한다.",
     "tags는 입력에 맞는 짧은 한국어 태그 1~3개로 작성한다.",
@@ -180,9 +183,9 @@ function parseAndValidateReport(content) {
   }
 
   const report = {
-    title: normalizeTextField(value.title, 80),
-    summary: normalizeTextField(value.summary, 220),
-    detail: normalizeTextField(value.detail, 360),
+    title: normalizeTextField(value.title, 60),
+    summary: normalizeTextField(value.summary, 80),
+    detail: normalizeTextField(value.detail, 100),
     weatherTip: normalizeTextField(value.weatherTip, 220),
     taskTip: normalizeTextField(value.taskTip, 220),
     imageTheme: normalizeTextField(value.imageTheme, 60) || "homecare_default",

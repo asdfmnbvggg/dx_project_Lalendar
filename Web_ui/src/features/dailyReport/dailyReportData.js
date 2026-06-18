@@ -85,17 +85,24 @@ export function createTodayDailyReport({
   const resolvedWeatherNotice = weatherNotice || buildWeatherNote(weather);
   const resolvedChoreNotice = choreNotice || buildChoreNote(applianceItems);
   const detailNotices = [weatherNotice, choreNotice].filter(Boolean);
+  const resolvedTitle = buildReportTitle(normalizedText, title);
+  const resolvedSummary = buildShortReportDetail({
+    detail,
+    scheduleItems,
+    applianceItems,
+    weatherNotice: resolvedWeatherNotice,
+    choreNotice: resolvedChoreNotice,
+    detailNotices,
+  });
 
   return {
     id: date,
     date: formatDate(date),
     dayLabel: formatDayLabel(date),
     cardText: normalizedText,
-    title: String(title || normalizedText).trim(),
+    title: resolvedTitle,
     subtitle: getPriorityNotice(priority, resolvedWeatherNotice, resolvedChoreNotice),
-    summary: String(detail || "").trim() || (detailNotices.length > 0
-      ? detailNotices.join(" ")
-      : "오늘의 일정과 가사일 데이터를 바탕으로 리포트를 정리했어요."),
+    summary: resolvedSummary,
     aiNarrative: normalizedText,
     imageTheme,
     priority,
@@ -130,6 +137,49 @@ function getPriorityNotice(priority, weatherNotice, choreNotice) {
   if (priority === "weather" && weatherNotice) return weatherNotice;
   if (priority === "chore" && choreNotice) return choreNotice;
   return choreNotice || weatherNotice || "오늘의 세부 일정과 진행 상황을 아래에서 확인해 주세요.";
+}
+
+function buildReportTitle(summary, fallbackTitle) {
+  const preferred = normalizeOneLine(summary);
+  const fallback = normalizeOneLine(fallbackTitle);
+  return trimSentence(preferred || fallback || "오늘의 가족 일정", 42);
+}
+
+function buildShortReportDetail({ detail, scheduleItems, applianceItems, weatherNotice, choreNotice, detailNotices }) {
+  const generated = buildOneLineTaskDetail(scheduleItems, applianceItems);
+  if (generated) return generated;
+
+  const source = normalizeOneLine(detail) || detailNotices.join(" ") || choreNotice || weatherNotice;
+  return trimSentence(source || "오늘의 일정과 가사일을 한 줄로 정리했어요.", 72);
+}
+
+function buildOneLineTaskDetail(scheduleItems, applianceItems) {
+  const scheduleText = summarizeItems(scheduleItems, "개인 일정");
+  const applianceText = summarizeItems(applianceItems, "가사일");
+
+  if (scheduleText && applianceText) return `${scheduleText}과 ${applianceText}을 한 줄로 확인해요.`;
+  if (scheduleText) return `${scheduleText}을 한 줄로 확인해요.`;
+  if (applianceText) return `${applianceText}을 한 줄로 확인해요.`;
+  return "";
+}
+
+function summarizeItems(items, fallbackLabel) {
+  const titles = [...new Set(items.map((item) => normalizeOneLine(item.title)).filter(Boolean))];
+  if (titles.length === 0) return "";
+  if (titles.length === 1) return titles[0];
+  return `${titles[0]} 외 ${titles.length - 1}개 ${fallbackLabel}`;
+}
+
+function trimSentence(value, limit) {
+  const text = normalizeOneLine(value);
+  if (!text) return "";
+  const firstSentence = text.match(/^.+?[.!?。]|^.+?[요다]\./)?.[0] || text;
+  const compact = firstSentence.length <= limit ? firstSentence : text;
+  return compact.length <= limit ? compact : `${compact.slice(0, Math.max(0, limit - 1)).trim()}…`;
+}
+
+function normalizeOneLine(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
 }
 
 function buildImageRecords(date, heroImageUrl, tasks) {

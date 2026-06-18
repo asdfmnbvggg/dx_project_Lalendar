@@ -59,14 +59,6 @@ export default function DailyReportDetail({ report, onBack, onAddTodo, onUpdateT
           </div>
         </section>
 
-        <section className="daily-report-character-note">
-          <img src={report.characterImageUrl} alt="리포트를 안내하는 플래니 캐릭터" />
-          <div>
-            <span>GPT DAILY NOTE</span>
-            <p>{report.aiNarrative}</p>
-          </div>
-        </section>
-
         <div className="daily-report-summary-grid">
           <DailyBriefingCard
             scheduleItems={report.scheduleItems}
