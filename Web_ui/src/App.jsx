@@ -27,6 +27,7 @@ import { fetchMidWeather } from "./services/midWeatherService.js";
 import { fetchAirQuality } from "./services/airQualityService.js";
 import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendationService.js";
 import { buildRoutineRecommendations } from "./services/routinePredictionService.js";
+import { DAILY_REPORT_FALLBACK_TEXT, fetchDailyReport } from "./services/dailyReportService.js";
 import { predictHouseworkTask } from "./services/taskPredictionService.js";
 import { sendDeviceCommand, subscribeSensorLatest } from "./services/sensorRealtimeService.js";
 import { THRESHOLDS, buildRealtimeAppliancePopups, buildScheduledWasherPopup, getPopupKey } from "./services/appliancePopupRuleService.js";
@@ -86,6 +87,8 @@ const DEFAULT_TAB = "schedule";
 const DEFAULT_CALENDAR_VIEW = "month";
 const DEFAULT_ONBOARDING_APPLIANCE_TYPES = [];
 const DEFAULT_ONBOARDING_APPLIANCE_ASSIGNEES = {};
+const DAILY_REPORT_LOADING_TEXT = "오늘의 일정을 정리하고 있어요...";
+const DAILY_REPORT_DEBOUNCE_MS = 400;
 
 export default function App() {
   const storedUser = readStoredCurrentUser();
@@ -140,6 +143,13 @@ export default function App() {
   const [airQualityPm10, setAirQualityPm10] = useState(null);
   const [aiRecommendationNotice, setAiRecommendationNotice] = useState("");
   const [aiRecommendationRequestCount, setAiRecommendationRequestCount] = useState(0);
+  const [dailyAiReport, setDailyAiReport] = useState(() => ({
+    cardText: DAILY_REPORT_FALLBACK_TEXT,
+    weatherNotice: "",
+    choreNotice: "",
+    priority: "normal",
+  }));
+  const [isDailyAiReportLoading, setDailyAiReportLoading] = useState(false);
   const [aiAssignmentPopup, setAiAssignmentPopup] = useState(null);
   const [sensorPopup, setSensorPopup] = useState(null);
   const [sensorPopupQueue, setSensorPopupQueue] = useState([]);
@@ -404,6 +414,63 @@ export default function App() {
       return map;
     }, {});
   }, [tasks]);
+  const dailyReportTaskData = useMemo(
+    () => collectDailyReportTasks(tasks, selectedDate, activeCalendarUserId),
+    [activeCalendarUserId, selectedDate, tasks],
+  );
+  const dailyReportSchedules = dailyReportTaskData.schedules;
+  const dailyReportChores = dailyReportTaskData.chores;
+  const dailyReportWeather = useMemo(
+    () =>
+      collectDailyReportWeather(
+        selectedDate,
+        calendarWeatherByDate,
+        toNullableFiniteNumber(latestSensorData?.pm10) ?? airQualityPm10,
+      ),
+    [airQualityPm10, calendarWeatherByDate, latestSensorData?.pm10, selectedDate],
+  );
+
+  useEffect(() => {
+    if (!currentUser) {
+      setDailyAiReportLoading(false);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    setDailyAiReportLoading(true);
+
+    const timer = window.setTimeout(async () => {
+      try {
+        const report = await fetchDailyReport(
+          {
+            selectedDate,
+            schedules: dailyReportSchedules,
+            chores: dailyReportChores,
+            weather: dailyReportWeather,
+          },
+          { signal: controller.signal },
+        );
+        setDailyAiReport(report);
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+        console.error("Daily AI Report request failed", error);
+        setDailyAiReport({
+          cardText: DAILY_REPORT_FALLBACK_TEXT,
+          weatherNotice: "",
+          choreNotice: "",
+          priority: "normal",
+        });
+      } finally {
+        if (!controller.signal.aborted) setDailyAiReportLoading(false);
+      }
+    }, DAILY_REPORT_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [currentUser, dailyReportChores, dailyReportSchedules, dailyReportWeather, selectedDate]);
+
   const notificationItems = useMemo(() => {
     const notificationContext = {
       date: notificationDemoDate,
@@ -1067,6 +1134,8 @@ export default function App() {
     onOpenPanel: setPanel,
     onOpenNotifications: openNotificationPopover,
     isAiRecommendationLoading: aiRecommendationRequestCount > 0,
+    dailyAiReportText: isDailyAiReportLoading ? DAILY_REPORT_LOADING_TEXT : dailyAiReport.cardText,
+    isDailyAiReportLoading,
     calendarView,
     setCalendarView,
   };
@@ -3665,6 +3734,103 @@ function isCalendarHouseworkTask(task) {
 
 function isPersonalScheduleTask(task) {
   return !isCalendarHouseworkTask(task);
+}
+
+function collectDailyReportTasks(tasks = [], selectedDate, activeCalendarUserId) {
+  const dates = [0, 1, 2].map((offset) => addDays(selectedDate, offset));
+  const scoped = tasks.filter((task) => !activeCalendarUserId || getTaskUserId(task) === activeCalendarUserId);
+  const schedules = [];
+  const chores = [];
+
+  dates.forEach((date) => {
+    scoped.filter((task) => isTaskVisibleOnDate(task, date)).forEach((task) => {
+      const timeRange = getDailyReportTaskTimeRange(task);
+
+      if (isPersonalScheduleTask(task)) {
+        schedules.push({
+          event_title: String(task.title || "").trim(),
+          event_date: date,
+          event_start_time: timeRange.startTime,
+          event_end_time: timeRange.endTime,
+        });
+        return;
+      }
+
+      if (task.done) return;
+      chores.push({
+        task_appliance: getDailyReportAppliance(task),
+        task_appliance_mode: String(task.applianceMode || task.currentMode || "").trim(),
+        task_date: date,
+        task_start_time: timeRange.startTime,
+        task_end_time: timeRange.endTime,
+      });
+    });
+  });
+
+  return { schedules, chores };
+}
+
+function collectDailyReportWeather(selectedDate, weatherByDate = {}, selectedDayDust = null) {
+  return [0, 1, 2].map((offset) => {
+    const date = addDays(selectedDate, offset);
+    const weather = weatherByDate[date] || {};
+    const minTemp = toNullableFiniteNumber(weather.minTemp);
+    const maxTemp = toNullableFiniteNumber(weather.maxTemp ?? weather.high);
+    const dayTemp =
+      minTemp !== null && maxTemp !== null
+        ? Math.round(((minTemp + maxTemp) / 2) * 10) / 10
+        : maxTemp ?? minTemp;
+    const condition = [weather.pty, weather.sky, weather.condition, weather.label]
+      .map((value) => String(value || "").trim())
+      .filter((value, index, list) => value && value !== "정보 없음" && list.indexOf(value) === index)
+      .join(" · ");
+
+    return {
+      date,
+      day_temp: dayTemp,
+      day_humidity: toNullableFiniteNumber(weather.humidity),
+      day_dust: offset === 0 ? toNullableFiniteNumber(selectedDayDust) : null,
+      rainProbability: toNullableFiniteNumber(weather.pop ?? weather.rainProbability),
+      condition,
+    };
+  });
+}
+
+function getDailyReportTaskTimeRange(task = {}) {
+  const explicitStart = /^\d{1,2}:\d{2}$/.test(String(task.startTime || "")) ? String(task.startTime) : "";
+  const explicitEnd = /^\d{1,2}:\d{2}$/.test(String(task.endTime || "")) ? String(task.endTime) : "";
+  if (explicitStart || explicitEnd) {
+    return { startTime: explicitStart, endTime: explicitEnd };
+  }
+
+  const range = getTaskNotificationRange(task);
+  return range
+    ? { startTime: formatTimeValue(range.startMinutes), endTime: formatTimeValue(range.endMinutes) }
+    : { startTime: "", endTime: "" };
+}
+
+function getDailyReportAppliance(task = {}) {
+  if (task.appliance) return String(task.appliance);
+
+  const typeMap = {
+    WASHER: "washer",
+    DRYER: "dryer",
+    DISHWASHER: "dishwasher",
+    ROBOT_CLEANER: "robot_cleaner",
+    AIR_PURIFIER: "air_purifier",
+    AIR_CONDITIONER: "air_conditioner",
+  };
+  const normalizedType = String(task.applianceType || "").toUpperCase();
+  if (typeMap[normalizedType]) return typeMap[normalizedType];
+
+  const text = `${task.title || ""} ${task.place || ""}`;
+  if (/세탁|빨래/i.test(text)) return "washer";
+  if (/건조/i.test(text)) return "dryer";
+  if (/식기|설거지/i.test(text)) return "dishwasher";
+  if (/로봇|청소/i.test(text)) return "robot_cleaner";
+  if (/공기청정|미세먼지/i.test(text)) return "air_purifier";
+  if (/에어컨|냉방|제습/i.test(text)) return "air_conditioner";
+  return String(task.title || "housework").trim();
 }
 
 function shouldSuggestAutomation(task) {

@@ -17,6 +17,24 @@ TOGETHER_MODEL=Qwen/Qwen3.5-9B
 `TOGETHER_MODEL` can be replaced with a fine-tuned Together model name.
 Do not use a `VITE_` prefix for the API key.
 
+## Daily AI Report
+
+`/api/daily-report` creates the calendar report from the selected date's
+three-day schedules, chores, and weather. OpenAI is the default provider and
+Together is used as a fallback when the OpenAI request fails.
+
+Configure these server-side environment variables in Vercel:
+
+```text
+LLM_PROVIDER=openai
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-4o-mini
+TOGETHER_API_KEY=your_together_api_key
+TOGETHER_MODEL=Qwen/Qwen3.5-9B
+```
+
+Never prefix either API key with `VITE_`.
+
 ## Environment Variables
 
 The weather and air-quality services are called from the Vite frontend with public `VITE_` variables:

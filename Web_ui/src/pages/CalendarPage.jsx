@@ -82,6 +82,8 @@ export default function CalendarPage({
   onOpenPanel,
   onOpenNotifications,
   isAiRecommendationLoading = false,
+  dailyAiReportText = "",
+  isDailyAiReportLoading = false,
   calendarView = "month",
   setCalendarView,
 }) {
@@ -846,7 +848,7 @@ export default function CalendarPage({
         <section className="calendar-ai-report" aria-label="AI Report">
           <h3>Daily AI Report</h3>
           <div>
-            <p>{buildAiReport(selectedDate, selectedVisibleTasks, mainCalendarTasksByDate)}</p>
+            <p aria-busy={isDailyAiReportLoading}>{dailyAiReportText || buildAiReport(selectedDate, selectedVisibleTasks, mainCalendarTasksByDate)}</p>
             <img src={aiDailyReportImage} alt="" aria-hidden="true" />
             <div className="calendar-ai-report-tags" aria-hidden="true">
               {buildAiReportTags(selectedDate, selectedVisibleTasks, mainCalendarTasksByDate).map((tag) => (
