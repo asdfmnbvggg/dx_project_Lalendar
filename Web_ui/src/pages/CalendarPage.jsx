@@ -1,11 +1,14 @@
 ﻿import { CalendarDays, ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Repeat2, Search, Settings, Trash2, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Bell, CheckCircle2, ChevronDown, Clock3, Home, Info, Power, Shirt, SlidersHorizontal, Thermometer, WashingMachine, Waves } from "lucide-react";
 import { dateKey, members } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
 import robotCleanerImage from "../assets/appliances/로봇청소기.png";
 import dishWasherImage from "../assets/appliances/식기세척기.png";
+import DailyReportCard from "../features/dailyReport/DailyReportCard.jsx";
+import DailyReportDetail from "../features/dailyReport/DailyReportDetail.jsx";
+import { createTodayDailyReport } from "../features/dailyReport/dailyReportData.js";
 
 import {
   airConditionerImage,
@@ -26,7 +29,6 @@ import {
   DAILY_TIMETABLE_START_TIME,
   dryerImage,
   fridgeImage,
-  getDailyReportImage,
   houseCalendarTodayAirQuality,
   houseCalendarWeatherByDate,
   HOUSEWORK_MEMBER_TABS,
@@ -84,6 +86,7 @@ export default function CalendarPage({
   onOpenNotifications,
   isAiRecommendationLoading = false,
   dailyAiReportText = "",
+  dailyAiReport = null,
   isDailyAiReportLoading = false,
   calendarView = "month",
   setCalendarView,
@@ -104,6 +107,8 @@ export default function CalendarPage({
   const [applianceModeMessage, setApplianceModeMessage] = useState("");
   const [isDatePickerOpen, setDatePickerOpen] = useState(false);
   const [draftDate, setDraftDate] = useState(() => parseDateKey(selectedDate));
+  const [dailyReportRouteId, setDailyReportRouteId] = useState(() => getDailyReportRouteId());
+  const reportDate = isDateKeyValue(dailyReportRouteId) ? dailyReportRouteId : selectedDate;
   const selectedDay = Number(selectedDate.slice(-2));
   const isHouseCalendar = calendarTaskMode === "house";
   const maxCalendarScale = isHouseCalendar || calendarView === "month" ? 2 : 4;
@@ -124,6 +129,8 @@ export default function CalendarPage({
   const filteredTasksByDate = filterTasksByCalendarMode(tasksByDate, calendarTaskMode, selectedMember);
   const mainCalendarTasksByDate = hideFixedTasksByDate(filteredTasksByDate);
   const selectedVisibleTasks = mainCalendarTasksByDate[selectedDate] || [];
+  const reportVisibleTasks = mainCalendarTasksByDate[reportDate] || [];
+  const reportWeather = weatherByDate[reportDate];
   const detailDate = selectedDetailDate || selectedDate;
   const detailTasks = filteredTasksByDate[detailDate] || [];
   const dailyFixedTasks = detailTasks.filter((task) => getDailyTaskGroup(task) === "schedule");
@@ -148,10 +155,37 @@ export default function CalendarPage({
     : HOUSEWORK_MEMBER_TABS;
   const canEditPersonalCalendar = !isHouseCalendar && Boolean(currentUser?.id) && (isMaster || activeCalendarOwnerId === currentUser.id);
   const canUseCalendarAdd = isHouseCalendar ? Boolean(selectedHouseworkMember) : canEditPersonalCalendar;
+  const reportText = dailyAiReport?.cardText || dailyAiReportText || buildAiReport(reportDate, reportVisibleTasks, mainCalendarTasksByDate);
+  const todayDailyReport = useMemo(
+    () =>
+      createTodayDailyReport({
+        date: reportDate,
+        cardText: reportText,
+        fallbackText: buildAiReport(reportDate, reportVisibleTasks, mainCalendarTasksByDate),
+        tasks: filteredTasksByDate[reportDate] || [],
+        weather: reportWeather,
+        tags: buildAiReportTags(reportDate, reportVisibleTasks, mainCalendarTasksByDate),
+        weatherNotice: dailyAiReport?.weatherNotice,
+        choreNotice: dailyAiReport?.choreNotice,
+      }),
+    [dailyAiReport, filteredTasksByDate, mainCalendarTasksByDate, reportDate, reportText, reportVisibleTasks, reportWeather],
+  );
 
   useEffect(() => {
     onSelectedDetailDateChange?.(selectedDetailDate);
   }, [onSelectedDetailDateChange, selectedDetailDate]);
+
+  useEffect(() => {
+    const handlePopState = () => setDailyReportRouteId(getDailyReportRouteId());
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (!dailyReportRouteId || dailyReportRouteId === selectedDate || !isDateKeyValue(dailyReportRouteId)) return;
+    const parsed = parseDateKey(dailyReportRouteId);
+    onSelectCalendarDate?.(parsed.year, parsed.month, parsed.day);
+  }, [dailyReportRouteId, onSelectCalendarDate, selectedDate]);
 
   useEffect(() => {
     if (!isHouseCalendar && !canEditPersonalCalendar && selectedDetailDate) {
@@ -211,6 +245,28 @@ export default function CalendarPage({
     setApplianceModeTask(null);
     setSelectedApplianceModeId("");
     setApplianceModeMessage("");
+  }
+
+  function openDailyReport() {
+    const path = `/daily-report/${todayDailyReport.id}`;
+    if (window.location.pathname !== path) window.history.pushState({ dailyReportId: todayDailyReport.id }, "", path);
+    setDailyReportRouteId(todayDailyReport.id);
+  }
+
+  function closeDailyReport() {
+    if (window.history.state?.dailyReportId) {
+      window.history.back();
+      return;
+    }
+    window.history.replaceState({}, "", "/");
+    setDailyReportRouteId("");
+  }
+
+  function openReportSchedule(view = "timetable") {
+    window.history.replaceState({}, "", "/");
+    setDailyReportRouteId("");
+    setDailyDetailView(view);
+    setSelectedDetailDate(todayDailyReport.id);
   }
 
   function toggleDeleteMode() {
@@ -339,6 +395,17 @@ export default function CalendarPage({
 
   if (isAiRecommendationLoading) {
     return <SchedulePlanningLoadingPage />;
+  }
+
+  if (dailyReportRouteId) {
+    return (
+      <DailyReportDetail
+        report={todayDailyReport}
+        onBack={closeDailyReport}
+        onOpenSchedule={() => openReportSchedule("timetable")}
+        onOpenTodo={() => openReportSchedule("list")}
+      />
+    );
   }
 
   if (applianceModeTask) {
@@ -849,18 +916,7 @@ export default function CalendarPage({
       </section>
 
       {(isHouseCalendar || calendarView === "month") && (
-        <section className="calendar-ai-report" aria-label="AI Report">
-          <h3>Daily AI Report</h3>
-          <div>
-            <p aria-busy={isDailyAiReportLoading}>{dailyAiReportText || buildAiReport(selectedDate, selectedVisibleTasks, mainCalendarTasksByDate)}</p>
-            <img src={getDailyReportImage(dailyAiReportText)} alt="" aria-hidden="true" />
-            <div className="calendar-ai-report-tags" aria-hidden="true">
-              {buildAiReportTags(selectedDate, selectedVisibleTasks, mainCalendarTasksByDate).map((tag) => (
-                <span key={tag}>{tag}</span>
-              ))}
-            </div>
-          </div>
-        </section>
+        <DailyReportCard report={todayDailyReport} loading={isDailyAiReportLoading} onOpen={openDailyReport} />
       )}
 
       {isDatePickerOpen && (
@@ -3217,6 +3273,15 @@ function addDays(date, amount) {
   const next = new Date(date + "T00:00:00");
   next.setDate(next.getDate() + amount);
   return toDateKey(next);
+}
+
+function getDailyReportRouteId() {
+  if (typeof window === "undefined") return "";
+  return window.location.pathname.match(/^\/daily-report\/(\d{4}-\d{2}-\d{2})\/?$/)?.[1] || "";
+}
+
+function isDateKeyValue(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
 }
 
 function getTodayDateKey() {

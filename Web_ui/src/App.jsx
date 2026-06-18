@@ -1353,6 +1353,7 @@ export default function App() {
     onOpenNotifications: openNotificationPopover,
     isAiRecommendationLoading: aiRecommendationRequestCount > 0,
     dailyAiReportText: isDailyAiReportLoading ? DAILY_REPORT_LOADING_TEXT : dailyAiReport.cardText,
+    dailyAiReport,
     isDailyAiReportLoading,
     calendarView,
     setCalendarView,
