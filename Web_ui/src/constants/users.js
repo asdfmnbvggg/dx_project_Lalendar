@@ -1,4 +1,5 @@
-export const CURRENT_USER_STORAGE_KEY = "lalendarCurrentUser";
+export const CURRENT_USER_STORAGE_KEY = "l-landerCurrentUser";
+export const LEGACY_CURRENT_USER_STORAGE_KEY = "lalendarCurrentUser";
 
 export const USERS = [
   {

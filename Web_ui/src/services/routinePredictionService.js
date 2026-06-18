@@ -1,8 +1,13 @@
-const LOG_STORAGE_KEY = "lalendar-thinq-usage-logs";
+const LOG_STORAGE_KEY = "l-lander-thinq-usage-logs";
+const LEGACY_LOG_STORAGE_KEY = "lalendar-thinq-usage-logs";
 
 export function readThinQUsageLogs() {
   try {
-    return JSON.parse(localStorage.getItem(LOG_STORAGE_KEY)) || [];
+    const logs = JSON.parse(localStorage.getItem(LOG_STORAGE_KEY) || localStorage.getItem(LEGACY_LOG_STORAGE_KEY)) || [];
+    if (!localStorage.getItem(LOG_STORAGE_KEY) && logs.length > 0) {
+      localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(logs));
+    }
+    return logs;
   } catch {
     return [];
   }

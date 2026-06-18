@@ -21,7 +21,7 @@ import DetailPanel from "./components/DetailPanel.jsx";
 import introLogo from "./assets/intro.png";
 import lgCharacter from "./assets/lg-character.png";
 import floatingStar from "./assets/floating-star.svg";
-import { CURRENT_USER_STORAGE_KEY, USERS, findUserById, isMasterUser } from "./constants/users.js";
+import { CURRENT_USER_STORAGE_KEY, LEGACY_CURRENT_USER_STORAGE_KEY, USERS, findUserById, isMasterUser } from "./constants/users.js";
 import { fetchCalendarWeather, fetchShortWeather } from "./services/weatherService.js";
 import { fetchMidWeather } from "./services/midWeatherService.js";
 import { fetchAirQuality } from "./services/airQualityService.js";
@@ -79,7 +79,8 @@ const USER_TO_OWNER = {
   dada: "minsu",
 };
 const OWNER_TO_USER = Object.fromEntries(Object.entries(USER_TO_OWNER).map(([userId, ownerId]) => [ownerId, userId]));
-const APP_SESSION_STORAGE_KEY = "lalendarAppSession";
+const APP_SESSION_STORAGE_KEY = "l-landerAppSession";
+const LEGACY_APP_SESSION_STORAGE_KEY = "lalendarAppSession";
 const DEFAULT_TAB = "schedule";
 const DEFAULT_CALENDAR_VIEW = "month";
 const DEFAULT_ONBOARDING_APPLIANCE_TYPES = [];
@@ -639,7 +640,9 @@ export default function App() {
 
   function handleLogout() {
     localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_CURRENT_USER_STORAGE_KEY);
     localStorage.removeItem(APP_SESSION_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_APP_SESSION_STORAGE_KEY);
     setCurrentUser(null);
     setActiveCalendarUser(null);
     setSelectedMember("jea");
@@ -954,9 +957,9 @@ export default function App() {
         {activeTab !== "home" && !(activeTab === "schedule" && !isOnboardingComplete) && (
         <header className="topbar">
           <div className="brand">
-            <span>L</span>
+            <span><img src="/icons/icon-192.png" alt="" aria-hidden="true" /></span>
             <div>
-              <strong>Lalendar</strong>
+              <strong>L-lander</strong>
               <small>housework calendar</small>
             </div>
           </div>
@@ -1364,9 +1367,9 @@ export default function App() {
 
 function LoginIntroSplash() {
   return (
-    <main className="login-intro-splash" aria-label="Lalendar 시작 중">
+    <main className="login-intro-splash" aria-label="L-lander 시작 중">
       <div className="login-intro-glow" aria-hidden="true" />
-      <img src={introLogo} alt="Lalendar" />
+      <img src={introLogo} alt="L-lander" />
     </main>
   );
 }
@@ -3634,10 +3637,16 @@ function readStoredCurrentUser() {
   if (typeof localStorage === "undefined") return null;
 
   try {
-    const savedUser = JSON.parse(localStorage.getItem(CURRENT_USER_STORAGE_KEY) || "null");
-    return findUserById(savedUser?.id);
+    const storedValue = localStorage.getItem(CURRENT_USER_STORAGE_KEY) || localStorage.getItem(LEGACY_CURRENT_USER_STORAGE_KEY);
+    const savedUser = JSON.parse(storedValue || "null");
+    const user = findUserById(savedUser?.id);
+    if (user && !localStorage.getItem(CURRENT_USER_STORAGE_KEY)) {
+      localStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(user));
+    }
+    return user;
   } catch {
     localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_CURRENT_USER_STORAGE_KEY);
     return null;
   }
 }
@@ -3646,11 +3655,16 @@ function readStoredAppSession() {
   if (typeof localStorage === "undefined") return null;
 
   try {
-    const session = JSON.parse(localStorage.getItem(APP_SESSION_STORAGE_KEY) || "null");
+    const storedValue = localStorage.getItem(APP_SESSION_STORAGE_KEY) || localStorage.getItem(LEGACY_APP_SESSION_STORAGE_KEY);
+    const session = JSON.parse(storedValue || "null");
     if (!session || typeof session !== "object") return null;
+    if (!localStorage.getItem(APP_SESSION_STORAGE_KEY)) {
+      localStorage.setItem(APP_SESSION_STORAGE_KEY, JSON.stringify(session));
+    }
     return session;
   } catch {
     localStorage.removeItem(APP_SESSION_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_APP_SESSION_STORAGE_KEY);
     return null;
   }
 }

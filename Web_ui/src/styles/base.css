@@ -55,11 +55,15 @@
   display: grid;
   place-items: center;
   border-radius: 14px;
-  background: linear-gradient(135deg, #ffb84d, #ff7a1f);
-  color: #ffffff;
-  font-size: 22px;
-  font-weight: 950;
+  overflow: hidden;
+  background: #fffaf5;
   box-shadow: 0 14px 26px rgba(255, 122, 31, 0.26);
+}
+
+.login-brand > span img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .login-brand strong {
@@ -476,10 +480,14 @@ button {
   display: grid;
   place-items: center;
   border-radius: 14px;
-  color: #fff;
-  background: linear-gradient(135deg, var(--red), var(--purple));
-  font-size: 22px;
-  font-weight: 950;
+  overflow: hidden;
+  background: #fffaf5;
+}
+
+.brand > span img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .brand strong {

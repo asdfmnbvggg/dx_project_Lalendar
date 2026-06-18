@@ -1,7 +1,7 @@
 {
-  "name": "web_ui",
+  "name": "l-lander-web-ui",
   "version": "1.0.0",
-  "description": "Calendar-first shared task app prototype",
+  "description": "L-lander shared family calendar and smart-home app",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "dev:vercel": "npm --prefix .. run dev:vercel",
