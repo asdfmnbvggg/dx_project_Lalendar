@@ -1,74 +1,67 @@
-// src/services/airQualityService.js
-
-const AIR_SERVICE_KEY = import.meta.env.VITE_AIR_SERVICE_KEY;
-
-const AIR_QUALITY_BASE_URL =
-  "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty";
-
-const DEFAULT_SIDO_NAME = "서울";
+const AIR_QUALITY_CACHE_KEY = "l-lander-air-quality-v1";
+const AIR_QUALITY_URL = "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty";
 
 export async function fetchAirQuality({
-  sidoName = DEFAULT_SIDO_NAME,
+  sidoName = import.meta.env.VITE_AIR_QUALITY_SIDO || "서울",
+  stationName = import.meta.env.VITE_AIR_QUALITY_STATION || "",
 } = {}) {
-  if (!AIR_SERVICE_KEY) {
-    throw new Error("VITE_AIR_SERVICE_KEY가 설정되지 않았습니다.");
-  }
+  const serviceKey = getServiceKey("VITE_AIR_SERVICE_KEY");
+  const cacheKey = `${AIR_QUALITY_CACHE_KEY}:${sidoName}:${stationName}`;
+  const cached = readCache(cacheKey);
+  if (cached) return cached;
 
   const params = new URLSearchParams({
-    serviceKey: AIR_SERVICE_KEY,
     returnType: "json",
     numOfRows: "100",
     pageNo: "1",
+    ver: "1.3",
     sidoName,
-    ver: "1.0",
+    serviceKey,
   });
 
-  const response = await fetch(`${AIR_QUALITY_BASE_URL}?${params.toString()}`);
+  const response = await fetch(`${AIR_QUALITY_URL}?${params.toString()}`);
+  if (!response.ok) throw new Error(`미세먼지 API request failed: ${response.status}`);
 
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `대기오염 API 호출 실패: ${response.status}`);
+  const payload = await response.json();
+  const resultCode = payload?.response?.header?.resultCode;
+  if (resultCode && resultCode !== "00") {
+    throw new Error(payload?.response?.header?.resultMsg || `미세먼지 API resultCode ${resultCode}`);
   }
 
-  const data = await response.json();
-  const items = data?.response?.body?.items || [];
-
-  return parseAirQualityItems(items);
-}
-
-function parseAirQualityItems(items) {
-  return items.map((item) => ({
-    stationName: item.stationName,
-    measuredAt: item.dataTime,
-    pm10: toNumberOrNull(item.pm10Value),
-    pm25: toNumberOrNull(item.pm25Value),
-    ozone: toNumberOrNull(item.o3Value),
-    carbonMonoxide: toNumberOrNull(item.coValue),
-    nitrogenDioxide: toNumberOrNull(item.no2Value),
-    sulfurDioxide: toNumberOrNull(item.so2Value),
-    airQualityIndex: item.khaiValue,
-    pm10Grade: convertDustGrade(item.pm10Grade),
-    pm25Grade: convertDustGrade(item.pm25Grade),
-  }));
-}
-
-function convertDustGrade(value) {
-  const map = {
-    1: "good",
-    2: "normal",
-    3: "bad",
-    4: "very_bad",
+  const items = payload?.response?.body?.items;
+  const data = Array.isArray(items) ? items : [];
+  const filteredData = stationName ? data.filter((item) => item.stationName === stationName) : data;
+  const result = {
+    data: filteredData,
+    sidoName,
+    stationName,
+    updatedAt: new Date().toISOString(),
   };
 
-  return map[value] || "unknown";
+  writeCache(cacheKey, result);
+  return result;
 }
 
-function toNumberOrNull(value) {
-  if (value === "-" || value === undefined || value === null) {
+function getServiceKey(name) {
+  const value = import.meta.env[name];
+  if (!value) throw new Error(`${name} is not configured`);
+  return value;
+}
+
+function readCache(key) {
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(key));
+    if (cached && Date.now() - cached.createdAt < 1000 * 60 * 30) return cached.value;
+  } catch {
     return null;
   }
+  return null;
+}
 
-  const numberValue = Number(value);
-
-  return Number.isFinite(numberValue) ? numberValue : null;
+function writeCache(key, value) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify({ createdAt: Date.now(), value }));
+  } catch {
+    // Storage can be unavailable in private browsing.
+  }
 }

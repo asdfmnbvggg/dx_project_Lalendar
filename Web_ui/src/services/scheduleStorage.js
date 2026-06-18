@@ -1,14 +1,24 @@
-const STORAGE_KEY = "lalendar.familySchedules";
+const STORAGE_KEY = "l-lander.familySchedules";
+const LEGACY_STORAGE_KEY = "lalendar.familySchedules";
+const isDev = import.meta.env.DEV;
+
+function devWarn(...args) {
+  if (isDev) console.warn(...args);
+}
 
 export function loadSchedules() {
   if (typeof window === "undefined") return [];
 
   try {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
+    const saved = window.localStorage.getItem(STORAGE_KEY) || window.localStorage.getItem(LEGACY_STORAGE_KEY);
     const parsed = saved ? JSON.parse(saved) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    const schedules = Array.isArray(parsed) ? parsed : [];
+    if (!window.localStorage.getItem(STORAGE_KEY) && schedules.length > 0) {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(schedules));
+    }
+    return schedules;
   } catch (error) {
-    console.warn("Failed to load family schedules", error);
+    devWarn("Failed to load family schedules", error);
     return [];
   }
 }

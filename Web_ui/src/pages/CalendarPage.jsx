@@ -1,106 +1,70 @@
-﻿import { ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Search, Settings, Trash2, X } from "lucide-react";
-import { useEffect, useState } from "react";
+﻿import { CalendarDays, ChevronLeft, ChevronRight, ClipboardList, Minus, Plus, Repeat2, Search, Settings, Trash2, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { Bell, CheckCircle2, ChevronDown, Clock3, Home, Info, Power, Shirt, SlidersHorizontal, Thermometer, WashingMachine, Waves } from "lucide-react";
 import { dateKey, members } from "../data.js";
 import TaskItem from "../components/TaskItem.jsx";
-import airConditionerImage from "../assets/appliances/에어컨.png";
-import dryerImage from "../assets/appliances/건조기.png";
-import fridgeImage from "../assets/appliances/냉장고.png";
-import washerImage from "../assets/appliances/세탁기.png";
-import lgCharacterImage from "../assets/lg-character.png";
+import robotCleanerImage from "../assets/appliances/로봇청소기.png";
+import dishWasherImage from "../assets/appliances/식기세척기.png";
 
-import jaehyeokImage from "../assets/people/재혁님.png";
-import suhyunImage from "../assets/people/김수현.jpg";
+import {
+  aiDailyReportImage,
+  airConditionerImage,
+  applianceImages,
+  applianceModeCatalog,
+  applianceTypeColor,
+  applianceTypeLabel,
+  CALENDAR_CELL_COLLAPSED_TASK_LIMIT,
+  CALENDAR_CELL_TASK_LIMIT,
+  calendarMemberIconText,
+  calendarProfileNames,
+  DABIN_MEMBER_IDS,
+  DABIN_TASK_OWNER,
+  DAILY_TIMETABLE_END_HOUR,
+  DAILY_TIMETABLE_END_INPUT_TIME,
+  DAILY_TIMETABLE_HOUR_HEIGHT,
+  DAILY_TIMETABLE_START_HOUR,
+  DAILY_TIMETABLE_START_TIME,
+  dryerImage,
+  fridgeImage,
+  houseCalendarTodayAirQuality,
+  houseCalendarWeatherByDate,
+  HOUSEWORK_MEMBER_TABS,
+  legacyScheduleColorMap,
+  lgCharacterImage,
+  memberImages,
+  SCHEDULE_PLANNING_DELAY,
+  scheduleColorOptions,
+  washerImage,
+  weatherIcon,
+} from "./calendarPage/calendarConstants.js";
 
-const weatherIcon = {
-  sunny: "☀️",
-  partly_cloudy: "⛅",
-  cloudy: "☁️",
-  rain: "🌧️",
-  snow: "❄️",
-  unknown: "?",
-};
+const isDev = import.meta.env.DEV;
 
-const applianceTypeLabel = {
-  WASHER: "세탁기",
-  DRYER: "건조기",
-  NATURAL_DRY: "자연건조",
-  DEHUMIDIFIER: "제습기",
-  AIR_CONDITIONER: "에어컨",
-  AIR_PURIFIER: "공기청정기",
-  ROBOT_CLEANER: "로봇청소기",
-  ETC: "가전",
-};
-
-const applianceTypeColor = {
-  WASHER: "#60a5fa",
-  DRYER: "#c084fc",
-  NATURAL_DRY: "#38bdf8",
-  DEHUMIDIFIER: "#34d399",
-  AIR_CONDITIONER: "#22d3ee",
-  AIR_PURIFIER: "#7c3aed",
-  ROBOT_CLEANER: "#f59e0b",
-  ETC: "#64748b",
-};
-
-const applianceImages = {
-  air: airConditionerImage,
-  dryer: dryerImage,
-  fridge: fridgeImage,
-  washer: washerImage,
-};
-
-const CALENDAR_CELL_TASK_LIMIT = 3;
-const CALENDAR_CELL_COLLAPSED_TASK_LIMIT = 2;
-const SCHEDULE_PLANNING_DELAY = 3000;
-
-const memberImages = {
-  jea: jaehyeokImage,
-  me: jaehyeokImage,
-  theresa: suhyunImage,
-};
-
-const calendarMemberLabels = {
-  sumin: "수민",
-  jea: "재혁",
-  dada: "다빈",
-  me: "MY",
-  minsu: "김철수",
-  theresa: "김수현",
-};
-
-const calendarProfileNames = {
-  sumin: "수민",
-  jea: "최재혁",
-  dada: "다빈",
-  me: "최재혁",
-  minsu: "김철수",
-  theresa: "김수현",
-};
-
-const calendarMemberIconText = {
-  sumin: "수",
-  jea: "최",
-  dada: "다",
-  me: "MY",
-  minsu: "김철수",
-  theresa: "김수현",
-};
+function devLog(...args) {
+  if (isDev) console.log(...args);
+}
 
 export default function CalendarPage({
   month,
   monthLabel,
   monthLeadingBlanks,
   weatherByDate,
+  weatherApiStatus = "idle",
   routineRecommendations = [],
   onPrevMonth,
   onNextMonth,
   onSelectCalendarDate,
   tasksByDate,
   selectedDate,
+  initialSelectedDetailDate,
+  onSelectedDetailDateChange,
   setSelectedDate,
   selectedMember,
+  currentUser,
   activeCalendarUser,
   calendarUsers = [],
+  applianceAssignees = {},
   memberColors,
   setSelectedMember,
   onActiveCalendarUserChange,
@@ -114,25 +78,33 @@ export default function CalendarPage({
   postponeTask,
   onAddWeatherRecommendation,
   onAddTask,
+  onUpdateApplianceColor,
   openComposer,
   onOpenPanel,
+  onOpenNotifications,
   calendarView = "month",
   setCalendarView,
 }) {
   const [calendarScale, setCalendarScale] = useState(2);
   const [calendarTaskMode, setCalendarTaskMode] = useState("personal");
-  const [selectedDetailDate, setSelectedDetailDate] = useState(null);
+  const [selectedDetailDate, setSelectedDetailDate] = useState(initialSelectedDetailDate || null);
   const [isDeleteMode, setDeleteMode] = useState(false);
   const [selectedDeleteTaskIds, setSelectedDeleteTaskIds] = useState([]);
   const [activeAddColumn, setActiveAddColumn] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [dailyContextTaskId, setDailyContextTaskId] = useState(null);
   const [dailyContextAction, setDailyContextAction] = useState(null);
+  const [dailyContextMenuPosition, setDailyContextMenuPosition] = useState(null);
+  const [dailyDetailView, setDailyDetailView] = useState("timetable");
+  const [applianceModeTask, setApplianceModeTask] = useState(null);
+  const [selectedApplianceModeId, setSelectedApplianceModeId] = useState("");
+  const [applianceModeMessage, setApplianceModeMessage] = useState("");
   const [isDatePickerOpen, setDatePickerOpen] = useState(false);
   const [pendingScheduleSave, setPendingScheduleSave] = useState(null);
   const [draftDate, setDraftDate] = useState(() => parseDateKey(selectedDate));
   const selectedDay = Number(selectedDate.slice(-2));
   const isHouseCalendar = calendarTaskMode === "house";
+  const maxCalendarScale = isHouseCalendar || calendarView === "month" ? 2 : 4;
   const displayDates = getDisplayDates(calendarView, selectedDate, month);
   const displayLabel = getDisplayLabel(calendarView, selectedDate, monthLabel);
   const calendarTitle = isHouseCalendar ? getTwoWeekCalendarTitle(selectedDate) : calendarView === "month" ? monthLabel.replace(". ", ".") : displayLabel;
@@ -145,18 +117,49 @@ export default function CalendarPage({
       : displayDates.map((key) => ({ key, day: Number(key.slice(-2)), isCurrentMonth: true }));
   const isExpanded = calendarScale >= 3;
   const selectedWeather = weatherByDate[selectedDate];
+  const shouldShowWeatherMissing = weatherApiStatus !== "loading" && !selectedWeather?.hasWeatherData;
   const selectedRecommendations = getRecommendationsForDate(selectedDate, weatherByDate, routineRecommendations);
   const filteredTasksByDate = filterTasksByCalendarMode(tasksByDate, calendarTaskMode, selectedMember);
-  const selectedVisibleTasks = filteredTasksByDate[selectedDate] || [];
+  const mainCalendarTasksByDate = hideFixedTasksByDate(filteredTasksByDate);
+  const selectedVisibleTasks = mainCalendarTasksByDate[selectedDate] || [];
   const detailDate = selectedDetailDate || selectedDate;
   const detailTasks = filteredTasksByDate[detailDate] || [];
   const dailyFixedTasks = detailTasks.filter((task) => getDailyTaskGroup(task) === "schedule");
-  const dailyHouseTasks = detailTasks.filter((task) => getDailyTaskGroup(task) === "housework");
+  const dailyHouseTasks = detailTasks
+    .filter((task) => getDailyTaskGroup(task) === "housework")
+    .map((task) => ({ ...task, memberName: getHouseworkTaskMemberName(task) }));
   const dailyHours = buildDailyHours(detailTasks);
   const familyMembers = calendarUsers.length > 0 ? calendarUsers : members.filter((member) => member.id !== "all");
+  const dailyAddMembers = familyMembers.filter(isDabinMember);
   const selectedMemberProfile = activeCalendarUser || familyMembers.find((member) => member.id === selectedMember) || familyMembers[0] || members[0];
   const selectedMemberName = calendarProfileNames[selectedMemberProfile.id] || selectedMemberProfile.name;
   const calendarOwnerTitle = isHouseCalendar ? "가사 캘린더" : `${activeCalendarUser?.displayName || selectedMemberName + "님"}의 캘린더`;
+  const calendarOwnerDesignName = getCalendarOwnerDesignName(activeCalendarUser?.displayName || selectedMemberName);
+  const activeCalendarOwnerId = activeCalendarUser?.id || selectedMemberProfile.id;
+  const currentHouseworkMember = HOUSEWORK_MEMBER_TABS.find((member) => member.userId === currentUser?.id || member.ownerId === currentUser?.id);
+  const isMaster = currentUser?.role === "master";
+  const selectedHouseworkMember = isMaster
+    ? HOUSEWORK_MEMBER_TABS.find((member) => member.userId === activeCalendarOwnerId)
+    : currentHouseworkMember;
+  const orderedHouseworkMembers = currentHouseworkMember
+    ? [currentHouseworkMember, ...HOUSEWORK_MEMBER_TABS.filter((member) => member.userId !== currentHouseworkMember.userId)]
+    : HOUSEWORK_MEMBER_TABS;
+  const canEditPersonalCalendar = !isHouseCalendar && Boolean(currentUser?.id) && (isMaster || activeCalendarOwnerId === currentUser.id);
+  const canUseCalendarAdd = isHouseCalendar ? Boolean(selectedHouseworkMember) : canEditPersonalCalendar;
+
+  useEffect(() => {
+    onSelectedDetailDateChange?.(selectedDetailDate);
+  }, [onSelectedDetailDateChange, selectedDetailDate]);
+
+  useEffect(() => {
+    if (!isHouseCalendar && !canEditPersonalCalendar && selectedDetailDate) {
+      closeDateDetail();
+    }
+  }, [canEditPersonalCalendar, isHouseCalendar, selectedDetailDate]);
+
+  useEffect(() => {
+    setCalendarScale((current) => Math.min(current, maxCalendarScale));
+  }, [maxCalendarScale]);
 
   function moveCalendar(offset) {
     if (isHouseCalendar) {
@@ -175,7 +178,7 @@ export default function CalendarPage({
   }
 
   function changeScale(offset) {
-    setCalendarScale((current) => Math.min(4, Math.max(0, current + offset)));
+    setCalendarScale((current) => Math.min(maxCalendarScale, Math.max(0, current + offset)));
   }
 
   function openDatePicker() {
@@ -202,6 +205,10 @@ export default function CalendarPage({
     setEditingTask(null);
     setDailyContextTaskId(null);
     setDailyContextAction(null);
+    setDailyContextMenuPosition(null);
+    setApplianceModeTask(null);
+    setSelectedApplianceModeId("");
+    setApplianceModeMessage("");
   }
 
   function toggleDeleteMode() {
@@ -219,8 +226,21 @@ export default function CalendarPage({
     setDeleteMode(false);
   }
 
-  function openDailyContext(task) {
-    setDailyContextTaskId((current) => (current === task.id ? null : task.id));
+  function openDailyContext(task, event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+
+    const taskKey = getDailyTaskKey(task);
+    if (dailyContextTaskId === taskKey) {
+      setDailyContextTaskId(null);
+      setDailyContextMenuPosition(null);
+      setDailyContextAction(null);
+      return;
+    }
+
+    const menuPosition = getDailyContextMenuPosition(event?.currentTarget);
+    setDailyContextTaskId(taskKey);
+    setDailyContextMenuPosition(menuPosition);
     setDailyContextAction(null);
   }
 
@@ -240,7 +260,71 @@ export default function CalendarPage({
 
       setDailyContextTaskId(null);
       setDailyContextAction(null);
+      setDailyContextMenuPosition(null);
     }, 140);
+  }
+
+  function openApplianceMode(task) {
+    const applianceType = normalizeApplianceType(resolveApplianceTask(task));
+    const catalog = applianceModeCatalog[applianceType] || applianceModeCatalog.ETC;
+    const currentMode = task.applianceMode || task.currentMode || "";
+    const selectedMode = catalog.modes.find((mode) => mode.label === currentMode || mode.id === currentMode) || catalog.modes[0];
+
+    setApplianceModeTask({ ...task, applianceType, displayType: "appliance" });
+    setSelectedApplianceModeId(selectedMode?.id || "");
+    setApplianceModeMessage("");
+    setDailyContextTaskId(null);
+    setDailyContextAction(null);
+    setDailyContextMenuPosition(null);
+  }
+
+  function openHouseworkComposerFor(member) {
+    if (!currentUser || (!isMaster && member?.userId !== currentUser.id)) return;
+
+    setSelectedDate(detailDate);
+    onActiveCalendarUserChange?.(member.userId);
+    setSelectedMember(member.userId);
+    setActiveAddColumn("housework");
+  }
+
+  function openCalendarComposer() {
+    if (isHouseCalendar && currentUser) {
+      const member = isMaster ? selectedHouseworkMember : HOUSEWORK_MEMBER_TABS.find((item) => item.userId === currentUser.id);
+      if (!member) return;
+      onActiveCalendarUserChange?.(member.userId);
+      setSelectedMember(member.userId);
+      setSelectedDetailDate(selectedDate);
+      setActiveAddColumn("housework");
+      return;
+    }
+
+    if (!canEditPersonalCalendar) return;
+    setSelectedDetailDate(selectedDate);
+    setActiveAddColumn("personal");
+  }
+
+  function changeApplianceMode(task, mode) {
+    if (!task || !mode) return;
+
+    const nextTask = {
+      ...task,
+      applianceMode: mode.label,
+      currentMode: mode.label,
+      modeUpdatedAt: new Date().toISOString(),
+    };
+
+    try {
+      updateTask?.(task.id, {
+        applianceMode: mode.label,
+        currentMode: mode.label,
+        modeUpdatedAt: nextTask.modeUpdatedAt,
+      });
+      setApplianceModeTask(nextTask);
+      setApplianceModeMessage("ThinQ API 없이 mock 데이터로 모드가 저장됐어요.");
+    } catch (error) {
+      setApplianceModeTask(nextTask);
+      setApplianceModeMessage("API 연결에 실패해 화면에서만 mock 모드로 반영했어요.");
+    }
   }
 
   function updateDraftDate(part, value) {
@@ -261,10 +345,6 @@ export default function CalendarPage({
     if (nextSave.type === "edit") {
       const updatedTask = { ...nextSave.task, ...nextSave.updates };
       updateTask?.(nextSave.task.id, nextSave.updates);
-      const generatedPlan = buildAiHousePlanTask(updatedTask);
-      if (generatedPlan) {
-        onAddTask?.(generatedPlan);
-      }
       setEditingTask(null);
       const nextDate = updatedTask.date || detailDate;
       setSelectedDate(nextDate);
@@ -273,10 +353,6 @@ export default function CalendarPage({
     }
 
     onAddTask?.(nextSave.task);
-    const generatedPlan = buildAiHousePlanTask(nextSave.task);
-    if (generatedPlan) {
-      onAddTask?.(generatedPlan);
-    }
     setActiveAddColumn(null);
     setSelectedDate(nextSave.task.date);
     setSelectedDetailDate(nextSave.task.date);
@@ -286,11 +362,32 @@ export default function CalendarPage({
     return <SchedulePlanningLoadingPage pendingSave={pendingScheduleSave} onComplete={completeSchedulePlanning} />;
   }
 
-  if (selectedDetailDate && editingTask) {
+  if (applianceModeTask) {
+    const nearestRunSchedule = getNearestApplianceSchedule(tasksByDate, normalizeApplianceType(applianceModeTask), selectedDate);
+
+    return (
+      <ApplianceModePage
+        task={applianceModeTask}
+        selectedModeId={selectedApplianceModeId}
+        message={applianceModeMessage}
+        nearestRunText={nearestRunSchedule ? formatNearestRunText(nearestRunSchedule) : ""}
+        onSelectMode={setSelectedApplianceModeId}
+        onApply={(mode) => changeApplianceMode(applianceModeTask, mode)}
+        onClose={() => {
+          setApplianceModeTask(null);
+          setSelectedApplianceModeId("");
+          setApplianceModeMessage("");
+        }}
+      />
+    );
+  }
+
+  if (selectedDetailDate && editingTask && (isHouseCalendar || canEditPersonalCalendar)) {
     return (
       <DailyScheduleEditPage
         task={editingTask}
         selectedDate={detailDate}
+        onApplianceColorChange={onUpdateApplianceColor}
         onClose={() => setEditingTask(null)}
         onSave={(updates) => {
           startSchedulePlanning({ type: "edit", task: editingTask, updates });
@@ -299,11 +396,19 @@ export default function CalendarPage({
     );
   }
 
-  if (selectedDetailDate && activeAddColumn === "personal") {
+  if (selectedDetailDate && (activeAddColumn === "personal" || activeAddColumn === "housework") && (isHouseCalendar || canEditPersonalCalendar)) {
+    const houseworkMember = isMaster
+      ? HOUSEWORK_MEMBER_TABS.find((member) => member.userId === selectedMember || member.userId === activeCalendarOwnerId)
+      : HOUSEWORK_MEMBER_TABS.find((member) => member.userId === currentUser?.id || member.ownerId === currentUser?.id);
+
     return (
-      <DailyPersonalSchedulePage
+      <DailyScheduleAddPage
         selectedDate={detailDate}
         selectedMember={selectedMember}
+        scheduleType={activeAddColumn}
+        houseworkOwnerId={houseworkMember?.ownerId}
+        applianceAssignees={applianceAssignees}
+        onApplianceColorChange={onUpdateApplianceColor}
         onClose={() => setActiveAddColumn(null)}
         onSave={(task) => {
           startSchedulePlanning({ type: "add", task });
@@ -312,16 +417,17 @@ export default function CalendarPage({
     );
   }
 
-  if (selectedDetailDate) {
+  if (selectedDetailDate && (isHouseCalendar || canEditPersonalCalendar)) {
     return (
       <section className="page calendar-page daily-detail-page">
         <section
           className="date-detail-card"
           aria-label="Daily schedule"
           onPointerDown={(event) => {
-            if (event.target.closest(".daily-time-block") || event.target.closest(".daily-context-menu")) return;
+            if (event.target.closest(".daily-time-block") || event.target.closest(".daily-context-menu") || event.target.closest(".appliance-mode-backdrop")) return;
             setDailyContextTaskId(null);
             setDailyContextAction(null);
+            setDailyContextMenuPosition(null);
           }}
         >
           <div className="date-detail-head">
@@ -329,86 +435,181 @@ export default function CalendarPage({
               <ChevronLeft size={22} />
             </button>
             <div>
-              <span>{formatDateTitle(detailDate)} · {formatDDay(detailDate)}</span>
               <h3>{calendarOwnerTitle}</h3>
+              <span></span>
+              <span>{formatDateTitle(detailDate)}</span>
             </div>
-            <span aria-hidden="true" />
+            <button
+              type="button"
+              className="date-detail-view-toggle"
+              aria-label={dailyDetailView === "timetable" ? "리스트 방식으로 보기" : "타임테이블 방식으로 보기"}
+              title={dailyDetailView === "timetable" ? "리스트 보기" : "타임테이블 보기"}
+              onClick={() => {
+                setDailyDetailView((current) => (current === "timetable" ? "list" : "timetable"));
+                setDailyContextTaskId(null);
+                setDailyContextAction(null);
+                setDailyContextMenuPosition(null);
+              }}
+            >
+              <Repeat2 size={21} strokeWidth={3} />
+            </button>
           </div>
 
-          <div className="date-detail-member-strip" aria-label="Members">
-            {familyMembers.slice(0, 3).map((member) => (
-              <span key={member.id} style={{ "--member-color": memberColors[member.id] || member.color }}>
-                {memberImages[member.id] ? <img src={memberImages[member.id]} alt="" aria-hidden="true" /> : calendarMemberIconText[member.id] || member.short || member.name?.slice(0, 1)}
-              </span>
-            ))}
-          </div>
+          {isHouseCalendar ? (
+            <>
+              {dailyDetailView === "timetable" ? (
+                <div className="daily-timetable-shell housework-detail three-members" aria-label="가사 일정" style={{ "--hour-count": dailyHours.length - 1 }}>
+                  <DailyTimeRail hours={dailyHours} />
+                  {orderedHouseworkMembers.map((member) => (
+                    <DailyTimetableColumn
+                      key={member.memberName}
+                      title={member.label}
+                      tasks={dailyHouseTasks.filter((task) => task.memberName === member.memberName)}
+                      hours={dailyHours}
+                      memberColors={memberColors}
+                      variant="housework"
+                      activeTaskId={dailyContextTaskId}
+                      activeAction={dailyContextAction}
+                      contextMenuPosition={dailyContextMenuPosition}
+                      onOpenContext={openDailyContext}
+                      onChooseContextAction={chooseDailyContextAction}
+                      onOpenModeChange={openApplianceMode}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="daily-list-shell housework-detail three-members" aria-label="가사 일정 목록">
+                  {orderedHouseworkMembers.map((member) => (
+                    <DailyListColumn
+                      key={member.memberName}
+                      title={member.label}
+                      tasks={dailyHouseTasks.filter((task) => task.memberName === member.memberName)}
+                      memberColors={memberColors}
+                      variant="housework"
+                      activeTaskId={dailyContextTaskId}
+                      activeAction={dailyContextAction}
+                      contextMenuPosition={dailyContextMenuPosition}
+                      onOpenContext={openDailyContext}
+                      onChooseContextAction={chooseDailyContextAction}
+                      onOpenModeChange={openApplianceMode}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          ) : dailyDetailView === "timetable" ? (
+            <div className="daily-timetable-shell" aria-label="Daily timetable" style={{ "--hour-count": dailyHours.length - 1 }}>
+              <DailyTimeRail hours={dailyHours} />
 
-          <div className="daily-timetable-shell" aria-label="Daily timetable" style={{ "--hour-count": dailyHours.length }}>
-            <section className="daily-time-rail" aria-label="Time">
-              <strong>시간</strong>
-              <div className="daily-time-scale" style={{ "--hour-count": dailyHours.length }}>
-                {dailyHours.map((hour) => (
-                  <span key={hour}>{formatDailyHour(hour)}</span>
-                ))}
-              </div>
-            </section>
+              <DailyTimetableColumn
+                title="개인 일정"
+                tasks={dailyFixedTasks}
+                hours={dailyHours}
+                memberColors={memberColors}
+                variant="personal"
+                activeTaskId={dailyContextTaskId}
+                activeAction={dailyContextAction}
+                contextMenuPosition={dailyContextMenuPosition}
+                onOpenContext={openDailyContext}
+                onChooseContextAction={chooseDailyContextAction}
+                onOpenModeChange={openApplianceMode}
+              />
+              <DailyTimetableColumn
+                title="가사 일정"
+                tasks={dailyHouseTasks}
+                hours={dailyHours}
+                memberColors={memberColors}
+                variant="housework"
+                activeTaskId={dailyContextTaskId}
+                activeAction={dailyContextAction}
+                contextMenuPosition={dailyContextMenuPosition}
+                onOpenContext={openDailyContext}
+                onChooseContextAction={chooseDailyContextAction}
+                onOpenModeChange={openApplianceMode}
+              />
 
-            <DailyTimetableColumn
-              title="개인 일정"
-              tasks={dailyFixedTasks}
-              hours={dailyHours}
-              memberColors={memberColors}
-              variant="personal"
-              activeTaskId={dailyContextTaskId}
-              activeAction={dailyContextAction}
-              onOpenContext={openDailyContext}
-              onChooseContextAction={chooseDailyContextAction}
-            />
-            <DailyTimetableColumn
-              title="가사 일정"
-              tasks={dailyHouseTasks}
-              hours={dailyHours}
-              memberColors={memberColors}
-              variant="housework"
-              activeTaskId={dailyContextTaskId}
-              activeAction={dailyContextAction}
-              onOpenContext={openDailyContext}
-              onChooseContextAction={chooseDailyContextAction}
-            />
-
-            {detailTasks.length === 0 && <p className="date-detail-empty">이 날의 일정이 없어요</p>}
-          </div>
+            </div>
+          ) : (
+            <div className="daily-list-shell" aria-label="Daily schedule list">
+              <DailyListColumn
+                title="개인 일정"
+                tasks={dailyFixedTasks}
+                memberColors={memberColors}
+                variant="personal"
+                activeTaskId={dailyContextTaskId}
+                activeAction={dailyContextAction}
+                contextMenuPosition={dailyContextMenuPosition}
+                onOpenContext={openDailyContext}
+                onChooseContextAction={chooseDailyContextAction}
+                onOpenModeChange={openApplianceMode}
+              />
+              <DailyListColumn
+                title="가사 일정"
+                tasks={dailyHouseTasks}
+                memberColors={memberColors}
+                variant="housework"
+                activeTaskId={dailyContextTaskId}
+                activeAction={dailyContextAction}
+                contextMenuPosition={dailyContextMenuPosition}
+                onOpenContext={openDailyContext}
+                onChooseContextAction={chooseDailyContextAction}
+                onOpenModeChange={openApplianceMode}
+              />
+            </div>
+          )}
 
           {isDeleteMode ? (
             <button type="button" className="date-detail-delete-action" onClick={deleteSelectedTasks} disabled={selectedDeleteTaskIds.length === 0}>
               선택한 일정 삭제
             </button>
           ) : (
-            <div className="daily-add-row" aria-label="일정 추가">
-              <span aria-hidden="true" />
-              <button
-                type="button"
-                className={["date-detail-add", "personal", activeAddColumn === "personal" ? "active" : ""].filter(Boolean).join(" ")}
-                aria-label="개인 일정 추가"
-                onClick={() => {
-                  setSelectedDate(detailDate);
-                  setActiveAddColumn("personal");
-                }}
-              >
-                <Plus size={24} strokeWidth={2.4} />
-              </button>
-              <button
-                type="button"
-                className={["date-detail-add", "housework", activeAddColumn === "housework" ? "active" : ""].filter(Boolean).join(" ")}
-                aria-label="가사일 일정 추가"
-                onClick={() => {
-                  setSelectedDate(detailDate);
-                  setActiveAddColumn("housework");
-                  openComposer();
-                }}
-              >
-                <Plus size={24} strokeWidth={2.4} />
-              </button>
+            <div className={["daily-add-row", isHouseCalendar ? "housework-only three-members" : "", dailyDetailView + "-view"].filter(Boolean).join(" ")} aria-label="일정 추가">
+              {isHouseCalendar ? (
+                <>
+                  {dailyDetailView === "timetable" && <span aria-hidden="true" />}
+                  {orderedHouseworkMembers.map((member) =>
+                    isMaster || member.userId === currentHouseworkMember?.userId ? (
+                      <button
+                        type="button"
+                        key={member.userId}
+                        className={["date-detail-add", "housework", activeAddColumn === "housework" ? "active" : ""].filter(Boolean).join(" ")}
+                        aria-label={`${member.memberName} 가사 일정 추가`}
+                        onClick={() => openHouseworkComposerFor(member)}
+                      >
+                        <Plus size={24} strokeWidth={2.4} />
+                      </button>
+                    ) : (
+                      <span className="daily-add-placeholder" aria-hidden="true" key={member.userId} />
+                    ),
+                  )}
+                </>
+              ) : (
+                <>
+                  <span aria-hidden="true" />
+                  <button
+                    type="button"
+                    className={["date-detail-add", "personal", activeAddColumn === "personal" ? "active" : ""].filter(Boolean).join(" ")}
+                    aria-label="개인 일정 추가"
+                    onClick={() => {
+                      setSelectedDate(detailDate);
+                      setActiveAddColumn("personal");
+                    }}
+                  >
+                    <Plus size={24} strokeWidth={2.4} />
+                  </button>
+                  <button
+                    type="button"
+                    className={["date-detail-add", "housework", activeAddColumn === "housework" ? "active" : ""].filter(Boolean).join(" ")}
+                    aria-label="가사 일정 추가"
+                    onClick={() => {
+                      setSelectedDate(detailDate);
+                      setActiveAddColumn("housework");
+                    }}
+                  >
+                    <Plus size={24} strokeWidth={2.4} />
+                  </button>
+                </>
+              )}
             </div>
           )}
         </section>
@@ -418,8 +619,19 @@ export default function CalendarPage({
   return (
     <section className={["page", "calendar-page", "calendar-page-" + calendarView].join(" ")}>
       <div className="calendar-filter-block">
-        <h1 className="calendar-family-title">{calendarOwnerTitle}</h1>
-        <button className="calendar-settings-button" type="button" aria-label="?ㅼ젙" onClick={() => onOpenPanel?.({ type: "settings" })}>
+        <h1 className="calendar-family-title">
+          {isHouseCalendar ? (
+            calendarOwnerTitle
+          ) : (
+            <>
+              <span>{calendarOwnerDesignName}</span>의 캘린더
+            </>
+          )}
+        </h1>
+        <button className="calendar-notification-button" type="button" aria-label="알림" onClick={() => onOpenNotifications?.()}>
+          <Bell size={19} strokeWidth={2.4} />
+        </button>
+        <button className="calendar-settings-button" type="button" aria-label="설정" onClick={() => onOpenPanel?.({ type: "settings" })}>
           <Settings size={22} strokeWidth={2.3} />
         </button>
         <p>일정 보기 필터</p>
@@ -428,9 +640,10 @@ export default function CalendarPage({
             {familyMembers.map((member) => (
               <button
                 key={member.id}
-                className={selectedMember === member.id || (selectedMember === "all" && member.id === selectedMemberProfile.id) ? "active" : ""}
+                className={!isHouseCalendar && (selectedMember === member.id || (selectedMember === "all" && member.id === selectedMemberProfile.id)) ? "active" : ""}
                 aria-label={(calendarProfileNames[member.id] || member.name) + " 캘린더 보기"}
                 onClick={() => {
+                  closeDateDetail();
                   onActiveCalendarUserChange?.(member);
                   setSelectedMember(member.id);
                   setCalendarTaskMode("personal");
@@ -452,42 +665,58 @@ export default function CalendarPage({
               closeDateDetail();
             }}
           >
-            <img className="house-calendar-toggle-image" src={dryerImage} alt="" aria-hidden="true" />
+            <span className="family-split-avatar" aria-hidden="true">
+              {familyMembers.slice(0, 3).map((member, index) => (
+                <span
+                  className={"family-split-part part-" + (index + 1)}
+                  key={member.id}
+                  style={{ "--member-color": memberColors[member.id] || member.color || "#d9d9d9" }}
+                >
+                  {memberImages[member.id] ? (
+                    <img src={memberImages[member.id]} alt="" />
+                  ) : (
+                    <b>{calendarMemberIconText[member.id] || member.short || member.name?.slice(0, 1)}</b>
+                  )}
+                </span>
+              ))}
+            </span>
           </button>
         </div>
       </div>
 
-      <section className="calendar-board">
-        <div className="calendar-header">
-          <div className="month-switcher">
-            <button onClick={() => moveCalendar(-1)} aria-label="이전 기간">
-              <ChevronLeft size={18} />
+      <div className="calendar-header">
+        <div className="month-switcher">
+          <button onClick={() => moveCalendar(-1)} aria-label="이전 기간">
+            <ChevronLeft size={18} />
+          </button>
+          <h2>
+            <button type="button" className="month-title-button" onClick={openDatePicker}>
+              {calendarTitle}
             </button>
-            <h2>
-              <button type="button" className="month-title-button" onClick={openDatePicker}>
-                {calendarTitle}
-              </button>
-            </h2>
-            <button onClick={() => moveCalendar(1)} aria-label="다음 기간">
-              <ChevronRight size={18} />
-            </button>
-          </div>
-          <div className="calendar-header-actions">
-            <button className="calendar-zoom-button" onClick={() => changeScale(-1)} disabled={calendarScale === 0}>
-              <Minus size={15} />
-              축소
-            </button>
-            <button className="calendar-zoom-button" onClick={() => changeScale(1)} disabled={calendarScale === 4}>
-              <Plus size={15} />
-              확대
-            </button>
-            <button className="calendar-add-button" onClick={openComposer}>
+          </h2>
+          <button onClick={() => moveCalendar(1)} aria-label="다음 기간">
+            <ChevronRight size={18} />
+          </button>
+        </div>
+        <div className="calendar-header-actions">
+          <button className="calendar-zoom-button" onClick={() => changeScale(-1)} disabled={calendarScale === 0}>
+            <Minus size={15} />
+            축소
+          </button>
+          <button className="calendar-zoom-button" onClick={() => changeScale(1)} disabled={calendarScale === maxCalendarScale}>
+            <Plus size={15} />
+            확대
+          </button>
+          {canUseCalendarAdd && (
+            <button className="calendar-add-button" onClick={openCalendarComposer}>
               <Plus size={18} />
               일정 추가
             </button>
-          </div>
+          )}
         </div>
+      </div>
 
+      <section className="calendar-board">
         {!isHouseCalendar && (
           <div className="calendar-toolbar">
             <div className="calendar-mode-controls" aria-label="캘린더 보기 방식">
@@ -507,12 +736,13 @@ export default function CalendarPage({
         {!isHouseCalendar && calendarView === "week" ? (
           <WeekTimetable
             dates={displayDates}
-            tasksByDate={filteredTasksByDate}
+            tasksByDate={mainCalendarTasksByDate}
             memberColors={memberColors}
             selectedDate={selectedDate}
             onPrevWeek={() => moveCalendar(-1)}
             onNextWeek={() => moveCalendar(1)}
             onSelectDate={(date) => {
+              if (!canEditPersonalCalendar) return;
               setSelectedDate(date);
               setSelectedDetailDate(date);
             }}
@@ -539,15 +769,16 @@ export default function CalendarPage({
               {!isHouseCalendar && calendarView !== "month" &&
                 Array.from({ length: leadingBlanks }).map((_, index) => <span className="blank-day" key={index} />)}
               {calendarCells.map(({ key, day, isCurrentMonth }) => {
-                const tasks = filteredTasksByDate[key] || [];
+                const tasks = mainCalendarTasksByDate[key] || [];
                 const cellTasks = getCalendarCellTasks(tasks, isHouseCalendar);
                 const visibleTasks =
                   !isHouseCalendar && cellTasks.length >= CALENDAR_CELL_TASK_LIMIT
                     ? cellTasks.slice(0, CALENDAR_CELL_COLLAPSED_TASK_LIMIT)
                     : cellTasks;
                 const hiddenTaskCount = cellTasks.length - visibleTasks.length;
-                const weather = weatherByDate[key];
+                const weather = isHouseCalendar ? houseCalendarWeatherByDate[key] || weatherByDate[key] : weatherByDate[key];
                 const hasWeatherData = Boolean(weather?.hasWeatherData);
+                const shouldShowAirQuality = isHouseCalendar && key === getTodayDateKey();
 
                 return (
                   <button
@@ -555,13 +786,14 @@ export default function CalendarPage({
                     className={["date-cell", selectedDate === key ? "selected" : "", isCurrentMonth ? "" : "outside-month"].filter(Boolean).join(" ")}
                     onClick={() => {
                       if (!isHouseCalendar && !isCurrentMonth) return;
+                      if (!isHouseCalendar && !canEditPersonalCalendar) return;
                       setSelectedDate(key);
                       setSelectedDetailDate(key);
                     }}
                     disabled={!isHouseCalendar && !isCurrentMonth}
                   >
                     <strong>{day}</strong>
-                    {hasWeatherData && (
+                    {hasWeatherData ? (
                       <span className="day-weather">
                         <>
                           <span className="weather-icon" role="img" aria-label={weather.sky || weather.pty || "날씨"}>
@@ -572,20 +804,35 @@ export default function CalendarPage({
                             <small>{formatTemp(weather.minTemp)}</small>
                             {Number.isFinite(weather.pop) && <small className="weather-pop">강수 {weather.pop}%</small>}
                             <small>{formatWeatherState(weather)}</small>
+                            {shouldShowAirQuality && (
+                              <small className="air-quality-chip">
+                                미세 {houseCalendarTodayAirQuality.grade} · PM10 {houseCalendarTodayAirQuality.pm10}
+                              </small>
+                            )}
                           </span>
                         </>
                       </span>
-                    )}
+                    ) : weatherApiStatus !== "loading" ? (
+                      <span className="day-weather empty">
+                        <em>안 받아와짐.</em>
+                      </span>
+                    ) : null}
 
                     <div className="date-tasks">
                       {isCurrentMonth && (
                         <>
                           {visibleTasks.map((task) => (
                             (() => {
-                              const taskColor = getTaskDisplayColor(task, memberColors, getDailyTaskGroup(task) === "housework" ? "housework" : "personal");
+                              const taskGroup = getDailyTaskGroup(task);
+                              const isHousework = taskGroup === "housework";
+                              const taskColor = getTaskDisplayColor(task, memberColors, isHousework ? "housework" : "personal");
                               return (
                             <i
-                              className={[task.tag, task.displayType === "fixed" ? "fixed-event-task" : ""].filter(Boolean).join(" ")}
+                              className={[
+                                task.tag,
+                                task.displayType === "fixed" ? "fixed-event-task" : "",
+                                isHousework ? "housework-task" : "",
+                              ].filter(Boolean).join(" ")}
                               key={task.id}
                               style={{ "--task-bg": taskColor, "--task-fg": getReadableTextColor(taskColor) }}
                             >
@@ -613,9 +860,15 @@ export default function CalendarPage({
 
       {(isHouseCalendar || calendarView === "month") && (
         <section className="calendar-ai-report" aria-label="AI Report">
-          <h3>AI Report</h3>
+          <h3>Daily AI Report</h3>
           <div>
-            <p>{buildAiReport(selectedDate, selectedVisibleTasks, filteredTasksByDate)}</p>
+            <p>{buildAiReport(selectedDate, selectedVisibleTasks, mainCalendarTasksByDate)}</p>
+            <img src={aiDailyReportImage} alt="" aria-hidden="true" />
+            <div className="calendar-ai-report-tags" aria-hidden="true">
+              {buildAiReportTags(selectedDate, selectedVisibleTasks, mainCalendarTasksByDate).map((tag) => (
+                <span key={tag}>{tag}</span>
+              ))}
+            </div>
           </div>
         </section>
       )}
@@ -677,7 +930,7 @@ export default function CalendarPage({
           </label>
         </div>
 
-        {selectedWeather?.hasWeatherData && (
+        {selectedWeather?.hasWeatherData ? (
           <div className="selected-weather-summary">
             <span className="weather-icon" role="img" aria-label={selectedWeather.sky || "날씨"}>
               {weatherIcon[selectedWeather.icon] || weatherIcon.unknown}
@@ -688,12 +941,16 @@ export default function CalendarPage({
               {Number.isFinite(selectedWeather.pop) ? " · 강수 " + selectedWeather.pop + "%" : ""}
             </small>
           </div>
-        )}
+        ) : shouldShowWeatherMissing ? (
+          <div className="selected-weather-summary empty">
+            <strong>안 받아와짐.</strong>
+          </div>
+        ) : null}
 
         {selectedTasks.map((task) => (
           <TaskItem
             key={task.id}
-            task={task}
+            task={getDisplayTask(task)}
             onToggle={toggleTask}
             onDelete={deleteTask}
             onOwnerChange={changeTaskOwner}
@@ -748,10 +1005,16 @@ function getRecommendationsForDate(date, weatherByDate, routineRecommendations) 
 }
 
 function SchedulePlanningLoadingPage({ pendingSave, onComplete }) {
+  const onCompleteRef = useRef(onComplete);
+
   useEffect(() => {
-    const timer = window.setTimeout(() => onComplete(pendingSave), SCHEDULE_PLANNING_DELAY);
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => onCompleteRef.current(pendingSave), SCHEDULE_PLANNING_DELAY);
     return () => window.clearTimeout(timer);
-  }, [pendingSave, onComplete]);
+  }, [pendingSave]);
 
   return (
     <section className="page calendar-page schedule-loading-page" aria-live="polite" aria-label="AI 일정 생성 중">
@@ -765,54 +1028,117 @@ function SchedulePlanningLoadingPage({ pendingSave, onComplete }) {
       </div>
 
       <div className="schedule-loading-copy">
+        <span>AI 루틴 정리 중</span>
         <strong>새로운 하루 계획을 만드는 중</strong>
         <p>입력한 일정을 반영해 AI가 가사 계획을 다시 정리하고 있어요</p>
+        <div className="schedule-loading-progress" aria-hidden="true">
+          <i />
+        </div>
       </div>
     </section>
   );
 }
 
-function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSave }) {
+function getHouseworkApplianceOptions(ownerId, applianceAssignees = {}) {
+  const options = [
+    { id: "washer", type: "WASHER", label: "세탁기" },
+    { id: "dryer", type: "DRYER", label: "건조기" },
+    { id: "dishwasher", type: "DISHWASHER", label: "식기세척기" },
+    { id: "robot", type: "ROBOT_CLEANER", label: "로봇청소기" },
+    { id: "air-purifier", type: "AIR_PURIFIER", label: "공기청정기" },
+    { id: "air-living", type: "AIR_CONDITIONER", label: "거실 에어컨" },
+    { id: "air-sumin", type: "AIR_CONDITIONER", label: "수민 에어컨", room: "수민 방" },
+    { id: "air-dabin", type: "AIR_CONDITIONER", label: "다빈 에어컨", room: "다빈 방" },
+    { id: "air-jaehyeok", type: "AIR_CONDITIONER", label: "재혁 에어컨", room: "재혁 방" },
+  ];
+  const hasAssigneeSetting = Object.values(applianceAssignees || {}).some(Boolean);
+  if (!ownerId || !hasAssigneeSetting) return options;
+
+  return options.filter((option) => applianceAssignees[option.id] === ownerId);
+}
+
+function getDefaultApplianceModeLabel(applianceType) {
+  return applianceModeCatalog[applianceType]?.modes?.[0]?.label || "자동";
+}
+
+function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "personal", houseworkOwnerId, applianceAssignees = {}, onClose, onSave, onApplianceColorChange }) {
   const parsedDate = parseDateKey(selectedDate);
-  const initialOwner = selectedMember === "all" ? "me" : selectedMember;
-  const colorOptions = ["#ff9e9e", "#7bd3ff", "#d7a8ff", "#f7fda6"];
-  const [title, setTitle] = useState("");
-  const [color, setColor] = useState(colorOptions[1]);
+  const initialOwner = scheduleType === "housework" ? houseworkOwnerId || selectedMember || DABIN_TASK_OWNER : selectedMember || DABIN_TASK_OWNER;
+  const isHouseworkSchedule = scheduleType === "housework";
+  const applianceOptions = getHouseworkApplianceOptions(houseworkOwnerId, applianceAssignees);
+  const applianceOptionKey = applianceOptions.map((option) => option.id).join("|");
+  const colorOptions = scheduleColorOptions;
+  const initialApplianceType = applianceOptions[0]?.type || "ETC";
+  const [title, setTitle] = useState(isHouseworkSchedule ? applianceOptions[0]?.label || "" : "");
+  const [applianceOptionId, setApplianceOptionId] = useState(applianceOptions[0]?.id || "washer");
+  const [isApplianceOpen, setApplianceOpen] = useState(false);
+  const [color, setColor] = useState(isHouseworkSchedule ? applianceTypeColor[initialApplianceType] || colorOptions[1] : colorOptions[1]);
   const [isColorOpen, setColorOpen] = useState(false);
   const [isAllDay, setAllDay] = useState(false);
   const [startMonth, setStartMonth] = useState(parsedDate.month);
   const [startDay, setStartDay] = useState(parsedDate.day);
   const [endMonth, setEndMonth] = useState(parsedDate.month);
   const [endDay, setEndDay] = useState(parsedDate.day);
-  const [startTime, setStartTime] = useState("07:00");
-  const [endTime, setEndTime] = useState("08:00");
+  const [startTime, setStartTime] = useState(DAILY_TIMETABLE_START_TIME);
+  const [endTime, setEndTime] = useState("07:00");
   const [error, setError] = useState("");
+  const selectedAppliance = applianceOptions.find((option) => option.id === applianceOptionId) || applianceOptions[0];
+  const fixedApplianceColor = applianceTypeColor[selectedAppliance?.type] || colorOptions[1];
+  const selectedColor = isHouseworkSchedule ? color || fixedApplianceColor : color;
+  const applianceSelectLabel = selectedAppliance?.label || (isHouseworkSchedule ? "담당 가전 없음" : "");
+
+  useEffect(() => {
+    if (!isHouseworkSchedule) return;
+    if (!applianceOptions.length) {
+      setApplianceOptionId("");
+      setTitle("");
+      setColor(colorOptions[1]);
+      return;
+    }
+    if (applianceOptions.some((option) => option.id === applianceOptionId)) return;
+
+    const nextOption = applianceOptions[0];
+    setApplianceOptionId(nextOption.id);
+    setTitle(nextOption.label);
+    setColor(applianceTypeColor[nextOption.type] || colorOptions[1]);
+  }, [applianceOptionKey, applianceOptionId, colorOptions, isHouseworkSchedule]);
 
   function saveSchedule() {
-    const trimmedTitle = title.trim();
+    const applianceType = selectedAppliance?.type || "ETC";
+    const trimmedTitle = isHouseworkSchedule ? selectedAppliance?.label || "" : title.trim();
     if (!trimmedTitle) {
-      setError("필수 입력 필요");
+      setError(isHouseworkSchedule ? "담당 가전이 없어요. 설정에서 담당 가전을 먼저 지정해 주세요." : "제목을 입력해 주세요.");
       return;
     }
 
-    const scheduleDates = orderScheduleDates(dateKey(parsedDate.year, startMonth, startDay), dateKey(parsedDate.year, endMonth, endDay));
+    const startDate = dateKey(parsedDate.year, startMonth, startDay);
+    const endDate = dateKey(parsedDate.year, endMonth, endDay);
+    if (isInvalidScheduleTime(startDate, endDate, startTime, endTime, isAllDay)) {
+      setError("종료 시간은 시작 시간보다 늦어야 해요.");
+      return;
+    }
+
+    const scheduleDates = orderScheduleDates(startDate, endDate);
+    if (isHouseworkSchedule && selectedColor !== fixedApplianceColor) {
+      onApplianceColorChange?.(applianceType, selectedColor);
+    }
     onSave({
       date: scheduleDates.date,
       title: trimmedTitle,
-      place: "개인 일정",
-      tag: "plan",
+      place: scheduleType === "housework" ? selectedAppliance?.room || "가사 일정" : "개인 일정",
+      tag: scheduleType === "housework" ? "house" : "plan",
       owner: initialOwner,
       done: false,
       repeat: isAllDay ? "하루종일" : startTime + " ~ " + endTime,
       source: "manual",
-      color,
+      color: selectedColor,
       endDate: scheduleDates.endDate,
-      displayType: "fixed",
+      displayType: isHouseworkSchedule ? "appliance" : "manual",
+      applianceType: isHouseworkSchedule ? applianceType : undefined,
+      applianceMode: isHouseworkSchedule ? getDefaultApplianceModeLabel(applianceType) : undefined,
+      currentMode: isHouseworkSchedule ? getDefaultApplianceModeLabel(applianceType) : undefined,
     });
   }
-
-  const daysForStart = getDaysInMonth(parsedDate.year, startMonth);
-  const daysForEnd = getDaysInMonth(parsedDate.year, endMonth);
 
   return (
     <section className="page calendar-page daily-add-page">
@@ -832,19 +1158,69 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
         </div>
 
         <section className="daily-add-title-section">
-          <label htmlFor="daily-add-title">제목</label>
+          <label htmlFor="daily-add-title">{isHouseworkSchedule ? "작동시킬 가전" : "제목"}</label>
           <div className={["daily-add-title-input", error ? "invalid" : ""].filter(Boolean).join(" ")}>
-            <input
-              id="daily-add-title"
-              value={title}
-              onChange={(event) => {
-                setTitle(event.target.value);
-                setError("");
-              }}
-              placeholder="제목을 입력해 주세요"
-              autoFocus
-            />
-            <button type="button" className="daily-color-button" style={{ "--selected-color": color }} aria-label="색상 변경" onClick={() => setColorOpen((current) => !current)} />
+            {isHouseworkSchedule ? (
+              <div
+                className={["daily-appliance-select", isApplianceOpen ? "open" : ""].filter(Boolean).join(" ")}
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget)) setApplianceOpen(false);
+                }}
+              >
+                <button id="daily-add-title" type="button" onClick={() => setApplianceOpen((current) => !current)} aria-expanded={isApplianceOpen}>
+                  <span>{applianceSelectLabel}</span>
+                  <ChevronDown size={16} strokeWidth={2.5} />
+                </button>
+                {isApplianceOpen && (
+                  <div className="daily-appliance-options" role="listbox" aria-label="작동시킬 가전 선택">
+                    {applianceOptions.length === 0 ? (
+                      <p className="daily-appliance-empty">담당 가전이 없어요</p>
+                    ) : applianceOptions.map((option) => (
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={option.id === applianceOptionId}
+                        className={option.id === applianceOptionId ? "active" : ""}
+                        key={option.id}
+                        onClick={() => {
+                          setApplianceOptionId(option.id);
+                          setTitle(option.label);
+                          setColor(applianceTypeColor[option.type] || colorOptions[1]);
+                          setError("");
+                          setApplianceOpen(false);
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <input
+                id="daily-add-title"
+                value={title}
+                onChange={(event) => {
+                  setTitle(event.target.value);
+                  setError("");
+                }}
+                placeholder="제목을 입력해 주세요."
+                aria-invalid={Boolean(error)}
+                autoFocus
+              />
+            )}
+            {isHouseworkSchedule ? (
+              <button
+                type="button"
+                className="daily-color-button appliance-color-button"
+                style={{ "--selected-color": selectedColor }}
+                aria-label={selectedColor === fixedApplianceColor ? "가전 고정 색상 변경" : "가전 변경 색상 변경"}
+                title={selectedColor === fixedApplianceColor ? "고정 색상" : "변경된 색상"}
+                onClick={() => setColorOpen((current) => !current)}
+              />
+            ) : (
+              <button type="button" className="daily-color-button" style={{ "--selected-color": color }} aria-label="색상 변경" onClick={() => setColorOpen((current) => !current)} />
+            )}
           </div>
           {error && <p className="daily-add-error">{error}</p>}
           {isColorOpen && (
@@ -853,10 +1229,15 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
                 <button
                   key={option}
                   type="button"
-                  className={option === color ? "active" : ""}
+                  className={option === selectedColor ? "active" : ""}
                   style={{ "--option-color": option }}
                   aria-label={option + " 선택"}
                   onClick={() => {
+                    if (isHouseworkSchedule && option !== fixedApplianceColor && option !== selectedColor) {
+                      const applianceLabel = selectedAppliance?.label || applianceTypeLabel[selectedAppliance?.type] || "해당";
+                      const shouldUpdateAll = window.confirm(`${applianceLabel} 가전의 전체 캘린더 색상을 바꾸겠습니까?`);
+                      if (!shouldUpdateAll) return;
+                    }
                     setColor(option);
                     setColorOpen(false);
                   }}
@@ -869,44 +1250,63 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
         <section className="daily-add-time-card">
           <label className="daily-all-day-row">
             <span>하루종일</span>
-            <input type="checkbox" checked={isAllDay} onChange={(event) => setAllDay(event.target.checked)} />
+            <input
+              type="checkbox"
+              checked={isAllDay}
+              onChange={(event) => {
+                setAllDay(event.target.checked);
+                setError("");
+              }}
+            />
             <i aria-hidden="true" />
           </label>
 
           <div className="daily-date-row">
             <strong>기간</strong>
-            <div className="daily-date-pair">
-              <select value={startMonth} onChange={(event) => setStartMonth(Number(event.target.value))}>
-                {monthOptions().map((month) => (
-                  <option key={month} value={month}>{month + "월"}</option>
-                ))}
-              </select>
-              <select value={startDay} onChange={(event) => setStartDay(Number(event.target.value))}>
-                {dayOptions(daysForStart).map((day) => (
-                  <option key={day} value={day}>{day + "일"}</option>
-                ))}
-              </select>
-            </div>
+            <DailyCalendarDatePicker
+              label="시작 날짜"
+              value={dateKey(parsedDate.year, startMonth, startDay)}
+              onChange={(value) => {
+                const next = parseDateKey(value);
+                setStartMonth(next.month);
+                setStartDay(next.day);
+                setError("");
+              }}
+            />
             <span>~</span>
-            <div className="daily-date-pair">
-              <select value={endMonth} onChange={(event) => setEndMonth(Number(event.target.value))}>
-                {monthOptions().map((month) => (
-                  <option key={month} value={month}>{month + "월"}</option>
-                ))}
-              </select>
-              <select value={endDay} onChange={(event) => setEndDay(Number(event.target.value))}>
-                {dayOptions(daysForEnd).map((day) => (
-                  <option key={day} value={day}>{day + "일"}</option>
-                ))}
-              </select>
-            </div>
+            <DailyCalendarDatePicker
+              label="종료 날짜"
+              value={dateKey(parsedDate.year, endMonth, endDay)}
+              onChange={(value) => {
+                const next = parseDateKey(value);
+                setEndMonth(next.month);
+                setEndDay(next.day);
+                setError("");
+              }}
+            />
           </div>
 
           <div className={["daily-time-row", isAllDay ? "disabled" : ""].filter(Boolean).join(" ")}>
             <strong>시간</strong>
-            <input type="time" value={startTime} disabled={isAllDay} onChange={(event) => setStartTime(event.target.value)} />
+            <DailyScrollTimePicker
+              label="시작 시간"
+              value={startTime}
+              disabled={isAllDay}
+              onChange={(value) => {
+                setStartTime(value);
+                setError("");
+              }}
+            />
             <span>~</span>
-            <input type="time" value={endTime} disabled={isAllDay} onChange={(event) => setEndTime(event.target.value)} />
+            <DailyScrollTimePicker
+              label="종료 시간"
+              value={endTime}
+              disabled={isAllDay}
+              onChange={(value) => {
+                setEndTime(value);
+                setError("");
+              }}
+            />
           </div>
         </section>
       </form>
@@ -914,14 +1314,18 @@ function DailyPersonalSchedulePage({ selectedDate, selectedMember, onClose, onSa
   );
 }
 
-function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
+function DailyScheduleEditPage({ task, selectedDate, onClose, onSave, onApplianceColorChange }) {
   const parsedDate = parseDateKey(task.date || selectedDate);
   const parsedEndDate = parseDateKey(task.endDate || task.date || selectedDate);
-  const colorOptions = ["#ff9e9e", "#7bd3ff", "#d7a8ff", "#f7fda6"];
+  const colorOptions = scheduleColorOptions;
   const initialTime = getEditableTaskTime(task);
+  const isHouseworkTask = getDailyTaskGroup(task) === "housework";
+  const fixedApplianceColor = task.applianceType ? applianceTypeColor[task.applianceType] : "";
+  const applianceLabel = task.applianceType ? applianceTypeLabel[task.applianceType] || task.title || "해당" : task.title || "해당";
   const [title, setTitle] = useState(task.title || "");
-  const [color, setColor] = useState(task.color || colorOptions[1]);
+  const [color, setColor] = useState(normalizeScheduleColor(task.color) || fixedApplianceColor || colorOptions[1]);
   const [isColorOpen, setColorOpen] = useState(false);
+  const [pendingApplianceColor, setPendingApplianceColor] = useState(null);
   const [isAllDay, setAllDay] = useState(initialTime.isAllDay);
   const [startMonth, setStartMonth] = useState(parsedDate.month);
   const [startDay, setStartDay] = useState(parsedDate.day);
@@ -934,11 +1338,21 @@ function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
   function saveSchedule() {
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
-      setError("필수 입력 필요");
+      setError("제목을 입력해 주세요.");
       return;
     }
 
-    const scheduleDates = orderScheduleDates(dateKey(parsedDate.year, startMonth, startDay), dateKey(parsedDate.year, endMonth, endDay));
+    const startDate = dateKey(parsedDate.year, startMonth, startDay);
+    const endDate = dateKey(parsedDate.year, endMonth, endDay);
+    if (isInvalidScheduleTime(startDate, endDate, startTime, endTime, isAllDay)) {
+      setError("종료 시간은 시작 시간보다 늦어야 해요.");
+      return;
+    }
+
+    const scheduleDates = orderScheduleDates(startDate, endDate);
+    if (pendingApplianceColor && task.applianceType) {
+      onApplianceColorChange?.(task.applianceType, pendingApplianceColor);
+    }
     onSave({
       title: trimmedTitle,
       date: scheduleDates.date,
@@ -947,9 +1361,6 @@ function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
       repeat: isAllDay ? "하루종일" : startTime + " ~ " + endTime,
     });
   }
-
-  const daysForStart = getDaysInMonth(parsedDate.year, startMonth);
-  const daysForEnd = getDaysInMonth(parsedDate.year, endMonth);
 
   return (
     <section className="page calendar-page daily-add-page daily-edit-page">
@@ -979,6 +1390,7 @@ function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
                 setError("");
               }}
               placeholder="제목을 입력해 주세요."
+              aria-invalid={Boolean(error)}
               autoFocus
             />
             <button
@@ -1000,6 +1412,13 @@ function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
                   style={{ "--option-color": option }}
                   aria-label={option + " 선택"}
                   onClick={() => {
+                    if (isHouseworkTask && task.applianceType && option !== color) {
+                      if (fixedApplianceColor && option !== fixedApplianceColor) {
+                        const shouldUpdateAll = window.confirm(`${applianceLabel} 가전의 전체 캘린더 색상을 바꾸겠습니까?`);
+                        if (!shouldUpdateAll) return;
+                      }
+                      setPendingApplianceColor(option);
+                    }
                     setColor(option);
                     setColorOpen(false);
                   }}
@@ -1012,44 +1431,63 @@ function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
         <section className="daily-add-time-card">
           <label className="daily-all-day-row">
             <span>하루종일</span>
-            <input type="checkbox" checked={isAllDay} onChange={(event) => setAllDay(event.target.checked)} />
+            <input
+              type="checkbox"
+              checked={isAllDay}
+              onChange={(event) => {
+                setAllDay(event.target.checked);
+                setError("");
+              }}
+            />
             <i aria-hidden="true" />
           </label>
 
           <div className="daily-date-row">
             <strong>기간</strong>
-            <div className="daily-date-pair">
-              <select value={startMonth} onChange={(event) => setStartMonth(Number(event.target.value))}>
-                {monthOptions().map((month) => (
-                  <option key={month} value={month}>{month + "월"}</option>
-                ))}
-              </select>
-              <select value={startDay} onChange={(event) => setStartDay(Number(event.target.value))}>
-                {dayOptions(daysForStart).map((day) => (
-                  <option key={day} value={day}>{day + "일"}</option>
-                ))}
-              </select>
-            </div>
+            <DailyCalendarDatePicker
+              label="시작 날짜"
+              value={dateKey(parsedDate.year, startMonth, startDay)}
+              onChange={(value) => {
+                const next = parseDateKey(value);
+                setStartMonth(next.month);
+                setStartDay(next.day);
+                setError("");
+              }}
+            />
             <span>~</span>
-            <div className="daily-date-pair">
-              <select value={endMonth} onChange={(event) => setEndMonth(Number(event.target.value))}>
-                {monthOptions().map((month) => (
-                  <option key={month} value={month}>{month + "월"}</option>
-                ))}
-              </select>
-              <select value={endDay} onChange={(event) => setEndDay(Number(event.target.value))}>
-                {dayOptions(daysForEnd).map((day) => (
-                  <option key={day} value={day}>{day + "일"}</option>
-                ))}
-              </select>
-            </div>
+            <DailyCalendarDatePicker
+              label="종료 날짜"
+              value={dateKey(parsedDate.year, endMonth, endDay)}
+              onChange={(value) => {
+                const next = parseDateKey(value);
+                setEndMonth(next.month);
+                setEndDay(next.day);
+                setError("");
+              }}
+            />
           </div>
 
           <div className={["daily-time-row", isAllDay ? "disabled" : ""].filter(Boolean).join(" ")}>
             <strong>시간</strong>
-            <input type="time" value={startTime} disabled={isAllDay} onChange={(event) => setStartTime(event.target.value)} />
+            <DailyScrollTimePicker
+              label="시작 시간"
+              value={startTime}
+              disabled={isAllDay}
+              onChange={(value) => {
+                setStartTime(value);
+                setError("");
+              }}
+            />
             <span>~</span>
-            <input type="time" value={endTime} disabled={isAllDay} onChange={(event) => setEndTime(event.target.value)} />
+            <DailyScrollTimePicker
+              label="종료 시간"
+              value={endTime}
+              disabled={isAllDay}
+              onChange={(value) => {
+                setEndTime(value);
+                setError("");
+              }}
+            />
           </div>
         </section>
       </form>
@@ -1057,54 +1495,350 @@ function DailyScheduleEditPage({ task, selectedDate, onClose, onSave }) {
   );
 }
 
-function monthOptions() {
-  return Array.from({ length: 12 }, (_, index) => index + 1);
+function DailyScrollTimePicker({ label, value, disabled = false, onChange }) {
+  const [isOpen, setOpen] = useState(false);
+  const normalizedValue = normalizeDailyPickerTime(value);
+  const [hour, minute] = normalizedValue.split(":");
+  const hours = Array.from({ length: DAILY_TIMETABLE_END_HOUR - DAILY_TIMETABLE_START_HOUR }, (_, index) =>
+    String(DAILY_TIMETABLE_START_HOUR + index).padStart(2, "0"),
+  );
+  const minutes = buildDailyPickerMinutes(minute);
+
+  return (
+    <div
+      className={["daily-scroll-time-picker", isOpen ? "open" : "", disabled ? "disabled" : ""].filter(Boolean).join(" ")}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
+      <button type="button" className="daily-scroll-time-display" disabled={disabled} onClick={() => setOpen((current) => !current)} aria-expanded={isOpen}>
+        <span>{formatDailyPickerTime(normalizedValue)}</span>
+        <Clock3 size={14} strokeWidth={2.4} />
+      </button>
+      {isOpen && !disabled && (
+        <div className="daily-scroll-time-panel" aria-label={label}>
+          <div className="daily-scroll-time-column" role="listbox" aria-label="시">
+            {hours.map((option) => (
+              <button
+                key={option}
+                type="button"
+                role="option"
+                aria-selected={hour === option}
+                className={hour === option ? "active" : ""}
+                onClick={() => onChange?.(`${option}:${minute}`)}
+              >
+                {Number(option)}시
+              </button>
+            ))}
+          </div>
+          <div className="daily-scroll-time-column" role="listbox" aria-label="분">
+            {minutes.map((option) => (
+              <button
+                key={option}
+                type="button"
+                role="option"
+                aria-selected={minute === option}
+                className={minute === option ? "active" : ""}
+                onClick={() => onChange?.(`${hour}:${option}`)}
+              >
+                {option}분
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
-function dayOptions(daysInMonth) {
-  return Array.from({ length: daysInMonth }, (_, index) => index + 1);
+function DailyCalendarDatePicker({ label, value, onChange }) {
+  const [isOpen, setOpen] = useState(false);
+  const selected = parseDateKey(value);
+  const [viewDate, setViewDate] = useState(() => new Date(selected.year, selected.month - 1, 1));
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth() + 1;
+  const daysInMonth = getDaysInMonth(year, month);
+  const leadingBlanks = new Date(year, month - 1, 1).getDay();
+  const cells = [
+    ...Array.from({ length: leadingBlanks }, (_, index) => ({ key: `blank-${index}`, day: "", date: "" })),
+    ...Array.from({ length: daysInMonth }, (_, index) => {
+      const day = index + 1;
+      const date = dateKey(year, month, day);
+      return { key: date, day, date };
+    }),
+  ];
+
+  useEffect(() => {
+    const next = parseDateKey(value);
+    setViewDate(new Date(next.year, next.month - 1, 1));
+  }, [value]);
+
+  function moveMonth(offset) {
+    setViewDate((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
+  }
+
+  return (
+    <div
+      className={["daily-calendar-date-picker", isOpen ? "open" : ""].filter(Boolean).join(" ")}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
+      <button type="button" className="daily-calendar-date-display" onClick={() => setOpen((current) => !current)} aria-expanded={isOpen}>
+        <span>{formatDailyPickerDate(value)}</span>
+        <CalendarDays size={14} strokeWidth={2.4} />
+      </button>
+      {isOpen && (
+        <div className="daily-calendar-date-panel" aria-label={label}>
+          <div className="daily-calendar-date-head">
+            <button type="button" onClick={() => moveMonth(-1)} aria-label="이전 달">
+              <ChevronLeft size={15} />
+            </button>
+            <strong>
+              {year}년 {month}월
+            </strong>
+            <button type="button" onClick={() => moveMonth(1)} aria-label="다음 달">
+              <ChevronRight size={15} />
+            </button>
+          </div>
+          <div className="daily-calendar-date-weekdays" aria-hidden="true">
+            {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
+              <span key={day}>{day}</span>
+            ))}
+          </div>
+          <div className="daily-calendar-date-grid">
+            {cells.map((cell) =>
+              cell.date ? (
+                <button
+                  key={cell.key}
+                  type="button"
+                  className={cell.date === value ? "active" : ""}
+                  onClick={() => {
+                    onChange?.(cell.date);
+                    setOpen(false);
+                  }}
+                >
+                  {cell.day}
+                </button>
+              ) : (
+                <span key={cell.key} />
+              ),
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function formatDailyPickerDate(value) {
+  const parsed = parseDateKey(value);
+  return `${parsed.month}월 ${parsed.day}일`;
+}
+
+function normalizeDailyPickerTime(value) {
+  const match = String(value || DAILY_TIMETABLE_START_TIME).match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return DAILY_TIMETABLE_START_TIME;
+  const hour = Math.max(DAILY_TIMETABLE_START_HOUR, Math.min(DAILY_TIMETABLE_END_HOUR - 1, Number(match[1])));
+  const minute = Math.max(0, Math.min(59, Number(match[2])));
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function buildDailyPickerMinutes(currentMinute) {
+  return Array.from(new Set([...["00", "10", "20", "30", "40", "50"], currentMinute])).sort((first, second) => Number(first) - Number(second));
+}
+
+function formatDailyPickerTime(value) {
+  const [hourText, minute] = normalizeDailyPickerTime(value).split(":");
+  const hour = Number(hourText);
+  const period = hour < 12 ? "오전" : "오후";
+  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  return `${period} ${String(displayHour).padStart(2, "0")}:${minute}`;
 }
 
 function orderScheduleDates(date, endDate) {
   return date <= endDate ? { date, endDate } : { date: endDate, endDate: date };
 }
 
-function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, activeTaskId, activeAction, onOpenContext, onChooseContextAction }) {
-  const startHour = hours[0] ?? 8;
-  const endHour = hours[hours.length - 1] ?? 22;
-  const totalMinutes = Math.max(60, (endHour - startHour + 1) * 60);
+function isInvalidScheduleTime(startDate, endDate, startTime, endTime, isAllDay) {
+  if (isAllDay) return false;
+  if (!startDate || !endDate || !startTime || !endTime) return true;
+  if (startDate !== endDate) return false;
+  return timeToMinutes(startTime) >= timeToMinutes(endTime);
+}
+
+function timeToMinutes(time) {
+  const [hour, minute] = String(time || "").split(":").map(Number);
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return 0;
+  return hour * 60 + minute;
+}
+
+function DailyTimeRail({ hours }) {
+  return (
+    <section className="daily-time-rail" aria-label="Time">
+      <strong>시간</strong>
+      <div className="daily-time-scale" style={{ "--hour-count": hours.length - 1, "--daily-hour-height": `${DAILY_TIMETABLE_HOUR_HEIGHT}px` }}>
+        {hours.map((hour, index) => (
+          <span
+            key={hour}
+            className={index === 0 ? "start" : index === hours.length - 1 ? "end" : ""}
+            style={{ "--hour-index": index }}
+          >
+            {formatDailyHour(hour)}
+          </span>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function getDailyContextMenuPosition(anchor) {
+  if (!anchor?.getBoundingClientRect) return null;
+
+  const rect = anchor.getBoundingClientRect();
+  const menuWidth = 76;
+  const menuHeight = 82;
+  const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 390;
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 720;
+  const left = Math.min(Math.max(menuWidth / 2 + 8, rect.left + rect.width / 2), viewportWidth - menuWidth / 2 - 8);
+  const belowTop = rect.bottom + 6;
+  const aboveTop = rect.top - menuHeight - 6;
+  const top = belowTop + menuHeight <= viewportHeight - 8 ? belowTop : Math.max(8, aboveTop);
+  const position = { left, top };
+
+  devLog("[daily-context-menu] card rect", {
+    left: Math.round(rect.left),
+    top: Math.round(rect.top),
+    right: Math.round(rect.right),
+    bottom: Math.round(rect.bottom),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height),
+  });
+  devLog("[daily-context-menu] computed position", {
+    left: Math.round(position.left),
+    top: Math.round(position.top),
+  });
+
+  return position;
+}
+
+function getDailyContextMenuStyle(position) {
+  if (!position) return undefined;
+
+  return {
+    left: `${position.left}px`,
+    top: `${position.top}px`,
+  };
+}
+
+function DailyContextMenu({ task, variant, activeAction, position, onChooseContextAction, onOpenModeChange }) {
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!menuRef.current || !position) return;
+
+    const style = window.getComputedStyle(menuRef.current);
+    devLog("[daily-context-menu] applied style", {
+      left: style.left,
+      top: style.top,
+      position: style.position,
+    });
+  }, [position]);
+
+  if (typeof document === "undefined" || !position) return null;
+
+  return createPortal(
+    <div
+      ref={menuRef}
+      className="daily-context-menu"
+      role="menu"
+      aria-label={task.title + " options"}
+      style={getDailyContextMenuStyle(position)}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        className={activeAction === "edit" ? "active" : ""}
+        role="menuitem"
+        onClick={(event) => {
+          event.stopPropagation();
+          onChooseContextAction?.("edit", task);
+        }}
+      >
+        수정
+      </button>
+      {variant === "housework" ? (
+        <button
+          type="button"
+          className={activeAction === "mode" ? "active" : ""}
+          role="menuitem"
+          onClick={(event) => {
+            event.stopPropagation();
+            onOpenModeChange?.(task);
+          }}
+        >
+          모드
+        </button>
+      ) : (
+        <button type="button" className="disabled" role="menuitem" disabled aria-disabled="true">
+          복사
+        </button>
+      )}
+      <button
+        type="button"
+        className={activeAction === "delete" ? "active" : ""}
+        role="menuitem"
+        onClick={(event) => {
+          event.stopPropagation();
+          onChooseContextAction?.("delete", task);
+        }}
+      >
+        삭제
+      </button>
+    </div>,
+    document.body,
+  );
+}
+
+function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, activeTaskId, activeAction, contextMenuPosition, onOpenContext, onChooseContextAction, onOpenModeChange }) {
+  const startHour = hours[0] ?? DAILY_TIMETABLE_START_HOUR;
+  const endHour = hours[hours.length - 1] ?? DAILY_TIMETABLE_END_HOUR;
+  const totalMinutes = Math.max(60, (endHour - startHour) * 60);
+  const displayStartMinutes = startHour * 60;
+  const displayEndMinutes = endHour * 60;
+  const blockLayouts = layoutDailyTimetableTasks(tasks, displayStartMinutes, displayEndMinutes, totalMinutes, DAILY_TIMETABLE_HOUR_HEIGHT);
 
   return (
     <section className={["daily-timetable-column", variant].filter(Boolean).join(" ")} aria-label={title}>
       <strong>{title}</strong>
-      <div className="daily-timetable-track" style={{ "--hour-count": hours.length }}>
-        {hours.map((hour) => (
-          <span className="daily-timetable-line" key={hour} />
+      <div className="daily-timetable-track" style={{ "--hour-count": hours.length - 1, "--daily-hour-height": `${DAILY_TIMETABLE_HOUR_HEIGHT}px` }}>
+        {hours.slice(0, -1).map((hour, index) => (
+          <span className="daily-timetable-line" key={hour} style={{ "--line-index": index }} />
         ))}
-        {tasks.map((task, index) => {
-          const range = getDailyTaskRange(task, index);
-          const top = ((range.startMinutes - startHour * 60) / totalMinutes) * 100;
-          const height = Math.max(7, ((range.endMinutes - range.startMinutes) / totalMinutes) * 100);
+        {blockLayouts.map(({ task, index, range, topPx, heightPx, lane, laneCount }) => {
           const color = getDailyBlockColor(task, memberColors, variant, index);
+          const taskKey = getDailyTaskKey(task);
 
           return (
             <article
-              className={["daily-time-block", activeTaskId === task.id ? "context-open" : ""].filter(Boolean).join(" ")}
-              key={task.id}
+              className={["daily-time-block", activeTaskId === taskKey ? "context-open" : ""].filter(Boolean).join(" ")}
+              key={taskKey}
               role="button"
               tabIndex={0}
               style={{
-                "--block-top": Math.max(0, Math.min(96, top)) + "%",
-                "--block-height": Math.min(96, height) + "%",
+                "--block-top": `${topPx}px`,
+                "--block-height": `${heightPx}px`,
                 "--block-color": color,
+                "--block-lane": lane,
+                "--block-lane-count": laneCount,
               }}
               onContextMenu={(event) => {
-                event.preventDefault();
-                onOpenContext?.(task);
+                onOpenContext?.(task, event);
               }}
               onPointerDown={(event) => {
                 if (event.target.closest(".daily-context-menu")) return;
-                onOpenContext?.(task);
+                onOpenContext?.(task, event);
               }}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
@@ -1115,40 +1849,15 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
             >
               <strong>{getDailyBlockTitle(task, variant)}</strong>
               <span>{formatTaskRange(range)}</span>
-              {activeTaskId === task.id && (
-                <div
-                  className="daily-context-menu"
-                  role="menu"
-                  aria-label={task.title + " options"}
-                  onPointerDown={(event) => event.stopPropagation()}
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <button
-                    type="button"
-                    className={activeAction === "delete" ? "active" : ""}
-                    role="menuitem"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onChooseContextAction?.("delete", task);
-                    }}
-                  >
-                    삭제
-                  </button>
-                  <button
-                    type="button"
-                    className={activeAction === "edit" ? "active" : ""}
-                    role="menuitem"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onChooseContextAction?.("edit", task);
-                    }}
-                  >
-                    편집
-                  </button>
-                  <button type="button" className="disabled" role="menuitem" disabled aria-disabled="true">
-                    복사
-                  </button>
-                </div>
+              {activeTaskId === taskKey && (
+                <DailyContextMenu
+                  task={task}
+                  variant={variant}
+                  activeAction={activeAction}
+                  position={contextMenuPosition}
+                  onChooseContextAction={onChooseContextAction}
+                  onOpenModeChange={onOpenModeChange}
+                />
               )}
             </article>
           );
@@ -1158,56 +1867,638 @@ function DailyTimetableColumn({ title, tasks, hours, memberColors, variant, acti
   );
 }
 
-function buildDailyHours(tasks) {
-  return Array.from({ length: 24 }, (_, index) => index);
+function DailyListColumn({ title, tasks, memberColors, variant, activeTaskId, activeAction, contextMenuPosition, onOpenContext, onChooseContextAction, onOpenModeChange }) {
+  return (
+    <section className={["daily-list-column", variant].filter(Boolean).join(" ")} aria-label={title}>
+      <strong>{title}</strong>
+      <div>
+        {tasks.length === 0 ? (
+          <p>등록된 일정이 없습니다.</p>
+        ) : (
+          tasks.map((task, index) => {
+            const range = getDailyTaskRange(task, index);
+            const color = getDailyBlockColor(task, memberColors, variant, index);
+            const taskKey = getDailyTaskKey(task);
+
+            return (
+              <article
+                className={["daily-list-task", activeTaskId === taskKey ? "context-open" : ""].filter(Boolean).join(" ")}
+                key={taskKey}
+                role="button"
+                tabIndex={0}
+                style={{ "--block-color": color }}
+                onPointerDown={(event) => {
+                  if (event.target.closest(".daily-context-menu")) return;
+                  onOpenContext?.(task, event);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onOpenContext?.(task);
+                  }
+                }}
+              >
+                <time>{formatBlockStartTime(range)}</time>
+                <div className="daily-list-task-card">
+                  <strong>{getDailyBlockTitle(task, variant)}</strong>
+                  <span>{formatTaskRange(range)}</span>
+                </div>
+                {activeTaskId === taskKey && (
+                  <DailyContextMenu
+                    task={task}
+                    variant={variant}
+                    activeAction={activeAction}
+                    position={contextMenuPosition}
+                    onChooseContextAction={onChooseContextAction}
+                    onOpenModeChange={onOpenModeChange}
+                  />
+                )}
+              </article>
+            );
+          })
+        )}
+      </div>
+    </section>
+  );
 }
 
-function buildAiHousePlanTask(task) {
-  if (!task || getDailyTaskGroup(task) === "housework") return null;
+function ApplianceModePage({ task, selectedModeId, message, nearestRunText, onSelectMode, onApply, onClose }) {
+  const applianceType = normalizeApplianceType(task);
+  const catalog = applianceModeCatalog[applianceType] || applianceModeCatalog.ETC;
+  const applianceName = applianceTypeLabel[applianceType] || task.title || "가전";
+  const modes = catalog.modes;
+  const selectedMode = modes.find((mode) => mode.id === selectedModeId) || modes[0];
+  const currentMode = task.applianceMode || task.currentMode || selectedMode?.label || modes[0]?.label || "자동";
+  const image = getApplianceModeImage(applianceType);
+  const isDryer = applianceType === "DRYER";
+  const [isPowerOn, setPowerOn] = useState(false);
+  const [isModeMenuOpen, setModeMenuOpen] = useState(false);
+  const [rinseCount, setRinseCount] = useState(2);
+  const [spinLevel, setSpinLevel] = useState("강");
+  const [waterTemp, setWaterTemp] = useState(40);
+  const [ecoMode, setEcoMode] = useState("자동");
+  const [dryLevel, setDryLevel] = useState("표준");
+  const [cleanScope, setCleanScope] = useState("전체");
+  const [suctionLevel, setSuctionLevel] = useState("강");
+  const [mopMode, setMopMode] = useState("사용");
+  const [targetTemp, setTargetTemp] = useState(24);
+  const [fanLevel, setFanLevel] = useState("자동");
+  const [airconOperation, setAirconOperation] = useState("냉방");
+  const [airQuality, setAirQuality] = useState("보통");
+  const [purifierFanLevel, setPurifierFanLevel] = useState("자동");
+  const [filterState, setFilterState] = useState("양호");
+  const [washCourse, setWashCourse] = useState(currentMode);
+  const [careEnabled, setCareEnabled] = useState(false);
+  const [options, setOptions] = useState(() => getApplianceModeOptions(applianceType));
+  const [activeTab, setActiveTab] = useState("product");
+  const [statusText, setStatusText] = useState("");
+  const settingCards = getApplianceSettingCards(applianceType, {
+    rinseCount,
+    setRinseCount,
+    spinLevel,
+    setSpinLevel,
+    waterTemp,
+    setWaterTemp,
+    ecoMode,
+    setEcoMode,
+    dryLevel,
+    setDryLevel,
+    cleanScope,
+    setCleanScope,
+    suctionLevel,
+    setSuctionLevel,
+    mopMode,
+    setMopMode,
+    targetTemp,
+    setTargetTemp,
+    fanLevel,
+    setFanLevel,
+    airconOperation,
+    setAirconOperation,
+    airQuality,
+    setAirQuality,
+    purifierFanLevel,
+    setPurifierFanLevel,
+    filterState,
+    setFilterState,
+  });
+  const careInfo = getApplianceCareInfo(applianceType, applianceName);
 
-  const range = getDailyTaskRange(task);
-  const startsEarly = range.startMinutes < 9 * 60;
-  const startMinutes = startsEarly ? Math.min(22 * 60, range.endMinutes + 30) : Math.max(7 * 60, range.startMinutes - 90);
-  const endMinutes = Math.min(24 * 60, startMinutes + 45);
-  const applianceType = "AIR_PURIFIER";
+  function selectMode(mode) {
+    onSelectMode(mode.id);
+    setWashCourse(mode.label);
+    setModeMenuOpen(false);
+    setStatusText(`${mode.label} 코스로 변경했어요.`);
+  }
+
+  function toggleOption(label) {
+    setOptions((current) => current.map((option) => (option.label === label ? { ...option, active: !option.active } : option)));
+  }
+
+  useEffect(() => {
+    setOptions(getApplianceModeOptions(applianceType));
+  }, [applianceType]);
+
+  function sendToAppliance() {
+    onApply(selectedMode);
+    setPowerOn(true);
+    setStatusText(`${applianceName}에 설정을 전송했어요.`);
+  }
+
+  function reserveCourse() {
+    setStatusText(nearestRunText || "가까운 실행 예정 일정이 없어요.");
+  }
+
+  return (
+    <section className={["page", "calendar-page", "washer-control-page", isDryer ? "dryer-control-page" : ""].filter(Boolean).join(" ")} aria-label={`${applianceName} 작동 설정`}>
+      <header className="washer-control-head">
+        <button type="button" aria-label="뒤로가기" onClick={onClose}>
+          <ChevronLeft size={30} strokeWidth={2.2} />
+        </button>
+        <h2>{applianceName}</h2>
+        <div>
+          <button type="button" aria-label="홈 보기" onClick={() => setStatusText("홈 화면 버튼을 눌렀어요.")}>
+            <Home size={26} strokeWidth={2.1} />
+          </button>
+          <button type="button" aria-label="설정" className="washer-settings-button" onClick={() => setStatusText("설정 버튼을 눌렀어요.")}>
+            <Settings size={30} strokeWidth={2.4} />
+          </button>
+        </div>
+      </header>
+
+      <div className="washer-hero">
+        <img src={image} alt="" aria-hidden="true" />
+        <span>
+          원격제어 꺼짐
+          <Info size={15} strokeWidth={2.3} />
+        </span>
+      </div>
+
+      <section className="washer-course-section" aria-label={`${applianceName} 코스`}>
+        <div className="washer-course-row">
+          <div className="washer-mode-picker">
+            <button type="button" aria-expanded={isModeMenuOpen} onClick={() => setModeMenuOpen((current) => !current)}>
+              {selectedMode?.label || washCourse || currentMode}
+              <ChevronDown size={24} strokeWidth={2.5} />
+            </button>
+            {isModeMenuOpen && (
+              <div className="washer-mode-menu">
+                {modes.map((mode) => (
+                  <button type="button" key={mode.id} className={mode.id === selectedMode?.id ? "active" : ""} onClick={() => selectMode(mode)}>
+                    {mode.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <button type="button" className={["washer-power-button", isPowerOn ? "active" : ""].filter(Boolean).join(" ")} aria-label="전원" onClick={() => setPowerOn((current) => !current)}>
+            <Power size={40} strokeWidth={2.1} />
+          </button>
+        </div>
+
+        <div className={["washer-setting-grid", isDryer ? "dryer-setting-grid" : ""].filter(Boolean).join(" ")}>
+          {settingCards.map((card) => (
+            <button type="button" className={["washer-setting-card", card.className].filter(Boolean).join(" ")} key={card.label} onClick={card.onClick}>
+              {card.icon}
+              <span>{card.label}</span>
+              <strong>{card.value}</strong>
+            </button>
+          ))}
+        </div>
+
+        <button type="button" className="washer-cycle-card" onClick={() => setStatusText(`${applianceName} 실행 모드 상세를 눌렀어요.`)}>
+          {getApplianceMainIcon(applianceType, 50)}
+          <span>실행 모드</span>
+          <strong>{washCourse || selectedMode?.label || "표준"}</strong>
+        </button>
+
+        <button type="button" className="washer-send-button" onClick={sendToAppliance}>
+          {applianceName}에 전송
+        </button>
+
+        <button type="button" className="washer-reserve-button" onClick={reserveCourse}>
+          <Clock3 size={25} strokeWidth={2.3} />
+          {nearestRunText || "가까운 실행 예정 일정이 없어요."}
+        </button>
+      </section>
+
+      <section className="washer-care-card" aria-label={careInfo.title}>
+        {careInfo.icon}
+        <div>
+          <strong>
+            {careInfo.title}
+            <i aria-hidden="true" />
+          </strong>
+          <span>{careInfo.description}</span>
+        </div>
+        <button type="button" onClick={() => setCareEnabled((current) => !current)}>
+          {careEnabled ? "켜짐" : "꺼짐"}
+        </button>
+      </section>
+
+      <section className={["washer-option-list", isDryer ? "dryer-option-list" : ""].filter(Boolean).join(" ")} aria-label="제품 기능">
+        {options.map((option) => (
+          <button type="button" className="washer-option-row" key={option.label} onClick={() => toggleOption(option.label)}>
+            <span className="washer-option-icon">{getWasherOptionIcon(option.label)}</span>
+            <strong>{option.label}</strong>
+            {isDryer ? (
+              <span className="dryer-option-state">
+                {option.active ? "켜짐" : "꺼짐"}
+                <ChevronRight size={25} strokeWidth={2.6} />
+              </span>
+            ) : (
+              <i className={option.active ? "active" : ""} aria-hidden="true" />
+            )}
+          </button>
+        ))}
+      </section>
+
+      <p className="washer-mode-feedback" aria-live="polite">
+        {statusText || message || "ThinQ API 없이 mock 데이터로 버튼 동작을 구성했어요."}
+      </p>
+
+      <nav className="washer-bottom-tabs" aria-label="세탁기 보기 전환">
+        <button type="button" className={activeTab === "product" ? "active" : ""} onClick={() => setActiveTab("product")}>
+          제품
+        </button>
+        <button type="button" className={activeTab === "features" ? "active" : ""} onClick={() => setActiveTab("features")}>
+          유용한 기능
+        </button>
+      </nav>
+    </section>
+  );
+}
+
+function getWasherOptionIcon(label) {
+  if (label === "터보샷") return <Waves size={26} strokeWidth={2.5} />;
+  if (label === "알림") return <Bell size={25} strokeWidth={2.4} />;
+  if (label === "구김방지") return <Shirt size={25} strokeWidth={2.3} />;
+  if (/흡입|풍량|필터|공기|청소|예약|절전|쾌속|물걸레/i.test(label)) return <SlidersHorizontal size={24} strokeWidth={2.3} />;
+  return <SlidersHorizontal size={24} strokeWidth={2.3} />;
+}
+
+function cycleApplianceValue(current, values) {
+  const currentIndex = values.indexOf(current);
+  return values[(currentIndex + 1) % values.length] || values[0];
+}
+
+function getApplianceMainIcon(applianceType, size = 50) {
+  if (applianceType === "AIR_CONDITIONER") return <Thermometer size={size} strokeWidth={2.2} />;
+  if (applianceType === "AIR_PURIFIER") return <Waves size={size} strokeWidth={2.2} />;
+  if (applianceType === "ROBOT_CLEANER") return <SlidersHorizontal size={size} strokeWidth={2.2} />;
+  if (applianceType === "DRYER") return <Shirt size={size} strokeWidth={2.2} />;
+  if (applianceType === "WASHER") return <Shirt size={size} strokeWidth={2.2} />;
+  return <Power size={size} strokeWidth={2.2} />;
+}
+
+function getApplianceSettingCards(applianceType, state) {
+  if (applianceType === "WASHER") {
+    return [
+      {
+        label: "헹굼",
+        value: `${state.rinseCount}회`,
+        className: "rinse",
+        icon: <Shirt size={50} strokeWidth={2.2} />,
+        onClick: () => state.setRinseCount((current) => (current >= 5 ? 1 : current + 1)),
+      },
+      {
+        label: "탈수",
+        value: state.spinLevel,
+        className: "spin",
+        icon: <Waves size={50} strokeWidth={2.2} />,
+        onClick: () => state.setSpinLevel((current) => cycleApplianceValue(current, ["강", "중", "약"])),
+      },
+      {
+        label: "물온도",
+        value: `${state.waterTemp}도`,
+        className: "temp",
+        icon: <Thermometer size={50} strokeWidth={2.2} />,
+        onClick: () => state.setWaterTemp((current) => (current >= 60 ? 20 : current + 10)),
+      },
+    ];
+  }
+
+  if (applianceType === "DRYER") {
+    return [
+      {
+        label: "절약모드",
+        value: state.ecoMode,
+        className: "dryer-saving",
+        icon: <Shirt size={50} strokeWidth={2.2} />,
+        onClick: () => state.setEcoMode((current) => cycleApplianceValue(current, ["자동", "켜짐", "꺼짐"])),
+      },
+      {
+        label: "건조정도",
+        value: state.dryLevel,
+        className: "dryer-level",
+        icon: <Shirt size={50} strokeWidth={2.2} />,
+        onClick: () => state.setDryLevel((current) => cycleApplianceValue(current, ["표준", "강력", "약"])),
+      },
+    ];
+  }
+
+  if (applianceType === "ROBOT_CLEANER") {
+    return [
+      {
+        label: "청소 범위",
+        value: state.cleanScope,
+        className: "rinse",
+        icon: <SlidersHorizontal size={50} strokeWidth={2.2} />,
+        onClick: () => state.setCleanScope((current) => cycleApplianceValue(current, ["전체", "거실", "선택 구역"])),
+      },
+      {
+        label: "흡입 세기",
+        value: state.suctionLevel,
+        className: "spin",
+        icon: <Waves size={50} strokeWidth={2.2} />,
+        onClick: () => state.setSuctionLevel((current) => cycleApplianceValue(current, ["강", "중", "약"])),
+      },
+      {
+        label: "물걸레",
+        value: state.mopMode,
+        className: "temp",
+        icon: <Shirt size={50} strokeWidth={2.2} />,
+        onClick: () => state.setMopMode((current) => cycleApplianceValue(current, ["사용", "미사용"])),
+      },
+    ];
+  }
+
+  if (applianceType === "AIR_CONDITIONER") {
+    return [
+      {
+        label: "희망 온도",
+        value: `${state.targetTemp}도`,
+        className: "temp",
+        icon: <Thermometer size={50} strokeWidth={2.2} />,
+        onClick: () => state.setTargetTemp((current) => (current >= 28 ? 18 : current + 1)),
+      },
+      {
+        label: "풍량",
+        value: state.fanLevel,
+        className: "spin",
+        icon: <Waves size={50} strokeWidth={2.2} />,
+        onClick: () => state.setFanLevel((current) => cycleApplianceValue(current, ["자동", "강", "중", "약"])),
+      },
+      {
+        label: "운전",
+        value: state.airconOperation,
+        className: "rinse",
+        icon: <Power size={50} strokeWidth={2.2} />,
+        onClick: () => state.setAirconOperation((current) => cycleApplianceValue(current, ["냉방", "제습", "송풍", "자동"])),
+      },
+    ];
+  }
+
+  if (applianceType === "AIR_PURIFIER") {
+    return [
+      {
+        label: "공기질",
+        value: state.airQuality,
+        className: "rinse",
+        icon: <Waves size={50} strokeWidth={2.2} />,
+        onClick: () => state.setAirQuality((current) => cycleApplianceValue(current, ["보통", "좋음", "나쁨"])),
+      },
+      {
+        label: "풍량",
+        value: state.purifierFanLevel,
+        className: "spin",
+        icon: <SlidersHorizontal size={50} strokeWidth={2.2} />,
+        onClick: () => state.setPurifierFanLevel((current) => cycleApplianceValue(current, ["자동", "강풍", "약풍"])),
+      },
+      {
+        label: "필터 상태",
+        value: state.filterState,
+        className: "temp",
+        icon: <Info size={50} strokeWidth={2.2} />,
+        onClick: () => state.setFilterState((current) => cycleApplianceValue(current, ["양호", "점검 필요"])),
+      },
+    ];
+  }
+
+  return [
+    {
+      label: "상태",
+      value: "대기",
+      className: "rinse",
+      icon: <Power size={50} strokeWidth={2.2} />,
+      onClick: () => {},
+    },
+    {
+      label: "모드",
+      value: "표준",
+      className: "spin",
+      icon: <SlidersHorizontal size={50} strokeWidth={2.2} />,
+      onClick: () => {},
+    },
+  ];
+}
+
+function getApplianceCareInfo(applianceType, applianceName) {
+  if (applianceType === "ROBOT_CLEANER") {
+    return {
+      title: "청소 완료 후 도크 복귀",
+      description: "청소가 끝나면 충전 도크로 돌아가요.",
+      icon: <SlidersHorizontal size={31} strokeWidth={2.2} />,
+    };
+  }
+
+  if (applianceType === "AIR_CONDITIONER") {
+    return {
+      title: "쾌적 운전 유지",
+      description: "실내 온도에 맞춰 운전 상태를 조절해요.",
+      icon: <Thermometer size={31} strokeWidth={2.2} />,
+    };
+  }
+
+  if (applianceType === "AIR_PURIFIER") {
+    return {
+      title: "실내 공기 관리",
+      description: "공기질 변화에 맞춰 풍량을 조절해요.",
+      icon: <Waves size={31} strokeWidth={2.2} />,
+    };
+  }
+
+  if (applianceType === "DRYER") {
+    return {
+      title: "건조 후 구김방지",
+      description: "건조가 끝난 뒤 옷감 구김을 줄여요.",
+      icon: <Shirt size={31} strokeWidth={2.2} />,
+    };
+  }
+
+  if (applianceType === "WASHER") {
+    return {
+      title: "종료 후 세탁물 케어",
+      description: "원격제어를 켠 뒤 사용할 수 있어요.",
+      icon: <WashingMachine size={31} strokeWidth={2.2} />,
+    };
+  }
 
   return {
-    id: Date.now() + 17,
-    date: task.date,
-    title: applianceTypeLabel[applianceType],
-    place: "LG ThinQ",
-    tag: "house",
-    owner: task.owner || "me",
-    done: false,
-    repeat: formatMinutes(startMinutes) + " ~ " + formatMinutes(endMinutes),
-    source: "auto",
-    displayType: "appliance",
-    applianceType,
-    color: applianceTypeColor[applianceType],
-    description: "새로 입력된 개인 일정을 기준으로 자동 재배치된 가사 계획입니다.",
-    automationType: "AI_SCHEDULE_REPLAN",
+    title: `${applianceName} 상태 관리`,
+    description: "현재 선택한 가전의 기본 상태를 확인해요.",
+    icon: <Power size={31} strokeWidth={2.2} />,
   };
 }
 
+function getApplianceModeOptions(applianceType) {
+  const common = [
+    { label: "터보샷", icon: "T", active: true },
+    { label: "알림", icon: "!", active: false },
+    { label: "구김방지", icon: "G", active: false },
+  ];
+
+  if (applianceType === "DRYER") {
+    return [
+      { label: "다림질알림", icon: "I", active: false },
+      { label: "구김방지", icon: "G", active: false },
+    ];
+  }
+
+  if (applianceType === "AIR_CONDITIONER") {
+    return [
+      { label: "절전", icon: "E", active: true },
+      { label: "쾌적 절전", icon: "Q", active: false },
+      { label: "예약", icon: "R", active: false },
+    ];
+  }
+
+  if (applianceType === "ROBOT_CLEANER") {
+    return [
+      { label: "흡입 세기", icon: "S", active: true },
+      { label: "물걸레", icon: "M", active: false },
+      { label: "예약", icon: "R", active: true },
+    ];
+  }
+
+  if (applianceType === "AIR_PURIFIER") {
+    return [
+      { label: "필터 상태", icon: "F", active: true },
+      { label: "공기질 알림", icon: "!", active: false },
+      { label: "쾌속청정", icon: "Q", active: false },
+    ];
+  }
+
+  if (applianceType === "REFRIGERATOR") {
+    return [
+      { label: "절전", icon: "E", active: true },
+      { label: "급속 냉동", icon: "F", active: false },
+      { label: "문 열림 알림", icon: "!", active: true },
+    ];
+  }
+
+  return common;
+}
+
+function buildDailyHours(tasks) {
+  return Array.from(
+    { length: DAILY_TIMETABLE_END_HOUR - DAILY_TIMETABLE_START_HOUR + 1 },
+    (_, index) => DAILY_TIMETABLE_START_HOUR + index,
+  );
+}
+
+function normalizeApplianceType(task = {}) {
+  const rawType = String(task.applianceType || task.deviceType || task.category || "").toUpperCase();
+  if (applianceModeCatalog[rawType]) return rawType;
+
+  const text = [task.title, task.place, task.description].filter(Boolean).join(" ");
+  if (/세탁|빨래|washer/i.test(text)) return "WASHER";
+  if (/건조|dryer/i.test(text)) return "DRYER";
+  if (/로봇|청소|robot|cleaner/i.test(text)) return "ROBOT_CLEANER";
+  if (/에어컨|냉방|air\s*conditioner/i.test(text)) return "AIR_CONDITIONER";
+  if (/공기청정|청정기|purifier/i.test(text)) return "AIR_PURIFIER";
+  if (/식기|세척|dish/i.test(text)) return "DISHWASHER";
+  if (/냉장|냉동|fridge|refrigerator/i.test(text)) return "REFRIGERATOR";
+  if (/가습|humidifier/i.test(text)) return "HUMIDIFIER";
+  return "ETC";
+}
+
+function getApplianceModeImage(applianceType) {
+  if (applianceType === "WASHER") return applianceImages.washer;
+  if (applianceType === "DRYER") return applianceImages.dryer;
+  if (applianceType === "AIR_CONDITIONER") return applianceImages.air;
+  if (applianceType === "REFRIGERATOR") return fridgeImage;
+  if (applianceType === "ROBOT_CLEANER") return robotCleanerImage;
+  if (applianceType === "DISHWASHER") return dishWasherImage;
+  return lgCharacterImage;
+}
+
 function getMonthTaskLabel(title) {
-  return String(title || "").replace(/\s+/g, "").trim().slice(0, 3);
+  return String(title || "").trim();
 }
 
 function getHouseTaskLabel(title) {
-  return String(title || "").replace(/\s+/g, "").trim().slice(0, 4);
+  return String(title || "").trim();
 }
 
 function getCalendarCellTasks(tasks, isHouseCalendar) {
-  if (isHouseCalendar) return tasks.filter((task) => getDailyTaskGroup(task) === "housework");
-  return tasks;
+  const visibleTasks = isHouseCalendar ? tasks.filter((task) => getDailyTaskGroup(task) === "housework") : tasks;
+  return [...visibleTasks].sort((first, second) => getCalendarTaskOrder(first) - getCalendarTaskOrder(second));
+}
+
+function getCalendarTaskOrder(task) {
+  return getDailyTaskGroup(task) === "housework" ? 1 : 0;
 }
 
 function getCalendarCellTaskLabel(task) {
-  if (task.displayType === "appliance" && task.applianceType) {
-    return getHouseTaskLabel(applianceTypeLabel[task.applianceType] || task.title);
-  }
+  return getDailyTaskGroup(task) === "housework" ? `${getHouseTaskEmoji(task)} ${getHouseTaskLabel(getHouseworkDisplayTitle(task))}` : getMonthTaskLabel(task.title);
+}
 
-  return getDailyTaskGroup(task) === "housework" ? getHouseTaskLabel(task.title) : getMonthTaskLabel(task.title);
+function getHouseworkDisplayTitle(task = {}) {
+  const explicitType = String(task.applianceType || "").toUpperCase();
+  if (explicitType === "AIR_CONDITIONER") return formatAirConditionerDisplayTitle(task);
+  if (applianceTypeLabel[explicitType]) return applianceTypeLabel[explicitType];
+
+  const title = String(task.title || "");
+  if (/세탁기|세탁 예약|세탁기 돌리기/i.test(title)) return applianceTypeLabel.WASHER;
+  if (/건조기|건조기 예약|건조기 사용/i.test(title)) return applianceTypeLabel.DRYER;
+  if (/식기세척|식기세척기/i.test(title)) return applianceTypeLabel.DISHWASHER;
+  if (/공기청정|공기청정기/i.test(title)) return applianceTypeLabel.AIR_PURIFIER;
+  if (/에어컨|냉방/i.test(title)) return applianceTypeLabel.AIR_CONDITIONER;
+  if (/냉장고/i.test(title)) return applianceTypeLabel.REFRIGERATOR;
+  if (/제습기/i.test(title)) return applianceTypeLabel.DEHUMIDIFIER;
+  if (/가습기/i.test(title)) return applianceTypeLabel.HUMIDIFIER;
+
+  return title;
+}
+
+function formatAirConditionerDisplayTitle(task = {}) {
+  const title = String(task.title || "");
+  const nameMatch = title.match(/(수민|다빈|재혁)\s*에어컨/);
+  if (nameMatch) return `${nameMatch[1]} 에어컨`;
+
+  const place = String(task.place || "");
+  const placeMatch = place.match(/(수민|다빈|재혁)\s*방/);
+  if (placeMatch) return `${placeMatch[1]} 에어컨`;
+
+  return applianceTypeLabel.AIR_CONDITIONER;
+}
+
+function getDisplayTask(task) {
+  if (getDailyTaskGroup(task) !== "housework") return task;
+  const title = getHouseworkDisplayTitle(task);
+  return title === task.title ? task : { ...task, title };
+}
+
+function resolveApplianceTask(task = {}) {
+  const title = getHouseworkDisplayTitle(task);
+  const applianceType = Object.entries(applianceTypeLabel).find(([, label]) => label === title)?.[0];
+  return applianceType ? { ...task, applianceType } : task;
+}
+
+function getHouseTaskEmoji(task) {
+  const type = String(task.applianceType || "").toUpperCase();
+  const text = `${type} ${task.title || ""} ${task.place || ""}`.toLowerCase();
+
+  if (type === "WASHER" || text.includes("세탁") || text.includes("빨래")) return "🧺";
+  if (type === "DRYER" || text.includes("건조")) return "🌀";
+  if (type === "AIR_PURIFIER" || text.includes("공기") || text.includes("청정")) return "🌀";
+  if (type === "ROBOT_CLEANER" || text.includes("청소")) return "🤖";
+  if (type === "DISHWASHER" || text.includes("식기")) return "🍽️";
+  if (type === "REFRIGERATOR" || text.includes("냉장")) return "🧊";
+  if (type === "AIR_CONDITIONER" || text.includes("에어컨")) return "❄️";
+  if (type === "HUMIDIFIER" || text.includes("가습") || text.includes("제습")) return "💧";
+  return "🏠";
 }
 
 function getMonthHouseImage(task) {
@@ -1221,26 +2512,70 @@ function getMonthHouseImage(task) {
 }
 
 function filterTasksByCalendarMode(tasksByDate, mode, selectedMember) {
+  const memberFilterIds = getMemberFilterIds(selectedMember);
+
   return Object.fromEntries(
     Object.entries(tasksByDate).map(([date, tasks]) => [
       date,
       tasks.filter((task) => {
         const isHousework = getDailyTaskGroup(task) === "housework";
         if (mode === "house") return isHousework;
-        return !isHousework || selectedMember === "all" || task.userId === selectedMember || task.owner === selectedMember;
+        return selectedMember === "all" || memberFilterIds.has(task.userId) || memberFilterIds.has(task.owner);
       }),
     ]),
   );
 }
 
+function hideFixedTasksByDate(tasksByDate) {
+  return Object.fromEntries(
+    Object.entries(tasksByDate).map(([date, tasks]) => [
+      date,
+      tasks.filter((task) => task.displayType !== "fixed"),
+    ]),
+  );
+}
+
+function getMemberFilterIds(memberId) {
+  const aliasMap = {
+    dada: ["dada", "minsu"],
+    minsu: ["dada", "minsu"],
+    sumin: ["sumin", "theresa"],
+    theresa: ["sumin", "theresa"],
+    jea: ["jea", "me"],
+    me: ["jea", "me"],
+  };
+
+  return new Set(aliasMap[memberId] || [memberId].filter(Boolean));
+}
+
+function getHouseworkTaskMemberName(task = {}) {
+  if (task.memberName) return task.memberName;
+
+  const member = HOUSEWORK_MEMBER_TABS.find((item) => [item.userId, item.ownerId].includes(task.userId) || [item.userId, item.ownerId].includes(task.owner));
+  return member?.memberName || HOUSEWORK_MEMBER_TABS[0].memberName;
+}
+
 function getDailyTaskGroup(task) {
+  if (task.applianceType || task.applianceMode || task.currentMode || task.automationType) return "housework";
   if (task.displayType === "appliance") return "housework";
   if (task.tag === "house" || task.source === "auto") return "housework";
   return "schedule";
 }
 
+function getDailyTaskKey(task = {}) {
+  return [task.id, task.date, task.endDate, task.userId, task.owner, getDailyTaskGroup(task), task.title, task.repeat].filter((item) => item !== undefined && item !== null).join("::");
+}
+
 function getDailyTaskRange(task, index = 0) {
   const timeText = String(task.repeat || "");
+  if (timeText.includes("하루종일")) {
+    return { startMinutes: 0, endMinutes: 24 * 60, isAllDay: true };
+  }
+
+  if (task.startTime && task.endTime) {
+    return normalizeTimeRange(timeToMinutes(task.startTime), timeToMinutes(task.endTime));
+  }
+
   const rangeMatch = timeText.match(/\b(\d{1,2}):(\d{2})\s*(?:~|-|to)\s*(\d{1,2}):(\d{2})\b/i);
 
   if (rangeMatch) {
@@ -1269,10 +2604,52 @@ function getDailyTaskRange(task, index = 0) {
   return normalizeTimeRange(fallbackHour * 60, fallbackHour * 60 + 60);
 }
 
+function layoutDailyTimetableTasks(tasks, displayStartMinutes, displayEndMinutes, totalMinutes, hourRowHeight = DAILY_TIMETABLE_HOUR_HEIGHT) {
+  const minuteHeight = hourRowHeight / 60;
+  const minimumBlockHeight = 44;
+  const visibleTasks = tasks
+    .map((task, index) => {
+      const range = getDailyTaskRange(task, index);
+      const visibleStartMinutes = Math.max(displayStartMinutes, range.startMinutes);
+      const visibleEndMinutes = Math.min(displayEndMinutes, range.endMinutes);
+      if (visibleEndMinutes <= visibleStartMinutes) return null;
+
+      return {
+        task,
+        index,
+        range,
+        visibleStartMinutes,
+        visibleEndMinutes,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.visibleStartMinutes - b.visibleStartMinutes || a.visibleEndMinutes - b.visibleEndMinutes || a.index - b.index);
+
+  return visibleTasks.map((item, itemIndex) => {
+    const overlappingItems = visibleTasks.filter(
+      (candidate) => candidate.visibleStartMinutes < item.visibleEndMinutes && candidate.visibleEndMinutes > item.visibleStartMinutes,
+    );
+    const earlierOverlaps = overlappingItems.filter(
+      (candidate) =>
+        candidate.visibleStartMinutes < item.visibleStartMinutes ||
+        (candidate.visibleStartMinutes === item.visibleStartMinutes && candidate.index < item.index),
+    );
+
+    return {
+      ...item,
+      lane: Math.min(earlierOverlaps.length, overlappingItems.length - 1),
+      laneCount: Math.max(1, overlappingItems.length),
+      topPx: (item.visibleStartMinutes - displayStartMinutes) * minuteHeight,
+      heightPx: Math.max(minimumBlockHeight, (item.visibleEndMinutes - item.visibleStartMinutes) * minuteHeight),
+      key: item.task.id || `${item.task.title}-${itemIndex}`,
+    };
+  });
+}
+
 function getEditableTaskTime(task) {
   const timeText = String(task.repeat || "");
   if (timeText.includes("하루종일")) {
-    return { isAllDay: true, startTime: "09:00", endTime: "10:00" };
+    return { isAllDay: true, startTime: DAILY_TIMETABLE_START_TIME, endTime: DAILY_TIMETABLE_END_INPUT_TIME };
   }
 
   const rangeMatch = timeText.match(/\b(\d{1,2}):(\d{2})\s*(?:~|-|to)\s*(\d{1,2}):(\d{2})\b/i);
@@ -1293,8 +2670,10 @@ function getEditableTaskTime(task) {
 }
 
 function normalizeTimeRange(startMinutes, endMinutes) {
-  const start = Math.max(0, Math.min(23 * 60 + 59, startMinutes));
-  const end = Math.max(start + 30, Math.min(24 * 60, endMinutes));
+  const minMinutes = DAILY_TIMETABLE_START_HOUR * 60;
+  const maxMinutes = DAILY_TIMETABLE_END_HOUR * 60;
+  const start = Math.max(minMinutes, Math.min(maxMinutes - 30, startMinutes));
+  const end = Math.max(start + 30, Math.min(maxMinutes, endMinutes));
   return { startMinutes: start, endMinutes: end };
 }
 
@@ -1303,7 +2682,19 @@ function formatDailyHour(hour) {
 }
 
 function formatTaskRange(range) {
+  if (range.isAllDay) return "하루종일";
   return formatMinutes(range.startMinutes) + " ~ " + formatMinutes(range.endMinutes);
+}
+
+function formatBlockStartTime(range) {
+  if (range.isAllDay) return "종일";
+  return formatCompactMinutes(range.startMinutes);
+}
+
+function formatCompactMinutes(minutes) {
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+  return String(hour) + ":" + String(minute).padStart(2, "0");
 }
 
 function formatMinutes(minutes) {
@@ -1313,26 +2704,38 @@ function formatMinutes(minutes) {
 }
 
 function getDailyBlockTitle(task, variant) {
-  if (variant === "housework" && task.applianceType) {
-    return applianceTypeLabel[task.applianceType] || task.title;
-  }
-  return task.title;
+  if (variant !== "housework") return task.title;
+
+  return `${getHouseworkDisplayTitle(task)} · ${getHouseworkModeLabel(task)}`;
+}
+
+function getHouseworkModeLabel(task = {}) {
+  return task.mode || task.operationMode || task.deviceMode || task.applianceMode || task.currentMode || "표준";
 }
 
 function getDailyBlockColor(task, memberColors, variant, index) {
-  const personalPalette = ["#ef4444", "#2563eb", "#16a34a", "#9333ea", "#ea580c"];
-  const housePalette = ["#0f766e", "#7c3aed", "#c2410c", "#0891b2", "#be123c"];
+  const personalPalette = scheduleColorOptions;
+  const housePalette = scheduleColorOptions;
   const taskColor = getTaskDisplayColor(task, memberColors, variant);
   if (taskColor) return taskColor;
-  return (variant === "housework" ? housePalette : personalPalette)[index % 5];
+  return (variant === "housework" ? housePalette : personalPalette)[index % scheduleColorOptions.length];
 }
 
 function getTaskDisplayColor(task, memberColors, variant) {
-  if (task.color) return task.color;
+  if (task.color) return normalizeScheduleColor(task.color);
   if (variant === "housework" && task.applianceType && applianceTypeColor[task.applianceType]) {
     return applianceTypeColor[task.applianceType];
   }
-  return memberColors[task.userId] || memberColors[task.owner] || memberColors.all;
+  const memberColor = memberColors[task.userId] || memberColors[task.owner] || memberColors.all;
+  return normalizeScheduleColor(memberColor);
+}
+
+function normalizeScheduleColor(color) {
+  if (!color) return "";
+  const normalizedColor = String(color).trim().toLowerCase();
+  const paletteMatch = scheduleColorOptions.find((option) => option.toLowerCase() === normalizedColor);
+  if (paletteMatch) return paletteMatch;
+  return legacyScheduleColorMap[normalizedColor] || scheduleColorOptions[0];
 }
 
 function getReadableTextColor(backgroundColor) {
@@ -1357,7 +2760,7 @@ function buildAiReport(selectedDate, selectedTasks, tasksByDate = {}) {
   const fixedTasks = reportTasks.filter((task) => task.displayType === "fixed" || getDailyTaskGroup(task) === "schedule");
   const applianceTasks = reportTasks.filter((task) => getDailyTaskGroup(task) === "housework");
   const fixedTask = fixedTasks[0];
-  const applianceSummary = formatReportList(applianceTasks.slice(0, 3).map((task) => task.title));
+  const applianceSummary = formatReportList(getUniqueAiReportApplianceLabels(applianceTasks).slice(0, 3));
 
   if (fixedTask && applianceSummary) {
     return dateLabel + "에는 " + fixedTask.title + " 일정이 있어요. 오늘은 " + applianceSummary + "을 챙기면 좋아요.";
@@ -1372,6 +2775,94 @@ function buildAiReport(selectedDate, selectedTasks, tasksByDate = {}) {
   }
 
   return "오늘은 등록된 개인 일정과 추천 가사일이 없어요. 여유 있게 하루를 보내도 괜찮아요.";
+}
+
+function buildAiReportTags(selectedDate, selectedTasks, tasksByDate = {}) {
+  const upcomingTasks = [0, 1, 2]
+    .flatMap((offset) => tasksByDate[addDays(selectedDate, offset)] || [])
+    .filter((task, index, list) => list.findIndex((item) => item.id === task.id) === index);
+  const reportTasks = upcomingTasks.length > 0 ? upcomingTasks : selectedTasks;
+  const tags = [];
+
+  reportTasks.forEach((task) => {
+    const tag = getAiReportTaskTag(task);
+    if (tag && !tags.includes(tag)) tags.push(tag);
+  });
+
+  return tags.slice(0, 3).length > 0 ? tags.slice(0, 3) : ["세탁", "청소", "실내 케어"];
+}
+
+function getAiReportTaskTag(task = {}) {
+  if (getDailyTaskGroup(task) === "housework") {
+    return getHouseworkDisplayTitle(resolveApplianceTask(task)) || task.title || "가전 일정";
+  }
+
+  return String(task.title || "").trim() || "개인 일정";
+}
+
+function getUniqueAiReportApplianceLabels(tasks = []) {
+  const labels = [];
+
+  tasks.forEach((task) => {
+    const label = getHouseworkDisplayTitle(resolveApplianceTask(task)) || task.title || "";
+    if (label && !labels.includes(label)) labels.push(label);
+  });
+
+  return labels;
+}
+
+function getNearestApplianceSchedule(tasksByDate = {}, applianceType, referenceDate) {
+  const referenceKey = referenceDate || getTodayDateKey();
+  const candidates = Object.values(tasksByDate)
+    .flat()
+    .filter((task) => !task.done)
+    .filter((task) => getDailyTaskGroup(task) === "housework")
+    .filter((task) => normalizeApplianceType(task) === applianceType)
+    .map((task, index) => {
+      const range = getDailyTaskRange(task, index);
+      return {
+        task,
+        date: task.date,
+        startMinutes: range.startMinutes,
+        timestamp: new Date(`${task.date}T${formatMinutes(range.startMinutes)}:00`).getTime(),
+      };
+    })
+    .filter((item) => item.date >= referenceKey)
+    .sort((first, second) => first.timestamp - second.timestamp);
+
+  return candidates[0] || null;
+}
+
+function formatNearestRunText(schedule) {
+  const name = getScheduleOwnerDisplayName(schedule.task);
+  return `${name}님이 ${formatRunDate(schedule.date)} ${formatKoreanTime(schedule.startMinutes)}에 실행시킬 예정입니다.`;
+}
+
+function getScheduleOwnerDisplayName(task = {}) {
+  const ownerId = task.owner || task.userId;
+  const mappedName = calendarProfileNames[ownerId];
+  if (mappedName) return mappedName;
+  const member = members.find((item) => item.id === ownerId);
+  return member?.name || "사용자";
+}
+
+function getCalendarOwnerDesignName(name = "") {
+  const trimmed = String(name || "").replace(/님$/, "").trim();
+  if (!trimmed) return "나";
+  return trimmed.length >= 3 ? trimmed.slice(1) : trimmed;
+}
+
+function formatRunDate(date) {
+  const parsed = parseDateKey(date);
+  return parsed.day + "일";
+}
+
+function formatKoreanTime(minutes) {
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+  const period = hour < 12 ? "오전" : "오후";
+  const displayHour = hour % 12 || 12;
+  return period + " " + displayHour + "시" + (minute ? " " + minute + "분" : "");
 }
 
 function formatReportList(items) {
@@ -1503,7 +2994,7 @@ function WeekTimetable({ dates, tasksByDate, memberColors, selectedDate, onPrevW
                   }}
                   onClick={() => onSelectDate(date)}
                 >
-                  <strong>{task.title}</strong>
+                  <strong>{getDailyTaskGroup(task) === "housework" ? getHouseworkDisplayTitle(task) : task.title}</strong>
                   <span>{task.place}</span>
                 </button>
               );
@@ -1552,14 +3043,20 @@ function getWeekTaskPlacement(task, dayIndex, taskIndex, hours) {
 }
 
 function getWeekTaskColor(task, memberColors, index) {
-  const palette = ["#fb7185", "#fbbf24", "#60a5fa", "#a78bfa", "#fb8a6b", "#34d399"];
-  if (task.userId && memberColors[task.userId]) return colorMix(memberColors[task.userId], palette[index % palette.length]);
-  if (task.owner && memberColors[task.owner]) return colorMix(memberColors[task.owner], palette[index % palette.length]);
+  const palette = scheduleColorOptions;
+  if (task.color) return normalizeScheduleColor(task.color);
+  if (task.userId && memberColors[task.userId]) return colorMix(normalizeScheduleColor(memberColors[task.userId]), palette[index % palette.length]);
+  if (task.owner && memberColors[task.owner]) return colorMix(normalizeScheduleColor(memberColors[task.owner]), palette[index % palette.length]);
   return palette[index % palette.length];
 }
 
 function colorMix(primary, fallback) {
-  return primary === "#d4144b" ? fallback : primary;
+  return normalizeScheduleColor(primary) || fallback;
+}
+
+function isDabinMember(member) {
+  const name = `${member?.name || ""} ${member?.displayName || ""}`;
+  return DABIN_MEMBER_IDS.has(member?.id) || name.includes("다빈");
 }
 
 function DateWheel({ label, values, value, formatter, onChange, loop = false }) {
@@ -1723,6 +3220,10 @@ function addDays(date, amount) {
   const next = new Date(date + "T00:00:00");
   next.setDate(next.getDate() + amount);
   return toDateKey(next);
+}
+
+function getTodayDateKey() {
+  return toDateKey(new Date());
 }
 
 function toDateKey(date) {

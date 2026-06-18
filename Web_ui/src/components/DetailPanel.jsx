@@ -1,5 +1,8 @@
-import { Check, ClipboardList, Cpu, Refrigerator, Settings, Sparkles, X } from "lucide-react";
+﻿import { useEffect, useState } from "react";
+import { Check, ClipboardList, Cpu, Refrigerator, Sparkles, X } from "lucide-react";
 import { appliances, communityTips, members, tagLabel } from "../data.js";
+import SettingsPanelContent, { normalizeSettingsOnboardingSetup } from "./detailPanel/SettingsPanelContent.jsx";
+import { getOwnerName, getPanelKicker, getPanelTasks, getPanelTitle, taskSorter } from "./detailPanel/panelUtils.js";
 
 export default function DetailPanel({
   panel,
@@ -16,20 +19,19 @@ export default function DetailPanel({
   onAddTask,
   selectedDate,
   selectedMember,
+  currentUser,
+  onboardingSetup,
+  onOnboardingSetupChange,
   onOpenComposer,
-  thinQDevices = [],
-  thinQDeviceStates = {},
-  thinQDeviceAux = {},
-  thinQError = "",
-  isThinQLoading = false,
-  onRefreshThinQDevices,
-  onLoadThinQDeviceState,
-  onRequestThinQControl,
-  onSubscribeThinQEvent,
-  onSubscribeThinQPush,
-  onLoadThinQDeviceEnergy,
   onLogout,
 }) {
+  const [settingsView, setSettingsView] = useState("menu");
+  const [draftOnboardingSetup, setDraftOnboardingSetup] = useState(() => normalizeSettingsOnboardingSetup(onboardingSetup));
+
+  useEffect(() => {
+    setDraftOnboardingSetup(normalizeSettingsOnboardingSetup(onboardingSetup));
+  }, [onboardingSetup]);
+
   if (!panel) return null;
 
   const doneTasks = tasks.filter((task) => task.done);
@@ -38,7 +40,7 @@ export default function DetailPanel({
 
   return (
     <div className="detail-backdrop" role="presentation">
-      <aside className="detail-panel">
+      <aside className={["detail-panel", panel.type === "settings" ? "settings-panel" : ""].filter(Boolean).join(" ")}>
         <div className="detail-head">
           <div>
             <p>{getPanelKicker(panel)}</p>
@@ -62,14 +64,15 @@ export default function DetailPanel({
         )}
 
         {panel.type === "settings" && (
-          <section className="detail-list">
-            {["가족 초대", "알림 설정", "테마 설정", "데이터 내보내기", "로그아웃"].map((item) => (
-              <button className="setting-row" key={item} onClick={item === "로그아웃" ? onLogout : undefined}>
-                <Settings size={18} />
-                {item}
-              </button>
-            ))}
-          </section>
+          <SettingsPanelContent
+            view={settingsView}
+            setView={setSettingsView}
+            onboardingSetup={draftOnboardingSetup}
+            setOnboardingSetup={setDraftOnboardingSetup}
+            onSaveSetup={(nextSetup) => onOnboardingSetupChange?.(normalizeSettingsOnboardingSetup(nextSetup))}
+            currentUser={currentUser}
+            onLogout={onLogout}
+          />
         )}
 
         {panel.type === "notifications" && (
@@ -144,54 +147,6 @@ export default function DetailPanel({
             ))}
           </section>
         )}
-
-        {panel.type === "thinq" && (
-          <section className="detail-list">
-            <div className="thinq-panel-head">
-              <p>{isThinQLoading ? "ThinQ 기기를 불러오는 중입니다." : "등록된 ThinQ 기기를 내부 API로 조회합니다."}</p>
-              <button type="button" onClick={onRefreshThinQDevices}>
-                새로고침
-              </button>
-            </div>
-            {thinQError && <p className="panel-error">{thinQError}</p>}
-            {thinQDevices.map((device) => (
-              <article className="notice-row thinq-device-row" key={device.id}>
-                <Cpu size={18} />
-                <div>
-                  <strong>{device.name || device.alias || device.modelName || device.id}</strong>
-                  <p>
-                    {device.type || device.deviceType || "ThinQ"} · {device.id}
-                  </p>
-                  {thinQDeviceStates[device.id] && (
-                    <pre className="thinq-state-preview">{JSON.stringify(thinQDeviceStates[device.id], null, 2)}</pre>
-                  )}
-                  {thinQDeviceAux[device.id] && (
-                    <pre className="thinq-state-preview">{JSON.stringify(thinQDeviceAux[device.id], null, 2)}</pre>
-                  )}
-                  <div className="notice-actions thinq-actions">
-                    <button type="button" onClick={() => onLoadThinQDeviceState?.(device.id)}>
-                      상태 조회
-                    </button>
-                    <button type="button" onClick={() => onRequestThinQControl?.(device)}>
-                      제어 요청
-                    </button>
-                    <button type="button" onClick={() => onSubscribeThinQEvent?.(device.id)}>
-                      이벤트 구독
-                    </button>
-                    <button type="button" onClick={() => onSubscribeThinQPush?.(device.id)}>
-                      푸시 구독
-                    </button>
-                    <button type="button" onClick={() => onLoadThinQDeviceEnergy?.(device.id)}>
-                      전력량
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))}
-            {!isThinQLoading && thinQDevices.length === 0 && <p className="panel-empty">표시할 ThinQ 기기가 없습니다.</p>}
-          </section>
-        )}
-
         {panel.type === "community" && (
           <section className="detail-list">
             {communityTips.map((tip) => (
@@ -225,7 +180,7 @@ export default function DetailPanel({
 
         {panel.type === "rotation" && (
           <section className="detail-list">
-            {["최재혁", "김다빈", "김수현"].map((name, index) => (
+            {["최재혁", "김다빈", "한수민"].map((name, index) => (
               <article className="notice-row" key={name}>
                 <Cpu size={18} />
                 <div>
@@ -239,7 +194,7 @@ export default function DetailPanel({
           </section>
         )}
 
-        {!["summary", "settings", "notifications", "recommendation", "appliance", "appliances", "thinq", "community", "tip", "member", "rotation"].includes(panel.type) && (
+        {!["summary", "settings", "notifications", "recommendation", "appliance", "appliances", "community", "tip", "member", "rotation"].includes(panel.type) && (
           <section className="detail-list">
             {panelTasks.map((task) => (
               <article className="detail-task" key={task.id}>
@@ -278,68 +233,13 @@ export default function DetailPanel({
           </section>
         )}
 
-        <button className="composer-submit" onClick={onOpenComposer}>
-          작업 추가
-        </button>
+        {panel.type !== "settings" && (
+          <button className="composer-submit" onClick={onOpenComposer}>
+            작업 추가
+          </button>
+        )}
       </aside>
     </div>
   );
 }
 
-function getPanelTasks(panel, tasks, doneTasks, pendingTasks) {
-  if (panel.type === "allTasks") return tasks;
-  if (panel.type === "history") return doneTasks;
-  if (panel.type === "room") return tasks.filter((task) => task.place === panel.room);
-  if (panel.type === "task") return tasks.filter((task) => task.id === panel.task.id);
-  if (panel.type === "pending") return pendingTasks;
-  if (panel.type === "appliances" || panel.type === "thinq" || panel.type === "community") return [];
-  return tasks;
-}
-
-function taskSorter(a, b) {
-  if (a.done !== b.done) return Number(a.done) - Number(b.done);
-  return b.id - a.id;
-}
-
-function getOwnerName(ownerId) {
-  return members.find((member) => member.id === ownerId)?.name || "미정";
-}
-
-function getPanelKicker(panel) {
-  const labels = {
-    allTasks: "모든 작업",
-    history: "기록",
-    summary: "요약",
-    room: "방별 작업",
-    task: "작업 상세",
-    notifications: "알림",
-    settings: "설정",
-    pending: "대기 작업",
-    recommendation: "AI 추천",
-    appliance: "가전 상태",
-    appliances: "가전 캘린더",
-    thinq: "LG ThinQ",
-    community: "커뮤니티",
-    tip: "생활 팁",
-    member: "멤버 상세",
-    rotation: "로테이션",
-  };
-  return labels[panel.type] || "상세";
-}
-
-function getPanelTitle(panel) {
-  if (panel.type === "room") return panel.room;
-  if (panel.type === "task") return panel.task.title;
-  if (panel.type === "notifications") return "청소 전 알려드려요";
-  if (panel.type === "settings") return "앱 메뉴";
-  if (panel.type === "pending") return "아직 남은 일";
-  if (panel.type === "recommendation") return "스마트 루틴";
-  if (panel.type === "appliance") return panel.appliance.name;
-  if (panel.type === "community") return "우리 동네 집안일 팁";
-  if (panel.type === "tip") return "커뮤니티 추천";
-  if (panel.type === "appliances") return "LG ThinQ 연동 가전";
-  if (panel.type === "thinq") return "LG ThinQ 기기";
-  if (panel.type === "member") return panel.member.name;
-  if (panel.type === "rotation") return "담당 순서";
-  return getPanelKicker(panel);
-}

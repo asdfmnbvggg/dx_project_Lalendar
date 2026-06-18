@@ -1,0 +1,6 @@
+{
+  "installCommand": "npm install --prefix Web_ui",
+  "buildCommand": "npm run build",
+  "outputDirectory": "Web_ui/dist",
+  "devCommand": "npm run dev"
+}
