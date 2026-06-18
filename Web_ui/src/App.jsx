@@ -625,12 +625,13 @@ export default function App() {
       const eventUserId = getTaskUserId(eventTask);
       const assignedOwner = getAiTaskApplianceAssignee(prediction.task_appliance, onboardingSetup.applianceAssignees);
       const assignedUserId = resolveOwnerOrUserIdToUserId(assignedOwner) || eventUserId;
+      const applianceDisplayName = getAiTaskApplianceDisplayName(prediction.task_appliance);
       const aiTask = normalizeTaskForUser(
         {
           id: createTaskId(),
           type: "ai_task",
           source: "together_ai",
-          title: `${prediction.task_appliance_mode} · ${prediction.task_appliance}`,
+          title: `${prediction.task_appliance_mode} · ${applianceDisplayName}`,
           date: prediction.task_date,
           startTime: prediction.task_start_time,
           endTime: prediction.task_end_time,
@@ -1815,6 +1816,20 @@ function getAiTaskApplianceAssignee(appliance, applianceAssignees = {}) {
   };
 
   return (settingKeys[appliance] || []).map((key) => applianceAssignees[key]).find(Boolean) || "";
+}
+
+function getAiTaskApplianceDisplayName(appliance) {
+  const labels = {
+    washer: "세탁기",
+    dryer: "건조기",
+    dishwasher: "식기세척기",
+    robot_cleaner: "로봇청소기",
+    air_purifier: "공기청정기",
+    dehumidifier: "제습기",
+    air_conditioner: "에어컨",
+    none: "추천 없음",
+  };
+  return labels[appliance] || "가전";
 }
 
 function createTaskId() {
