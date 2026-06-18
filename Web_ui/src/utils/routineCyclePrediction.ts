@@ -15,6 +15,9 @@ export type RoutineCyclePrediction = {
   recent_cycle_days: number | null;
   adapted_cycle_days: number | null;
   cycle_changed: boolean;
+  base_daily_usage_count: number | null;
+  recent_daily_usage_count: number | null;
+  frequency_changed: boolean;
   change_confidence: number;
   next_expected_date: string | null;
   reason: string;
@@ -24,6 +27,7 @@ export type RoutineCyclePredictionOptions = {
   minRecentCount?: number;
   diffThresholdDays?: number;
   maxRecentStd?: number;
+  dailyFrequencyThreshold?: number;
   alpha?: number;
 };
 
@@ -39,10 +43,24 @@ type NormalizedUsageLog = ApplianceUsageLog & {
   started_date: string;
 };
 
+type DailyUsageCount = {
+  date: string;
+  count: number;
+};
+
+type FrequencyChangeDetection = {
+  frequency_changed: boolean;
+  base_daily_usage_count: number | null;
+  recent_daily_usage_count: number | null;
+  frequency_diff: number | null;
+  frequency_confidence: number;
+};
+
 const DEFAULT_OPTIONS: Required<RoutineCyclePredictionOptions> = {
   minRecentCount: 3,
   diffThresholdDays: 1.5,
   maxRecentStd: 1.2,
+  dailyFrequencyThreshold: 0.5,
   alpha: 0.6,
 };
 
@@ -142,6 +160,59 @@ export function detectCycleChange(
   };
 }
 
+/** Detects daily frequency changes such as dishwasher 1 use/day to 2 uses/day. */
+export function detectDailyUsageFrequencyChange(
+  dailyUsageCounts: DailyUsageCount[],
+  options: RoutineCyclePredictionOptions = {},
+): FrequencyChangeDetection {
+  const resolvedOptions = resolveOptions(options);
+  const sortedCounts = dailyUsageCounts
+    .filter((item) => isDateKey(item.date) && Number.isFinite(item.count))
+    .slice()
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const recentCounts = sortedCounts.slice(-resolvedOptions.minRecentCount);
+  const baseCounts = sortedCounts.slice(0, -resolvedOptions.minRecentCount);
+  const base_daily_usage_count = roundDays(
+    average(baseCounts.length > 0 ? baseCounts.map((item) => item.count) : sortedCounts.map((item) => item.count)),
+  );
+  const recent_daily_usage_count = roundDays(average(recentCounts.map((item) => item.count)));
+
+  if (
+    base_daily_usage_count == null ||
+    recent_daily_usage_count == null ||
+    recentCounts.length < resolvedOptions.minRecentCount
+  ) {
+    return {
+      frequency_changed: false,
+      base_daily_usage_count,
+      recent_daily_usage_count,
+      frequency_diff: null,
+      frequency_confidence: 0,
+    };
+  }
+
+  const frequency_diff = roundFiniteDays(
+    Math.abs(recent_daily_usage_count - base_daily_usage_count),
+  );
+  const frequency_changed = frequency_diff >= resolvedOptions.dailyFrequencyThreshold;
+
+  return {
+    frequency_changed,
+    base_daily_usage_count,
+    recent_daily_usage_count,
+    frequency_diff,
+    frequency_confidence: frequency_changed
+      ? roundFiniteDays(
+          clamp(
+            frequency_diff / Math.max(resolvedOptions.dailyFrequencyThreshold * 2, 1),
+            0,
+            1,
+          ),
+        )
+      : 0,
+  };
+}
+
 /** Blends base and recent cycles without retraining the underlying model. */
 export function adaptCycle(
   baseCycle: number | null,
@@ -179,6 +250,10 @@ export function predictRoutineCycle(
   const base_cycle_days = predictBaseCycle(intervals);
   const recentIntervals = intervals.slice(-resolvedOptions.minRecentCount);
   const detection = detectCycleChange(base_cycle_days, recentIntervals, resolvedOptions);
+  const frequencyDetection = detectDailyUsageFrequencyChange(
+    calculateDailyUsageCounts(startLogs),
+    resolvedOptions,
+  );
   const adapted_cycle_days = detection.cycle_changed
     ? adaptCycle(base_cycle_days, detection.recent_cycle_days, resolvedOptions.alpha)
     : base_cycle_days;
@@ -194,9 +269,20 @@ export function predictRoutineCycle(
     recent_cycle_days: detection.recent_cycle_days,
     adapted_cycle_days,
     cycle_changed: detection.cycle_changed,
-    change_confidence: detection.change_confidence,
+    base_daily_usage_count: frequencyDetection.base_daily_usage_count,
+    recent_daily_usage_count: frequencyDetection.recent_daily_usage_count,
+    frequency_changed: frequencyDetection.frequency_changed,
+    change_confidence: Math.max(
+      detection.change_confidence,
+      frequencyDetection.frequency_confidence,
+    ),
     next_expected_date,
-    reason: buildReason(base_cycle_days, detection.recent_cycle_days, detection.cycle_changed),
+    reason: buildReason(
+      base_cycle_days,
+      detection.recent_cycle_days,
+      detection.cycle_changed,
+      frequencyDetection,
+    ),
   };
 }
 
@@ -252,6 +338,19 @@ function uniqueSortedUsageDates(logs: NormalizedUsageLog[]): string[] {
   return Array.from(new Set(logs.map((log) => log.started_date))).sort();
 }
 
+/** Counts start logs per active date without collapsing multiple same-day uses. */
+function calculateDailyUsageCounts(logs: NormalizedUsageLog[]): DailyUsageCount[] {
+  const countsByDate = new Map<string, number>();
+
+  logs.forEach((log) => {
+    countsByDate.set(log.started_date, (countsByDate.get(log.started_date) ?? 0) + 1);
+  });
+
+  return Array.from(countsByDate.entries())
+    .map(([date, count]) => ({ date, count }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
 function resolveOptions(
   options: RoutineCyclePredictionOptions = {},
 ): Required<RoutineCyclePredictionOptions> {
@@ -265,6 +364,10 @@ function resolveOptions(
       options.diffThresholdDays ?? DEFAULT_OPTIONS.diffThresholdDays,
     ),
     maxRecentStd: Math.max(0, options.maxRecentStd ?? DEFAULT_OPTIONS.maxRecentStd),
+    dailyFrequencyThreshold: Math.max(
+      0,
+      options.dailyFrequencyThreshold ?? DEFAULT_OPTIONS.dailyFrequencyThreshold,
+    ),
     alpha: clamp(options.alpha ?? DEFAULT_OPTIONS.alpha, 0, 1),
   };
 }
@@ -273,7 +376,16 @@ function buildReason(
   baseCycle: number | null,
   recentCycle: number | null,
   cycleChanged: boolean,
+  frequencyDetection: FrequencyChangeDetection,
 ): string {
+  if (cycleChanged && frequencyDetection.frequency_changed) {
+    return `최근 사용 주기와 하루 사용 횟수가 함께 바뀐 것 같아요. 기존에는 약 ${formatDays(baseCycle ?? 0)}마다 사용했지만 최근에는 약 ${formatDays(recentCycle ?? 0)} 간격으로 사용되고, 하루 평균 사용 횟수도 ${formatCount(frequencyDetection.base_daily_usage_count)}회에서 ${formatCount(frequencyDetection.recent_daily_usage_count)}회로 달라졌어요. 최근 패턴을 반영해 다음 예상 사용일을 다시 계산했습니다.`;
+  }
+
+  if (frequencyDetection.frequency_changed) {
+    return `최근 하루 사용 횟수가 바뀐 것 같아요. 기존에는 하루 평균 ${formatCount(frequencyDetection.base_daily_usage_count)}회 사용했지만, 최근에는 하루 평균 ${formatCount(frequencyDetection.recent_daily_usage_count)}회 사용되고 있어요. 주기 변화와 별도로 사용 빈도 변화를 감지했습니다.`;
+  }
+
   if (baseCycle == null || recentCycle == null) {
     return "사용 간격 데이터가 부족해 아직 주기 변화를 판단하지 않았습니다.";
   }
@@ -311,6 +423,9 @@ function createEmptyPrediction(
     recent_cycle_days: null,
     adapted_cycle_days: null,
     cycle_changed: false,
+    base_daily_usage_count: null,
+    recent_daily_usage_count: null,
+    frequency_changed: false,
     change_confidence: 0,
     next_expected_date: null,
     reason,
@@ -381,10 +496,22 @@ function roundFiniteDays(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+function average(values: number[]): number | null {
+  const numericValues = values.filter((value) => Number.isFinite(value));
+  if (numericValues.length === 0) return null;
+
+  return numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length;
+}
+
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
 function formatDays(days: number): string {
   return Number.isInteger(days) ? `${days}일` : `${roundDays(days)}일`;
+}
+
+function formatCount(count: number | null): string {
+  if (count == null) return "0";
+  return Number.isInteger(count) ? `${count}` : `${roundDays(count)}`;
 }
