@@ -1,3 +1,5 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 #include <DHT.h>
 #include "HX711.h"
 
@@ -7,7 +9,35 @@
 
 #define SERIAL_BAUD 115200
 
+// =========================
+// LCD 3개 설정
+// =========================
+
+// LCD 3개 모두 같은 I2C 라인에 연결
+// LCD SDA → ESP32 GPIO 21
+// LCD SCL → ESP32 GPIO 22
+#define LCD_SDA_PIN 21
+#define LCD_SCL_PIN 22
+
+// LCD 주소
+// 1번 LCD: 납땜 안 한 기본 → 0x27
+// 2번 LCD: A0 납땜       → 0x26
+// 3번 LCD: A1 납땜       → 0x25
+LiquidCrystal_I2C lcdTempHumid(0x27, 16, 2);  // 온습도 LCD
+LiquidCrystal_I2C lcdDust(0x26, 16, 2);       // 미세먼지 LCD
+LiquidCrystal_I2C lcdWeight(0x25, 16, 2);     // 무게 LCD
+
+// 만약 LCD가 안 나오면 주소가 0x3F 계열일 수 있음
+// 그 경우 아래처럼 바꾸기
+// LiquidCrystal_I2C lcdTempHumid(0x3F, 16, 2);
+// LiquidCrystal_I2C lcdDust(0x3E, 16, 2);
+// LiquidCrystal_I2C lcdWeight(0x3D, 16, 2);
+
+
+// =========================
 // DHT11 온습도 센서
+// =========================
+
 #define DHT_PIN 33
 #define DHT_TYPE DHT11
 DHT dht(DHT_PIN, DHT_TYPE);
@@ -45,6 +75,55 @@ const unsigned long SENSOR_PRINT_INTERVAL = 3000;
 // 최근 미세먼지 값 저장
 float pm25Value = 0.0;
 float pm10Value = 0.0;
+
+
+// =========================
+// LCD 공통 함수
+// =========================
+
+String fitLCDText(String text) {
+  text.replace("\n", " ");
+  text.replace("|", " ");
+  text.trim();
+
+  if (text.length() > 16) {
+    text = text.substring(0, 16);
+  }
+
+  return text;
+}
+
+
+void displayLCD(LiquidCrystal_I2C &targetLCD, String line1, String line2) {
+  line1 = fitLCDText(line1);
+  line2 = fitLCDText(line2);
+
+  targetLCD.clear();
+
+  targetLCD.setCursor(0, 0);
+  targetLCD.print(line1);
+
+  targetLCD.setCursor(0, 1);
+  targetLCD.print(line2);
+}
+
+
+void initLCDs() {
+  Wire.begin(LCD_SDA_PIN, LCD_SCL_PIN);
+
+  lcdTempHumid.init();
+  lcdTempHumid.backlight();
+
+  lcdDust.init();
+  lcdDust.backlight();
+
+  lcdWeight.init();
+  lcdWeight.backlight();
+
+  displayLCD(lcdTempHumid, "TEMP / HUMID", "LCD Ready");
+  displayLCD(lcdDust, "PM2.5 / PM10", "LCD Ready");
+  displayLCD(lcdWeight, "WEIGHT", "LCD Ready");
+}
 
 
 // =========================
@@ -95,16 +174,38 @@ bool readSDS011Data(float &pm25, float &pm10) {
 // =========================
 // 센서값 출력
 // Python 코드가 이 형식을 읽음
+// LCD 3개에도 각각 분리 출력
 // =========================
 
 void printSensorData() {
+  // =========================
+  // 1. 온습도 센서
+  // =========================
+
   float temperature = dht.readTemperature();
   float humidity = dht.readHumidity();
 
   if (isnan(temperature) || isnan(humidity)) {
     Serial.println("DHT sensor read failed");
-    return;
+
+    displayLCD(lcdTempHumid, "DHT Failed", "Check Sensor");
+  } else {
+    // Python 통합 코드가 아래 형식을 파싱함
+    Serial.print("T: ");
+    Serial.print(temperature, 1);
+    Serial.print(" H: ");
+    Serial.println(humidity, 1);
+
+    // 1번 LCD: 온습도
+    String tempLine = String("Temp: ") + String(temperature, 1) + " C";
+    String humidLine = String("Humid: ") + String(humidity, 1) + " %";
+
+    displayLCD(lcdTempHumid, tempLine, humidLine);
   }
+
+  // =========================
+  // 2. 미세먼지 센서
+  // =========================
 
   float newPm25;
   float newPm10;
@@ -114,25 +215,39 @@ void printSensorData() {
     pm10Value = newPm10;
   }
 
-  float weight = 0.0;
-
-  if (scale.is_ready()) {
-    weight = scale.get_units(5);
-  } else {
-    Serial.println("HX711 not ready");
-  }
-
   // Python 통합 코드가 아래 형식을 파싱함
-  Serial.print("T: ");
-  Serial.print(temperature, 1);
-  Serial.print(" H: ");
-  Serial.println(humidity, 1);
-
   Serial.print("PM2.5: ");
   Serial.print(pm25Value, 1);
   Serial.print(" PM10: ");
   Serial.println(pm10Value, 1);
 
+  // 2번 LCD: 미세먼지
+  String pm25Line = String("PM2.5: ") + String(pm25Value, 1);
+  String pm10Line = String("PM10 : ") + String(pm10Value, 1);
+
+  displayLCD(lcdDust, pm25Line, pm10Line);
+
+  // =========================
+  // 3. 로드셀 무게 센서
+  // =========================
+
+  float weight = 0.0;
+
+  if (scale.is_ready()) {
+    weight = scale.get_units(5);
+
+    // 3번 LCD: 무게
+    String weightLine1 = "Weight";
+    String weightLine2 = String(weight, 1) + " g";
+
+    displayLCD(lcdWeight, weightLine1, weightLine2);
+  } else {
+    Serial.println("HX711 not ready");
+
+    displayLCD(lcdWeight, "HX711 Error", "Not Ready");
+  }
+
+  // Python 통합 코드가 아래 형식을 파싱함
   Serial.print("Weight: ");
   Serial.println(weight, 1);
 }
@@ -270,6 +385,10 @@ void handleCommand(String command) {
 
 void setup() {
   Serial.begin(SERIAL_BAUD);
+  Serial.setTimeout(50);
+
+  // LCD 3개 초기화
+  initLCDs();
 
   pinMode(AIR_PURIFIER_LED, OUTPUT);
   pinMode(SHARED_AIRCON_LED, OUTPUT);
@@ -293,7 +412,12 @@ void setup() {
   scale.set_scale(calibration_factor);
   scale.tare();
 
+  displayLCD(lcdTempHumid, "TEMP / HUMID", "Ready");
+  displayLCD(lcdDust, "DUST SENSOR", "Ready");
+  displayLCD(lcdWeight, "WEIGHT SENSOR", "Ready");
+
   Serial.println("ESP32 sensor + command bridge ready");
+  Serial.println("3 LCD sensor display ready");
 }
 
 
