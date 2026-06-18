@@ -1,5 +1,6 @@
 const TOGETHER_CHAT_COMPLETIONS_URL = "https://api.together.xyz/v1/chat/completions";
-const DEFAULT_MODEL = "Qwen/Qwen3-8B";
+const DEFAULT_MODEL = "Qwen/Qwen3.5-9B";
+const LEGACY_NON_SERVERLESS_MODELS = new Set(["Qwen/Qwen3-8B"]);
 const ALLOWED_APPLIANCES = [
   "washer",
   "dryer",
@@ -66,7 +67,8 @@ export default async function predictTaskHandler(request, response) {
 
   try {
     const input = validatePredictionInput(await readJsonBody(request));
-    const model = normalizeSecret(process.env.TOGETHER_MODEL) || DEFAULT_MODEL;
+    const configuredModel = normalizeSecret(process.env.TOGETHER_MODEL);
+    const model = !configuredModel || LEGACY_NON_SERVERLESS_MODELS.has(configuredModel) ? DEFAULT_MODEL : configuredModel;
     const togetherResponse = await fetch(TOGETHER_CHAT_COMPLETIONS_URL, {
       method: "POST",
       headers: {
