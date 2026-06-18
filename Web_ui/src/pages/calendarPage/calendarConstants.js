@@ -137,7 +137,7 @@ export const applianceModeCatalog = {
       { id: "all", label: "전체 청소", meta: "집 전체", icon: "전" },
       { id: "spot", label: "부분 청소", meta: "선택 영역", icon: "부" },
       { id: "schedule", label: "예약 청소", meta: "일정 연동", icon: "예" },
-      { id: "return", label: "워크 복귀", meta: "도크 이동", icon: "복" },
+      { id: "deep", label: "꼼꼼 청소", meta: "구석까지", icon: "꼼" },
     ],
   },
   AIR_CONDITIONER: {
@@ -153,9 +153,9 @@ export const applianceModeCatalog = {
     status: "실내 공기 감지 중",
     modes: [
       { id: "auto", label: "자동", meta: "센서 기반", icon: "자" },
+      { id: "strong_wind", label: "강풍", meta: "풍량 강화", icon: "강" },
       { id: "sleep", label: "취침", meta: "저소음", icon: "취" },
-      { id: "strong", label: "강력", meta: "빠른 정화", icon: "강" },
-      { id: "silent", label: "무소음", meta: "조용하게", icon: "무" },
+      { id: "quick_clean", label: "쾌속청정", meta: "빠른 정화", icon: "쾌" },
     ],
   },
   DISHWASHER: {
@@ -191,6 +191,7 @@ export const CALENDAR_CELL_COLLAPSED_TASK_LIMIT = 5;
 export const SCHEDULE_PLANNING_DELAY = 3000;
 export const DAILY_TIMETABLE_START_HOUR = 6;
 export const DAILY_TIMETABLE_END_HOUR = 24;
+export const DAILY_TIMETABLE_HOUR_HEIGHT = 52;
 export const DAILY_TIMETABLE_START_TIME = "06:00";
 export const DAILY_TIMETABLE_END_INPUT_TIME = "23:59";
 export const scheduleColorOptions = ["#ff7976", "#ffd5d6", "#ffc68f", "#ffb063", "#fff294", "#cbf39d", "#95cff5", "#d3b5f3"];

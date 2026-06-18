@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   Bell,
@@ -27,8 +27,12 @@ import { fetchMidWeather } from "./services/midWeatherService.js";
 import { fetchAirQuality } from "./services/airQualityService.js";
 import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendationService.js";
 import { buildRoutineRecommendations } from "./services/routinePredictionService.js";
+import { sendDeviceCommand, subscribeSensorLatest } from "./services/sensorRealtimeService.js";
+import { buildRealtimeAppliancePopups, buildScheduledWasherPopup, getPopupKey } from "./services/appliancePopupRuleService.js";
 
 const ENABLE_ONBOARDING_TASK_GENERATION = false;
+const SENSOR_DEVICE_ID = "living_room_01";
+const POPUP_COOLDOWN_MS = 10 * 60 * 1000;
 const CALENDAR_SCHEDULE_COLORS = ["#ff7976", "#ffd5d6", "#ffc68f", "#ffb063", "#fff294", "#cbf39d", "#95cff5", "#d3b5f3"];
 const LEGACY_CALENDAR_COLOR_MAP = {
   "#fb7185": "#ff7976",
@@ -130,6 +134,12 @@ export default function App() {
   const [calendarView, setCalendarView] = useState(storedSession?.calendarView || DEFAULT_CALENDAR_VIEW);
   const [calendarWeatherByDate, setCalendarWeatherByDate] = useState({});
   const [weatherApiStatus, setWeatherApiStatus] = useState("loading");
+  const [sensorPopup, setSensorPopup] = useState(null);
+  const [sensorPopupQueue, setSensorPopupQueue] = useState([]);
+  const [latestSensorData, setLatestSensorData] = useState(null);
+  const sensorPopupCooldownRef = useRef({});
+  const washerPopupShownRef = useRef({});
+  const sensorDemoPopupIndexRef = useRef(0);
 
   useEffect(() => {
     setTasks((current) => {
@@ -200,6 +210,74 @@ export default function App() {
       isActive = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!currentUser || !isOnboardingComplete) return undefined;
+
+    return subscribeSensorLatest(SENSOR_DEVICE_ID, (sensorData) => {
+      console.log("[sensor] realtime data received", sensorData);
+      console.log("[sensor] current user", currentUser);
+      setLatestSensorData(sensorData);
+
+      const popups = buildRealtimeAppliancePopups(sensorData, {
+        targetUserIds: getRealtimeApplianceTargetUserIds(onboardingSetup.applianceAssignees, activeCalendarUser, currentUser),
+      });
+      const scheduleFilteredPopups = filterRealtimePopupsBySchedule(popups, tasks, new Date());
+      console.log("[sensor] realtime threshold result", popups);
+      console.log("[sensor] realtime schedule filtered result", scheduleFilteredPopups);
+
+      enqueueSensorPopups(
+        scheduleFilteredPopups.filter((popup) => popup.targetUserId === currentUser.id),
+        "realtime",
+      );
+    });
+  }, [activeCalendarUser, currentUser, isOnboardingComplete, onboardingSetup.applianceAssignees, tasks]);
+
+  useEffect(() => {
+    if (!currentUser || !isOnboardingComplete || !latestSensorData) return undefined;
+
+    const checkScheduledWasherAlerts = () => {
+      const now = new Date();
+      const today = dateKey(now.getFullYear(), now.getMonth() + 1, now.getDate());
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      const washerCandidates = getDueWasherAlertCandidates(tasks, today, nowMinutes, activeCalendarUser, currentUser);
+
+      console.log("[sensor] washer schedule detected", washerCandidates);
+
+      const popups = washerCandidates
+        .map(({ washerTask, targetUserId, alertMinutes }) => {
+          console.log("[sensor] washer target result", { targetUserId, washerTask, alertMinutes });
+          if (targetUserId !== currentUser.id) return null;
+
+          return buildScheduledWasherPopup(latestSensorData, {
+            washerTask,
+            targetUserId,
+          });
+        })
+        .filter((popup) => {
+          if (!popup) return false;
+          const popupKey = getPopupKey(popup);
+          if (washerPopupShownRef.current[popupKey]) {
+            console.log("[sensor] washer popup skipped: already shown", popupKey);
+            return false;
+          }
+          return true;
+        });
+
+      console.log("[sensor] washer threshold result", popups);
+      enqueueSensorPopups(popups, "washer-schedule");
+    };
+
+    checkScheduledWasherAlerts();
+    const intervalId = window.setInterval(checkScheduledWasherAlerts, 60 * 1000);
+    return () => window.clearInterval(intervalId);
+  }, [activeCalendarUser, currentUser, isOnboardingComplete, latestSensorData, tasks]);
+
+  useEffect(() => {
+    if (isOnboardingComplete) return;
+    setSensorPopup(null);
+    setSensorPopupQueue([]);
+  }, [isOnboardingComplete]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -511,6 +589,9 @@ export default function App() {
 
   function selectMainTab(id) {
     setActiveTab(id);
+    if (id === "menu") {
+      showNextSensorDemoPopup();
+    }
     if (id === "schedule" && !isOnboardingComplete && !hasGeneratedOnboardingTasks) {
       setOnboardingSetup(createDefaultOnboardingSetup());
       setOnboardingComplete(false);
@@ -627,6 +708,112 @@ export default function App() {
 
     addAutomationTask(item, item.date);
     setDismissedAlerts((current) => [...current, item.id]);
+  }
+
+  function showNextSensorDemoPopup() {
+    if (!currentUser || !isOnboardingComplete) return;
+
+    const demoSensors = [
+      { temperature: 30.5, humidity: 45, pm10: 12, pm25: 8, last_updated: "테스트 알림" },
+      { temperature: 26, humidity: 63, pm10: 12, pm25: 8, last_updated: "테스트 알림" },
+      { temperature: 24, humidity: 45, pm10: 35, pm25: 12, last_updated: "테스트 알림" },
+      { temperature: 24, humidity: 45, pm10: 86, pm25: 38, last_updated: "테스트 알림" },
+    ];
+    const sensor = demoSensors[sensorDemoPopupIndexRef.current % demoSensors.length];
+    sensorDemoPopupIndexRef.current += 1;
+
+    const popups = buildRealtimeAppliancePopups(sensor, {
+      targetUserIds: {
+        AIR_CONDITIONER: currentUser.id,
+        AIR_PURIFIER: currentUser.id,
+      },
+    }).filter((popup) => popup.targetUserId === currentUser.id);
+
+    enqueueSensorPopups(popups.slice(0, 1), "menu-demo", { bypassCooldown: true });
+  }
+
+  function enqueueSensorPopups(popups, source = "sensor", options = {}) {
+    if (popups.length === 0) {
+      console.log("[sensor] popup display skipped: no matching visible rule", source);
+      return;
+    }
+
+    const now = Date.now();
+    const availablePopups = popups.filter((popup) => {
+      const popupKey = getPopupKey(popup);
+      const lastClosedAt = sensorPopupCooldownRef.current[popupKey] || 0;
+
+      if (!options.bypassCooldown && now - lastClosedAt < POPUP_COOLDOWN_MS) {
+        console.log("[sensor] popup display skipped: cooldown", source, popupKey);
+        return false;
+      }
+
+      return true;
+    });
+
+    if (availablePopups.length === 0) return;
+
+    setSensorPopup((currentPopup) => {
+      const currentPopupKey = currentPopup ? getPopupKey(currentPopup) : "";
+      const nextPopups = availablePopups.filter((popup) => getPopupKey(popup) !== currentPopupKey);
+
+      if (nextPopups.length === 0) {
+        console.log("[sensor] popup display skipped: already visible", source);
+        return currentPopup;
+      }
+
+      if (currentPopup) {
+        setSensorPopupQueue((queue) => appendUniqueSensorPopups(queue, nextPopups));
+        console.log("[sensor] popup queued", source, nextPopups.map(getPopupKey));
+        return currentPopup;
+      }
+
+      const [nextPopup, ...queuedPopups] = nextPopups;
+      setSensorPopupQueue((queue) => appendUniqueSensorPopups(queue, queuedPopups));
+      console.log("[sensor] popup displayed", source, getPopupKey(nextPopup));
+      return nextPopup;
+    });
+  }
+
+  function closeSensorPopup() {
+    if (sensorPopup) {
+      const popupKey = getPopupKey(sensorPopup);
+      sensorPopupCooldownRef.current[popupKey] = Date.now();
+      if (sensorPopup.applianceType === "WASHER") {
+        washerPopupShownRef.current[popupKey] = true;
+      }
+    }
+    setSensorPopupQueue((queue) => {
+      const [nextPopup, ...restQueue] = queue;
+      setSensorPopup(nextPopup || null);
+      if (nextPopup) {
+        console.log("[sensor] popup displayed from queue", getPopupKey(nextPopup));
+      }
+      return restQueue;
+    });
+  }
+
+  async function executeSensorPopup() {
+    if (!sensorPopup || sensorPopup.blocked) {
+      closeSensorPopup();
+      return;
+    }
+
+    try {
+      await sendDeviceCommand(SENSOR_DEVICE_ID, {
+        command: sensorPopup.command,
+        mode: sensorPopup.mode,
+        applianceType: sensorPopup.applianceType,
+        applianceName: sensorPopup.applianceName,
+        reason: sensorPopup.message,
+        targetUserId: sensorPopup.targetUserId,
+      });
+      console.log("[sensor] device command sent", sensorPopup);
+    } catch (error) {
+      console.warn("[sensor] device command failed", error);
+    } finally {
+      closeSensorPopup();
+    }
   }
 
   function postponeNotification(item) {
@@ -1050,6 +1237,14 @@ export default function App() {
         </div>
       )}
 
+      {sensorPopup && (
+        <SensorPopupDialog
+          popup={sensorPopup}
+          onClose={closeSensorPopup}
+          onExecute={executeSensorPopup}
+        />
+      )}
+
       {pendingPostpone && (
         <div className="confirm-backdrop" role="presentation">
           <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="postpone-title">
@@ -1169,6 +1364,233 @@ function LoginIntroSplash() {
   );
 }
 
+function SensorPopupDialog({ popup, onClose, onExecute }) {
+  const assignee = getPopupAssignee(popup.targetUserId);
+
+  return (
+    <div className="confirm-backdrop sensor-popup-backdrop" role="presentation">
+      <section className="confirm-dialog sensor-popup-dialog" role="dialog" aria-modal="true" aria-labelledby="sensor-popup-title">
+        <div className="sensor-popup-head">
+          <p>실시간 센서 알림</p>
+          {assignee && (
+            <div className="sensor-popup-assignee" aria-label={`담당자 ${assignee.name}`}>
+              <span className="sensor-popup-assignee-text">
+                <small>담당자</small>
+                <strong>{assignee.name}</strong>
+              </span>
+            </div>
+          )}
+        </div>
+        <h2 id="sensor-popup-title">{popup.title}</h2>
+        <span>{popup.message}</span>
+
+        <div className="sensor-popup-metrics" aria-label="센서 감지 정보">
+          <div>
+            <small>{popup.metricLabel || "현재 값"}</small>
+            <strong>
+              <SensorMetricValue popup={popup} />
+            </strong>
+          </div>
+          <div>
+            <small>추천 모드</small>
+            <strong>{popup.applianceName} · {popup.mode}</strong>
+          </div>
+        </div>
+
+        {popup.thresholdLabel && <small className="sensor-popup-updated">기준 {popup.thresholdLabel}</small>}
+
+        <div className={`confirm-actions ${popup.blocked ? "single" : ""}`}>
+          {popup.blocked ? (
+            <button type="button" onClick={onClose}>
+              확인
+            </button>
+          ) : (
+            <>
+              <button type="button" onClick={onClose}>
+                나중에
+              </button>
+              <button type="button" onClick={onExecute}>
+                실행하기
+              </button>
+            </>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function SensorMetricValue({ popup }) {
+  if (!Array.isArray(popup.metricParts) || popup.metricParts.length === 0) {
+    return popup.metricValue || "-";
+  }
+
+  return popup.metricParts.map((part, index) => (
+    <span key={`${part.label || "value"}-${index}`}>
+      {index > 0 && <span className="sensor-popup-metric-separator"> / </span>}
+      {part.label && <span>{part.label} </span>}
+      <span className={part.isExceeded ? "sensor-popup-value-exceeded" : ""}>{part.value}</span>
+    </span>
+  ));
+}
+
+function appendUniqueSensorPopups(queue, popups) {
+  if (!popups.length) return queue;
+
+  const existingKeys = new Set(queue.map(getPopupKey));
+  const nextQueue = [...queue];
+
+  popups.forEach((popup) => {
+    const popupKey = getPopupKey(popup);
+    if (!existingKeys.has(popupKey)) {
+      existingKeys.add(popupKey);
+      nextQueue.push(popup);
+    }
+  });
+
+  return nextQueue;
+}
+
+function getPopupAssignee(targetUserId) {
+  if (!targetUserId) return null;
+
+  const user = findUserById(targetUserId);
+  const memberId = userIdToOwner(targetUserId);
+  const member = members.find((item) => item.id === memberId || item.id === targetUserId);
+  const name = user?.displayName || user?.name || member?.name || "";
+
+  if (!name) return null;
+
+  return {
+    name,
+    color: member?.color || USER_COLORS[targetUserId] || "#ff7a21",
+    initial: getAssigneeInitial(name),
+  };
+}
+
+function getAssigneeInitial(name) {
+  const text = String(name || "").replace(/님$/, "").trim();
+  return [...text][0] || "?";
+}
+
+function getRealtimeApplianceTargetUserIds(applianceAssignees = {}, activeCalendarUser, currentUser) {
+  const fallbackUserId = activeCalendarUser?.id || currentUser?.id || "";
+
+  return {
+    AIR_CONDITIONER:
+      resolveOwnerOrUserIdToUserId(
+        applianceAssignees["air-living"] ||
+          applianceAssignees["air"] ||
+          applianceAssignees["air-conditioner"] ||
+          applianceAssignees.AIR_CONDITIONER,
+      ) || "",
+    AIR_PURIFIER:
+      resolveOwnerOrUserIdToUserId(applianceAssignees["air-purifier"] || applianceAssignees.AIR_PURIFIER) || fallbackUserId,
+  };
+}
+
+function filterRealtimePopupsBySchedule(popups = [], tasks = [], now = new Date()) {
+  return popups.filter((popup) => {
+    if (popup.applianceType !== "AIR_CONDITIONER") return true;
+    return canSendAirConditionerAlert(popup, tasks, now);
+  });
+}
+
+function canSendAirConditionerAlert(popup = {}, tasks = [], now = new Date()) {
+  const hasAssignedUser = Boolean(popup.targetUserId);
+  if (!hasAssignedUser) {
+    console.log("[sensor] air conditioner popup skipped: no assigned user", popup);
+    return false;
+  }
+
+  const today = dateKey(now.getFullYear(), now.getMonth() + 1, now.getDate());
+  const alertStartMinutes = getAirConditionerAlertStartTime(tasks, popup.targetUserId, today);
+
+  if (!Number.isFinite(alertStartMinutes)) {
+    // 고정 일정 없음 → 재택/자유 일정으로 간주하고 기존 센서 임계값 알림 정책을 적용합니다.
+    return true;
+  }
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const canSend = currentMinutes >= alertStartMinutes;
+
+  if (!canSend) {
+    console.log("[sensor] air conditioner popup skipped: before fixed schedule return window", {
+      targetUserId: popup.targetUserId,
+      currentMinutes,
+      alertStartMinutes,
+    });
+  }
+
+  return canSend;
+}
+
+function getAirConditionerAlertStartTime(tasks = [], targetUserId, date) {
+  const lastFixedScheduleEndTime = getLastFixedScheduleEndTime(tasks, targetUserId, date);
+  return Number.isFinite(lastFixedScheduleEndTime) ? Math.max(0, lastFixedScheduleEndTime - 60) : null;
+}
+
+function getLastFixedScheduleEndTime(tasks = [], targetUserId, date) {
+  const fixedScheduleEndTimes = tasks
+    .filter((task) => isTaskVisibleOnDate(task, date))
+    .filter((task) => getTaskUserId(task) === targetUserId)
+    .filter(isFixedScheduleTask)
+    .map(getFixedScheduleEndMinutes)
+    .filter(Number.isFinite);
+
+  return fixedScheduleEndTimes.length > 0 ? Math.max(...fixedScheduleEndTimes) : null;
+}
+
+function getFixedScheduleEndMinutes(task = {}) {
+  const range = getTaskNotificationRange(task);
+  if (!range) return NaN;
+  return range.endMinutes < range.startMinutes ? range.endMinutes + 24 * 60 : range.endMinutes;
+}
+
+function getDueWasherAlertCandidates(tasks, date, nowMinutes, activeCalendarUser, currentUser) {
+  const washerTasks = tasks.filter((task) => isTaskVisibleOnDate(task, date) && isWasherScheduleTask(task));
+
+  return washerTasks
+    .map((washerTask) => {
+      const targetUserId = getTaskUserId(washerTask) || activeCalendarUser?.id || currentUser?.id || "";
+      const alertMinutes = getWasherAlertMinutes(tasks, washerTask, targetUserId, date);
+      return { washerTask, targetUserId, alertMinutes };
+    })
+    .filter(({ alertMinutes }) => Number.isFinite(alertMinutes) && nowMinutes >= alertMinutes);
+}
+
+function getWasherAlertMinutes(tasks, washerTask, targetUserId, date) {
+  const fixedSchedules = tasks
+    .filter((task) => isTaskVisibleOnDate(task, date))
+    .filter((task) => getTaskUserId(task) === targetUserId)
+    .filter(isFixedScheduleTask)
+    .map((task) => getTaskNotificationRange(task)?.startMinutes)
+    .filter(Number.isFinite)
+    .sort((first, second) => first - second);
+
+  if (fixedSchedules.length > 0) {
+    return Math.max(0, fixedSchedules[0] - 60);
+  }
+
+  return getTaskNotificationRange(washerTask)?.startMinutes;
+}
+
+function isWasherScheduleTask(task = {}) {
+  const text = `${task.title || ""} ${task.applianceType || ""} ${task.displayType || ""}`;
+  if (task.applianceType === "DISHWASHER" || /식기|세척|dishwasher|dish/i.test(text)) return false;
+  return task.applianceType === "WASHER" || /세탁|빨래|washer/i.test(text);
+}
+
+function isFixedScheduleTask(task = {}) {
+  return task.displayType === "fixed" || task.place === "고정 일정";
+}
+
+function resolveOwnerOrUserIdToUserId(value) {
+  if (!value) return "";
+  if (findUserById(value)) return value;
+  return OWNER_TO_USER[value] || "";
+}
+
 
 const mainNavItems = [
   { id: "devices", label: "디바이스", icon: Grid2X2 },
@@ -1191,6 +1613,17 @@ const fixedScheduleColorByTitle = {
   "기계공학실험": "#ff7976",
   "부트 캠프": "#cbf39d",
   "삼겹살집 알바": "#ffc68f",
+  "국어": "#ff7976",
+  "수학": "#95cff5",
+  "영어": "#d3b5f3",
+  "과학": "#cbf39d",
+  "사회": "#ffc68f",
+  "체육": "#ffb063",
+  "음악": "#fff294",
+  "미술": "#ffd5d6",
+  "창체": "#d3b5f3",
+  "기술가정": "#95cff5",
+  "동아리": "#cbf39d",
 };
 const fallbackFixedScheduleColors = CALENDAR_SCHEDULE_COLORS;
 
@@ -1211,34 +1644,47 @@ const fixedScheduleTemplates = {
       color: getFixedScheduleColor("필라테스"),
     })),
   ],
-  jaehyeok: [
-    ["공업수학", "월", "09:00", "10:30"],
-    ["정역학", "월", "11:00", "12:30"],
-    ["열역학", "월", "14:00", "16:00"],
-    ["유체역학", "화", "10:00", "12:00"],
-    ["기계제도", "화", "14:00", "17:00"],
-    ["공업수학", "수", "09:00", "10:30"],
-    ["재료역학", "수", "13:00", "15:00"],
-    ["유체역학", "목", "10:00", "12:00"],
-    ["기계공작법", "목", "14:00", "16:00"],
-    ["기계공학실험", "금", "13:00", "16:00"],
-  ].map(([title, day, startTime, endTime]) => ({ title, day, startTime, endTime, color: getFixedScheduleColor(title) })),
+  jaehyeok: ["월", "화", "수", "목", "금"].map((day) => ({
+    title: "회사",
+    day,
+    startTime: "09:00",
+    endTime: "18:00",
+    color: getFixedScheduleColor("회사"),
+  })),
   dabin: [
-    ...["월", "화", "수", "목", "금"].map((day) => ({
-      title: "부트 캠프",
-      day,
-      startTime: "09:00",
-      endTime: "18:00",
-      color: getFixedScheduleColor("부트 캠프"),
-    })),
-    ...["토", "일"].map((day) => ({
-      title: "삼겹살집 알바",
-      day,
-      startTime: "15:00",
-      endTime: "18:00",
-      color: getFixedScheduleColor("삼겹살집 알바"),
-    })),
-  ],
+    ["국어", "월", "09:10", "09:55"],
+    ["수학", "월", "10:05", "10:50"],
+    ["영어", "월", "11:00", "11:45"],
+    ["과학", "월", "11:55", "12:40"],
+    ["사회", "월", "13:30", "14:15"],
+    ["체육", "월", "14:25", "15:10"],
+    ["수학", "화", "09:10", "09:55"],
+    ["영어", "화", "10:05", "10:50"],
+    ["국어", "화", "11:00", "11:45"],
+    ["음악", "화", "11:55", "12:40"],
+    ["과학", "화", "13:30", "14:15"],
+    ["미술", "화", "14:25", "15:10"],
+    ["창체", "화", "15:20", "16:05"],
+    ["영어", "수", "09:10", "09:55"],
+    ["과학", "수", "10:05", "10:50"],
+    ["수학", "수", "11:00", "11:45"],
+    ["국어", "수", "11:55", "12:40"],
+    ["기술가정", "수", "13:30", "14:15"],
+    ["체육", "수", "14:25", "15:10"],
+    ["사회", "목", "09:10", "09:55"],
+    ["국어", "목", "10:05", "10:50"],
+    ["영어", "목", "11:00", "11:45"],
+    ["수학", "목", "11:55", "12:40"],
+    ["과학", "목", "13:30", "14:15"],
+    ["동아리", "목", "14:25", "15:10"],
+    ["창체", "목", "15:20", "16:05"],
+    ["과학", "금", "09:10", "09:55"],
+    ["체육", "금", "10:05", "10:50"],
+    ["사회", "금", "11:00", "11:45"],
+    ["국어", "금", "11:55", "12:40"],
+    ["수학", "금", "13:30", "14:15"],
+    ["영어", "금", "14:25", "15:10"],
+  ].map(([title, day, startTime, endTime]) => ({ title, day, startTime, endTime, color: getFixedScheduleColor(title) })),
 };
 
 const defaultFixedScheduleUsers = [
@@ -3235,3 +3681,6 @@ function getTaskUserId(task) {
 function userIdToOwner(userId) {
   return USER_TO_OWNER[userId] || "me";
 }
+
+
+
