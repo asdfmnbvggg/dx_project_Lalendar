@@ -89,6 +89,7 @@ const DEFAULT_ONBOARDING_APPLIANCE_TYPES = [];
 const DEFAULT_ONBOARDING_APPLIANCE_ASSIGNEES = {};
 const DAILY_REPORT_LOADING_TEXT = "오늘의 일정을 정리하고 있어요...";
 const DAILY_REPORT_DEBOUNCE_MS = 400;
+const DAILY_REPORT_CACHE_PREFIX = "l-landerDailyReport:";
 
 export default function App() {
   const storedUser = readStoredCurrentUser();
@@ -151,7 +152,7 @@ export default function App() {
     priority: "normal",
   }));
   const [isDailyAiReportLoading, setDailyAiReportLoading] = useState(false);
-  const [dailyReportCreationVersion, setDailyReportCreationVersion] = useState(0);
+  const [dailyReportCreationToken, setDailyReportCreationToken] = useState("initial");
   const [aiAssignmentPopup, setAiAssignmentPopup] = useState(null);
   const [sensorPopup, setSensorPopup] = useState(null);
   const [sensorPopupQueue, setSensorPopupQueue] = useState([]);
@@ -162,6 +163,7 @@ export default function App() {
   const dailyReportGeneratedKeyRef = useRef("");
   const dailyReportKnownTaskIdsRef = useRef(null);
   const dailyReportKnownUserIdRef = useRef("");
+  const dailyReportTaskChangePendingRef = useRef(false);
 
   useEffect(() => {
     setTasks((current) => {
@@ -436,19 +438,23 @@ export default function App() {
     if (dailyReportKnownUserIdRef.current !== dailyReportUserId || dailyReportKnownTaskIdsRef.current === null) {
       dailyReportKnownUserIdRef.current = dailyReportUserId;
       dailyReportKnownTaskIdsRef.current = currentIds;
+      dailyReportTaskChangePendingRef.current = false;
       return;
     }
 
     const knownIds = dailyReportKnownTaskIdsRef.current;
-    const hasNewTaskInReportRange = tasks.some((task) => {
+    const newTaskIdsInReportRange = tasks.filter((task) => {
       if (dailyReportUserId && getTaskUserId(task) !== dailyReportUserId) return false;
       if (knownIds.has(String(task.id))) return false;
       return [0, 1, 2].some((offset) => isTaskVisibleOnDate(task, addDays(selectedDate, offset)));
-    });
+    }).map((task) => String(task.id));
 
     dailyReportKnownTaskIdsRef.current = currentIds;
-    if (hasNewTaskInReportRange) {
-      setDailyReportCreationVersion((version) => version + 1);
+    if (newTaskIdsInReportRange.length > 0) {
+      dailyReportTaskChangePendingRef.current = true;
+      setDailyReportCreationToken(newTaskIdsInReportRange.sort().join(","));
+    } else {
+      dailyReportTaskChangePendingRef.current = false;
     }
   }, [dailyReportUserId, selectedDate, tasks]);
 
@@ -467,9 +473,9 @@ export default function App() {
       JSON.stringify({
         selectedDate,
         userId: dailyReportUserId,
-        creationVersion: dailyReportCreationVersion,
+        creationToken: dailyReportCreationToken,
       }),
-    [dailyReportCreationVersion, dailyReportUserId, selectedDate],
+    [dailyReportCreationToken, dailyReportUserId, selectedDate],
   );
 
   useEffect(() => {
@@ -478,7 +484,17 @@ export default function App() {
       return undefined;
     }
     if (weatherApiStatus === "loading" || airQualityApiStatus === "loading") return undefined;
+    if (aiRecommendationRequestCount > 0) return undefined;
+    if (dailyReportTaskChangePendingRef.current) return undefined;
     if (dailyReportGeneratedKeyRef.current === dailyReportRequestKey) return undefined;
+
+    const cachedReport = readCachedDailyReport(dailyReportRequestKey);
+    if (cachedReport) {
+      dailyReportGeneratedKeyRef.current = dailyReportRequestKey;
+      setDailyAiReport(cachedReport);
+      setDailyAiReportLoading(false);
+      return undefined;
+    }
 
     const controller = new AbortController();
     setDailyAiReportLoading(true);
@@ -496,6 +512,7 @@ export default function App() {
           { signal: controller.signal },
         );
         setDailyAiReport(report);
+        writeCachedDailyReport(dailyReportRequestKey, report);
       } catch (error) {
         if (error?.name === "AbortError") return;
         console.error("Daily AI Report request failed", error);
@@ -516,6 +533,7 @@ export default function App() {
     };
   }, [
     airQualityApiStatus,
+    aiRecommendationRequestCount,
     currentUser,
     dailyReportRequestKey,
     weatherApiStatus,
@@ -3818,6 +3836,25 @@ function collectDailyReportTasks(tasks = [], selectedDate, activeCalendarUserId)
   });
 
   return { schedules, chores };
+}
+
+function readCachedDailyReport(key) {
+  try {
+    const value = sessionStorage.getItem(`${DAILY_REPORT_CACHE_PREFIX}${key}`);
+    if (!value) return null;
+    const report = JSON.parse(value);
+    return report?.cardText ? report : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedDailyReport(key, report) {
+  try {
+    sessionStorage.setItem(`${DAILY_REPORT_CACHE_PREFIX}${key}`, JSON.stringify(report));
+  } catch {
+    // Storage can be unavailable in private browsing or restricted webviews.
+  }
 }
 
 function collectDailyReportWeather(selectedDate, weatherByDate = {}, selectedDayDust = null) {
