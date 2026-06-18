@@ -148,6 +148,8 @@ function buildSystemPrompt() {
     "title은 일반 제목 대신 summary와 같은 한 줄 핵심 문장으로 작성한다.",
     "summary는 1문장, 45자 이내로 작성한다. GPT DAILY NOTE에 그대로 들어갈 짧은 문장이다.",
     "detail은 1문장, 80자 이내로 아주 짧게 작성한다.",
+    "detail에는 고정일정, 반복수업, 학교 시간표, 교과목 전체 나열을 쓰지 않는다.",
+    "detail에는 변동 일정, 가사일, 날씨 기반 안내, 남은 할 일만 자연스럽게 작성한다.",
     "반복 일정은 여러 날짜를 풀어 쓰지 말고 '매주 월~금 09:00-18:00 회사'처럼 한 줄 규칙으로만 요약한다.",
     "weatherTip과 taskTip은 해당 근거가 없으면 빈 문자열로 둔다.",
     "imageTheme은 homecare_laundry, homecare_cleaning, homecare_air, homecare_weather, homecare_schedule, homecare_default 중 하나로 작성한다.",

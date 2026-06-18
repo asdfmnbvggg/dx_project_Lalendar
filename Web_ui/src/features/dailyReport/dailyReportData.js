@@ -76,7 +76,9 @@ export function createTodayDailyReport({
   source = "gpt",
 }) {
   const normalizedText = String(cardText || fallbackText || "").trim();
-  const scheduleItems = tasks.filter((task) => !isApplianceTask(task)).map(toReportItem);
+  const scheduleTasks = tasks.filter((task) => !isApplianceTask(task));
+  const detailScheduleItems = scheduleTasks.filter((task) => !isFixedScheduleTask(task)).map(toReportItem);
+  const scheduleItems = scheduleTasks.map(toReportItem);
   const applianceItems = tasks.filter(isApplianceTask).map(toReportItem);
   const todoItems = tasks.map(toReportItem);
   const completedCount = todoItems.filter((item) => item.done).length;
@@ -85,10 +87,11 @@ export function createTodayDailyReport({
   const resolvedWeatherNotice = weatherNotice || buildWeatherNote(weather);
   const resolvedChoreNotice = choreNotice || buildChoreNote(applianceItems);
   const detailNotices = [weatherNotice, choreNotice].filter(Boolean);
-  const resolvedTitle = buildReportTitle(normalizedText, title);
+  const fallbackNote = buildFallbackDailyNote(scheduleItems, applianceItems);
+  const resolvedTitle = buildReportTitle(normalizedText, title, fallbackNote);
   const resolvedSummary = buildShortReportDetail({
     detail,
-    scheduleItems,
+    scheduleItems: detailScheduleItems,
     applianceItems,
     weatherNotice: resolvedWeatherNotice,
     choreNotice: resolvedChoreNotice,
@@ -139,17 +142,18 @@ function getPriorityNotice(priority, weatherNotice, choreNotice) {
   return choreNotice || weatherNotice || "오늘의 세부 일정과 진행 상황을 아래에서 확인해 주세요.";
 }
 
-function buildReportTitle(summary, fallbackTitle) {
-  const preferred = normalizeOneLine(summary);
-  const fallback = normalizeOneLine(fallbackTitle);
-  return trimSentence(preferred || fallback || "오늘의 가족 일정", 42);
+function buildReportTitle(summary, fallbackTitle, fallbackNote) {
+  const preferred = sanitizeTitleCandidate(summary);
+  const fallback = sanitizeTitleCandidate(fallbackTitle);
+  return trimSentence(preferred || fallback || fallbackNote || "오늘의 일정과 가사일을 확인해요.", 58);
 }
 
 function buildShortReportDetail({ detail, scheduleItems, applianceItems, weatherNotice, choreNotice, detailNotices }) {
   const generated = buildOneLineTaskDetail(scheduleItems, applianceItems);
   if (generated) return generated;
 
-  const source = normalizeOneLine(detail) || detailNotices.join(" ") || choreNotice || weatherNotice;
+  const detailText = normalizeOneLine(detail);
+  const source = (isFixedScheduleDetail(detailText) ? "" : detailText) || detailNotices.join(" ") || choreNotice || weatherNotice;
   return trimSentence(source || "오늘의 일정과 가사일을 한 줄로 정리했어요.", 72);
 }
 
@@ -180,6 +184,42 @@ function trimSentence(value, limit) {
 
 function normalizeOneLine(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function sanitizeTitleCandidate(value) {
+  const text = normalizeOneLine(value);
+  if (!text) return "";
+  if (/가족\s*일정\s*및\s*생활\s*정보|Daily\s*AI\s*Report|GPT\s*DAILY/i.test(text)) return "";
+  return text;
+}
+
+function buildFallbackDailyNote(scheduleItems, applianceItems) {
+  const scheduleText = summarizeItems(scheduleItems, "일정");
+  const applianceText = summarizeItems(applianceItems, "가사일");
+  if (scheduleText && applianceText) return `오늘은 ${scheduleText}이 있고, ${applianceText}도 예정되어 있어요.`;
+  if (scheduleText) return `오늘은 ${scheduleText}이 있습니다.`;
+  if (applianceText) return `오늘은 ${applianceText}이 예정되어 있어요.`;
+  return "오늘은 여유롭게 일정을 확인해도 좋아요.";
+}
+
+function isFixedScheduleTask(task = {}) {
+  const text = `${task.title || ""} ${task.place || ""} ${task.repeat || ""} ${task.type || ""} ${task.displayType || ""}`;
+  if (task.displayType === "fixed" || task.type === "fixed" || task.place === "고정 일정") return true;
+  if (Array.isArray(task.daysOfWeek) && task.daysOfWeek.length > 0) return true;
+  if (/매주|반복|weekly|고정\s*일정/i.test(text)) return true;
+  return isSchoolTimetableText(text);
+}
+
+function isFixedScheduleDetail(text) {
+  if (!text) return false;
+  if (/고정\s*일정|시간표|수업이\s*(있|이어|시작)|내일\s*\d{0,2}\s*월|모레\s*\d{0,2}\s*월/.test(text)) return true;
+  return isSchoolTimetableText(text);
+}
+
+function isSchoolTimetableText(text) {
+  const subjects = ["국어", "영어", "수학", "과학", "사회", "체육", "음악", "미술", "기술가정", "창체", "동아리"];
+  const matchCount = subjects.reduce((count, subject) => count + (String(text || "").includes(subject) ? 1 : 0), 0);
+  return matchCount >= 3;
 }
 
 function buildImageRecords(date, heroImageUrl, tasks) {
