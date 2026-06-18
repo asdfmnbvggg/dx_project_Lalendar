@@ -29,7 +29,7 @@ import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendat
 import { buildRoutineRecommendations } from "./services/routinePredictionService.js";
 import { predictHouseworkTask } from "./services/taskPredictionService.js";
 import { sendDeviceCommand, subscribeSensorLatest } from "./services/sensorRealtimeService.js";
-import { buildRealtimeAppliancePopups, buildScheduledWasherPopup, getPopupKey } from "./services/appliancePopupRuleService.js";
+import { THRESHOLDS, buildRealtimeAppliancePopups, buildScheduledWasherPopup, getPopupKey } from "./services/appliancePopupRuleService.js";
 
 const ENABLE_ONBOARDING_TASK_GENERATION = false;
 const SENSOR_DEVICE_ID = "living_room_01";
@@ -276,10 +276,31 @@ export default function App() {
           if (import.meta.env.DEV) console.log("[sensor] washer target result", { targetUserId, washerTask, alertMinutes });
           if (!isMasterUser(currentUser) && targetUserId !== currentUser.id) return null;
 
-          return buildScheduledWasherPopup(latestSensorData, {
+          const washerWeight = Number(latestSensorData?.weight);
+          const washerStatus = {
+            targetUserId,
+            alertMinutes,
+            scheduleId: washerTask?.id,
+            scheduleTitle: washerTask?.title,
+            weight: Number.isFinite(washerWeight) ? washerWeight : null,
+            weightThreshold: THRESHOLDS.washerEmptyWeight,
+            hasLaundry: Number.isFinite(washerWeight) && washerWeight > THRESHOLDS.washerEmptyWeight,
+            washerDoorOpen: latestSensorData?.washerDoorOpen === true,
+            runnable:
+              Number.isFinite(washerWeight) &&
+              washerWeight > THRESHOLDS.washerEmptyWeight &&
+              latestSensorData?.washerDoorOpen !== true,
+          };
+          if (import.meta.env.DEV) console.log("[sensor] washer status check result", washerStatus);
+
+          const popup = buildScheduledWasherPopup(latestSensorData, {
             washerTask,
             targetUserId,
           });
+          if (import.meta.env.DEV) console.log("[sensor] washer blocked result", { blocked: popup?.blocked ?? null, title: popup?.title || "", command: popup?.command || null });
+          if (import.meta.env.DEV) console.log("[sensor] washer executable popup created", { created: Boolean(popup && popup.blocked === false), popup });
+
+          return popup;
         })
         .filter((popup) => {
           if (!popup) return false;
@@ -919,15 +940,17 @@ export default function App() {
     }
 
     try {
-      await sendDeviceCommand(SENSOR_DEVICE_ID, {
+      const commandPayload = {
         command: sensorPopup.command,
         mode: sensorPopup.mode,
         applianceType: sensorPopup.applianceType,
         applianceName: sensorPopup.applianceName,
-        reason: sensorPopup.message,
+        reason: sensorPopup.reason || sensorPopup.message,
         targetUserId: sensorPopup.targetUserId,
-      });
-      if (import.meta.env.DEV) console.log("[sensor] device command sent", sensorPopup);
+      };
+      if (import.meta.env.DEV) console.log("[sensor] execute popup command payload", commandPayload);
+      await sendDeviceCommand(SENSOR_DEVICE_ID, commandPayload);
+      if (import.meta.env.DEV) console.log("[sensor] device command sent", { deviceId: SENSOR_DEVICE_ID, payload: commandPayload, popup: sensorPopup });
     } catch (error) {
       devWarn("[sensor] device command failed", error);
     } finally {

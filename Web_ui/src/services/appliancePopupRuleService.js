@@ -28,9 +28,11 @@ export function buildScheduledWasherPopup(sensor = {}, context = {}) {
   const targetUserId = context.targetUserId || "";
   const weight = toNumber(sensor.weight);
   const scheduleTitle = context.washerTask.title || "세탁 일정";
+  const scheduleKey = getWasherScheduleKey(context.washerTask);
 
   if (sensor.washerDoorOpen === true) {
     return {
+      type: "washer-schedule",
       applianceType: "WASHER",
       applianceName: "세탁기",
       mode: "작동 차단",
@@ -39,7 +41,8 @@ export function buildScheduledWasherPopup(sensor = {}, context = {}) {
       message: `오늘 ${scheduleTitle}이 있지만 세탁기 문이 열려 있습니다. 문을 닫은 뒤 세탁을 시작해 주세요.`,
       blocked: true,
       targetUserId,
-      scheduleKey: getWasherScheduleKey(context.washerTask),
+      scheduleKey,
+      source: "washer-schedule",
       metricLabel: "문 상태",
       metricValue: "열림",
       thresholdLabel: "닫힘 필요",
@@ -49,6 +52,7 @@ export function buildScheduledWasherPopup(sensor = {}, context = {}) {
 
   if (Number.isFinite(weight) && weight <= THRESHOLDS.washerEmptyWeight) {
     return {
+      type: "washer-schedule",
       applianceType: "WASHER",
       applianceName: "세탁기",
       mode: "작동 차단",
@@ -57,10 +61,32 @@ export function buildScheduledWasherPopup(sensor = {}, context = {}) {
       message: `오늘 ${scheduleTitle}이 있지만 세탁기 안에 세탁물이 감지되지 않습니다. 세탁물을 넣은 뒤 세탁을 시작해 주세요.`,
       blocked: true,
       targetUserId,
-      scheduleKey: getWasherScheduleKey(context.washerTask),
+      scheduleKey,
+      source: "washer-schedule",
       metricLabel: "현재 무게",
       metricValue: `${formatNumber(weight)}kg`,
       thresholdLabel: `${THRESHOLDS.washerEmptyWeight}kg 이하`,
+      updatedAt: sensor.last_updated || "",
+    };
+  }
+
+  if (Number.isFinite(weight) && weight > THRESHOLDS.washerEmptyWeight) {
+    return {
+      type: "washer-schedule",
+      applianceType: "WASHER",
+      applianceName: "세탁기",
+      title: "세탁기 작동을 시작할까요?",
+      message: "세탁 일정 시간이 되었어요. 표준 모드로 세탁을 시작할 수 있어요.",
+      mode: "표준",
+      command: "washer_start",
+      targetUserId,
+      blocked: false,
+      source: "washer-schedule",
+      scheduleKey,
+      reason: "세탁 일정 시간이 되어 표준 모드 실행을 요청했습니다.",
+      metricLabel: "현재 무게",
+      metricValue: `${formatNumber(weight)}kg`,
+      thresholdLabel: `${THRESHOLDS.washerEmptyWeight}kg 초과`,
       updatedAt: sensor.last_updated || "",
     };
   }
