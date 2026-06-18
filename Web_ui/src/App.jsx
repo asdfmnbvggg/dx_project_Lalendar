@@ -2076,6 +2076,30 @@ function buildDeviceCommandPayloadFromTask(task = {}, context = {}) {
     };
   }
 
+  if (task.applianceType === "ROBOT_CLEANER" || /로봇청소|로봇\s*청소|robot/i.test(`${task.title || ""} ${task.place || ""} ${task.applianceName || ""}`)) {
+    return {
+      applianceType: "ROBOT_CLEANER",
+      applianceId: "robot_cleaner",
+      applianceName: "로봇청소기",
+      command: "robot_cleaner_start",
+      mode: task.applianceMode || task.currentMode || "전체 청소",
+      reason: "알림 목록 실행 버튼에서 로봇청소기 실행을 요청했습니다.",
+      targetUserId: getTaskUserId(task),
+    };
+  }
+
+  if (task.applianceType === "DISHWASHER" || /식기세척|식기\s*세척|설거지|dishwasher/i.test(`${task.title || ""} ${task.place || ""} ${task.applianceName || ""}`)) {
+    return {
+      applianceType: "DISHWASHER",
+      applianceId: "dishwasher",
+      applianceName: "식기세척기",
+      command: "dishwasher_start",
+      mode: task.applianceMode || task.currentMode || "표준",
+      reason: "알림 목록 실행 버튼에서 식기세척기 실행을 요청했습니다.",
+      targetUserId: getTaskUserId(task),
+    };
+  }
+
   return null;
 }
 

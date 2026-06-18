@@ -241,6 +241,20 @@ void handleCommand(String command) {
   }
 
   // =========================
+  // 로봇청소기
+  // =========================
+  else if (command == "robot_cleaner_start") {
+    Serial.println("로봇청소기 실행 완료");
+  }
+
+  // =========================
+  // 식기세척기
+  // =========================
+  else if (command == "dishwasher_start") {
+    Serial.println("식기세척기 표준 모드 실행 완료");
+  }
+
+  // =========================
   // 알 수 없는 명령
   // =========================
   else {
