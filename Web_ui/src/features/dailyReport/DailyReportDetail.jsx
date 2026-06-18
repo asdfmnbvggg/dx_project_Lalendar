@@ -62,14 +62,20 @@ export default function DailyReportDetail({ report, onBack, onAddTodo, onUpdateT
         <section className="daily-report-character-note">
           <img src={report.characterImageUrl} alt="리포트를 안내하는 플래니 캐릭터" />
           <div>
-            <span>Planie’s note</span>
-            <p>오늘 일정과 가사일을 바탕으로 리포트를 정리했어요.</p>
+            <span>GPT DAILY NOTE</span>
+            <p>{report.aiNarrative}</p>
           </div>
         </section>
 
         <div className="daily-report-summary-grid">
           <ReportListCard icon={<CalendarDays />} title="오늘 일정 요약" items={report.scheduleItems} emptyText="등록된 개인 일정이 없어요." />
-          <ReportListCard icon={<WashingMachine />} title="가사일 · 가전 일정" items={report.applianceItems} emptyText="예정된 가전 작업이 없어요." />
+          <ReportListCard
+            icon={<WashingMachine />}
+            title="가사일 · 가전 일정"
+            items={report.applianceItems}
+            emptyText="예정된 가전 작업이 없어요."
+            note={report.choreNote}
+          />
           <article className="daily-report-info-card weather">
             <CloudSun />
             <div><span>날씨 기반 안내</span><p>{report.weatherNote}</p></div>
@@ -147,7 +153,7 @@ export default function DailyReportDetail({ report, onBack, onAddTodo, onUpdateT
   );
 }
 
-function ReportListCard({ icon, title, items, emptyText }) {
+function ReportListCard({ icon, title, items, emptyText, note = "" }) {
   return (
     <article className="daily-report-list-card">
       <div className="daily-report-list-title">{icon}<h2>{title}</h2></div>
@@ -162,6 +168,7 @@ function ReportListCard({ icon, title, items, emptyText }) {
           ))}
         </ul>
       ) : <p className="daily-report-empty">{emptyText}</p>}
+      {note && <p className="daily-report-gpt-note">{note}</p>}
     </article>
   );
 }

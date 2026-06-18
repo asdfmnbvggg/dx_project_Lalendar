@@ -258,6 +258,17 @@
   font-size: 13px;
 }
 
+.daily-report-gpt-note {
+  margin: 15px 0 0;
+  padding: 11px 12px;
+  border-radius: 13px;
+  color: #75462c;
+  background: #fff2e7;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
 .daily-report-info-card {
   display: flex;
   gap: 13px;

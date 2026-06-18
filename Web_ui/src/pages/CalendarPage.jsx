@@ -167,6 +167,7 @@ export default function CalendarPage({
         tags: buildAiReportTags(reportDate, reportVisibleTasks, mainCalendarTasksByDate),
         weatherNotice: dailyAiReport?.weatherNotice,
         choreNotice: dailyAiReport?.choreNotice,
+        priority: dailyAiReport?.priority,
       }),
     [dailyAiReport, filteredTasksByDate, mainCalendarTasksByDate, reportDate, reportText, reportVisibleTasks, reportWeather],
   );
