@@ -7,13 +7,18 @@ import {
 } from "../services/sensorRealtimeService";
 
 const DEVICE_ID = "living_room_01";
+const isDev = import.meta.env.DEV;
+
+function devLog(...args) {
+  if (isDev) console.log(...args);
+}
 
 function SensorTestPanel() {
   const [sensor, setSensor] = useState(null);
 
   useEffect(() => {
     const unsubscribe = subscribeSensorLatest(DEVICE_ID, (data) => {
-      console.log("실시간 센서 데이터:", data);
+      devLog("실시간 센서 데이터:", data);
       setSensor(data);
     });
 

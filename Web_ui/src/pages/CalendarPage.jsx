@@ -39,6 +39,12 @@ import {
   weatherIcon,
 } from "./calendarPage/calendarConstants.js";
 
+const isDev = import.meta.env.DEV;
+
+function devLog(...args) {
+  if (isDev) console.log(...args);
+}
+
 export default function CalendarPage({
   month,
   monthLabel,
@@ -1694,7 +1700,7 @@ function getDailyContextMenuPosition(anchor) {
   const top = belowTop + menuHeight <= viewportHeight - 8 ? belowTop : Math.max(8, aboveTop);
   const position = { left, top };
 
-  console.log("[daily-context-menu] card rect", {
+  devLog("[daily-context-menu] card rect", {
     left: Math.round(rect.left),
     top: Math.round(rect.top),
     right: Math.round(rect.right),
@@ -1702,7 +1708,7 @@ function getDailyContextMenuPosition(anchor) {
     width: Math.round(rect.width),
     height: Math.round(rect.height),
   });
-  console.log("[daily-context-menu] computed position", {
+  devLog("[daily-context-menu] computed position", {
     left: Math.round(position.left),
     top: Math.round(position.top),
   });
@@ -1726,7 +1732,7 @@ function DailyContextMenu({ task, variant, activeAction, position, onChooseConte
     if (!menuRef.current || !position) return;
 
     const style = window.getComputedStyle(menuRef.current);
-    console.log("[daily-context-menu] applied style", {
+    devLog("[daily-context-menu] applied style", {
       left: style.left,
       top: style.top,
       position: style.position,

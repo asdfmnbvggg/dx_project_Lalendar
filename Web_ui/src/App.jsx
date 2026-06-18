@@ -33,6 +33,7 @@ import { buildRealtimeAppliancePopups, buildScheduledWasherPopup, getPopupKey } 
 const ENABLE_ONBOARDING_TASK_GENERATION = false;
 const SENSOR_DEVICE_ID = "living_room_01";
 const POPUP_COOLDOWN_MS = 10 * 60 * 1000;
+const isDev = import.meta.env.DEV;
 const CALENDAR_SCHEDULE_COLORS = ["#ff7976", "#ffd5d6", "#ffc68f", "#ffb063", "#fff294", "#cbf39d", "#95cff5", "#d3b5f3"];
 const LEGACY_CALENDAR_COLOR_MAP = {
   "#fb7185": "#ff7976",
@@ -199,7 +200,7 @@ export default function App() {
         }
       })
       .catch((error) => {
-        console.warn(error);
+        devWarn(error);
         if (isActive) {
           setCalendarWeatherByDate({});
           setWeatherApiStatus("error");
@@ -215,16 +216,16 @@ export default function App() {
     if (!currentUser || !isOnboardingComplete) return undefined;
 
     return subscribeSensorLatest(SENSOR_DEVICE_ID, (sensorData) => {
-      console.log("[sensor] realtime data received", sensorData);
-      console.log("[sensor] current user", currentUser);
+      if (import.meta.env.DEV) console.log("[sensor] realtime data received", sensorData);
+      if (import.meta.env.DEV) console.log("[sensor] current user", currentUser);
       setLatestSensorData(sensorData);
 
       const popups = buildRealtimeAppliancePopups(sensorData, {
         targetUserIds: getRealtimeApplianceTargetUserIds(onboardingSetup.applianceAssignees, activeCalendarUser, currentUser),
       });
       const scheduleFilteredPopups = filterRealtimePopupsBySchedule(popups, tasks, new Date());
-      console.log("[sensor] realtime threshold result", popups);
-      console.log("[sensor] realtime schedule filtered result", scheduleFilteredPopups);
+      if (import.meta.env.DEV) console.log("[sensor] realtime threshold result", popups);
+      if (import.meta.env.DEV) console.log("[sensor] realtime schedule filtered result", scheduleFilteredPopups);
 
       enqueueSensorPopups(
         scheduleFilteredPopups.filter((popup) => popup.targetUserId === currentUser.id),
@@ -242,11 +243,11 @@ export default function App() {
       const nowMinutes = now.getHours() * 60 + now.getMinutes();
       const washerCandidates = getDueWasherAlertCandidates(tasks, today, nowMinutes, activeCalendarUser, currentUser);
 
-      console.log("[sensor] washer schedule detected", washerCandidates);
+      if (import.meta.env.DEV) console.log("[sensor] washer schedule detected", washerCandidates);
 
       const popups = washerCandidates
         .map(({ washerTask, targetUserId, alertMinutes }) => {
-          console.log("[sensor] washer target result", { targetUserId, washerTask, alertMinutes });
+          if (import.meta.env.DEV) console.log("[sensor] washer target result", { targetUserId, washerTask, alertMinutes });
           if (targetUserId !== currentUser.id) return null;
 
           return buildScheduledWasherPopup(latestSensorData, {
@@ -258,13 +259,13 @@ export default function App() {
           if (!popup) return false;
           const popupKey = getPopupKey(popup);
           if (washerPopupShownRef.current[popupKey]) {
-            console.log("[sensor] washer popup skipped: already shown", popupKey);
+            if (import.meta.env.DEV) console.log("[sensor] washer popup skipped: already shown", popupKey);
             return false;
           }
           return true;
         });
 
-      console.log("[sensor] washer threshold result", popups);
+      if (import.meta.env.DEV) console.log("[sensor] washer threshold result", popups);
       enqueueSensorPopups(popups, "washer-schedule");
     };
 
@@ -734,7 +735,7 @@ export default function App() {
 
   function enqueueSensorPopups(popups, source = "sensor", options = {}) {
     if (popups.length === 0) {
-      console.log("[sensor] popup display skipped: no matching visible rule", source);
+      if (import.meta.env.DEV) console.log("[sensor] popup display skipped: no matching visible rule", source);
       return;
     }
 
@@ -744,7 +745,7 @@ export default function App() {
       const lastClosedAt = sensorPopupCooldownRef.current[popupKey] || 0;
 
       if (!options.bypassCooldown && now - lastClosedAt < POPUP_COOLDOWN_MS) {
-        console.log("[sensor] popup display skipped: cooldown", source, popupKey);
+        if (import.meta.env.DEV) console.log("[sensor] popup display skipped: cooldown", source, popupKey);
         return false;
       }
 
@@ -758,19 +759,19 @@ export default function App() {
       const nextPopups = availablePopups.filter((popup) => getPopupKey(popup) !== currentPopupKey);
 
       if (nextPopups.length === 0) {
-        console.log("[sensor] popup display skipped: already visible", source);
+        if (import.meta.env.DEV) console.log("[sensor] popup display skipped: already visible", source);
         return currentPopup;
       }
 
       if (currentPopup) {
         setSensorPopupQueue((queue) => appendUniqueSensorPopups(queue, nextPopups));
-        console.log("[sensor] popup queued", source, nextPopups.map(getPopupKey));
+        if (import.meta.env.DEV) console.log("[sensor] popup queued", source, nextPopups.map(getPopupKey));
         return currentPopup;
       }
 
       const [nextPopup, ...queuedPopups] = nextPopups;
       setSensorPopupQueue((queue) => appendUniqueSensorPopups(queue, queuedPopups));
-      console.log("[sensor] popup displayed", source, getPopupKey(nextPopup));
+      if (import.meta.env.DEV) console.log("[sensor] popup displayed", source, getPopupKey(nextPopup));
       return nextPopup;
     });
   }
@@ -787,7 +788,7 @@ export default function App() {
       const [nextPopup, ...restQueue] = queue;
       setSensorPopup(nextPopup || null);
       if (nextPopup) {
-        console.log("[sensor] popup displayed from queue", getPopupKey(nextPopup));
+        if (import.meta.env.DEV) console.log("[sensor] popup displayed from queue", getPopupKey(nextPopup));
       }
       return restQueue;
     });
@@ -808,9 +809,9 @@ export default function App() {
         reason: sensorPopup.message,
         targetUserId: sensorPopup.targetUserId,
       });
-      console.log("[sensor] device command sent", sensorPopup);
+      if (import.meta.env.DEV) console.log("[sensor] device command sent", sensorPopup);
     } catch (error) {
-      console.warn("[sensor] device command failed", error);
+      devWarn("[sensor] device command failed", error);
     } finally {
       closeSensorPopup();
     }
@@ -1499,7 +1500,7 @@ function filterRealtimePopupsBySchedule(popups = [], tasks = [], now = new Date(
 function canSendAirConditionerAlert(popup = {}, tasks = [], now = new Date()) {
   const hasAssignedUser = Boolean(popup.targetUserId);
   if (!hasAssignedUser) {
-    console.log("[sensor] air conditioner popup skipped: no assigned user", popup);
+    if (import.meta.env.DEV) console.log("[sensor] air conditioner popup skipped: no assigned user", popup);
     return false;
   }
 
@@ -1515,7 +1516,7 @@ function canSendAirConditionerAlert(popup = {}, tasks = [], now = new Date()) {
   const canSend = currentMinutes >= alertStartMinutes;
 
   if (!canSend) {
-    console.log("[sensor] air conditioner popup skipped: before fixed schedule return window", {
+    if (import.meta.env.DEV) console.log("[sensor] air conditioner popup skipped: before fixed schedule return window", {
       targetUserId: popup.targetUserId,
       currentMinutes,
       alertStartMinutes,
@@ -1625,6 +1626,10 @@ const fixedScheduleColorByTitle = {
   "기술가정": "#95cff5",
   "동아리": "#cbf39d",
 };
+
+function devWarn(...args) {
+  if (isDev) console.warn(...args);
+}
 const fallbackFixedScheduleColors = CALENDAR_SCHEDULE_COLORS;
 
 const fixedScheduleTemplates = {

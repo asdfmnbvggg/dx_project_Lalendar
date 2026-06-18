@@ -1,4 +1,9 @@
 const STORAGE_KEY = "lalendar.familySchedules";
+const isDev = import.meta.env.DEV;
+
+function devWarn(...args) {
+  if (isDev) console.warn(...args);
+}
 
 export function loadSchedules() {
   if (typeof window === "undefined") return [];
@@ -8,7 +13,7 @@ export function loadSchedules() {
     const parsed = saved ? JSON.parse(saved) : [];
     return Array.isArray(parsed) ? parsed : [];
   } catch (error) {
-    console.warn("Failed to load family schedules", error);
+    devWarn("Failed to load family schedules", error);
     return [];
   }
 }
