@@ -5,7 +5,7 @@ import requests
 
 # ⚠️ 본인의 아두이노 포트에 맞게 수정하세요.
 PORT = 'COM4' 
-BAUDRATE = 9600
+BAUDRATE = 115200
 
 # 🎯 사용자님의 Firebase Realtime Database 주소 (반드시 https:// 로 시작해야 합니다)
 FIREBASE_URL = "https://lgdxsirius-default-rtdb.asia-southeast1.firebasedatabase.app/sensor_latest/living_room_01.json"
