@@ -1,13 +1,13 @@
 ﻿metric,value
-전체 샘플 수,709
-정상 예측 성공 샘플 수,N/A
-JSON 파싱 성공률,N/A
-task_appliance 정확도,N/A
-task_appliance_mode 정확도,N/A
-task_date 정확도,N/A
-task_start_time 정확도,N/A
-task_end_time 정확도,N/A
-전체 필드 Exact Match Accuracy,N/A
-평균 응답 길이,N/A
-실패 케이스 수,N/A
-주요 실패 유형: 파인튜닝/평가 미실행,709
+preview_note,"mock preview values, not real Together API results"
+total_validation_samples,709
+successful_prediction_samples,677
+json_parse_success_rate,99.29%
+task_appliance_accuracy,98.31%
+task_appliance_mode_accuracy,97.46%
+task_date_accuracy,99.29%
+task_start_time_accuracy,98.31%
+task_end_time_accuracy,99.29%
+all_field_exact_match_accuracy,95.49%
+average_response_length,138.69
+failure_case_count,32
