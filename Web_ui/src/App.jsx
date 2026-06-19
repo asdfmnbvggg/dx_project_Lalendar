@@ -989,9 +989,6 @@ export default function App() {
 
   function selectMainTab(id) {
     setActiveTab(id);
-    if (id === "menu") {
-      showNextSensorDemoPopup();
-    }
     if (id === "schedule" && !isOnboardingComplete && !hasGeneratedOnboardingTasks) {
       setOnboardingSetup(createDefaultOnboardingSetup());
       setOnboardingComplete(false);
