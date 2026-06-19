@@ -9,6 +9,9 @@ import dishWasherImage from "../assets/appliances/식기세척기.png";
 import DailyReportCard from "../features/dailyReport/DailyReportCard.jsx";
 import DailyReportDetail from "../features/dailyReport/DailyReportDetail.jsx";
 import { createTodayDailyReport } from "../features/dailyReport/dailyReportData.js";
+import { fetchAirQuality } from "../services/airQualityService.js";
+import { fetchMidWeather } from "../services/midWeatherService.js";
+import { fetchShortWeather } from "../services/weatherService.js";
 
 import {
   airConditionerImage,
@@ -107,6 +110,7 @@ export default function CalendarPage({
   const [selectedApplianceModeId, setSelectedApplianceModeId] = useState("");
   const [applianceModeMessage, setApplianceModeMessage] = useState("");
   const [isDatePickerOpen, setDatePickerOpen] = useState(false);
+  const [isEnvironmentOpen, setEnvironmentOpen] = useState(false);
   const [draftDate, setDraftDate] = useState(() => parseDateKey(selectedDate));
   const [dailyReportRouteId, setDailyReportRouteId] = useState(() => getDailyReportRouteId());
   const reportDate = isDateKeyValue(dailyReportRouteId) ? dailyReportRouteId : selectedDate;
@@ -877,7 +881,23 @@ export default function CalendarPage({
                   >
                     <strong>{day}</strong>
                     {hasWeatherData ? (
-                      <span className="day-weather">
+                      <span
+                        className={["day-weather", isHouseCalendar ? "clickable" : ""].filter(Boolean).join(" ")}
+                        role={isHouseCalendar ? "button" : undefined}
+                        tabIndex={isHouseCalendar ? 0 : undefined}
+                        aria-label={isHouseCalendar ? "날씨와 미세먼지 상세 보기" : undefined}
+                        onClick={(event) => {
+                          if (!isHouseCalendar) return;
+                          event.stopPropagation();
+                          setEnvironmentOpen(true);
+                        }}
+                        onKeyDown={(event) => {
+                          if (!isHouseCalendar || !["Enter", " "].includes(event.key)) return;
+                          event.preventDefault();
+                          event.stopPropagation();
+                          setEnvironmentOpen(true);
+                        }}
+                      >
                         <>
                           <span className="weather-icon" role="img" aria-label={weather.sky || weather.pty || "날씨"}>
                             {weatherIcon[weather.icon] || weatherIcon.unknown}
@@ -896,7 +916,17 @@ export default function CalendarPage({
                         </>
                       </span>
                     ) : weatherApiStatus !== "loading" ? (
-                      <span className="day-weather empty">
+                      <span
+                        className={["day-weather empty", isHouseCalendar ? "clickable" : ""].filter(Boolean).join(" ")}
+                        role={isHouseCalendar ? "button" : undefined}
+                        tabIndex={isHouseCalendar ? 0 : undefined}
+                        aria-label={isHouseCalendar ? "날씨와 미세먼지 상세 보기" : undefined}
+                        onClick={(event) => {
+                          if (!isHouseCalendar) return;
+                          event.stopPropagation();
+                          setEnvironmentOpen(true);
+                        }}
+                      >
                         <em>안 받아와짐.</em>
                       </span>
                     ) : null}
@@ -1066,6 +1096,8 @@ export default function CalendarPage({
           </div>
         )}
       </section>
+
+      {isEnvironmentOpen && <WeatherEnvironmentModal onClose={() => setEnvironmentOpen(false)} />}
     </section>
   );
 }
@@ -1098,6 +1130,243 @@ function SchedulePlanningLoadingPage() {
       </div>
     </section>
   );
+}
+
+function WeatherEnvironmentModal({ onClose }) {
+  const [environmentData, setEnvironmentData] = useState(() => ({
+    short: { status: "idle", data: null, error: "" },
+    mid: { status: "idle", data: null, error: "" },
+    air: { status: "idle", data: null, error: "" },
+  }));
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadEnvironmentData() {
+      setEnvironmentData({
+        short: { status: "loading", data: null, error: "" },
+        mid: { status: "loading", data: null, error: "" },
+        air: { status: "loading", data: null, error: "" },
+      });
+
+      const [shortResult, midResult, airResult] = await Promise.allSettled([
+        fetchShortWeather(),
+        fetchMidWeather(),
+        fetchAirQuality(),
+      ]);
+
+      if (!isActive) return;
+
+      setEnvironmentData({
+        short: resultToApiState(shortResult),
+        mid: resultToApiState(midResult),
+        air: resultToApiState(airResult),
+      });
+    }
+
+    loadEnvironmentData();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  function refreshEnvironmentData() {
+    setEnvironmentData((current) => ({
+      short: { ...current.short, status: "loading", error: "" },
+      mid: { ...current.mid, status: "loading", error: "" },
+      air: { ...current.air, status: "loading", error: "" },
+    }));
+
+    Promise.allSettled([fetchShortWeather(), fetchMidWeather(), fetchAirQuality()]).then(([shortResult, midResult, airResult]) => {
+      setEnvironmentData({
+        short: resultToApiState(shortResult),
+        mid: resultToApiState(midResult),
+        air: resultToApiState(airResult),
+      });
+    });
+  }
+
+  return createPortal(
+    <div className="weather-environment-backdrop" role="presentation" onClick={onClose}>
+      <section className="weather-environment-dialog" role="dialog" aria-modal="true" aria-labelledby="weather-environment-title" onClick={(event) => event.stopPropagation()}>
+        <button type="button" className="weather-environment-close" aria-label="닫기" onClick={onClose}>
+          <X size={20} />
+        </button>
+        <EnvironmentDataPanel data={environmentData} onRefresh={refreshEnvironmentData} titleId="weather-environment-title" />
+      </section>
+    </div>,
+    document.body,
+  );
+}
+
+function EnvironmentDataPanel({ data, onRefresh, titleId }) {
+  const isLoading = Object.values(data).some((item) => item.status === "loading");
+  const shortItems = normalizePayloadList(data.short.data);
+  const midItems = normalizePayloadList(data.mid.data);
+  const airItems = normalizePayloadList(data.air.data);
+  const airNow = airItems[0] || (data.air.data && typeof data.air.data === "object" ? data.air.data : null);
+
+  return (
+    <section className="environment-panel" aria-label="날씨와 미세먼지">
+      <div className="environment-panel-head">
+        <div>
+          <h2 id={titleId}>오늘의 환경</h2>
+          <p>단기예보, 중기예보, 미세먼지 데이터를 API에서 불러와요.</p>
+        </div>
+        <button type="button" onClick={onRefresh} disabled={isLoading}>
+          {isLoading ? "불러오는 중" : "새로고침"}
+        </button>
+      </div>
+
+      <div className="environment-grid">
+        <ForecastSummaryCard title="단기예보" state={data.short} items={shortItems} emptyText="단기예보 데이터가 없습니다." />
+        <ForecastSummaryCard title="중기예보" state={data.mid} items={midItems} emptyText="중기예보 데이터가 없습니다." />
+        <AirQualityCard state={data.air} item={airNow} />
+      </div>
+    </section>
+  );
+}
+
+function ForecastSummaryCard({ title, state, items, emptyText }) {
+  return (
+    <article className="environment-card">
+      <span>{title}</span>
+      {state.status === "loading" && <p className="environment-message">불러오는 중...</p>}
+      {state.status === "error" && <p className="environment-error">{state.error || "데이터를 불러오지 못했어요."}</p>}
+      {state.status === "success" && items.length === 0 && <p className="environment-message">{emptyText}</p>}
+      {state.status === "success" && items.length > 0 && (
+        <div className="environment-forecast-list">
+          {items.slice(0, 3).map((item) => (
+            <div className="environment-forecast-row" key={item.date || item.fcstDate || item.weatherText}>
+              <strong>{formatWeatherDate(item.date)}</strong>
+              <span>
+                {formatWeatherIcon(item.icon)}
+                {formatWeatherTemperatures(item)}
+              </span>
+              <small>{formatWeatherDetail(item)}</small>
+            </div>
+          ))}
+        </div>
+      )}
+    </article>
+  );
+}
+
+function AirQualityCard({ state, item }) {
+  const grade = item ? item.khaiGrade || item.pm10Grade || item.pm25Grade || item.grade || item.status : "";
+
+  return (
+    <article className="environment-card air">
+      <span>미세먼지</span>
+      {state.status === "loading" && <p className="environment-message">불러오는 중...</p>}
+      {state.status === "error" && <p className="environment-error">{state.error || "미세먼지 데이터를 불러오지 못했어요."}</p>}
+      {state.status === "success" && !item && <p className="environment-message">미세먼지 데이터가 없습니다.</p>}
+      {state.status === "success" && item && (
+        <div className="environment-air-body">
+          <strong>{formatAirQualityGrade(grade)}</strong>
+          <small>
+            PM10 {formatNullableValue(item.pm10Value, "ug/m3")} · PM2.5 {formatNullableValue(item.pm25Value, "ug/m3")}
+          </small>
+          <small>{item.stationName || state.data?.stationName || ""}</small>
+        </div>
+      )}
+    </article>
+  );
+}
+
+function resultToApiState(result) {
+  if (result.status === "fulfilled") {
+    return { status: "success", data: result.value, error: "" };
+  }
+
+  return {
+    status: "error",
+    data: null,
+    error: result.reason instanceof Error ? result.reason.message : "API 호출에 실패했습니다.",
+  };
+}
+
+function normalizePayloadList(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (!payload || typeof payload !== "object") return [];
+
+  const candidates = [
+    payload.data,
+    payload.items,
+    payload.list,
+    payload.results,
+    payload.response?.body?.items?.item,
+    payload.response?.body?.items,
+    payload.body?.items?.item,
+    payload.body?.items,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+    if (candidate && typeof candidate === "object") return [candidate];
+  }
+
+  return [payload];
+}
+
+function formatWeatherDate(date) {
+  if (!date) return "";
+  const text = String(date);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+
+  const [, month, day] = text.split("-");
+  return `${Number(month)}월 ${Number(day)}일`;
+}
+
+function formatWeatherTemperatures(item) {
+  const minTemp = item.minTemp ?? item.minTemperature ?? item.tmn;
+  const maxTemp = item.maxTemp ?? item.maxTemperature ?? item.tmx;
+  const currentTemp = item.temp ?? item.temperature ?? item.tmp;
+
+  if (Number.isFinite(Number(minTemp)) || Number.isFinite(Number(maxTemp))) {
+    return `${formatNullableValue(minTemp, "C")} / ${formatNullableValue(maxTemp, "C")}`;
+  }
+
+  return Number.isFinite(Number(currentTemp)) ? `${currentTemp}C` : "기온 정보 없음";
+}
+
+function formatWeatherIcon(icon) {
+  const iconMap = {
+    sunny: "☀️ ",
+    partly_cloudy: "⛅ ",
+    cloudy: "☁️ ",
+    rain: "🌧️ ",
+    snow: "❄️ ",
+  };
+
+  return iconMap[icon] || "";
+}
+
+function formatWeatherDetail(item) {
+  const parts = [
+    item.sky,
+    item.pty,
+    Number.isFinite(Number(item.pop)) ? `강수확률 ${item.pop}%` : "",
+    Number.isFinite(Number(item.humidity)) ? `습도 ${item.humidity}%` : "",
+  ].filter(Boolean);
+
+  return parts.length ? parts.join(" · ") : item.source || "상세 정보 없음";
+}
+
+function formatAirQualityGrade(grade) {
+  const gradeMap = {
+    1: "좋음",
+    2: "보통",
+    3: "나쁨",
+    4: "매우 나쁨",
+  };
+
+  return gradeMap[grade] || grade || "등급 정보 없음";
+}
+
+function formatNullableValue(value, suffix = "") {
+  return value === null || value === undefined || value === "" || value === "-" ? "정보 없음" : `${value}${suffix}`;
 }
 
 function getHouseworkApplianceOptions(ownerId, applianceAssignees = {}) {
