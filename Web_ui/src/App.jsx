@@ -18,7 +18,7 @@ import CrewPage from "./pages/CrewPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import TaskComposer from "./components/TaskComposer.jsx";
 import DetailPanel from "./components/DetailPanel.jsx";
-import DeviceTab from "./components/DeviceTab.jsx";
+import DeviceTab from "./components/DeviceTabSynced.jsx";
 import CareTab from "./components/CareTab.jsx";
 import MenuTab from "./components/MenuTab.jsx";
 import introLogo from "./assets/intro.png";
@@ -1501,7 +1501,15 @@ export default function App() {
           </div>
         )}
         {activeTab === "schedule" && isOnboardingComplete && <CalendarPage {...pageProps} />}
-        {activeTab === "devices" && <DeviceTab onOpenNotifications={openNotificationPopover} />}
+        {activeTab === "devices" && (
+          <DeviceTab
+            onOpenNotifications={openNotificationPopover}
+            tasksByDate={tasksByDate}
+            selectedDate={selectedDate}
+            currentUser={currentUser}
+            activeCalendarUser={activeCalendarUser}
+          />
+        )}
         {activeTab === "care" && <CareTab onOpenNotifications={openNotificationPopover} />}
         {activeTab === "menu" && <MenuTab onOpenNotifications={openNotificationPopover} />}
 
