@@ -43,10 +43,8 @@ import {
   weatherIcon,
 } from "./calendarPage/calendarConstants.js";
 
-const isDev = import.meta.env.DEV;
-
-function devLog(...args) {
-  if (isDev) console.log(...args);
+function devLog() {
+  // Keep local debugging silent so user and schedule data is not exposed in the console.
 }
 
 export default function CalendarPage({

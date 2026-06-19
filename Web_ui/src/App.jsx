@@ -354,17 +354,12 @@ export default function App() {
     if (!currentUser || !isOnboardingComplete) return undefined;
 
     return subscribeSensorLatest(SENSOR_DEVICE_ID, (sensorData) => {
-      if (import.meta.env.DEV) console.log("[sensor] realtime data received", sensorData);
-      if (import.meta.env.DEV) console.log("[sensor] current user", currentUser);
       setLatestSensorData(sensorData);
 
       const popups = buildRealtimeAppliancePopups(sensorData, {
         targetUserIds: getRealtimeApplianceTargetUserIds(onboardingSetup.applianceAssignees, activeCalendarUser, currentUser),
       });
       const scheduleFilteredPopups = filterRealtimePopupsBySchedule(popups, tasks, new Date());
-      if (import.meta.env.DEV) console.log("[sensor] realtime threshold result", popups);
-      if (import.meta.env.DEV) console.log("[sensor] realtime schedule filtered result", scheduleFilteredPopups);
-
       enqueueSensorPopups(scheduleFilteredPopups.filter((popup) => isMasterUser(currentUser) || popup.targetUserId === currentUser.id), "realtime");
     });
   }, [activeCalendarUser, currentUser, isOnboardingComplete, onboardingSetup.applianceAssignees, tasks]);
@@ -378,11 +373,8 @@ export default function App() {
       const nowMinutes = now.getHours() * 60 + now.getMinutes();
       const washerCandidates = getDueWasherAlertCandidates(tasks, today, nowMinutes, activeCalendarUser, currentUser);
 
-      if (import.meta.env.DEV) console.log("[sensor] washer schedule detected", washerCandidates);
-
       const popups = washerCandidates
         .map(({ washerTask, targetUserId, alertMinutes }) => {
-          if (import.meta.env.DEV) console.log("[sensor] washer target result", { targetUserId, washerTask, alertMinutes });
           if (!isMasterUser(currentUser) && targetUserId !== currentUser.id) return null;
 
           const washerWeight = Number(latestSensorData?.weight);
@@ -400,14 +392,10 @@ export default function App() {
               washerWeight > THRESHOLDS.washerEmptyWeight &&
               latestSensorData?.washerDoorOpen !== true,
           };
-          if (import.meta.env.DEV) console.log("[sensor] washer status check result", washerStatus);
-
           const popup = buildScheduledWasherPopup(latestSensorData, {
             washerTask,
             targetUserId,
           });
-          if (import.meta.env.DEV) console.log("[sensor] washer blocked result", { blocked: popup?.blocked ?? null, title: popup?.title || "", command: popup?.command || null });
-          if (import.meta.env.DEV) console.log("[sensor] washer executable popup created", { created: Boolean(popup && popup.blocked === false), popup });
 
           return popup;
         })
@@ -415,13 +403,11 @@ export default function App() {
           if (!popup) return false;
           const popupKey = getPopupKey(popup);
           if (washerPopupShownRef.current[popupKey]) {
-            if (import.meta.env.DEV) console.log("[sensor] washer popup skipped: already shown", popupKey);
             return false;
           }
           return true;
         });
 
-      if (import.meta.env.DEV) console.log("[sensor] washer threshold result", popups);
       enqueueSensorPopups(popups, "washer-schedule");
     };
 
@@ -600,8 +586,6 @@ export default function App() {
         writeCachedDailyReport(dailyReportRequestKey, report);
       } catch (error) {
         if (error?.name === "AbortError") return;
-        console.error("Daily AI Report request failed", error);
-        console.warn("GPT daily report generation failed, using fallback");
         setDailyAiReport(createDailyReportFallback());
       } finally {
         if (!controller.signal.aborted) setDailyAiReportLoading(false);
@@ -956,7 +940,6 @@ export default function App() {
         endTime: aiTask.endTime,
       });
     } catch (error) {
-      console.error("AI housework recommendation failed", error);
       setAiRecommendationNotice(
         error?.code === "TOGETHER_API_KEY_MISSING"
           ? "AI API 설정이 필요해요. Vercel 환경변수를 확인해 주세요."
@@ -1154,11 +1137,9 @@ export default function App() {
       throw new Error("No executable appliance command for this task");
     }
 
-    if (import.meta.env.DEV) console.log("[calendar] appliance command payload", payload);
     logAnalyticsEvent("device_execute_click", payload);
     logDeviceExecuteEvent(taskWithMode, payload);
     await sendDeviceCommand(SENSOR_DEVICE_ID, payload);
-    if (import.meta.env.DEV) console.log("[calendar] appliance command sent", { deviceId: SENSOR_DEVICE_ID, payload });
     return payload;
   }
 
@@ -1186,7 +1167,6 @@ export default function App() {
 
   function enqueueSensorPopups(popups, source = "sensor", options = {}) {
     if (popups.length === 0) {
-      if (import.meta.env.DEV) console.log("[sensor] popup display skipped: no matching visible rule", source);
       return;
     }
 
@@ -1196,7 +1176,6 @@ export default function App() {
       const lastClosedAt = sensorPopupCooldownRef.current[popupKey] || 0;
 
       if (!options.bypassCooldown && now - lastClosedAt < POPUP_COOLDOWN_MS) {
-        if (import.meta.env.DEV) console.log("[sensor] popup display skipped: cooldown", source, popupKey);
         return false;
       }
 
@@ -1210,19 +1189,16 @@ export default function App() {
       const nextPopups = availablePopups.filter((popup) => getPopupKey(popup) !== currentPopupKey);
 
       if (nextPopups.length === 0) {
-        if (import.meta.env.DEV) console.log("[sensor] popup display skipped: already visible", source);
         return currentPopup;
       }
 
       if (currentPopup) {
         setSensorPopupQueue((queue) => appendUniqueSensorPopups(queue, nextPopups));
-        if (import.meta.env.DEV) console.log("[sensor] popup queued", source, nextPopups.map(getPopupKey));
         return currentPopup;
       }
 
       const [nextPopup, ...queuedPopups] = nextPopups;
       setSensorPopupQueue((queue) => appendUniqueSensorPopups(queue, queuedPopups));
-      if (import.meta.env.DEV) console.log("[sensor] popup displayed", source, getPopupKey(nextPopup));
       return nextPopup;
     });
   }
@@ -1238,9 +1214,6 @@ export default function App() {
     setSensorPopupQueue((queue) => {
       const [nextPopup, ...restQueue] = queue;
       setSensorPopup(nextPopup || null);
-      if (nextPopup) {
-        if (import.meta.env.DEV) console.log("[sensor] popup displayed from queue", getPopupKey(nextPopup));
-      }
       return restQueue;
     });
   }
@@ -1262,11 +1235,9 @@ export default function App() {
         targetUserId: sensorPopup.targetUserId,
         requestedBy: currentUser?.id || "",
       });
-      if (import.meta.env.DEV) console.log("[sensor] execute popup command payload", commandPayload);
       logAnalyticsEvent("device_execute_click", commandPayload);
       logDeviceExecuteEvent(sensorPopup, commandPayload);
       await sendDeviceCommand(SENSOR_DEVICE_ID, commandPayload);
-      if (import.meta.env.DEV) console.log("[sensor] device command sent", { deviceId: SENSOR_DEVICE_ID, payload: commandPayload, popup: sensorPopup });
     } catch (error) {
       devWarn("[sensor] device command failed", error);
     } finally {
@@ -1992,7 +1963,6 @@ function getRealtimeApplianceTargetUserIds(applianceAssignees = {}, activeCalend
 function filterRealtimePopupsBySchedule(popups = [], tasks = [], now = new Date()) {
   return popups.filter((popup) => {
     if (popup.applianceType === "WASHER") {
-      if (import.meta.env.DEV) console.log("[sensor] realtime washer popup skipped: washer is schedule-only", popup);
       return false;
     }
     if (popup.applianceType !== "AIR_CONDITIONER") return true;
@@ -2003,7 +1973,6 @@ function filterRealtimePopupsBySchedule(popups = [], tasks = [], now = new Date(
 function canSendAirConditionerAlert(popup = {}, tasks = [], now = new Date()) {
   const hasAssignedUser = Boolean(popup.targetUserId);
   if (!hasAssignedUser) {
-    if (import.meta.env.DEV) console.log("[sensor] air conditioner popup skipped: no assigned user", popup);
     return false;
   }
 
@@ -2017,14 +1986,6 @@ function canSendAirConditionerAlert(popup = {}, tasks = [], now = new Date()) {
 
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const canSend = currentMinutes >= alertStartMinutes;
-
-  if (!canSend) {
-    if (import.meta.env.DEV) console.log("[sensor] air conditioner popup skipped: before fixed schedule return window", {
-      targetUserId: popup.targetUserId,
-      currentMinutes,
-      alertStartMinutes,
-    });
-  }
 
   return canSend;
 }
@@ -2086,11 +2047,9 @@ function isWasherScheduleTask(task = {}) {
 }
 
 async function sendDeviceCommandFromNotification(payload = {}) {
-  if (import.meta.env.DEV) console.log("[notification] device command payload", payload);
   logAnalyticsEvent("device_execute_click", payload);
   logDeviceExecuteEvent(payload, payload);
   await sendDeviceCommand(SENSOR_DEVICE_ID, payload);
-  if (import.meta.env.DEV) console.log("[notification] device command sent", { deviceId: SENSOR_DEVICE_ID, payload });
 }
 
 function buildDeviceCommandPayloadFromTask(task = {}, context = {}) {
@@ -2329,11 +2288,9 @@ async function sendWasherStartCommandFromNotification(task = {}) {
   const payload = buildDeviceCommandPayloadFromTask(task);
   if (!payload) return;
 
-  if (import.meta.env.DEV) console.log("[notification] washer_start command payload", payload);
   logAnalyticsEvent("device_execute_click", payload);
   logAnalyticsEvent("washer_execute", payload);
   await sendDeviceCommand(SENSOR_DEVICE_ID, payload);
-  if (import.meta.env.DEV) console.log("[notification] washer_start command sent", { deviceId: SENSOR_DEVICE_ID, payload });
 }
 
 function isUserWasherScheduleTask(task = {}) {
@@ -2394,8 +2351,8 @@ const fixedScheduleColorByTitle = {
   "동아리": "#cbf39d",
 };
 
-function devWarn(...args) {
-  if (isDev) console.warn(...args);
+function devWarn() {
+  // Intentionally silent: avoid exposing user, sensor, or command payload data in the browser console.
 }
 
 function getFirestoreScheduleUserIds(currentUser) {

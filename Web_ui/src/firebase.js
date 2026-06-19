@@ -26,8 +26,7 @@ function getAnalyticsInstance() {
   if (!analyticsPromise) {
     analyticsPromise = isSupported()
       .then((supported) => (supported ? getAnalytics(app) : null))
-      .catch((error) => {
-        if (import.meta.env.DEV) console.warn("[analytics] init skipped", error);
+      .catch(() => {
         return null;
       });
   }

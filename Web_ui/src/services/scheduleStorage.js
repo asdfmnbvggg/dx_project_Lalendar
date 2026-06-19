@@ -1,9 +1,8 @@
 const STORAGE_KEY = "l-lander.familySchedules";
 const LEGACY_STORAGE_KEY = "lalendar.familySchedules";
-const isDev = import.meta.env.DEV;
 
-function devWarn(...args) {
-  if (isDev) console.warn(...args);
+function devWarn() {
+  // Keep stored schedule data and parse failures out of the browser console.
 }
 
 export function loadSchedules() {

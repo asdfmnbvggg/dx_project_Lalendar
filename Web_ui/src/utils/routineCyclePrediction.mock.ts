@@ -41,9 +41,6 @@ export function runRoutineCyclePredictionMock() {
   const washerLogs = washerDates.map((date, index) => createWasherLog(index, date));
   const prediction = predictRoutineCycle(washerLogs);
 
-  console.log("washer routine cycle prediction mock", prediction);
-  console.log("cycle_changed should be true:", prediction.cycle_changed);
-
   return prediction;
 }
 
@@ -58,9 +55,6 @@ export function runDailyFrequencyPredictionMock() {
     ]),
   ];
   const prediction = predictRoutineCycle(dishwasherLogs);
-
-  console.log("dishwasher daily frequency prediction mock", prediction);
-  console.log("frequency_changed should be true:", prediction.frequency_changed);
 
   return prediction;
 }
