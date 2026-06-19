@@ -1207,7 +1207,6 @@ function EnvironmentDataPanel({ data, onRefresh, titleId }) {
       <div className="environment-panel-head">
         <div>
           <h2 id={titleId}>오늘의 환경</h2>
-          <p>단기예보, 중기예보, 미세먼지 데이터를 API에서 불러와요.</p>
         </div>
         <button type="button" onClick={onRefresh} disabled={isLoading}>
           {isLoading ? "불러오는 중" : "새로고침"}
