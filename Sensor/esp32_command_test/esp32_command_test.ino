@@ -437,8 +437,8 @@ void handleCommand(String command) {
   // 건조기
   // =========================
   else if (command == "dryer_start") {
-    turnOnOnlyApplianceLed(DRYER_LED, "dryer");
     Serial.println("건조기 실행 완료");
+    turnOnOnlyApplianceLed(DRYER_LED, "dryer");
   }
 
   // =========================
