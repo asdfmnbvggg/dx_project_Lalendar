@@ -114,6 +114,23 @@ export default function CalendarPage({
   const reportDate = isDateKeyValue(dailyReportRouteId) ? dailyReportRouteId : selectedDate;
   const selectedDay = Number(selectedDate.slice(-2));
   const isHouseCalendar = calendarTaskMode === "house";
+  const weatherDetailInteractionProps = isHouseCalendar
+    ? {
+        role: "button",
+        tabIndex: 0,
+        "aria-label": "날씨와 미세먼지 상세 보기",
+        onClick: (event) => {
+          event.stopPropagation();
+          setEnvironmentOpen(true);
+        },
+        onKeyDown: (event) => {
+          if (!["Enter", " "].includes(event.key)) return;
+          event.preventDefault();
+          event.stopPropagation();
+          setEnvironmentOpen(true);
+        },
+      }
+    : {};
   const maxCalendarScale = isHouseCalendar || calendarView === "month" ? 2 : 4;
   const displayDates = getDisplayDates(calendarView, selectedDate, month);
   const displayLabel = getDisplayLabel(calendarView, selectedDate, monthLabel);
@@ -881,20 +898,7 @@ export default function CalendarPage({
                     {hasWeatherData ? (
                       <span
                         className={["day-weather", isHouseCalendar ? "clickable" : ""].filter(Boolean).join(" ")}
-                        role={isHouseCalendar ? "button" : undefined}
-                        tabIndex={isHouseCalendar ? 0 : undefined}
-                        aria-label={isHouseCalendar ? "날씨와 미세먼지 상세 보기" : undefined}
-                        onClick={(event) => {
-                          if (!isHouseCalendar) return;
-                          event.stopPropagation();
-                          setEnvironmentOpen(true);
-                        }}
-                        onKeyDown={(event) => {
-                          if (!isHouseCalendar || !["Enter", " "].includes(event.key)) return;
-                          event.preventDefault();
-                          event.stopPropagation();
-                          setEnvironmentOpen(true);
-                        }}
+                        {...weatherDetailInteractionProps}
                       >
                         <>
                           <span className="weather-icon" role="img" aria-label={weather.sky || weather.pty || "날씨"}>
@@ -916,14 +920,7 @@ export default function CalendarPage({
                     ) : weatherApiStatus !== "loading" ? (
                       <span
                         className={["day-weather empty", isHouseCalendar ? "clickable" : ""].filter(Boolean).join(" ")}
-                        role={isHouseCalendar ? "button" : undefined}
-                        tabIndex={isHouseCalendar ? 0 : undefined}
-                        aria-label={isHouseCalendar ? "날씨와 미세먼지 상세 보기" : undefined}
-                        onClick={(event) => {
-                          if (!isHouseCalendar) return;
-                          event.stopPropagation();
-                          setEnvironmentOpen(true);
-                        }}
+                        {...weatherDetailInteractionProps}
                       >
                         <em>안 받아와짐.</em>
                       </span>

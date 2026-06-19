@@ -22,8 +22,7 @@ import introLogo from "./assets/intro.png";
 import lgCharacter from "./assets/lg-character.png";
 import floatingStar from "./assets/floating-star.svg";
 import { CURRENT_USER_STORAGE_KEY, LEGACY_CURRENT_USER_STORAGE_KEY, USERS, findUserById, isMasterUser } from "./constants/users.js";
-import { fetchCalendarWeather, fetchShortWeather } from "./services/weatherService.js";
-import { fetchMidWeather } from "./services/midWeatherService.js";
+import { fetchCalendarWeather } from "./services/weatherService.js";
 import { fetchAirQuality } from "./services/airQualityService.js";
 import { logAnalyticsEvent } from "./firebase.js";
 import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendationService.js";
@@ -3672,87 +3671,6 @@ function HomePage({ onOpenNotifications }) {
   );
 }
 
-function EnvironmentDataPanel({ data, onRefresh }) {
-  const isLoading = Object.values(data).some((item) => item.status === "loading");
-  const shortItems = normalizePayloadList(data.short.data);
-  const midItems = normalizePayloadList(data.mid.data);
-  const airItems = normalizePayloadList(data.air.data);
-  const airNow = airItems[0] || (data.air.data && typeof data.air.data === "object" ? data.air.data : null);
-
-  return (
-    <section className="environment-panel" aria-label="날씨와 미세먼지">
-      <div className="environment-panel-head">
-        <div>
-          <h2>오늘의 환경</h2>
-          <p>단기예보, 중기예보, 미세먼지 데이터를 API에서 불러와요.</p>
-        </div>
-        <button type="button" onClick={onRefresh} disabled={isLoading}>
-          {isLoading ? "불러오는 중" : "새로고침"}
-        </button>
-      </div>
-
-      <div className="environment-grid">
-        <ForecastSummaryCard title="단기예보" state={data.short} items={shortItems} emptyText="단기예보 데이터가 없습니다." />
-        <ForecastSummaryCard title="중기예보" state={data.mid} items={midItems} emptyText="중기예보 데이터가 없습니다." />
-        <AirQualityCard state={data.air} item={airNow} />
-      </div>
-    </section>
-  );
-}
-
-function ForecastSummaryCard({ title, state, items, emptyText }) {
-  return (
-    <article className="environment-card">
-      <span>{title}</span>
-      {state.status === "loading" ? (
-        <p className="environment-message">데이터를 불러오고 있어요.</p>
-      ) : state.status === "error" ? (
-        <p className="environment-error">{state.error}</p>
-      ) : items.length === 0 ? (
-        <p className="environment-message">{emptyText}</p>
-      ) : (
-        <div className="environment-forecast-list">
-          {items.slice(0, 3).map((item, index) => (
-            <div className="environment-forecast-row" key={`${title}-${item.date || index}`}>
-              <strong>{formatWeatherDate(item.date) || `${index + 1}번째 예보`}</strong>
-              <p>
-                {formatWeatherIcon(item.icon)}
-                {formatWeatherTemperatures(item)}
-              </p>
-              <small>{formatWeatherDetail(item)}</small>
-            </div>
-          ))}
-        </div>
-      )}
-    </article>
-  );
-}
-
-function AirQualityCard({ state, item }) {
-  const grade = item ? item.khaiGrade || item.pm10Grade || item.pm25Grade || item.grade || item.status : "";
-
-  return (
-    <article className="environment-card air">
-      <span>미세먼지</span>
-      {state.status === "loading" ? (
-        <p className="environment-message">데이터를 불러오고 있어요.</p>
-      ) : state.status === "error" ? (
-        <p className="environment-error">{state.error}</p>
-      ) : !item ? (
-        <p className="environment-message">미세먼지 데이터가 없습니다.</p>
-      ) : (
-        <div className="environment-air-body">
-          <strong>{formatAirQualityGrade(grade)}</strong>
-          <p>
-            PM10 {formatNullableValue(item.pm10Value || item.pm10, "ug/m3")} · PM2.5 {formatNullableValue(item.pm25Value || item.pm25, "ug/m3")}
-          </p>
-          <small>{item.stationName || item.sidoName || item.dataTime || "측정소 정보 없음"}</small>
-        </div>
-      )}
-    </article>
-  );
-}
-
 function TimeSelect({ label, value, options, onChange }) {
   const [isOpen, setOpen] = useState(false);
 
@@ -3938,100 +3856,6 @@ function SimpleTabPage({ icon, title, text }) {
       <p>{text}</p>
     </section>
   );
-}
-
-function resultToApiState(result) {
-  if (result.status === "fulfilled") {
-    return { status: "success", data: result.value, error: "" };
-  }
-
-  return {
-    status: "error",
-    data: null,
-    error: result.reason instanceof Error ? result.reason.message : "API 호출에 실패했습니다.",
-  };
-}
-
-function normalizePayloadList(payload) {
-  if (Array.isArray(payload)) return payload;
-  if (!payload || typeof payload !== "object") return [];
-
-  const candidates = [
-    payload.data,
-    payload.items,
-    payload.list,
-    payload.results,
-    payload.response?.body?.items?.item,
-    payload.response?.body?.items,
-    payload.body?.items?.item,
-    payload.body?.items,
-  ];
-
-  for (const candidate of candidates) {
-    if (Array.isArray(candidate)) return candidate;
-    if (candidate && typeof candidate === "object") return [candidate];
-  }
-
-  return [payload];
-}
-
-function formatWeatherDate(date) {
-  if (!date) return "";
-  const text = String(date);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
-
-  const [, month, day] = text.split("-");
-  return `${Number(month)}월 ${Number(day)}일`;
-}
-
-function formatWeatherTemperatures(item) {
-  const minTemp = item.minTemp ?? item.minTemperature ?? item.tmn;
-  const maxTemp = item.maxTemp ?? item.maxTemperature ?? item.tmx;
-  const currentTemp = item.temp ?? item.temperature ?? item.tmp;
-
-  if (Number.isFinite(Number(minTemp)) || Number.isFinite(Number(maxTemp))) {
-    return `${formatNullableValue(minTemp, "C")} / ${formatNullableValue(maxTemp, "C")}`;
-  }
-
-  return Number.isFinite(Number(currentTemp)) ? `${currentTemp}C` : "기온 정보 없음";
-}
-
-function formatWeatherIcon(icon) {
-  const iconMap = {
-    sunny: "☀️ ",
-    partly_cloudy: "⛅ ",
-    cloudy: "☁️ ",
-    rain: "🌧️ ",
-    snow: "❄️ ",
-  };
-
-  return iconMap[icon] || "";
-}
-
-function formatWeatherDetail(item) {
-  const parts = [
-    item.sky,
-    item.pty,
-    Number.isFinite(Number(item.pop)) ? `강수확률 ${item.pop}%` : "",
-    Number.isFinite(Number(item.humidity)) ? `습도 ${item.humidity}%` : "",
-  ].filter(Boolean);
-
-  return parts.length ? parts.join(" · ") : item.source || "상세 정보 없음";
-}
-
-function formatAirQualityGrade(grade) {
-  const gradeMap = {
-    1: "좋음",
-    2: "보통",
-    3: "나쁨",
-    4: "매우 나쁨",
-  };
-
-  return gradeMap[grade] || grade || "등급 정보 없음";
-}
-
-function formatNullableValue(value, suffix = "") {
-  return value === null || value === undefined || value === "" || value === "-" ? "정보 없음" : `${value}${suffix}`;
 }
 
 function sortTasks(tasks) {
