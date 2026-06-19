@@ -294,20 +294,43 @@
   line-height: 1.35;
 }
 
-.thinq-play-banner i {
-  position: absolute;
-  right: 14px;
-  bottom: -22px;
-  width: 76px;
-  height: 76px;
+.thinq-floating-play-button {
+  position: fixed;
+  right: max(24px, calc((100vw - min(430px, 100vw)) / 2 + 24px));
+  bottom: max(104px, calc(env(safe-area-inset-bottom) + 104px));
+  z-index: 260;
+  width: 58px;
+  height: 58px;
+  display: grid;
+  grid-template-rows: auto auto;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(135deg, #ff5a3f 0%, #ff3f74 48%, #b737ff 100%);
+  box-shadow: 0 10px 20px rgba(214, 54, 128, 0.26);
+  border: 0;
+  line-height: 1;
+}
+
+.thinq-floating-play-button span {
+  width: 26px;
+  height: 20px;
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  color: #ec2e8f;
-  background: #fff;
-  box-shadow: 0 12px 22px rgba(43, 49, 57, 0.22);
-  font-size: 56px;
-  font-style: normal;
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  font-size: 21px;
+  font-weight: 900;
+  line-height: 0.8;
+}
+
+.thinq-floating-play-button strong {
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0;
   line-height: 1;
 }
 
@@ -349,9 +372,11 @@
 }
 
 .thinq-main-tabbar {
+  position: fixed !important;
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
+  z-index: 180;
   width: min(430px, 100%) !important;
   height: 74px !important;
   min-height: 74px;

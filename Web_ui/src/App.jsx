@@ -1591,6 +1591,20 @@ export default function App() {
         )}
       </section>
 
+      {activeTab === "home" && (
+        <button
+          className="thinq-floating-play-button"
+          type="button"
+          aria-label="AI Chat"
+          onClick={() => {
+            window.location.href = "https://cx-project-ai-chatbot.vercel.app/";
+          }}
+        >
+          <span aria-hidden="true">∞</span>
+          <strong>AI Chat</strong>
+        </button>
+      )}
+
       {isComposerOpen && (
         <TaskComposer
           selectedDate={selectedDate}
@@ -3661,7 +3675,6 @@ function HomePage({ onOpenNotifications }) {
           <strong>ThinQ PLAY</strong>
           앱을 다운로드하여 제품과 공간을 업그레이드해보세요.
         </span>
-        <i aria-hidden="true">∞</i>
       </button>
 
       <section className="thinq-smart-routine">
@@ -4616,13 +4629,4 @@ function normalizeTaskForUser(task, fallbackUserId) {
 
 function getTaskUserId(task) {
   if (USERS.some((user) => user.id === task.userId)) return task.userId;
-  if (USERS.some((user) => user.id === task.owner)) return task.owner;
-  return OWNER_TO_USER[task.owner] || "";
-}
-
-function userIdToOwner(userId) {
-  return USER_TO_OWNER[userId] || "me";
-}
-
-
-
+  if (USERS.some((user) => user.id === task.o
