@@ -4629,4 +4629,13 @@ function normalizeTaskForUser(task, fallbackUserId) {
 
 function getTaskUserId(task) {
   if (USERS.some((user) => user.id === task.userId)) return task.userId;
-  if (USERS.some((user) => user.id === task.o
+  if (USERS.some((user) => user.id === task.owner)) return task.owner;
+  return OWNER_TO_USER[task.owner] || "";
+}
+
+function userIdToOwner(userId) {
+  return USER_TO_OWNER[userId] || "me";
+}
+
+
+
