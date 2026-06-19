@@ -955,6 +955,13 @@
   max-width: 60vw;
 }
 
+.onboarding-character-scene.appliance .onboarding-character-wrap .onboarding-character-image,
+.onboarding-character-scene.assignee .onboarding-character-wrap .onboarding-character-image {
+  width: 116px;
+  max-width: 32vw;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.18));
+}
+
 .onboarding-character-scene .onboarding-card {
   pointer-events: auto;
 }
@@ -2595,6 +2602,19 @@
   .onboarding-fixed-page .onboarding-fixed-next-button {
     bottom: 42px;
   }
+
+  .onboarding-character-scene.appliance .onboarding-character-wrap.onboarding-character,
+  .onboarding-character-scene.assignee .onboarding-character-wrap.onboarding-character {
+    right: 2px;
+    bottom: -74px;
+    opacity: 0.78;
+  }
+
+  .onboarding-character-scene.appliance .onboarding-character-wrap .onboarding-character-image,
+  .onboarding-character-scene.assignee .onboarding-character-wrap .onboarding-character-image {
+    width: 96px;
+    max-width: 28vw;
+  }
 }
 
 @media (min-width: 760px) {
@@ -2660,6 +2680,40 @@
 .onboarding-character-scene.appliance,
 .onboarding-character-scene.assignee {
   top: clamp(62px, 12svh, 104px);
+}
+
+.onboarding-character-scene.appliance .onboarding-combined-appliance-card,
+.onboarding-character-scene.assignee .onboarding-assignee-card {
+  position: relative;
+  z-index: 3;
+}
+
+.onboarding-character-scene.appliance .onboarding-character-wrap.onboarding-character,
+.onboarding-character-scene.assignee .onboarding-character-wrap.onboarding-character {
+  left: auto;
+  right: -4px;
+  bottom: -94px;
+  z-index: 1;
+  width: auto;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  opacity: 0.86;
+  transform: none;
+}
+
+.onboarding-character-scene.appliance .onboarding-character-wrap.onboarding-character::before,
+.onboarding-character-scene.appliance .onboarding-character-wrap.onboarding-character::after,
+.onboarding-character-scene.assignee .onboarding-character-wrap.onboarding-character::before,
+.onboarding-character-scene.assignee .onboarding-character-wrap.onboarding-character::after {
+  display: none;
+}
+
+.onboarding-character-scene.appliance .onboarding-character-wrap .onboarding-floating-star,
+.onboarding-character-scene.assignee .onboarding-character-wrap .onboarding-floating-star {
+  display: none;
 }
 
 .onboarding-intro-panel,
