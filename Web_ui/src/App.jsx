@@ -3592,60 +3592,6 @@ function OnboardingAssigneeSelect({ value, options, onChange }) {
 }
 
 function HomePage({ onOpenNotifications }) {
-  const [environmentData, setEnvironmentData] = useState(() => ({
-    short: { status: "idle", data: null, error: "" },
-    mid: { status: "idle", data: null, error: "" },
-    air: { status: "idle", data: null, error: "" },
-  }));
-
-  useEffect(() => {
-    let isActive = true;
-
-    async function loadEnvironmentData() {
-      setEnvironmentData({
-        short: { status: "loading", data: null, error: "" },
-        mid: { status: "loading", data: null, error: "" },
-        air: { status: "loading", data: null, error: "" },
-      });
-
-      const [shortResult, midResult, airResult] = await Promise.allSettled([
-        fetchShortWeather(),
-        fetchMidWeather(),
-        fetchAirQuality(),
-      ]);
-
-      if (!isActive) return;
-
-      setEnvironmentData({
-        short: resultToApiState(shortResult),
-        mid: resultToApiState(midResult),
-        air: resultToApiState(airResult),
-      });
-    }
-
-    loadEnvironmentData();
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
-
-  function refreshEnvironmentData() {
-    setEnvironmentData((current) => ({
-      short: { ...current.short, status: "loading", error: "" },
-      mid: { ...current.mid, status: "loading", error: "" },
-      air: { ...current.air, status: "loading", error: "" },
-    }));
-
-    Promise.allSettled([fetchShortWeather(), fetchMidWeather(), fetchAirQuality()]).then(([shortResult, midResult, airResult]) => {
-      setEnvironmentData({
-        short: resultToApiState(shortResult),
-        mid: resultToApiState(midResult),
-        air: resultToApiState(airResult),
-      });
-    });
-  }
-
   return (
     <section className="thinq-home-page" aria-label="홈">
       <header className="thinq-statusbar" aria-label="상태 표시줄">
@@ -3718,8 +3664,6 @@ function HomePage({ onOpenNotifications }) {
         </span>
         <i aria-hidden="true">∞</i>
       </button>
-
-      <EnvironmentDataPanel data={environmentData} onRefresh={refreshEnvironmentData} />
 
       <section className="thinq-smart-routine">
         <h2>스마트 루틴</h2>
