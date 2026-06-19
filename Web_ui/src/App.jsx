@@ -3607,11 +3607,6 @@ function OnboardingAssigneeSelect({ value, options, onChange }) {
 function HomePage({ onOpenNotifications }) {
   return (
     <section className="thinq-home-page" aria-label="홈">
-      <header className="thinq-statusbar" aria-label="상태 표시줄">
-        <strong>6:21</strong>
-        <span>⌁ 5G ▮▮ 63</span>
-      </header>
-
       <div className="thinq-home-top">
         <button className="thinq-home-selector" type="button">
           <strong>우리 집</strong>

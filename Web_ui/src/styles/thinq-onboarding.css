@@ -5,21 +5,6 @@
   animation: soft-enter 240ms ease both;
 }
 
-.thinq-statusbar {
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: #4f5964;
-  font-size: 18px;
-  font-weight: 900;
-}
-
-.thinq-statusbar span {
-  font-size: 14px;
-  letter-spacing: 0;
-}
-
 .thinq-home-top,
 .thinq-home-selector,
 .thinq-home-actions,
