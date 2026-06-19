@@ -1954,7 +1954,7 @@ function getRealtimeApplianceTargetUserIds(applianceAssignees = {}, activeCalend
           applianceAssignees["air"] ||
           applianceAssignees["air-conditioner"] ||
           applianceAssignees.AIR_CONDITIONER,
-      ) || "",
+      ) || fallbackUserId,
     AIR_PURIFIER:
       resolveOwnerOrUserIdToUserId(applianceAssignees["air-purifier"] || applianceAssignees.AIR_PURIFIER) || fallbackUserId,
   };
@@ -1965,51 +1965,8 @@ function filterRealtimePopupsBySchedule(popups = [], tasks = [], now = new Date(
     if (popup.applianceType === "WASHER") {
       return false;
     }
-    if (popup.applianceType !== "AIR_CONDITIONER") return true;
-    return canSendAirConditionerAlert(popup, tasks, now);
-  });
-}
-
-function canSendAirConditionerAlert(popup = {}, tasks = [], now = new Date()) {
-  const hasAssignedUser = Boolean(popup.targetUserId);
-  if (!hasAssignedUser) {
-    return false;
-  }
-
-  const today = dateKey(now.getFullYear(), now.getMonth() + 1, now.getDate());
-  const alertStartMinutes = getAirConditionerAlertStartTime(tasks, popup.targetUserId, today);
-
-  if (!Number.isFinite(alertStartMinutes)) {
-    // 고정 일정 없음 → 재택/자유 일정으로 간주하고 기존 센서 임계값 알림 정책을 적용합니다.
     return true;
-  }
-
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const canSend = currentMinutes >= alertStartMinutes;
-
-  return canSend;
-}
-
-function getAirConditionerAlertStartTime(tasks = [], targetUserId, date) {
-  const lastFixedScheduleEndTime = getLastFixedScheduleEndTime(tasks, targetUserId, date);
-  return Number.isFinite(lastFixedScheduleEndTime) ? Math.max(0, lastFixedScheduleEndTime - 60) : null;
-}
-
-function getLastFixedScheduleEndTime(tasks = [], targetUserId, date) {
-  const fixedScheduleEndTimes = tasks
-    .filter((task) => isTaskVisibleOnDate(task, date))
-    .filter((task) => getTaskUserId(task) === targetUserId)
-    .filter(isFixedScheduleTask)
-    .map(getFixedScheduleEndMinutes)
-    .filter(Number.isFinite);
-
-  return fixedScheduleEndTimes.length > 0 ? Math.max(...fixedScheduleEndTimes) : null;
-}
-
-function getFixedScheduleEndMinutes(task = {}) {
-  const range = getTaskNotificationRange(task);
-  if (!range) return NaN;
-  return range.endMinutes < range.startMinutes ? range.endMinutes + 24 * 60 : range.endMinutes;
+  });
 }
 
 function getDueWasherAlertCandidates(tasks, date, nowMinutes, activeCalendarUser, currentUser) {
