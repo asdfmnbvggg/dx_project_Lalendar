@@ -111,7 +111,7 @@ export default function App() {
   const initialVisibleMonth = visibleMonthFromDate(initialSelectedDate);
   const [currentUser, setCurrentUser] = useState(storedUser);
   const [activeCalendarUser, setActiveCalendarUser] = useState(() => getInitialCalendarUser(storedUser, storedSession?.activeCalendarUserId));
-  const [tasks, setTasks] = useState(() => normalizeCalendarTaskColors(normalizeTasksForUsers(normalizeGeneratedTaskTitles(buildDefaultCalendarTasks()))));
+  const [tasks, setTasks] = useState(() => []);
   const [memberColors, setMemberColors] = useState(() => ({
     ...Object.fromEntries(members.map((member) => [member.id, member.color])),
     ...USER_COLORS,
@@ -2639,8 +2639,7 @@ const defaultFixedScheduleUsers = [
 ];
 
 function buildDefaultCalendarTasks() {
-  const fixedTasks = buildDefaultFixedCalendarTasks();
-  return [...fixedTasks, ...buildRuleBasedApplianceCalendarTasks(fixedTasks)];
+  return [];
 }
 
 function buildDefaultFixedCalendarTasks() {

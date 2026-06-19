@@ -421,7 +421,7 @@ const demoCalendarTasks = [
   },
 ];
 
-export const initialTasks = [...baseTasks];
+export const initialTasks = [];
 
 export const navItems = [
   { id: "calendar", label: "캘린더", icon: CalendarDays },
