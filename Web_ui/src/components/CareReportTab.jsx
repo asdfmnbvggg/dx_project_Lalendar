@@ -38,7 +38,7 @@ const productFilters = [
   { id: "water_purifier", label: "정수기" },
   { id: "washer", label: "세탁기" },
   { id: "dryer", label: "건조기" },
-  { id: "air_conditioner", label: "에어컨" },
+  { id: "air_conditioner", label: "에어컨 4대" },
 ];
 
 const productReports = [
@@ -83,14 +83,20 @@ const productReports = [
   },
   {
     id: "air_conditioner",
-    name: "에어컨",
+    name: "에어컨 4대",
     image: airconImage,
-    title: "사용 시간이 늘고 있어요.",
-    message: "필터 청소 후 사용하면 효율이 좋아져요.",
+    title: "4대 전체 사용 시간이 늘고 있어요.",
+    message: "방별 사용 패턴을 나눠 보면 거실 사용량이 가장 높아요.",
     metrics: [
-      { label: "이번달 사용 시간", value: "42 시간", subValue: "지난달 28 시간", highlight: true },
-      { label: "이번달 사용량", value: "210 kWh", subValue: "지난달 168 kWh", highlight: true },
-      { label: "케어 팁", value: "필터 청소", subValue: "효율 개선 추천" },
+      { label: "이번달 총 사용 시간", value: "42 시간", subValue: "4대 합산 · 지난달 28 시간", highlight: true },
+      { label: "이번달 총 사용량", value: "210 kWh", subValue: "4대 합산 · 지난달 168 kWh", highlight: true },
+      { label: "케어 팁", value: "필터 청소", subValue: "4대 순차 점검 추천" },
+    ],
+    units: [
+      { name: "거실", usage: "18시간", status: "사용량 높음" },
+      { name: "수민 방", usage: "9시간", status: "적정" },
+      { name: "다빈 방", usage: "8시간", status: "적정" },
+      { name: "재혁 방", usage: "7시간", status: "절전 양호" },
     ],
   },
 ];
@@ -292,6 +298,17 @@ function ProductReportCard({ report }) {
           </article>
         ))}
       </div>
+      {report.units && (
+        <div className="care-aircon-unit-grid" aria-label="에어컨 4대 사용 요약">
+          {report.units.map((unit) => (
+            <article key={unit.name}>
+              <strong>{unit.name}</strong>
+              <span>{unit.usage}</span>
+              <em>{unit.status}</em>
+            </article>
+          ))}
+        </div>
+      )}
     </article>
   );
 }

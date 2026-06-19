@@ -23,7 +23,10 @@ const connectedAppliances = [
   { id: "robot_cleaner", type: "ROBOT_CLEANER", image: robotImage, place: "거실", defaultOwner: "김다빈" },
   { id: "dishwasher", type: "DISHWASHER", image: dishwasherImage, place: "주방", defaultOwner: "최재혁" },
   { id: "air_purifier", type: "AIR_PURIFIER", image: purifierImage, place: "거실", defaultOwner: "공용" },
-  { id: "air_conditioner", type: "AIR_CONDITIONER", image: airConditionerImage, place: "거실", defaultOwner: "공용" },
+  { id: "air-living", type: "AIR_CONDITIONER", name: "거실 에어컨", image: airConditionerImage, place: "거실", defaultOwner: "공용" },
+  { id: "air-sumin", type: "AIR_CONDITIONER", name: "수민 에어컨", image: airConditionerImage, place: "수민 방", defaultOwner: "한수민" },
+  { id: "air-dabin", type: "AIR_CONDITIONER", name: "다빈 에어컨", image: airConditionerImage, place: "다빈 방", defaultOwner: "김다빈" },
+  { id: "air-jaehyeok", type: "AIR_CONDITIONER", name: "재혁 에어컨", image: airConditionerImage, place: "재혁 방", defaultOwner: "최재혁" },
 ];
 
 const automationSettings = [
@@ -62,7 +65,7 @@ export default function DeviceTabSynced({ onOpenNotifications, tasksByDate = {},
   const devices = useMemo(
     () =>
       connectedAppliances.map((appliance) => {
-        const matchedTasks = calendarTasksByType[appliance.type] || [];
+        const matchedTasks = getTasksForAppliance(appliance, calendarTasksByType[appliance.type] || []);
         return buildDeviceFromCalendar(appliance, matchedTasks, selectedDate, localStatuses[appliance.id], activeCalendarUser || currentUser);
       }),
     [activeCalendarUser, calendarTasksByType, currentUser, localStatuses, selectedDate],
@@ -331,10 +334,23 @@ function groupTasksByApplianceType(tasks) {
   }, {});
 }
 
+function getTasksForAppliance(appliance, tasks) {
+  if (appliance.type !== "AIR_CONDITIONER") return tasks;
+
+  const exactTasks = tasks.filter((task) => getTaskApplianceId(task) === appliance.id);
+  if (exactTasks.length > 0) return exactTasks;
+
+  if (appliance.id === "air-living") {
+    return tasks.filter((task) => !getTaskApplianceId(task) || ["air", "air-conditioner", "air_conditioner", "aircon", "aircon_shared"].includes(getTaskApplianceId(task)));
+  }
+
+  return [];
+}
+
 function buildDeviceFromCalendar(appliance, tasks, selectedDate, localStatus, activeUser) {
   const todayTasks = tasks.filter((task) => task.date === selectedDate);
   const nextTask = todayTasks.find((task) => !task.done) || tasks.find((task) => !task.done) || tasks[0];
-  const name = applianceTypeLabel[appliance.type] || "가전";
+  const name = appliance.name || applianceTypeLabel[appliance.type] || "가전";
   const modeLabel = nextTask ? getTaskModeLabel(nextTask) : getDefaultMode(appliance.type);
   const owner = nextTask ? getOwnerName(nextTask) : getOwnerName({ owner: activeUser?.id, userId: activeUser?.id }) || appliance.defaultOwner;
   const localStatusType = localStatus || "";
@@ -387,6 +403,10 @@ function normalizeApplianceType(task = {}) {
   if (/공기청정|미세먼지|purifier/.test(text)) return "AIR_PURIFIER";
   if (/에어컨|냉방|제습|aircon|air-conditioner|air_conditioner/.test(text)) return "AIR_CONDITIONER";
   return "";
+}
+
+function getTaskApplianceId(task = {}) {
+  return String(task.applianceId || task.appliance || task.deviceId || "").trim();
 }
 
 function getTaskDisplayTitle(task = {}) {
