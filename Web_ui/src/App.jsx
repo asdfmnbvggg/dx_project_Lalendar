@@ -27,6 +27,7 @@ import floatingStar from "./assets/floating-star.svg";
 import home3dView from "./assets/home-3d-view.png";
 import { CURRENT_USER_STORAGE_KEY, LEGACY_CURRENT_USER_STORAGE_KEY, USERS, findUserById, isMasterUser } from "./constants/users.js";
 import { fetchCalendarWeather } from "./services/weatherService.js";
+import { importGoogleCalendarEvents } from "./services/googleCalendarService.js";
 import { fetchAirQuality } from "./services/airQualityService.js";
 import { logAnalyticsEvent } from "./firebase.js";
 import { buildWeatherRecommendationsByDate } from "./services/weatherRecommendationService.js";
@@ -878,6 +879,34 @@ export default function App() {
     }
   }
 
+  function handleGoogleCalendarImported(events = []) {
+    const importedTasks = events
+      .map((event, index) => googleCalendarEventToTask(event, activeCalendarUserId || currentUser?.id, index))
+      .filter(Boolean);
+    const existingGoogleIds = new Set(tasks.map((task) => task.googleEventId).filter(Boolean));
+    const nextTasks = importedTasks.filter((task) => !existingGoogleIds.has(task.googleEventId));
+
+    if (nextTasks.length === 0) return 0;
+
+    setTasks((current) => {
+      const currentGoogleIds = new Set(current.map((task) => task.googleEventId).filter(Boolean));
+      const dedupedTasks = nextTasks.filter((task) => !currentGoogleIds.has(task.googleEventId));
+      return [...dedupedTasks, ...current];
+    });
+
+    const firstDate = nextTasks[0]?.date;
+    if (firstDate) {
+      setSelectedDate(firstDate);
+      const [year, month] = firstDate.split("-").map(Number);
+      if (Number.isFinite(year) && Number.isFinite(month)) {
+        setVisibleMonth({ year, month });
+      }
+    }
+
+    logAnalyticsEvent("google_calendar_import", { count: nextTasks.length, userId: activeCalendarUserId || currentUser?.id || "" });
+    return nextTasks.length;
+  }
+
   async function requestAiHouseworkTask(eventTask) {
     const timeRange = getTaskNotificationRange(eventTask);
     if (!timeRange) {
@@ -1480,6 +1509,7 @@ export default function App() {
               onPreview={() => setOnboardingStep("appliance")}
               onApplianceNext={() => setOnboardingStep("ready")}
               onAssigneeNext={() => setOnboardingStep("ready")}
+              onGoogleCalendarImported={handleGoogleCalendarImported}
               onSkip={() => completeOnboarding({ skipGeneration: true })}
               onBack={() =>
                 setOnboardingStep(
@@ -2976,7 +3006,22 @@ function isFixedScheduleOverlapping(first, second) {
   return firstStart < secondEnd && secondStart < firstEnd;
 }
 
-function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange, onNext, onInfoNext, onFixedNext, onPreview, onApplianceNext, onAssigneeNext, onBack, onComplete, onSkip }) {
+function OnboardingPage({
+  step,
+  userName = "00",
+  onboardingSetup,
+  onSetupChange,
+  onNext,
+  onInfoNext,
+  onFixedNext,
+  onPreview,
+  onApplianceNext,
+  onAssigneeNext,
+  onGoogleCalendarImported,
+  onBack,
+  onComplete,
+  onSkip,
+}) {
   const isIntro = step === "intro";
   const isScheduleInfo = step === "scheduleInfo";
   const isFixedSchedule = step === "fixedSchedule";
@@ -2986,7 +3031,9 @@ function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange,
   const isReady = step === "ready";
   const [selectedApplianceTypes, setSelectedApplianceTypes] = useState(() => onboardingSetup?.applianceTypes || []);
   const [applianceAssignees, setApplianceAssignees] = useState(() => onboardingSetup?.applianceAssignees || {});
-  const [selectedImportMethod, setSelectedImportMethod] = useState("");
+  const [selectedImportMethod, setSelectedImportMethod] = useState(onboardingSetup?.importMethod || "");
+  const [googleImportStatus, setGoogleImportStatus] = useState("idle");
+  const [googleImportMessage, setGoogleImportMessage] = useState("");
   const [fixedSchedules, setFixedSchedules] = useState(() => onboardingSetup?.fixedSchedules || []);
   const [fixedTitle, setFixedTitle] = useState("");
   const [fixedDay, setFixedDay] = useState("");
@@ -3113,8 +3160,9 @@ function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange,
       applianceTypes: selectedApplianceTypes,
       applianceAssignees,
       fixedSchedules,
+      importMethod: selectedImportMethod,
     });
-  }, [applianceAssignees, fixedSchedules, onSetupChange, selectedApplianceTypes]);
+  }, [applianceAssignees, fixedSchedules, onSetupChange, selectedApplianceTypes, selectedImportMethod]);
 
   function toggleApplianceType(type) {
     setSelectedApplianceTypes((current) => {
@@ -3148,9 +3196,21 @@ function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange,
     });
   }
 
-  function importGoogleCalendar() {
+  async function importGoogleCalendar() {
     setSelectedImportMethod("google");
-    window.setTimeout(onPreview, 180);
+    setGoogleImportStatus("loading");
+    setGoogleImportMessage("Google Calendar 권한을 요청하고 있어요.");
+
+    try {
+      const events = await importGoogleCalendarEvents();
+      const importedCount = onGoogleCalendarImported?.(events) || 0;
+      setGoogleImportStatus("success");
+      setGoogleImportMessage(importedCount > 0 ? `${importedCount}개의 Google 일정을 가져왔어요.` : "가져올 새 Google 일정이 없어요.");
+      window.setTimeout(onPreview, 700);
+    } catch (error) {
+      setGoogleImportStatus("error");
+      setGoogleImportMessage(error?.message || "Google Calendar 연동에 실패했어요.");
+    }
   }
 
   function registerFixedSchedule(event) {
@@ -3403,10 +3463,16 @@ function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange,
                 <button type="button" onClick={onPreview}>
                   나중에
                 </button>
-                <button className={selectedImportMethod === "google" ? "active" : ""} type="button" onClick={importGoogleCalendar}>
-                  연동하기
+                <button
+                  className={selectedImportMethod === "google" ? "active" : ""}
+                  type="button"
+                  onClick={importGoogleCalendar}
+                  disabled={googleImportStatus === "loading"}
+                >
+                  {googleImportStatus === "loading" ? "연동 중..." : googleImportStatus === "success" ? "연동 완료" : "연동하기"}
                 </button>
               </div>
+              {googleImportMessage && <p className={`onboarding-google-status ${googleImportStatus}`}>{googleImportMessage}</p>}
             </div>
           </section>
         ) : isAppliance ? (
@@ -3956,6 +4022,7 @@ function createDefaultOnboardingSetup() {
     applianceTypes: DEFAULT_ONBOARDING_APPLIANCE_TYPES,
     applianceAssignees: DEFAULT_ONBOARDING_APPLIANCE_ASSIGNEES,
     fixedSchedules: [],
+    importMethod: "",
   };
 }
 
@@ -3965,11 +4032,13 @@ function normalizeOnboardingSetup(setup = {}) {
   const applianceAssignees =
     setup.applianceAssignees && typeof setup.applianceAssignees === "object" ? { ...fallback.applianceAssignees, ...setup.applianceAssignees } : fallback.applianceAssignees;
   const fixedSchedules = Array.isArray(setup.fixedSchedules) ? setup.fixedSchedules : fallback.fixedSchedules;
+  const importMethod = setup.importMethod === "google" ? "google" : fallback.importMethod;
 
   return {
     applianceTypes,
     applianceAssignees,
     fixedSchedules,
+    importMethod,
   };
 }
 
@@ -3981,6 +4050,55 @@ function normalizeGeneratedTaskTitle(task) {
   if (!nextTitle || nextTitle === title) return task;
 
   return { ...task, title: nextTitle };
+}
+
+function googleCalendarEventToTask(event = {}, fallbackUserId, index = 0) {
+  const start = event.start || {};
+  const end = event.end || {};
+  const startValue = start.dateTime || start.date;
+  if (!event.id || !startValue) return null;
+
+  const isAllDay = Boolean(start.date);
+  const startDate = isAllDay ? start.date : dateFromDateTime(startValue);
+  const rawEndDate = isAllDay && end.date ? addDays(end.date, -1) : end.dateTime ? dateFromDateTime(end.dateTime) : startDate;
+  const endDate = rawEndDate && rawEndDate !== startDate ? rawEndDate : "";
+  const startTime = isAllDay ? "" : timeFromDateTime(startValue);
+  const endTime = isAllDay || !end.dateTime ? "" : timeFromDateTime(end.dateTime);
+  const userId = fallbackUserId || "jea";
+
+  return normalizeTaskForUser(
+    {
+      id: `google-${event.id}-${index}`,
+      googleEventId: event.id,
+      date: startDate,
+      endDate,
+      title: event.summary || "Google Calendar 일정",
+      place: event.location || "Google Calendar",
+      tag: "plan",
+      type: "google",
+      displayType: "google",
+      source: "google",
+      repeat: isAllDay ? "하루종일" : startTime && endTime ? `${startTime}-${endTime}` : startTime || "Google Calendar",
+      startTime,
+      endTime,
+      description: event.description || "",
+      done: false,
+      color: "#95cff5",
+    },
+    userId,
+  );
+}
+
+function dateFromDateTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return dateKey(date.getFullYear(), date.getMonth() + 1, date.getDate());
+}
+
+function timeFromDateTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
 function buildOnboardingTasks(profile, selectedMember, onboardingSetup = {}) {
