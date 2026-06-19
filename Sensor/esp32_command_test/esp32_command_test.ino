@@ -84,6 +84,11 @@ const int APPLIANCE_LED_PINS[] = {
 };
 const int APPLIANCE_LED_COUNT = sizeof(APPLIANCE_LED_PINS) / sizeof(APPLIANCE_LED_PINS[0]);
 
+// 가전 LED는 실행 확인용으로 3초만 켜둠
+const unsigned long APPLIANCE_LED_ON_DURATION = 3000;
+unsigned long applianceLedTurnedOnAt = 0;
+bool applianceLedActive = false;
+
 // 센서 출력 주기
 unsigned long lastSensorPrintTime = 0;
 const unsigned long SENSOR_PRINT_INTERVAL = 3000;
@@ -284,15 +289,27 @@ void turnOffAllApplianceLeds() {
   for (int i = 0; i < APPLIANCE_LED_COUNT; i++) {
     digitalWrite(APPLIANCE_LED_PINS[i], LOW);
   }
+
+  applianceLedActive = false;
+  applianceLedTurnedOnAt = 0;
 }
 
 void turnOnOnlyApplianceLed(int ledPin, const char* applianceLabel) {
   turnOffAllApplianceLeds();
   digitalWrite(ledPin, HIGH);
+  applianceLedActive = true;
+  applianceLedTurnedOnAt = millis();
   Serial.print("LED ON GPIO");
   Serial.print(ledPin);
   Serial.print(": ");
   Serial.println(applianceLabel);
+}
+
+void updateApplianceLedAutoOff() {
+  if (applianceLedActive && millis() - applianceLedTurnedOnAt >= APPLIANCE_LED_ON_DURATION) {
+    turnOffAllApplianceLeds();
+    Serial.println("LED OFF: auto timeout");
+  }
 }
 
 
@@ -475,6 +492,8 @@ void loop() {
     lastSensorPrintTime = millis();
     printSensorData();
   }
+
+  updateApplianceLedAutoOff();
 
   // 2. Python에서 들어오는 명령 수신
   if (Serial.available() > 0) {
