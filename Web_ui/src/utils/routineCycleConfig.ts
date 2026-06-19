@@ -1,0 +1,28 @@
+export const DEFAULT_ROUTINE_TTA_OPTIONS = {
+  minRecentCount: 3,
+  recentWindowSize: 8,
+  diffThresholdDays: 0.75,
+  maxRecentStd: 2.0,
+  alpha: 0.6,
+  frequencyDiffThreshold: 0.5,
+  frequencyRecentWindowDays: 14,
+} as const;
+
+export const STRICT_ROUTINE_TTA_OPTIONS = {
+  minRecentCount: 3,
+  recentWindowSize: 3,
+  diffThresholdDays: 1.5,
+  maxRecentStd: 1.2,
+  alpha: 0.6,
+  frequencyDiffThreshold: 0.7,
+  frequencyRecentWindowDays: 14,
+} as const;
+
+export const HYPERPARAMETER_SEARCH_SPACE = {
+  minRecentCount: [2, 3, 4, 5],
+  diffThresholdDays: [0.5, 0.75, 1.0, 1.5, 2.0],
+  maxRecentStd: [0.5, 1.0, 1.2, 1.5, 2.0],
+  alpha: [0.3, 0.5, 0.6, 0.7, 0.9],
+  frequencyDiffThreshold: [0.3, 0.5, 0.7, 1.0],
+  frequencyRecentWindowDays: [7, 14, 21, 30],
+} as const;

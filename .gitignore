@@ -3,3 +3,5 @@ node_modules/
 .env
 vite-*.log
 dht_data.csv
+outputs/
+**/outputs/

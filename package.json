@@ -5,7 +5,8 @@
     "dev": "npm --prefix Web_ui run dev",
     "dev:vercel": "vercel dev --listen 127.0.0.1:3000",
     "build": "npm --prefix Web_ui run build",
-    "preview": "npm --prefix Web_ui run preview"
+    "preview": "npm --prefix Web_ui run preview",
+    "routine:hparam": "python tta-ins/data-make-multifamily.py && python tta-ins/hparam-search.py --data-dir outputs/dummy_appliance_dataset"
   },
   "dependencies": {
     "firebase": "^12.14.0"

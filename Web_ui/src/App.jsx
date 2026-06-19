@@ -1478,7 +1478,7 @@ export default function App() {
               onNext={() => setOnboardingStep("scheduleInfo")}
               onInfoNext={() => setOnboardingStep("fixedSchedule")}
               onFixedNext={() => setOnboardingStep("googleConfirm")}
-              onPreview={() => setOnboardingStep("appliance")}
+              onPreview={() => setOnboardingStep("ready")}
               onApplianceNext={() => setOnboardingStep("ready")}
               onAssigneeNext={() => setOnboardingStep("ready")}
               onSkip={() => completeOnboarding({ skipGeneration: true })}
@@ -2967,8 +2967,10 @@ function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange,
   const introMessage = "어서 오세요!\n최적의 가사일 계획을\n자동으로 짜주는\nAI 가사일 플래너\n플래니입니다!";
   const scheduleUserName = String(userName || "00").endsWith("님") ? String(userName || "00").slice(0, -1) : String(userName || "00");
   const scheduleInfoMessage = `AI가 최적의 가사일을\n자동으로 계획하려면\n${scheduleUserName} 님의 일정 정보가 필요해요!`;
+  const readyMessage = `${scheduleUserName}님의 일정, 날씨, 온습도\n데이터를 분석해서\n플래니가 최적의 가사일 계획을\n짜고 있어요!`;
   const [introTextLength, setIntroTextLength] = useState(0);
   const [scheduleInfoTextLength, setScheduleInfoTextLength] = useState(0);
+  const [readyTextLength, setReadyTextLength] = useState(0);
   const guideByStep = {
     intro: "어서오세요",
     scheduleInfo: "일정 정보가 필요해요",
@@ -2996,6 +2998,8 @@ function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange,
   const isIntroComplete = introTextLength >= introMessage.length;
   const scheduleInfoText = scheduleInfoMessage.slice(0, scheduleInfoTextLength);
   const isScheduleInfoComplete = scheduleInfoTextLength >= scheduleInfoMessage.length;
+  const readyText = readyMessage.slice(0, readyTextLength);
+  const isReadyTextComplete = readyTextLength >= readyMessage.length;
   const fixedDays = ["일", "월", "화", "수", "목", "금", "토"];
   const fixedHours = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
   const fixedMinutes = ["00", "10", "20", "30", "40", "50"];
@@ -3044,6 +3048,24 @@ function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange,
   useEffect(() => {
     if (!isReady) return undefined;
 
+    setReadyTextLength(0);
+    const interval = window.setInterval(() => {
+      setReadyTextLength((current) => {
+        if (current >= readyMessage.length) {
+          window.clearInterval(interval);
+          return current;
+        }
+
+        return current + 1;
+      });
+    }, 34);
+
+    return () => window.clearInterval(interval);
+  }, [isReady, readyMessage.length]);
+
+  useEffect(() => {
+    if (!isReady || !isReadyTextComplete) return undefined;
+
     const timeout = window.setTimeout(
       () =>
         onComplete({
@@ -3054,7 +3076,7 @@ function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange,
       5000,
     );
     return () => window.clearTimeout(timeout);
-  }, [applianceAssignees, assignedApplianceTypes, fixedSchedules, isReady, onComplete]);
+  }, [applianceAssignees, assignedApplianceTypes, fixedSchedules, isReady, isReadyTextComplete, onComplete]);
 
   useEffect(() => {
     onSetupChange?.({
@@ -3204,12 +3226,12 @@ function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange,
       )}
 
       <div
-        className={`onboarding-character-scene ${isIntro ? "intro" : ""} ${isScheduleInfo ? "info" : ""} ${isFixedSchedule ? "profile fixed" : ""} ${isGoogleConfirm ? "google-confirm" : ""} ${isAppliance ? "appliance" : ""} ${
+        className={`onboarding-character-scene onboarding-visual ${isIntro ? "intro" : ""} ${isScheduleInfo ? "info" : ""} ${isFixedSchedule ? "profile fixed" : ""} ${isGoogleConfirm ? "google-confirm" : ""} ${isAppliance ? "appliance" : ""} ${
           isAssignee ? "assignee" : ""
         } ${isReady ? "ready" : ""}`}
       >
         {isIntro ? (
-          <section className="onboarding-intro-panel" aria-label="환영 멘트">
+          <section className="onboarding-intro-panel onboarding-speech-bubble" aria-label="환영 멘트">
             <div className="onboarding-bubble-content">
               <p className="onboarding-intro-type">
                 {renderTypedOnboardingText(introText, "플래니")}
@@ -3222,7 +3244,7 @@ function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange,
             </div>
           </section>
         ) : isScheduleInfo ? (
-          <section className="onboarding-intro-panel onboarding-info-panel" aria-label="일정 정보 안내">
+          <section className="onboarding-intro-panel onboarding-info-panel onboarding-speech-bubble" aria-label="일정 정보 안내">
             <div className="onboarding-bubble-content">
               <p className="onboarding-intro-type onboarding-info-type">
                 {renderTypedOnboardingText(scheduleInfoText, scheduleUserName)}
@@ -3340,7 +3362,7 @@ function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange,
             </button>
           </div>
         ) : isGoogleConfirm ? (
-          <section className="onboarding-intro-panel onboarding-google-confirm" aria-label="구글 캘린더 연동 확인">
+          <section className="onboarding-intro-panel onboarding-google-confirm onboarding-speech-bubble" aria-label="구글 캘린더 연동 확인">
             <div className="onboarding-bubble-content">
               <p className="onboarding-intro-type onboarding-info-type">
                 구글 캘린더에 등록된 일정도
@@ -3463,13 +3485,8 @@ function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange,
             <section className="onboarding-ai-wait-card">
               <span className="onboarding-ai-spinner" aria-hidden="true" />
               <p>
-                {scheduleUserName}님의 일정, 날씨, 온습도
-                <br />
-                데이터를 분석해서
-                <br />
-                플래니가 <span className="onboarding-ai-highlight">최적의 가사일 계획</span>을
-                <br />
-                짜고 있어요!
+                {renderTypedOnboardingText(readyText, "최적의 가사일 계획")}
+                {!isReadyTextComplete && <i aria-hidden="true" />}
               </p>
               <span className="onboarding-ai-character-wrap" aria-hidden="true">
                 <img className="onboarding-floating-star star-a" src={floatingStar} alt="" />
@@ -3480,7 +3497,7 @@ function OnboardingPage({ step, userName = "00", onboardingSetup, onSetupChange,
           </div>
         )}
         {!isReady && !isFixedSchedule && (
-          <span className="onboarding-character-wrap" aria-hidden="true">
+          <span className="onboarding-character-wrap onboarding-character" aria-hidden="true">
             <img className="onboarding-floating-star star-a" src={floatingStar} alt="" />
             <img className="onboarding-floating-star star-b" src={floatingStar} alt="" />
             <img className="onboarding-character-image" src={lgCharacter} alt="" />
