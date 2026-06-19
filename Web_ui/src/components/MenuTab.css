@@ -1,17 +1,17 @@
 .menu-tab-frame {
-  padding: 18px 22px 104px;
+  padding: 14px 16px 96px;
   background: #eef0f5;
 }
 
 .menu-tab-page {
   display: grid;
-  gap: 22px;
+  gap: 14px;
   color: #111;
   animation: soft-enter 220ms ease both;
 }
 
 .menu-tab-header {
-  min-height: 48px;
+  min-height: 42px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -21,7 +21,7 @@
 .menu-tab-header h1 {
   margin: 0;
   color: #111;
-  font-size: 30px;
+  font-size: 27px;
   font-weight: 950;
   letter-spacing: 0;
 }
@@ -29,16 +29,21 @@
 .menu-tab-header > div {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 12px;
 }
 
 .menu-tab-header button {
   position: relative;
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   display: grid;
   place-items: center;
   color: #647080;
+}
+
+.menu-tab-header button:first-child,
+.menu-tab-dot {
+  display: none;
 }
 
 .menu-tab-header button i {
@@ -54,7 +59,7 @@
 .menu-tab-quick {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 10px;
 }
 
 .menu-tab-quick button,
@@ -62,18 +67,23 @@
 .menu-tab-card {
   border-radius: 14px;
   background: #fff;
-  box-shadow: 0 10px 24px rgba(37, 45, 58, 0.04);
+  box-shadow: 0 8px 18px rgba(37, 45, 58, 0.035);
 }
 
 .menu-tab-quick button {
-  min-height: 118px;
+  min-height: 92px;
   display: grid;
   place-items: center;
   align-content: center;
-  gap: 12px;
+  gap: 8px;
   color: #151515;
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 850;
+}
+
+.menu-tab-quick button svg {
+  width: 28px;
+  height: 28px;
 }
 
 .menu-tab-quick button:first-child svg {
@@ -86,20 +96,20 @@
 }
 
 .menu-tab-promo {
-  min-height: 118px;
+  min-height: 94px;
   display: grid;
-  grid-template-columns: 88px minmax(0, 1fr);
+  grid-template-columns: 66px minmax(0, 1fr);
   grid-template-rows: auto auto;
   align-items: center;
-  gap: 0 16px;
-  padding: 20px 18px;
+  gap: 0 12px;
+  padding: 14px;
   text-align: left;
 }
 
 .menu-tab-promo > span {
   grid-row: span 2;
-  width: 70px;
-  height: 70px;
+  width: 54px;
+  height: 54px;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -110,19 +120,19 @@
 }
 
 .menu-tab-promo > span i {
-  width: 42px;
-  height: 54px;
+  width: 32px;
+  height: 42px;
   border-radius: 5px 5px 2px 2px;
   background:
     linear-gradient(90deg, transparent 45%, rgba(255, 255, 255, 0.7) 46% 52%, transparent 53%),
     linear-gradient(180deg, #26465f, #eef6ff);
-  box-shadow: -14px 10px 0 -4px #aecbe2, 14px 12px 0 -6px #5f89aa;
+  box-shadow: -10px 8px 0 -4px #aecbe2, 10px 9px 0 -6px #5f89aa;
 }
 
 .menu-tab-promo strong {
   align-self: end;
   color: #171717;
-  font-size: 21px;
+  font-size: 17px;
   font-weight: 850;
   line-height: 1.15;
 }
@@ -131,20 +141,20 @@
   align-self: start;
   margin: 4px 0 0;
   color: #171717;
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 650;
-  line-height: 1.25;
+  line-height: 1.28;
 }
 
 .menu-tab-section {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .menu-tab-section h2 {
-  margin: 12px 0 0;
+  margin: 8px 0 0;
   color: #6d7b8d;
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 900;
 }
 
@@ -155,12 +165,12 @@
 .menu-tab-card button {
   position: relative;
   width: 100%;
-  min-height: 76px;
+  min-height: 58px;
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) auto;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 14px;
-  padding: 0 32px;
+  gap: 10px;
+  padding: 0 18px;
   text-align: left;
 }
 
@@ -168,8 +178,8 @@
   content: "";
   position: absolute;
   top: 0;
-  left: 96px;
-  right: 32px;
+  left: 70px;
+  right: 18px;
   height: 1px;
   background: #e0e4e9;
 }
@@ -178,7 +188,7 @@
   min-width: 0;
   color: #151515;
   overflow: hidden;
-  font-size: 22px;
+  font-size: 17px;
   font-weight: 780;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -186,17 +196,22 @@
 
 .menu-tab-card em {
   color: #6f7b8a;
-  font-size: 22px;
+  font-size: 17px;
   font-style: normal;
   font-weight: 800;
 }
 
 .menu-tab-icon {
   position: relative;
-  width: 42px;
-  height: 42px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
+}
+
+.menu-tab-icon svg {
+  width: 23px;
+  height: 23px;
 }
 
 .menu-tab-icon.red { color: #f03546; }
@@ -214,8 +229,8 @@
   position: absolute;
   right: 2px;
   bottom: 3px;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -236,31 +251,31 @@
 
 .menu-tab-store-card button,
 .menu-tab-lab-card button {
-  min-height: 94px;
+  min-height: 64px;
 }
 
 .menu-tab-lab-card {
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .menu-tab-footer {
   display: grid;
-  gap: 20px;
-  padding: 12px 0 6px;
+  gap: 12px;
+  padding: 4px 0 2px;
 }
 
 .menu-tab-footer p {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 10px 22px;
+  gap: 8px 16px;
   margin: 0;
 }
 
 .menu-tab-footer button {
   position: relative;
   color: #728092;
-  font-size: 19px;
+  font-size: 14px;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -269,9 +284,9 @@
   content: "";
   position: absolute;
   top: 50%;
-  left: -12px;
+  left: -9px;
   width: 1px;
-  height: 22px;
+  height: 16px;
   background: #d9dee6;
   transform: translateY(-50%);
 }
@@ -282,53 +297,53 @@
 
 @media (max-width: 390px) {
   .menu-tab-frame {
-    padding-inline: 18px;
+    padding-inline: 14px;
   }
 
   .menu-tab-header h1 {
-    font-size: 28px;
+    font-size: 25px;
   }
 
   .menu-tab-quick button {
-    min-height: 104px;
-    font-size: 18px;
-  }
-
-  .menu-tab-promo {
-    grid-template-columns: 72px minmax(0, 1fr);
-    padding: 16px 14px;
-  }
-
-  .menu-tab-promo > span {
-    width: 60px;
-    height: 60px;
-  }
-
-  .menu-tab-promo strong {
-    font-size: 19px;
-  }
-
-  .menu-tab-promo p {
+    min-height: 84px;
     font-size: 16px;
   }
 
+  .menu-tab-promo {
+    grid-template-columns: 58px minmax(0, 1fr);
+    padding: 12px;
+  }
+
+  .menu-tab-promo > span {
+    width: 48px;
+    height: 48px;
+  }
+
+  .menu-tab-promo strong {
+    font-size: 16px;
+  }
+
+  .menu-tab-promo p {
+    font-size: 12px;
+  }
+
   .menu-tab-card button {
-    min-height: 70px;
-    grid-template-columns: 48px minmax(0, 1fr) auto;
-    padding: 0 24px;
+    min-height: 54px;
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+    padding: 0 16px;
   }
 
   .menu-tab-card button + button::before {
-    left: 86px;
-    right: 24px;
+    left: 62px;
+    right: 16px;
   }
 
   .menu-tab-card strong,
   .menu-tab-card em {
-    font-size: 20px;
+    font-size: 16px;
   }
 
   .menu-tab-footer button {
-    font-size: 17px;
+    font-size: 13px;
   }
 }
