@@ -19,6 +19,7 @@ import LoginPage from "./pages/LoginPage.jsx";
 import TaskComposer from "./components/TaskComposer.jsx";
 import DetailPanel from "./components/DetailPanel.jsx";
 import DeviceTab from "./components/DeviceTab.jsx";
+import CareTab from "./components/CareTab.jsx";
 import introLogo from "./assets/intro.png";
 import lgCharacter from "./assets/lg-character.png";
 import floatingStar from "./assets/floating-star.svg";
@@ -1378,8 +1379,8 @@ export default function App() {
 
   return (
     <main className="app-shell">
-      <section className={`app-frame ${activeTab === "home" ? "thinq-home-frame" : ""} ${activeTab === "devices" ? "device-tab-frame" : ""} ${activeTab === "schedule" && !isOnboardingComplete ? "onboarding-frame" : ""}`}>
-        {activeTab !== "home" && activeTab !== "devices" && !(activeTab === "schedule" && !isOnboardingComplete) && (
+      <section className={`app-frame ${activeTab === "home" ? "thinq-home-frame" : ""} ${activeTab === "devices" ? "device-tab-frame" : ""} ${activeTab === "care" ? "care-tab-frame" : ""} ${activeTab === "schedule" && !isOnboardingComplete ? "onboarding-frame" : ""}`}>
+        {activeTab !== "home" && activeTab !== "devices" && activeTab !== "care" && !(activeTab === "schedule" && !isOnboardingComplete) && (
         <header className="topbar">
           <div className="brand">
             <span><img src="/icons/icon-192.png" alt="" aria-hidden="true" /></span>
@@ -1502,7 +1503,7 @@ export default function App() {
         )}
         {activeTab === "schedule" && isOnboardingComplete && <CalendarPage {...pageProps} />}
         {activeTab === "devices" && <DeviceTab onOpenNotifications={openNotificationPopover} />}
-        {activeTab === "care" && <SimpleTabPage icon={<ChartColumnIncreasing size={28} />} title="케어" text="제품 상태와 사용 리포트를 한눈에 볼 수 있게 준비 중이에요." />}
+        {activeTab === "care" && <CareTab onOpenNotifications={openNotificationPopover} />}
         {activeTab === "menu" && <CrewPage {...pageProps} />}
 
         <nav className="tabbar thinq-main-tabbar" aria-label="하단 탭">
