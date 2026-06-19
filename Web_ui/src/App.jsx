@@ -20,6 +20,7 @@ import TaskComposer from "./components/TaskComposer.jsx";
 import DetailPanel from "./components/DetailPanel.jsx";
 import DeviceTab from "./components/DeviceTab.jsx";
 import CareTab from "./components/CareTab.jsx";
+import MenuTab from "./components/MenuTab.jsx";
 import introLogo from "./assets/intro.png";
 import lgCharacter from "./assets/lg-character.png";
 import floatingStar from "./assets/floating-star.svg";
@@ -1379,8 +1380,8 @@ export default function App() {
 
   return (
     <main className="app-shell">
-      <section className={`app-frame ${activeTab === "home" ? "thinq-home-frame" : ""} ${activeTab === "devices" ? "device-tab-frame" : ""} ${activeTab === "care" ? "care-tab-frame" : ""} ${activeTab === "schedule" && !isOnboardingComplete ? "onboarding-frame" : ""}`}>
-        {activeTab !== "home" && activeTab !== "devices" && activeTab !== "care" && !(activeTab === "schedule" && !isOnboardingComplete) && (
+      <section className={`app-frame ${activeTab === "home" ? "thinq-home-frame" : ""} ${activeTab === "devices" ? "device-tab-frame" : ""} ${activeTab === "care" ? "care-tab-frame" : ""} ${activeTab === "menu" ? "menu-tab-frame" : ""} ${activeTab === "schedule" && !isOnboardingComplete ? "onboarding-frame" : ""}`}>
+        {activeTab !== "home" && activeTab !== "devices" && activeTab !== "care" && activeTab !== "menu" && !(activeTab === "schedule" && !isOnboardingComplete) && (
         <header className="topbar">
           <div className="brand">
             <span><img src="/icons/icon-192.png" alt="" aria-hidden="true" /></span>
@@ -1504,7 +1505,7 @@ export default function App() {
         {activeTab === "schedule" && isOnboardingComplete && <CalendarPage {...pageProps} />}
         {activeTab === "devices" && <DeviceTab onOpenNotifications={openNotificationPopover} />}
         {activeTab === "care" && <CareTab onOpenNotifications={openNotificationPopover} />}
-        {activeTab === "menu" && <CrewPage {...pageProps} />}
+        {activeTab === "menu" && <MenuTab onOpenNotifications={openNotificationPopover} />}
 
         <nav className="tabbar thinq-main-tabbar" aria-label="하단 탭">
           {mainNavItems.map(({ id, label, icon: Icon }) => (
