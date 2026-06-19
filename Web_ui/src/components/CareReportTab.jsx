@@ -57,6 +57,7 @@ const productReports = [
       { label: "이번달 하루 평균", value: "4.3 L", subValue: "누적 76.9 L", highlight: true },
       { label: "지난달 하루 평균", value: "4.6 L", subValue: "누적 141.3 L" },
     ],
+    trend: [42, 48, 45, 46, 44, 43],
   },
   {
     id: "washer",
@@ -68,6 +69,7 @@ const productReports = [
       { label: "이번달 사용량", value: "126 kWh", subValue: "지난달 132 kWh", highlight: true },
       { label: "효율 등급", value: "A", subValue: "좋은 사용 습관이에요!", grade: true },
     ],
+    trend: [64, 58, 62, 55, 51, 48],
   },
   {
     id: "dryer",
@@ -80,6 +82,7 @@ const productReports = [
       { label: "이번달 사용량", value: "98 kWh", subValue: "지난달 75 kWh", highlight: true },
       { label: "케어 팁", value: "자동 건조", subValue: "습한 날 추천" },
     ],
+    trend: [34, 38, 42, 56, 61, 68],
   },
   {
     id: "air_conditioner",
@@ -98,6 +101,7 @@ const productReports = [
       { name: "다빈 방", usage: "8시간", status: "적정" },
       { name: "재혁 방", usage: "7시간", status: "절전 양호" },
     ],
+    trend: [40, 52, 58, 66, 74, 82],
   },
 ];
 
@@ -244,6 +248,9 @@ function EnergyUsageCard({ report, formatCurrency, onOpenDetail }) {
         <span />
         <span />
         <span />
+        <span />
+        <span />
+        <span />
         <i>
           <Zap size={25} fill="currentColor" />
         </i>
@@ -309,7 +316,18 @@ function ProductReportCard({ report }) {
           ))}
         </div>
       )}
+      {report.trend && <MiniTrendChart values={report.trend} />}
     </article>
+  );
+}
+
+function MiniTrendChart({ values }) {
+  return (
+    <div className="care-mini-chart" aria-hidden="true">
+      {values.map((value, index) => (
+        <span key={`${value}-${index}`} style={{ "--chart-value": `${value}%` }} />
+      ))}
+    </div>
   );
 }
 
