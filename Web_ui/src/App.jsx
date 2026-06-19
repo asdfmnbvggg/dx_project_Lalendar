@@ -19,7 +19,7 @@ import LoginPage from "./pages/LoginPage.jsx";
 import TaskComposer from "./components/TaskComposer.jsx";
 import DetailPanel from "./components/DetailPanel.jsx";
 import DeviceTab from "./components/DeviceTabSynced.jsx";
-import CareTab from "./components/CareTab.jsx";
+import CareReportTab from "./components/CareReportTab.jsx";
 import MenuTab from "./components/MenuTab.jsx";
 import introLogo from "./assets/intro.png";
 import lgCharacter from "./assets/lg-character.png";
@@ -1510,7 +1510,7 @@ export default function App() {
             activeCalendarUser={activeCalendarUser}
           />
         )}
-        {activeTab === "care" && <CareTab onOpenNotifications={openNotificationPopover} />}
+        {activeTab === "care" && <CareReportTab onOpenNotifications={openNotificationPopover} />}
         {activeTab === "menu" && <MenuTab onOpenNotifications={openNotificationPopover} />}
 
         <nav className="tabbar thinq-main-tabbar" aria-label="하단 탭">
