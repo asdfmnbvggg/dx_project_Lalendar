@@ -1,0 +1,710 @@
+﻿no,x_event_title,x_event_date,x_event_start_time,x_event_end_time,x_day_temp,x_day_humidity,x_day_dust,expected_task_appliance,expected_task_appliance_mode,expected_task_date,expected_task_start_time,expected_task_end_time,predicted_task_appliance,predicted_task_appliance_mode,predicted_task_date,predicted_task_start_time,predicted_task_end_time,raw_response,response_length,json_parse_success,exact_match,failure_type,error
+1,이마트 장보기,2026-03-15,10:00,11:30,15.7,40.0,30,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+2,아내와 성수동 카페 탐방,2026-04-15,10:00,13:00,20.4,50.0,20,robot_cleaner,자동,2026-04-15,09:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+3,아내 생신 저녁 외식,2026-03-20,19:30,21:30,15.0,50.0,20,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+4,연희동 일식집 방문,2026-03-05,18:00,20:00,15.0,60.0,20,washer,기능성,2026-03-05,20:15,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+5,노을 보러 북한산 둘레길,2025-10-15,16:00,18:00,20.3,55.0,15,washer,기능성,2025-10-15,18:00,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+6,앞산공원 산책,2024-04-15,10:00,12:00,19.3,52.0,15,washer,기능성,2024-04-15,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+7,가족과 맛집 탐방,2026-05-21,11:00,14:00,22.1,50.0,15,washer,표준,2026-05-21,14:30,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+8,천연 발효종 빵 사기,2026-03-11,10:00,11:00,18.5,50.0,25,washer,기능성,2026-03-11,11:30,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+9,가족과 송도 파스타 맛집 방문,2026-09-15,17:00,19:00,24.0,58.0,30,washer,표준,2026-09-15,19:00,19:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+10,들안길 일식당 저녁,2026-02-12,18:30,20:00,2.5,60.0,15,dishwasher,강력,2026-02-12,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+11,남편과 수목원 나들이,2026-05-07,09:30,12:30,22.1,55.0,15,air_conditioner,냉방,2026-05-07,08:30,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+12,제주도 서귀포 독채 펜션,2026-05-05,15:00,11:00,22.3,60.0,10,air_purifier,자동,2026-05-05,13:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+13,평창 전나무 숲 산책,2026-06-12,10:00,12:00,22.5,60.0,15,washer,기능성,2026-06-12,12:15,13:15,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+14,강화도 전등사 숲길 트레킹,2026-04-23,09:00,12:00,18.4,55.0,15,washer,기능성,2026-04-23,12:30,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+15,주말 바다 여행,2026-05-20,10:00,18:00,24.1,60.0,20,washer,기능성,2026-05-20,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+16,주말 대청호 드라이브,2026-05-20,13:00,16:00,22.5,55.0,20,washer,기능성,2026-05-20,16:00,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+17,남강변 가족 나들이,2025-05-15,13:00,18:00,25.0,40.0,20,washer,표준,2025-05-15,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+18,서울시티투어,2026-05-20,14:00,18:00,26.1,50.0,15,washer,기능성,2026-05-20,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+19,배우자와 동네 갈빗집 외식,2026-04-10,18:00,19:30,20.5,40.0,15,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+20,대청호 숲길 산책,2024-04-20,10:00,12:00,18.5,60.0,15,washer,기능성,2024-04-20,12:30,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+21,청도 펜션 예약,2026-04-15,10:00,16:00,20.3,55.0,30,washer,기능성,2026-04-15,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+22,청주 상당산성 둘레길 걷기,2026-04-14,11:00,13:00,19.5,48.0,15,washer,기능성,2026-04-14,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+23,양평 숲길 걷기,2026-05-14,10:00,11:30,22.0,50.0,10,washer,기능성,2026-05-14,11:30,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+24,전기기능사 자격증 공부,2026-04-15,20:00,22:00,18.2,55.0,22,air_conditioner,제습,2026-04-15,19:30,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+25,부산 국제시장 맛집 탐방,2026-03-12,11:00,14:00,16.5,50.0,20,washer,패딩케어,2026-03-12,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+26,가족 산책,2026-05-10,10:00,12:00,24.2,55.0,17,air_conditioner,제습,2026-05-10,12:30,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+27,신혼부부 집들이,2026-06-12,16:00,20:00,27.5,40.0,20,dishwasher,강력,2026-06-12,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+28,노포 맛집 탐방,2026-07-14,11:30,14:00,26.7,40.0,30,washer,기능성,2026-07-14,14:30,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+29,가족과 강원도 여행,2026-10-14,08:00,15:00,18.7,50.0,22,washer,표준,2026-10-14,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+30,축구 경기 관람,2026-05-15,16:00,18:00,22.5,40.0,10,washer,기능성,2026-05-15,18:00,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+31,동문시장 방문,2026-06-15,10:00,12:00,25.5,43.0,17,robot_cleaner,자동,2026-06-15,10:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+32,부모님 생신 잔치,2026-07-05,15:00,18:00,30.0,40.0,10,dishwasher,강력,2026-07-05,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+33,제주도 미술관 방문,2026-04-10,10:00,16:00,22.3,60.0,15,air_conditioner,냉방,2026-04-10,16:30,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+34,유성온천 반신욕,2026-02-12,10:00,12:00,5.0,60.0,10,washer,표준,2026-02-12,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+35,남편과 크림 파스타 외식,2026-09-23,18:30,20:00,22.1,55.0,10,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+36,충남 아산 온천 여행,2026-05-27,10:00,18:00,27.4,50.0,14,washer,기능성,2026-05-27,18:00,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+37,주말 산책로 걷기,2026-07-12,09:00,11:00,23.0,52.0,17,washer,기능성,2026-07-12,11:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+38,가족과 숯불 갈비,2026-04-01,17:00,19:00,20.0,55.0,40,robot_cleaner,자동,2026-04-01,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+39,주말 망원시장 장보기,2026-05-15,10:00,12:00,23.5,52.0,8,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+40,용산 맛집 탐방,2026-03-12,12:30,14:00,15.0,60.0,20,air_conditioner,제습,2026-03-12,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+41,일본식 오마카세,2026-11-11,18:30,20:30,20.5,40.0,10,washer,패딩케어,2026-11-11,20:30,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+42,기흥구 숨은 빵집 탐방,2026-03-22,14:00,16:00,20.5,50.0,25,washer,기능성,2026-03-22,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+43,고향 친지 방문,2026-05-01,11:00,18:00,22.0,50.0,20,robot_cleaner,자동,2026-05-01,09:00,10:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+44,부부와 돼지갈비 외식,2026-04-20,18:00,20:00,19.0,65.0,30,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+45,동네 사우나에서 반신욕,2026-01-10,19:00,21:00,-2.0,70.0,30,washer,기능성,2026-01-10,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+46,시내 갤러리 투어,2026-05-05,13:00,17:00,23.3,61.0,19,air_conditioner,냉방,2026-05-05,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+47,서해안 드라이브,2026-04-10,09:00,13:00,20.0,50.0,15,robot_cleaner,자동,2026-04-10,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+48,울산 맛집 삼겹살,2026-04-10,18:30,20:00,20.5,50.0,15,air_conditioner,냉방,2026-04-10,17:30,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+49,천호천 반려견 산책,2026-05-20,08:00,09:00,22.3,50.0,10,washer,기능성,2026-05-20,09:00,10:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+50,동탄 일식집 점심,2026-03-10,12:30,13:30,15.2,60.0,30,dishwasher,강력,2026-03-10,13:30,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+51,가족과 시장 구경,2026-04-30,10:00,12:00,20.0,55.0,12,washer,기능성,2026-04-30,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+52,제주도 골프 리조트 여행,2026-04-10,09:00,18:00,22.3,55.0,15,air_conditioner,냉방,2026-04-10,18:00,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+53,구로구 역사 유적지 탐방,2026-04-15,10:00,15:00,18.7,55.0,20,washer,기능성,2026-04-15,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+54,친구들과 의암호 사진 촬영,2026-10-15,09:00,12:00,15.5,65.0,15,washer,셔츠,2026-10-15,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+55,주말 아내와 외식,2026-01-15,17:30,20:00,4.0,49.0,10,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+56,가이세키 료칸 여행,2026-08-12,09:00,17:00,25.0,60.0,18,washer,기능성,2026-08-12,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+57,퇴근 후 분식집 저녁,2026-03-15,18:30,20:00,16.2,60.0,20,washer,기능성,2026-03-15,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+58,제천 맛집 탐방,2026-06-20,12:00,14:30,27.3,65.0,15,washer,기능성,2026-06-20,14:30,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+59,부모님 생신 기념 외식,2026-06-15,18:00,20:00,28.7,60.0,20,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+60,아내와 점심 데이트,2026-04-10,12:00,13:30,18.2,55.0,30,washer,기능성,2026-04-10,13:30,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+61,전주 갤러리 투어,2026-04-12,10:00,12:00,18.2,55.0,30,washer,표준,2026-04-12,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+62,주말 일본식당 탐방,2026-03-12,11:30,14:00,18.5,50.0,5,washer,기능성,2026-03-12,14:30,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+63,가족 저녁 나들이,2026-07-20,17:30,20:00,28.4,50.0,30,dishwasher,강력,2026-07-20,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+64,문학거리 산책,2026-04-15,16:00,18:00,25.0,45.0,18,washer,기능성,2026-04-15,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+65,강원도 평창 가족 여행,2026-06-12,08:30,14:30,19.7,65.0,15,washer,기능성,2026-05-03,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+66,아내와 일식 외식,2026-04-30,18:30,20:30,20.1,55.0,10,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+67,반려견과 숲길 산책,2026-04-10,10:30,12:00,15.2,55.0,20,washer,기능성,2026-04-10,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+68,자연 경관 산책,2026-09-15,09:30,12:00,21.8,50.0,8,air_conditioner,제습,2026-09-15,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+69,서점 방문,2026-02-25,14:00,16:00,20.3,45.0,30,washer,표준,2026-02-25,16:00,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+70,진해 해안도로 자전거 라이딩,2026-04-20,09:00,12:00,20.5,50.0,30,washer,표준,2026-04-20,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+71,강원도 여행,2025-07-25,11:00,15:00,23.0,55.0,10,washer,기능성,2025-07-25,15:30,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+72,전주 나물 정식 맛집 탐방,2026-04-10,11:00,14:00,18.7,55.0,20,air_conditioner,제습,2026-04-10,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+73,테니스 클럽 정기 모임,2026-05-20,17:00,20:00,24.0,55.0,20,washer,기능성,2026-05-20,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+74,강릉 바닷가 산책,2024-06-10,10:00,12:00,26.3,60.0,15,washer,기능성,2024-06-10,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+75,아산 온천 가족 여행,2026-03-15,11:00,17:00,21.0,40.0,8,air_conditioner,냉방,2026-03-15,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+76,아내와 동네 고깃집에서 저녁,2026-10-02,18:30,20:00,17.2,70.0,22,robot_cleaner,자동,2026-06-15,15:00,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+77,중남미 테마 펜션 드라이브 여행,2026-11-11,09:00,16:00,16.0,50.0,15,washer,기능성,2026-11-11,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+78,부산 돼지국밥 탐방,2026-05-15,11:00,13:00,27.5,45.0,28,washer,표준,2026-05-15,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+79,사찰 음식 외식,2026-04-22,12:30,14:00,17.2,65.0,15,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+80,성북동 나물 정식 맛집 탐방,2026-04-12,12:30,14:00,20.1,50.0,15,washer,표준,2026-04-12,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+81,삼겹살 저녁 외식,2026-05-20,18:30,20:00,22.3,55.0,20,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+82,송리단길 이탈리안 레스토랑,2026-04-22,18:00,20:00,21.4,50.0,14,robot_cleaner,자동,2026-04-22,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+83,아내와 함께 하는 역사 다큐멘터리 시청,2024-02-10,20:00,21:30,5.0,60.0,35,air_purifier,자동,2024-02-10,21:30,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+84,강원도 레포츠 체험,2025-08-12,09:00,18:00,27.3,60.0,30,washer,기능성,2025-08-12,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+85,전주 시내 한식당 외식,2026-04-15,18:00,20:00,19.2,45.0,10,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+86,아산 파라다이스 스파 방문,2026-09-22,10:00,16:00,23.1,55.0,14,washer,표준,2026-09-22,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+87,온천 호텔 스파 데이트,2026-03-12,10:00,15:00,18.2,60.0,20,washer,기능성,2026-03-12,15:30,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+88,독립영화관에서 영화 관람,2026-08-15,18:30,21:00,22.7,55.0,20,washer,표준,2026-08-15,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+89,남편과 벚꽃길 산책,2026-04-15,18:30,20:00,17.8,50.0,10,washer,기능성,2026-04-15,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+90,동네 유명 한우 전문점,2026-06-20,18:30,20:00,28.0,50.0,18,washer,기능성,2026-06-20,20:00,20:20,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+91,경주 대릉원 방문,2026-03-25,14:00,16:00,19.5,58.0,20,washer,기능성,2026-03-25,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+92,정자동 파스타 집 디너,2025-05-15,19:30,21:00,22.1,50.0,15,robot_cleaner,자동,2025-05-15,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+93,양양 해변 멍 때리기 여행,2026-10-15,09:00,15:00,20.2,53.0,25,washer,기능성,2026-10-15,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+94,야구 경기 관람,2026-07-20,17:00,21:00,25.6,48.0,12,washer,기능성,2026-07-20,21:00,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+95,노포 맛집 탐방,2026-03-20,12:00,14:00,18.5,55.0,20,washer,기능성,2026-03-20,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+96,청국장 전문점 방문,2025-08-20,12:00,13:30,27.5,75.0,15,washer,기능성,2025-08-20,13:30,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+97,대구 쇼핑센터 투어,2024-04-13,10:00,15:00,20.5,50.0,15,washer,기능성,2024-04-13,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+98,상가 쇼핑,2026-05-02,12:00,14:00,22.2,50.0,18,washer,기능성,2026-05-02,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+99,주말 일식집 외식,2026-04-17,18:30,20:00,19.0,57.0,15,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+100,세종시 전시회 관람,2026-11-25,14:00,16:00,12.3,60.0,5,washer,기능성,2026-11-25,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+101,주말 소주 모임,2026-08-14,18:00,21:00,28.0,50.0,15,robot_cleaner,자동,2026-08-14,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+102,동네 배드민턴 클럽 정기 모임,2024-04-15,18:00,20:00,18.2,60.0,15,robot_cleaner,자동,2024-04-15,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+103,의성 갈비 먹으러 가기,2026-04-15,10:00,14:00,18.2,50.0,15,washer,기능성,2026-04-15,14:30,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+104,동네 요가 수업,2024-06-10,19:00,20:00,23.5,55.0,15,air_conditioner,냉방,2024-06-10,18:00,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+105,평택호 낚시,2026-04-15,06:30,12:00,17.5,60.0,15,washer,기능성,2026-04-15,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+106,광명전통시장 외식,2026-11-10,17:00,19:00,19.2,60.0,22,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+107,남해 바닷가 가족 여행,2026-07-22,11:00,16:00,28.0,55.0,20,washer,기능성,2026-07-22,16:00,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+108,여수 해변 산책,2024-06-15,10:00,12:00,26.3,60.0,15,washer,기능성,2024-06-15,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+109,이웃 집 수리 도와주기,2026-07-22,14:00,18:00,29.3,40.0,20,washer,기능성,2026-07-22,18:00,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+110,센텀시티몰 디자인 소품 쇼핑,2026-03-12,14:00,17:00,18.5,50.0,11,washer,기능성,2026-03-12,17:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+111,롯데 자이언츠 야구 경기 관람,2026-04-16,18:30,21:00,20.5,45.0,10,washer,표준,2026-04-16,21:00,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+112,남편과 드라이브 여행,2026-04-16,09:00,17:00,20.3,50.0,15,washer,기능성,2026-04-16,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+113,동네 찜질방,2026-02-20,16:00,18:00,10.0,70.0,15,washer,기능성,2026-02-20,18:00,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+114,동네 삼겹살집 외식,2026-03-15,19:00,21:00,15.5,48.0,10,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+115,남산 고기집 탐방,2025-10-14,19:00,21:00,18.2,60.0,15,dishwasher,강력,2025-10-14,21:00,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+116,금정산 숨은 등산로 탐방,2026-04-15,09:00,12:00,18.3,55.0,20,washer,기능성,2026-04-15,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+117,군산 이성당 신제품 출시 기념 방문,2024-04-10,10:00,11:30,18.5,60.0,20,washer,표준,2024-04-10,11:30,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+118,부산시내 맛집 탐방,2026-08-04,11:30,14:00,28.2,47.0,19,robot_cleaner,자동,2026-08-04,11:30,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+119,남해 바다 산책,2026-05-20,11:00,14:00,22.0,55.0,10,washer,기능성,2026-05-20,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+120,가족 바비큐,2026-07-02,17:00,20:00,28.7,50.0,30,washer,강력,2026-07-02,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+121,제주도 여행,2026-05-10,09:00,18:00,22.4,60.0,30,robot_cleaner,자동,2026-05-10,09:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+122,가족과 해수욕장,2026-07-20,10:00,16:00,30.0,70.0,10,air_conditioner,제습,2026-07-20,16:00,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+123,일식 초밥 세트,2026-02-20,19:00,20:30,12.0,65.0,22,washer,표준,2026-02-20,20:30,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+124,배우자와 저녁 외식,2026-03-15,19:00,21:00,12.3,55.0,30,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+125,부산 시티투어 버스 탑승,2025-08-12,10:00,12:00,30.2,60.0,35,air_conditioner,냉방,2025-08-12,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+126,아내와 저녁 외식,2026-03-22,18:00,20:00,21.3,50.0,12,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+127,기흥의 한정식집 방문,2026-07-20,18:00,20:00,27.5,55.0,15,air_conditioner,냉방,2026-07-20,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+128,김밥 맛집 탐방,2026-04-15,11:00,13:00,18.5,60.0,20,washer,표준,2026-04-15,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+129,부산 일식집 방문,2026-05-05,12:00,15:00,25.0,55.0,10,robot_cleaner,자동,2026-05-05,12:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+130,오마카세 예약,2026-06-25,19:00,21:00,26.5,65.0,15,washer,표준,2026-06-25,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+131,전국 일식 먹거리 축제,2026-06-20,10:00,16:00,26.5,60.0,30,washer,기능성,2026-06-20,16:30,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+132,미식 여행을 위한 준비,2026-06-10,10:00,12:00,27.0,55.0,18,dryer,소량급속,2026-06-10,08:00,09:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+133,주말 가족 나들이,2026-11-12,10:00,14:00,18.2,50.0,15,washer,기능성,2026-11-12,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+134,전자제품 리뷰 영상 시청,2024-12-01,20:00,22:00,5.0,40.0,20,air_conditioner,제습,2024-12-01,19:30,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+135,소래습지생태공원 산책,2024-04-22,10:00,12:00,18.5,55.0,15,washer,기능성,2024-04-22,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+136,아내와 저녁 초밥 먹기,2025-05-12,18:30,20:00,22.5,55.0,15,dishwasher,강력,2026-04-10,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+137,부부와 함께하는 장흥 5일장 구경,2026-05-05,09:00,12:00,22.7,60.0,20,robot_cleaner,자동,2026-05-05,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+138,아내와 디저트 카페 방문,2024-03-15,16:00,17:30,17.2,55.0,30,washer,기능성,2024-03-15,17:30,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+139,아내와 함께 돌산 해변 드라이브,2026-04-08,09:00,12:00,19.5,50.0,20,washer,기능성,2026-04-08,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+140,가족 외식,2026-03-05,18:00,20:00,19.0,45.0,22,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+141,친구와 카페에서 디저트,2026-06-10,11:30,13:00,25.0,60.0,10,washer,표준,2026-06-10,13:00,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+142,아내와 외식(일식당),2026-05-20,19:00,21:00,22.7,40.0,15,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+143,온천 가족 여행,2026-03-12,09:00,17:00,15.3,60.0,20,washer,기능성,2026-03-12,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+144,성수동 수제 버거 맛집 탐방,2026-04-02,12:00,14:00,19.5,60.0,30,washer,기능성,2026-04-02,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+145,양가 부모님 방문,2026-03-12,12:00,15:00,14.2,60.0,30,robot_cleaner,자동,2026-03-12,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+146,대구 돼지국밥 맛집 탐방,2026-03-15,12:00,14:00,16.0,55.0,20,washer,기능성,2026-03-15,14:30,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+147,남한산성 둘레길 산책,2026-04-15,10:00,12:00,18.2,50.0,20,washer,기능성,2026-04-15,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+148,금정산 트레킹,2026-08-11,08:00,10:00,20.0,45.0,20,washer,강력,2026-08-11,10:00,11:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+149,부부와 함께 팔공산 캠핑,2026-06-05,11:00,14:00,27.5,40.0,15,washer,기능성,2026-06-05,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+150,상무지구 맛집 탐방,2025-04-10,18:30,21:00,20.3,55.0,30,air_purifier,자동,2025-04-10,21:00,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+151,소품 숍 오픈 준비,2026-04-01,10:00,16:00,14.0,50.0,18,robot_cleaner,자동,2026-04-01,09:00,10:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+152,부부 수목원 산책,2026-11-12,13:00,15:00,21.0,48.0,20,washer,기능성,2026-11-12,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+153,가족과 함께 빵집 투어,2026-04-02,10:00,13:00,16.3,60.0,12,washer,표준,2026-04-02,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+154,고덕신도시 삼겹살 외식,2025-10-07,19:00,21:00,18.5,70.0,25,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+155,강원도 스키장 방문,2026-01-05,09:00,17:00,-5.0,60.0,5,washer,기능성,2026-01-05,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+156,남편 생일 저녁,2026-04-20,18:00,21:00,22.5,40.0,15,dishwasher,강력,2026-04-20,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+157,안양천 반려견 산책,2025-04-15,09:00,10:30,18.2,60.0,20,washer,기능성,2025-04-15,10:30,11:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+158,이마트 장보기,2026-02-12,10:00,12:00,5.2,60.0,20,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+159,삼산동 일식 맛집 탐방,2026-05-21,18:30,20:30,22.0,50.0,10,washer,조용조용,2026-05-21,20:30,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+160,전통 찻집 방문,2026-01-28,15:00,17:00,7.5,70.0,25,washer,표준,2026-01-28,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+161,가평 저수지 민물낚시,2026-04-15,06:30,12:30,18.3,55.0,20,washer,기능성,2026-04-15,12:30,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+162,서울 시내 갤러리 탐방,2026-04-10,10:00,13:00,18.5,55.0,20,washer,기능성,2026-04-10,13:30,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+163,양양 해변 드라이브,2026-05-20,10:00,13:00,24.0,55.0,12,washer,기능성,2026-05-20,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+164,부부와 함께하는 전통시장 방문,2026-02-28,10:30,13:00,12.6,40.0,25,washer,표준,2026-02-28,13:30,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+165,여름 바닷가 여행,2026-07-15,09:00,18:00,30.2,60.0,15,washer,기능성,2026-07-15,18:00,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+166,배우자 집들이,2026-10-15,15:00,18:00,18.0,50.0,20,robot_cleaner,자동,2026-10-15,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+167,담양 메타세쿼이아 길 드라이브,2025-04-15,10:00,13:00,20.5,50.0,30,air_conditioner,냉방,2025-04-15,09:30,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+168,가족과 함께 바닷가 소풍,2026-07-25,10:00,17:00,29.0,65.0,12,washer,기능성,2026-07-25,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+169,대구 아쿠아리움 방문,2026-05-01,11:00,14:00,22.0,50.0,20,washer,기능성,2026-05-01,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+170,행주산성 둘레길 산책,2026-04-20,09:00,11:00,20.3,40.0,20,washer,기능성,2026-04-20,11:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+171,부산 금정산 둘레길 걷기,2026-04-15,10:00,13:00,18.3,50.0,20,washer,기능성,2026-04-15,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+172,대구 신세계백화점 방문,2026-06-25,11:00,15:00,25.0,54.0,14,washer,기능성,2026-06-25,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+173,주말 역사 소설 독서,2026-06-12,14:00,16:30,27.0,50.0,10,air_conditioner,냉방,2026-06-12,13:30,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+174,노포 음식 여행,2026-08-15,11:00,20:00,27.8,43.0,16,washer,기능성,2026-08-15,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+175,동네 산책로 걷기,2026-05-14,18:30,19:30,22.3,50.0,20,washer,기능성,2026-05-14,19:30,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+176,부하들과 점심 회식,2026-03-12,12:00,13:30,15.2,55.0,20,dishwasher,강력,2026-03-12,13:30,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+177,도쿄 시티투어,2026-08-15,08:00,18:00,30.0,50.0,10,air_conditioner,제습,2026-08-15,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+178,속초 중앙시장 닭강정,2026-05-21,12:00,13:30,22.3,50.0,15,washer,표준,2026-05-21,13:30,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+179,대전 시티투어,2026-04-15,09:00,17:00,22.0,60.0,30,washer,기능성,2026-04-15,17:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+180,청량리 맛집 탐방,2026-05-20,18:00,20:00,25.0,45.0,8,washer,기능성,2026-05-20,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+181,양가 부모님 방문,2025-11-05,12:00,16:00,15.0,75.0,30,robot_cleaner,자동,2025-11-05,10:00,11:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+182,신림동 맛집 탐방,2026-04-22,12:00,14:00,19.0,55.0,30,washer,표준,2026-04-22,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+183,이촌동 일식당 탐방,2024-04-20,13:00,15:00,22.4,50.0,10,robot_cleaner,자동,2024-04-20,13:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+184,석촌호수 가벼운 산책,2026-03-15,09:00,11:00,18.5,55.0,10,air_conditioner,냉방,2026-03-15,11:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+185,포천 아트밸리 방문,2025-08-14,09:00,12:00,25.6,42.0,20,air_purifier,자동,2025-08-14,08:00,08:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+186,영남알프스 소풍,2026-04-20,10:00,15:00,20.3,55.0,15,washer,기능성,2026-04-20,15:00,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+187,석촌호수 카페 탐방,2024-04-15,11:00,13:00,19.3,55.0,15,air_purifier,자동,2024-04-15,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+188,속초 맛집 탐방,2026-06-12,11:00,16:00,22.4,60.0,30,washer,기능성,2026-06-12,16:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+189,이마트 장보기,2026-03-12,10:00,11:00,15.2,60.0,20,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+190,가족 드라이브 및 바다 구경,2026-07-15,10:00,17:00,30.2,70.0,15,washer,기능성,2026-07-15,17:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+191,판교역 베트남 쌀국수,2026-04-22,19:00,20:30,19.0,55.0,12,washer,표준,2026-04-22,20:30,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+192,제주도 오름 투어,2026-09-05,08:00,17:00,26.0,65.0,10,washer,기능성,2026-09-05,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+193,동네 당구장 3쿠션 게임,2026-04-16,20:00,22:00,16.0,60.0,25,robot_cleaner,자동,2026-04-16,22:00,22:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+194,이모님 생신 파티,2026-05-10,18:00,21:00,22.5,50.0,15,robot_cleaner,자동,2026-05-10,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+195,고깃집 저녁 외식,2026-05-10,18:30,20:00,22.0,50.0,20,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+196,가평 수목원 산책,2026-04-15,10:00,12:00,20.5,50.0,15,washer,기능성,2026-04-15,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+197,제주 전나무 숲 여행,2026-04-18,09:00,12:00,21.5,50.0,14,air_conditioner,제습,2026-04-18,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+198,평택 배드민턴 동호회,2026-11-05,20:00,22:00,8.2,55.0,20,air_conditioner,냉방,2026-11-05,22:00,22:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+199,온천 가족 여행,2024-03-15,10:00,18:00,15.2,60.0,20,washer,기능성,2024-03-15,18:30,19:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+200,익산 시장 탐방,2024-04-14,09:00,12:00,19.0,50.0,30,washer,기능성,2024-04-14,12:30,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+201,아이들과 함께하는 도서관 봉사,2024-04-15,10:00,12:00,18.3,60.0,20,washer,기능성,2024-04-15,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+202,강릉 해안도로 드라이브,2026-04-15,10:00,15:00,20.0,55.0,12,washer,기능성,2026-04-15,15:00,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+203,팔공산 등산,2025-10-14,08:00,12:00,18.2,60.0,20,washer,기능성,2025-10-14,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+204,여름휴가 제주도 여행,2024-07-10,09:00,14:00,30.5,60.0,15,washer,기능성,2024-07-10,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+205,해외 여행 준비,2026-03-10,09:00,12:00,15.0,60.0,20,washer,기능성,2026-03-10,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+206,일식집 외식,2026-03-25,18:30,20:00,16.5,60.0,32,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+207,동네 친구들과 배드민턴 경기,2026-06-12,16:00,18:00,25.5,55.0,15,washer,기능성,2026-06-12,18:30,19:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+208,밀양 숲속 캠핑,2026-07-20,15:00,19:00,28.7,65.0,10,washer,기능성,2026-07-20,19:00,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+209,아내와 바베큐 저녁,2026-01-29,18:30,20:30,7.4,50.0,8,robot_cleaner,자동,2026-01-29,18:30,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+210,주말 팔공산 산책,2026-03-25,08:00,11:00,19.2,48.0,14,washer,표준,2026-03-25,11:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+211,여수 바다 드라이브,2026-09-18,13:00,19:00,26.6,55.0,22,air_conditioner,제습,2026-09-18,19:00,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+212,전주 파스타 맛집 탐방,2026-10-14,18:30,20:30,16.3,55.0,18,washer,표준,2026-10-14,20:30,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+213,아이들과 놀이터,2026-04-10,10:00,12:00,20.0,55.0,15,washer,기능성,2026-04-10,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+214,부부 온천 데이트,2026-06-10,11:00,15:00,28.2,60.0,10,washer,기능성,2026-10-02,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+215,주말 농구 경기,2026-03-27,15:00,17:00,22.0,45.0,18,washer,강력,2026-03-27,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+216,동료들과 노래방,2026-03-15,18:00,20:00,16.0,60.0,20,washer,표준,2026-03-15,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+217,오크밸리 산책,2026-04-10,10:00,12:00,18.3,50.0,20,washer,표준,2026-04-10,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+218,롯데월드 대기 시간 확인,2026-04-10,09:00,11:00,18.3,55.0,20,washer,표준,2026-04-10,11:30,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+219,남편과의 한정식 외식,2026-05-10,18:00,20:00,22.0,50.0,15,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+220,남해 풀빌라 친구들과 휴가,2026-05-12,10:00,15:00,22.6,30.0,7,air_conditioner,냉방,2026-05-12,15:00,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+221,안면도 해안가 산책,2024-05-21,10:00,12:00,22.1,60.0,20,washer,표준,2024-05-21,12:30,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+222,숯불 갈비 맛집 탐방,2026-04-15,18:00,21:00,20.3,55.0,30,washer,기능성,2026-04-15,21:00,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+223,평창 숲길 산책,2026-05-12,09:00,14:00,22.0,50.0,15,washer,기능성,2026-05-12,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+224,아내와 돼지갈비 외식,2026-06-10,18:30,20:00,25.0,60.0,15,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+225,부천 당구장 방문,2026-04-22,16:00,18:00,20.0,60.0,15,washer,기능성,2026-04-22,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+226,가족과 바닷길 드라이브,2026-05-14,10:00,13:00,22.3,60.0,15,washer,기능성,2026-05-14,13:00,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+227,건설 현장 점검,2026-05-10,08:00,12:00,21.7,48.0,25,washer,기능성,2026-05-10,12:00,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+228,가벼운 동네 산책,2026-01-18,16:00,18:00,2.5,50.0,10,robot_cleaner,자동,2026-01-18,16:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+229,주말 평택강변 산책,2026-09-11,10:00,12:00,23.8,48.0,20,washer,기능성,2026-09-11,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+230,전통시장 쇼핑,2026-11-15,10:00,13:00,15.0,55.0,22,washer,표준,2026-11-15,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+231,남편과 동네 고깃집 외식,2026-07-23,19:00,21:00,28.0,70.0,30,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+232,부산 해안도로 드라이브,2026-07-10,15:00,18:00,27.4,50.0,8,robot_cleaner,자동,2026-07-10,15:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+233,아이들과 동물원 나들이,2026-04-10,10:00,15:00,19.2,60.0,20,washer,기능성,2026-04-10,15:00,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+234,가평 숲길 산책,2026-04-22,10:00,12:00,18.3,60.0,15,air_conditioner,냉방,2026-04-22,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+235,한우 전문점 저녁 외식,2024-03-15,18:30,20:00,12.5,60.0,20,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+236,가족 제주도 여행,2026-05-22,09:00,19:00,23.4,50.0,10,washer,기능성,2026-05-22,19:30,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+237,남해 바람의 언덕 방문,2026-08-30,10:00,14:00,25.5,65.0,8,washer,표준,2026-08-30,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+238,임대 관리 소모임,2026-04-28,13:00,15:00,18.0,53.0,12,washer,표준,2026-04-28,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+239,상봉동 볼링장 방문,2026-09-15,18:30,21:30,24.0,55.0,18,washer,기능성,2026-09-15,21:30,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+240,전국 노포 고기집 탐방,2026-05-08,12:00,14:00,19.0,50.0,20,dishwasher,강력,2026-05-08,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+241,주문진 해안 드라이브,2026-07-10,13:00,17:00,27.8,50.0,5,washer,기능성,2026-07-10,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+242,관악산 둘레길 트레킹,2025-10-15,09:00,12:00,18.3,60.0,20,washer,기능성,2025-10-15,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+243,봉명동 이자카야 방문,2026-09-10,19:00,21:00,24.4,50.0,17,dishwasher,강력,2026-09-10,21:00,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+244,아내 생신 기념 저녁식사,2025-11-18,18:30,21:00,15.4,75.0,20,washer,기능성,2025-11-18,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+245,주말 리조트 가족 여행,2026-06-10,09:00,17:00,27.8,55.0,15,washer,기능성,2026-06-10,17:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+246,남편과 리조트 휴양,2026-05-05,15:00,17:00,22.3,60.0,10,washer,기능성,2026-05-05,17:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+247,무심천 산책,2026-05-14,19:00,20:00,22.5,40.0,10,washer,기능성,2026-05-14,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+248,양양 조용한 펜션,2026-08-15,15:00,21:00,27.3,30.0,5,washer,표준,2026-08-15,21:00,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+249,전국 명물 빵집 탐방,2026-03-20,10:00,17:00,15.0,55.0,10,washer,표준,2026-03-20,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+250,남편과 고기구이 외식,2026-05-15,19:00,21:00,22.1,60.0,15,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+251,아이들과 숲 체험 프로그램,2026-04-15,10:00,12:00,18.2,60.0,15,washer,기능성,2026-04-15,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+252,해외 자전거 여행,2026-09-10,09:00,17:00,26.0,60.0,10,air_conditioner,냉방,2026-09-10,08:00,09:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+253,주말 가족 여행,2026-04-22,09:00,17:00,23.5,55.0,10,washer,기능성,2026-04-22,17:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+254,제부도 드라이브,2026-04-23,10:00,15:00,20.5,50.0,15,washer,기능성,2026-04-23,15:00,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+255,고기구이집 외식,2026-02-25,19:00,21:00,14.0,65.0,30,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+256,성수동 카페 탐방,2026-05-07,15:00,17:00,22.3,55.0,20,air_conditioner,제습,2026-05-07,17:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+257,경주 불국사 돌담길 걷기,2026-05-11,10:00,15:00,22.0,48.0,11,washer,기능성,2026-04-22,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+258,자녀 어린이집 운동회,2026-05-10,09:00,12:00,22.3,40.0,10,washer,기능성,2026-05-10,12:30,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+259,주말 테니스,2026-06-15,10:00,12:00,22.5,50.0,12,washer,기능성,2026-06-15,12:30,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+260,가족과 임진각 산책,2026-04-22,10:00,12:00,20.0,40.0,10,washer,기능성,2026-04-22,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+261,혼자 떠나는 숲 여행,2026-06-15,08:00,19:00,22.3,70.0,10,washer,기능성,2026-06-15,19:00,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+262,올림픽공원 산책,2026-04-10,10:00,12:00,18.0,50.0,20,washer,기능성,2026-04-10,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+263,가족과 영화 관람,2026-09-20,17:00,20:00,21.4,60.0,16,washer,기능성,2026-09-20,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+264,김해 미술관 방문,2026-10-01,14:00,17:00,23.5,50.0,9,washer,표준,2026-10-01,17:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+265,주말 친구들과 볼링 모임,2026-08-07,14:00,16:00,30.2,50.0,25,washer,기능성,2026-08-07,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+266,정선 노포 탐방,2026-04-15,11:00,14:00,18.2,55.0,12,washer,기능성,2026-04-15,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+267,고객 상담 일정,2026-04-25,10:00,12:00,20.0,55.0,20,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+268,아내 생일 저녁,2026-08-22,18:00,21:00,27.8,60.0,8,robot_cleaner,자동,2026-08-22,15:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+269,가족과 미술관 방문,2024-06-10,13:00,16:00,25.5,60.0,20,washer,기능성,2026-08-20,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+270,천안 시티투어 버스 여행,2026-04-10,09:00,12:00,18.2,50.0,30,washer,표준,2026-04-10,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+271,조용한 숲길 산책,2026-04-15,10:00,12:00,22.0,50.0,10,air_conditioner,냉방,2026-04-15,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+272,가평 노포 맛집 탐방,2026-06-12,11:30,13:30,22.3,53.0,9,washer,기능성,2026-06-12,13:30,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+273,남편 생신 저녁식사,2026-06-10,19:00,21:00,25.3,55.0,10,robot_cleaner,자동,2026-06-10,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+274,남편과 루미큐브,2026-06-15,20:00,22:00,22.5,60.0,14,air_conditioner,냉방,2026-06-15,18:00,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+275,배달 전문점 창업 준비 회의,2026-06-15,10:00,12:00,26.3,40.0,15,washer,기능성,2026-06-15,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+276,정갈한 보리밥 집 방문,2026-05-15,11:30,13:00,24.0,49.0,14,washer,기능성,2026-05-15,13:30,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+277,전통주 라벨 수집,2024-03-09,10:00,16:00,15.5,60.0,20,washer,기능성,2024-03-09,16:00,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+278,춘천 맛집 탐방,2026-06-15,18:00,20:00,27.0,45.0,11,washer,표준,2026-06-15,20:15,21:15,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+279,청라 호수공원 반려견 산책,2024-04-20,09:00,10:30,18.2,60.0,18,washer,기능성,2024-04-20,10:30,11:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+280,주말 평창 여행,2025-09-10,08:00,18:00,22.5,55.0,10,washer,기능성,2025-09-10,18:30,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+281,시티투어 명소 탐방,2026-03-28,12:00,17:00,22.3,48.0,15,washer,기능성,2026-03-28,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+282,네일 아트 예약,2026-07-08,14:00,15:30,29.1,40.0,30,washer,표준,2026-07-08,15:30,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+283,여자친구와 쇼핑,2026-03-20,14:00,17:00,18.5,50.0,30,washer,울,2026-03-20,17:30,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+284,가족과 안양천 산책,2026-09-03,17:00,19:00,24.2,50.0,12,robot_cleaner,자동,2026-09-03,17:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+285,의류 매장 재고 점검,2026-01-12,10:00,12:00,15.0,40.0,25,air_conditioner,냉방,2026-01-12,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+286,서초동 파스타 집 외식,2026-07-09,19:00,21:00,27.1,40.0,22,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+287,서울 미술관 관람,2026-01-18,14:00,17:00,5.5,50.0,15,air_purifier,자동,2026-01-18,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+288,된장찌개 저녁,2026-05-02,18:00,19:30,21.3,50.0,22,dishwasher,강력,2026-05-02,19:30,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+289,팔당호 캠핑,2026-05-05,14:00,19:00,22.8,55.0,12,washer,기능성,2026-05-05,19:00,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+290,양평 자연 감상,2026-04-12,09:00,12:00,22.5,50.0,15,washer,기능성,2026-04-12,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+291,아내 생일 기념 저녁 외식,2026-06-05,18:30,20:30,25.5,60.0,15,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+292,광교 초밥집 방문,2026-06-15,18:30,20:30,25.0,50.0,15,air_conditioner,냉방,2026-06-15,17:30,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+293,반려동물과 마당 산책,2026-03-15,09:00,10:00,15.0,55.0,10,washer,기능성,2026-03-15,10:00,11:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+294,제주도 숨은 맛집 탐방,2026-06-15,12:00,16:00,25.0,60.0,15,washer,표준,2024-04-13,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+295,내장산 산행,2026-05-14,08:00,13:00,22.0,50.0,25,washer,기능성,2026-05-14,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+296,여수 게장 거리 탐방,2026-06-25,12:00,14:00,24.8,70.0,10,air_conditioner,냉방,2026-06-25,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+297,청라 일식당 모둠 초밥,2026-03-15,19:00,21:00,12.5,60.0,30,washer,기능성,2026-03-15,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+298,가족과 숲 산책,2026-05-25,10:30,12:00,21.0,45.0,10,washer,기능성,2026-05-25,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+299,일식집 초밥 외식,2026-05-22,19:00,21:00,23.0,55.0,12,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+300,강원도 원주 캠핑,2026-03-12,09:00,17:00,15.2,50.0,20,washer,기능성,2026-03-12,17:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+301,소규모 기술 컨설팅 미팅,2026-04-20,14:00,16:00,21.5,60.0,25,robot_cleaner,자동,2026-04-20,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+302,친구들과 골프 라운딩,2026-05-03,11:00,15:00,20.0,50.0,11,washer,기능성,2026-05-03,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+303,에버랜드 가족 나들이,2026-07-15,09:30,17:00,30.1,70.0,20,washer,강력,2026-07-15,17:30,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+304,인제 숲길 걷기,2026-06-05,09:00,11:00,15.8,65.0,5,washer,기능성,2026-06-05,11:00,11:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+305,양가 부모님 방문,2026-05-10,12:00,15:00,22.4,55.0,30,robot_cleaner,자동,2026-03-22,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+306,주말 가족 점심 외식,2024-04-14,12:30,13:30,18.2,50.0,20,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+307,물향기수목원 산책,2026-04-15,10:00,12:00,18.3,60.0,15,washer,기능성,2025-04-20,16:00,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+308,가족 나들이,2026-05-17,11:00,15:00,21.5,60.0,20,washer,기능성,2026-05-17,15:00,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+309,세종호수공원 산책,2026-04-10,10:00,12:00,18.5,55.0,20,air_conditioner,제습,2026-04-10,11:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+310,역사 소설 독서,2025-11-01,10:00,11:30,12.5,70.0,10,air_purifier,자동,2025-11-01,10:00,11:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+311,일식집 초밥 정식,2024-05-05,19:00,20:30,20.0,65.0,20,washer,표준,2024-05-05,20:30,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+312,화성시 꽃집 운영 준비,2026-03-10,09:00,18:00,15.0,50.0,5,robot_cleaner,자동,2026-03-10,08:00,09:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+313,부부 제주도 여행,2026-03-18,08:00,20:00,20.0,65.0,10,washer,기능성,2026-03-18,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+314,동네 단골 주점 생맥주,2026-06-15,18:30,20:30,27.3,50.0,30,washer,기능성,2026-06-15,20:30,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+315,동래시장 단팥빵 구매,2026-03-12,10:00,11:00,15.2,60.0,18,washer,표준,2026-03-12,11:00,11:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+316,가족과 나들이,2026-03-05,10:00,13:00,12.0,70.0,20,washer,기능성,2026-03-05,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+317,대부도 바다낚시,2026-04-15,09:00,15:00,20.3,60.0,15,washer,기능성,2026-04-15,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+318,주말 부부 산책,2026-04-10,10:00,12:00,20.0,50.0,15,washer,기능성,2026-04-10,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+319,비치 수영장 자유 수영,2026-08-10,14:00,16:00,30.5,45.0,10,washer,기능성,2026-08-10,16:00,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+320,아내 생신 저녁식사,2023-10-20,18:30,21:00,15.0,70.0,20,robot_cleaner,자동,2023-10-20,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+321,경주 불국사 탐방,2026-05-15,10:00,13:00,17.0,50.0,8,washer,기능성,2026-05-15,13:30,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+322,남편과 외식,2026-06-15,18:30,20:00,27.2,65.0,15,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+323,부모님 주말 방문,2026-06-10,14:00,17:00,25.0,60.0,10,robot_cleaner,자동,2026-06-10,17:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+324,남편과 베이커리 카페,2026-04-25,15:00,16:30,20.3,55.0,8,washer,표준,2026-04-25,16:30,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+325,동물원 데이트,2026-04-09,10:00,14:00,18.0,40.0,20,washer,기능성,2026-04-09,14:30,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+326,주말 외식 삼겹살,2026-04-10,18:00,20:00,18.5,50.0,20,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+327,동네 분식집 저녁,2026-02-20,18:00,19:00,8.7,55.0,30,washer,기능성,2026-02-20,19:15,20:15,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+328,주말 가족 쇼핑몰 방문,2025-04-07,10:30,13:00,20.3,55.0,15,washer,기능성,2024-06-10,11:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+329,주말 떡볶이 맛집 탐방,2024-04-21,17:00,19:00,20.0,50.0,15,washer,기능성,2024-04-21,19:00,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+330,정비소 업무 관련 워크숍,2026-09-20,09:00,12:00,23.0,55.0,16,washer,기능성,2026-09-20,07:00,08:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+331,강화도 숨은 명소 탐방,2026-10-02,10:00,14:00,21.5,50.0,18,washer,기능성,2026-10-02,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+332,친구와 당구 한 판,2026-04-15,18:00,20:00,18.3,55.0,30,washer,기능성,2026-04-15,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+333,건강검진,2026-03-29,09:00,10:30,19.2,50.0,20,washer,기능성,2026-03-29,10:30,11:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+334,창녕 온천 여행,2026-06-20,10:00,15:00,27.5,65.0,9,washer,기능성,2026-06-20,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+335,남편과 소고기 저녁식사,2023-10-14,19:00,21:00,17.0,65.0,20,air_purifier,자동,2023-10-14,21:00,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+336,성성호수공원 점심,2026-04-10,12:30,13:30,18.2,55.0,30,air_conditioner,제습,2026-04-10,13:00,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+337,은평구 돼지갈비집 외식,2026-04-15,18:00,20:00,21.5,45.0,25,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+338,가족과 함께하는 영통 호캉스,2026-06-10,14:00,20:00,25.2,50.0,15,washer,기능성,2026-06-10,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+339,부산 여행,2026-04-20,09:00,18:00,20.3,60.0,15,washer,기능성,2026-04-20,18:00,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+340,가족과 함께 지역 축제 방문,2026-05-07,10:00,18:00,22.0,50.0,18,air_conditioner,냉방,2026-05-07,09:30,10:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+341,경주 불국사 탐방,2026-04-10,09:00,13:00,18.2,60.0,15,washer,기능성,2026-04-10,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+342,산과 계곡 탐방,2026-08-10,09:00,17:00,30.0,50.0,10,washer,기능성,2026-08-10,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+343,주말 돼지갈비 외식,2026-05-14,18:00,20:00,22.4,55.0,10,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+344,배우자 생일 외식,2026-11-20,19:00,21:00,12.5,80.0,10,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+345,보험사 팀 회식,2026-03-22,18:00,21:00,16.4,50.0,20,robot_cleaner,자동,2026-03-22,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+346,제주도 오름 탐방,2026-04-15,10:00,13:00,20.0,47.0,12,washer,기능성,2026-04-15,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+347,마포구 돼지갈비 집,2026-11-12,18:30,20:00,10.5,70.0,20,washer,기능성,2026-11-12,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+348,강원도 숲길 산책,2026-04-22,09:00,11:00,20.0,65.0,17,washer,기능성,2026-04-10,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+349,반려견과 금오산 산책,2026-03-15,09:00,11:00,15.3,60.0,20,washer,기능성,2026-03-15,11:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+350,가평 잣나무 숲길 산책,2026-04-09,10:00,12:00,20.5,60.0,15,washer,기능성,2026-04-09,12:30,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+351,평택호 캠핑,2026-07-10,15:00,19:00,28.5,45.0,8,washer,기능성,2026-07-10,19:30,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+352,둘째 생일파티,2026-04-05,14:00,17:00,18.0,40.0,15,robot_cleaner,자동,2026-04-05,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+353,부산 원도심 맛집 탐방,2026-06-10,11:00,14:00,25.2,55.0,18,air_conditioner,제습,2026-06-10,10:00,11:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+354,중식당 짬뽕 먹기,2026-06-05,19:00,20:30,28.0,60.0,30,dishwasher,강력,2026-06-05,20:30,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+355,찜닭 골목 탐방,2026-09-14,17:00,20:00,26.5,70.0,18,washer,기능성,2026-09-14,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+356,구조대 후배 교육,2026-03-15,10:00,12:00,18.5,55.0,20,washer,기능성,2026-03-15,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+357,동네 맛집 탐방,2026-10-03,11:00,15:00,18.5,55.0,10,washer,표준,2026-10-03,15:00,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+358,아내와 주말 외식,2024-04-14,18:00,20:00,18.5,60.0,30,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+359,가족과 신정호수 산책,2026-07-08,18:00,20:00,22.1,50.0,5,air_conditioner,제습,2026-07-08,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+360,무등산 산책,2026-05-12,08:00,10:00,19.5,55.0,22,washer,기능성,2026-05-12,10:00,10:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+361,주말 곰치국 아침,2026-03-29,09:00,10:30,18.4,55.0,19,washer,표준,2026-03-29,10:30,11:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+362,가족과 외식,2026-04-18,19:00,21:00,21.0,50.0,10,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+363,압구정 일식집 방문,2026-04-15,19:00,21:00,22.0,50.0,20,robot_cleaner,자동,2026-04-15,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+364,제주 흑돼지 구이집 외식,2026-03-20,18:00,20:00,16.5,58.0,22,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+365,둘째 운동회,2026-06-10,09:00,12:00,22.3,60.0,15,washer,기능성,2026-06-10,12:30,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+366,노포 맛집 탐방 여행,2026-05-05,11:00,15:00,23.0,50.0,20,washer,기능성,2026-05-05,15:00,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+367,강원도 해변 여행,2026-07-15,10:00,18:00,28.7,60.0,15,washer,강력,2026-07-15,18:00,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+368,도심 미술관 투어,2026-06-30,14:00,17:00,25.0,50.0,15,washer,기능성,2026-06-30,17:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+369,아산 온천 휴식,2026-07-15,10:00,14:00,32.0,50.0,18,washer,표준,2026-07-15,14:30,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+370,이웃과 꽃집 오픈 행사,2024-04-15,10:00,13:00,18.3,60.0,15,robot_cleaner,자동,2024-04-15,08:00,09:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+371,스크린 골프 라운딩,2024-06-12,10:00,12:00,24.0,50.0,30,washer,기능성,2024-06-12,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+372,주말 가족 농구,2024-06-22,10:00,12:00,26.7,50.0,10,washer,기능성,2024-06-22,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+373,부산 근교 여행,2026-06-20,09:00,17:00,26.0,40.0,10,robot_cleaner,자동,2026-06-20,08:00,09:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+374,상봉동 전통시장 장보기,2023-11-05,14:00,15:30,15.0,60.0,20,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+375,부평 전통시장 맛집 탐방,2025-10-07,11:00,14:00,18.7,55.0,20,washer,기능성,2025-10-07,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+376,친구들과의 저녁식사,2024-05-20,19:00,21:00,22.8,50.0,20,robot_cleaner,자동,2024-05-20,16:30,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+377,남편과 상수동 맛집 탐방,2024-03-15,13:00,16:00,18.2,60.0,20,dishwasher,강력,2026-04-10,21:00,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+378,프리미어리그 관람,2026-05-11,21:00,23:00,20.0,45.0,12,air_conditioner,냉방,2026-05-11,20:30,23:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+379,부평 유명 소금빵 맛집 방문,2026-09-15,16:00,17:30,24.0,55.0,20,washer,기능성,2026-09-15,17:30,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+380,지역 문화센터 자격증 수업,2026-03-10,10:00,12:00,12.3,60.0,20,robot_cleaner,자동,2026-03-10,10:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+381,가족 평창 스키 여행,2026-01-15,07:00,19:00,-3.5,40.0,10,washer,기능성,2026-01-15,19:00,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+382,카이센동 맛집 탐방,2024-11-12,12:00,14:30,14.7,70.0,40,washer,기능성,2024-11-12,14:30,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+383,강원도 숲길 산책,2026-09-15,09:00,12:00,20.4,50.0,10,washer,기능성,2026-09-15,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+384,전주 한정식 맛집 방문,2024-10-12,12:00,14:00,20.5,60.0,15,washer,표준,2024-10-12,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+385,주말 시장 구경,2026-07-02,09:00,12:00,25.3,60.0,20,robot_cleaner,자동,2026-07-02,09:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+386,배우자 생일 기념일 저녁 외식,2025-05-20,19:00,21:00,22.0,55.0,15,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+387,서울 시티투어 버스,2026-04-10,10:00,14:00,18.3,55.0,20,washer,기능성,2026-04-10,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+388,친구들과 저녁 식사,2024-06-15,19:00,21:00,28.3,60.0,18,air_conditioner,냉방,2024-06-15,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+389,주말 가족 산책,2026-04-09,10:00,12:00,20.7,60.0,25,washer,기능성,2026-06-18,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+390,골프 필드 라운딩,2026-06-15,09:00,12:00,22.4,55.0,15,washer,기능성,2026-06-15,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+391,남편과 보리밥 집 방문,2026-03-12,12:30,14:00,15.0,60.0,20,air_conditioner,제습,2026-03-12,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+392,부천 장보기,2026-04-10,10:00,11:30,18.2,55.0,30,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+393,주말 자연 탐방,2026-06-25,08:00,14:00,23.0,70.0,17,washer,기능성,2026-06-25,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+394,강원도 캠핑,2026-04-22,16:00,19:00,21.1,47.0,12,washer,기능성,2026-04-22,19:00,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+395,광교 호수공원 야간 산책,2026-04-15,19:00,20:30,16.3,60.0,20,air_conditioner,냉방,2026-04-15,20:30,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+396,울진 덕구온천 방문,2026-08-02,09:00,16:00,28.3,75.0,10,washer,기능성,2026-08-02,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+397,서울 시내 탐방,2026-05-20,14:00,17:00,23.0,40.0,30,washer,표준,2026-05-20,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+398,인천 식물원 방문,2026-06-15,10:00,12:00,24.1,40.0,12,washer,기능성,2026-06-15,12:30,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+399,고덕면 산책로 러닝,2026-04-10,16:00,17:30,22.3,50.0,15,washer,기능성,2026-04-10,17:30,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+400,아내와 경주 불국사 방문,2026-04-15,09:00,16:00,20.3,50.0,15,washer,표준,2026-04-15,16:00,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+401,가족과 베이커리 탐방,2026-03-30,14:00,16:00,15.6,50.0,22,washer,기능성,2026-03-30,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+402,배드민턴 동호회 활동,2026-10-16,19:00,21:00,17.0,45.0,30,washer,강력,2026-10-16,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+403,이모네 집들이 방문,2026-03-12,14:00,17:00,10.3,55.0,30,robot_cleaner,자동,2026-03-12,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+404,순천 나물 정식 맛집 탐방,2026-04-22,11:00,14:00,22.1,45.0,8,washer,기능성,2026-04-22,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+405,동네 베이커리 카페 탐방,2026-04-15,14:00,15:30,18.5,60.0,15,washer,기능성,2026-04-15,15:30,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+406,남편과 미슐랭 레스토랑 예약,2025-09-15,18:30,21:00,22.0,60.0,20,washer,기능성,2025-09-15,21:00,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+407,첫째 운동회 관람,2026-06-10,09:00,12:00,25.0,50.0,20,washer,기능성,2026-06-10,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+408,남해 해안 드라이브,2026-10-02,13:00,18:00,20.3,50.0,8,washer,기능성,2026-10-02,18:00,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+409,동네 일식집 방문,2026-04-05,19:00,20:30,20.0,60.0,22,washer,조용조용,2026-04-05,20:30,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+410,강원도 평창 숲길 걷기,2026-09-15,09:00,13:00,20.0,50.0,10,washer,기능성,2026-09-15,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+411,부모님 방문,2026-04-15,15:00,18:00,18.0,50.0,15,robot_cleaner,자동,2026-04-15,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+412,지역 특산물 축제,2026-07-04,10:00,16:00,29.8,75.0,9,washer,강력,2026-07-04,16:00,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+413,부천역 전통시장 장보기,2025-03-10,09:00,10:30,15.2,60.0,20,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+414,주말 중식당 짬뽕,2026-02-18,18:00,19:30,9.0,40.0,18,washer,기능성,2026-02-18,19:30,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+415,동성로 소품샵 투어,2026-07-01,14:00,16:00,30.0,40.0,20,washer,기능성,2026-07-01,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+416,첫째 미술관 관람,2025-04-20,10:00,12:00,18.3,55.0,30,washer,기능성,2025-04-20,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+417,주말 낚시,2026-06-12,08:00,14:00,27.2,60.0,15,washer,기능성,2026-06-12,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+418,도시 시티투어 가족 여행,2026-06-28,09:30,16:30,25.2,60.0,20,air_conditioner,제습,2026-06-28,16:30,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+419,횡성 보리밥집 방문,2026-12-18,13:00,15:00,10.0,60.0,0,washer,표준,2026-12-18,15:00,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+420,아내와 함께하는 빵집 투어,2026-04-21,14:00,16:00,18.5,50.0,20,washer,기능성,2026-04-21,16:00,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+421,이천 설봉공원 산책,2026-09-25,09:00,11:00,18.2,50.0,20,washer,기능성,2026-09-25,11:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+422,수원역 고깃집 삼겹살,2026-04-15,18:00,20:00,18.3,55.0,30,dishwasher,강력,2026-04-15,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+423,도봉산 둘레길 산책,2026-09-02,10:00,13:00,21.1,55.0,9,washer,기능성,2026-09-02,13:00,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+424,영천 경로당 방문,2026-06-30,10:00,12:00,25.0,50.0,14,washer,기능성,2026-06-30,12:30,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+425,아내와 건강식 일식당 방문,2026-04-15,12:30,14:00,18.2,60.0,15,air_purifier,자동,2026-04-15,11:30,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+426,프리미어리그 경기 시청,2026-05-14,19:00,21:00,18.7,60.0,30,washer,기능성,2026-05-14,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+427,코인 노래방에서 최신곡 부르기,2026-04-11,20:00,22:00,15.0,65.0,20,washer,기능성,2026-04-11,22:00,22:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+428,에버랜드 판다월드,2026-06-25,11:00,17:00,30.0,80.0,13,air_conditioner,냉방,2026-06-25,10:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+429,강원도 숲길 걷기,2026-05-20,09:00,12:00,23.0,35.0,10,washer,기능성,2026-05-20,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+430,산책로 걷기,2026-05-05,09:00,11:00,24.0,60.0,8,washer,기능성,2026-05-05,11:00,11:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+431,부부 제주도 여행,2026-08-15,09:00,16:00,28.0,60.0,8,washer,기능성,2026-08-15,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+432,아내와 파스타 전문점,2026-04-10,19:00,20:30,21.5,50.0,12,washer,표준,2026-04-10,20:30,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+433,아내와 캠핑,2026-04-25,10:00,17:00,22.4,40.0,20,washer,기능성,2026-04-25,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+434,가족과 함께 강릉,2026-09-10,09:00,17:00,23.5,70.0,30,washer,기능성,2026-09-10,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+435,남편과 주말 외식,2026-06-10,18:00,20:00,23.5,55.0,15,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+436,당구 동호회 모임,2025-11-20,19:00,22:00,10.0,60.0,20,washer,강력,2025-11-20,22:00,23:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+437,온양온천역 돼지갈비 외식,2026-03-12,18:30,20:00,15.2,60.0,30,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+438,주말 외식(오징어 튀김),2026-04-18,19:00,21:00,19.9,52.0,20,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+439,양주 미술관 방문,2026-06-15,10:30,12:30,24.7,45.0,10,washer,기능성,2026-06-15,12:30,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+440,에버랜드 판다월드 방문,2026-05-20,11:00,15:00,22.5,50.0,15,washer,기능성,2026-05-20,15:30,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+441,가족 찜질방 데이,2025-12-05,16:00,19:00,5.0,80.0,15,air_conditioner,파워,2025-12-05,19:00,19:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+442,남편과 동금산 등산,2026-04-09,09:00,12:00,20.3,50.0,22,air_conditioner,냉방,2026-04-09,08:30,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+443,반포동 피부관리 샵 방문,2026-05-10,14:00,15:30,22.0,50.0,20,washer,기능성,2026-05-10,15:30,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+444,주말 순천 시내 탐방,2026-03-29,10:00,15:00,20.0,45.0,20,robot_cleaner,자동,2026-03-29,10:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+445,부천 가족 식사,2026-04-16,18:30,20:00,16.5,55.0,30,dishwasher,강력,2026-04-16,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+446,가족 온천 여행,2026-07-12,11:00,16:00,28.0,70.0,10,washer,기능성,2026-07-12,16:30,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+447,친구들과 낚시,2026-04-10,07:00,12:00,16.3,50.0,20,washer,기능성,2026-06-15,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+448,역사 유적지 답사,2026-06-15,10:00,14:00,21.9,53.0,12,washer,기능성,2026-06-15,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+449,강원도 평창 전나무 숲길 산책,2026-10-15,09:00,13:00,18.3,60.0,15,washer,기능성,2026-10-15,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+450,남한산성 둘레길 걷기,2026-05-21,09:00,11:00,22.5,45.0,15,washer,강력,2026-05-21,11:00,11:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+451,가족과 함께하는 백운산 둘레길 산책,2026-12-25,14:00,16:00,16.0,70.0,15,washer,기능성,2026-12-25,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+452,남양주 숲길 산책,2026-04-15,14:00,16:00,18.5,55.0,25,air_conditioner,냉방,2026-04-15,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+453,게임 시간,2025-04-16,21:00,23:00,19.0,50.0,15,air_conditioner,파워,2025-04-16,20:30,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+454,광명 시장 나들이,2026-02-05,10:00,14:00,15.2,50.0,35,washer,기능성,2026-02-05,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+455,부모님 방문,2026-03-20,11:00,15:00,15.0,60.0,20,robot_cleaner,자동,2026-03-20,09:00,11:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+456,통신 장비 점검,2026-03-05,09:00,11:00,12.0,45.0,15,washer,기능성,2026-03-05,11:00,11:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+457,부평 맛집 탐방,2026-03-27,12:00,15:00,19.5,60.0,20,washer,기능성,2026-03-27,15:00,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+458,옥정호수공원 조깅,2026-04-10,07:30,08:30,15.2,60.0,20,washer,기능성,2026-04-10,08:30,09:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+459,반려견 산책,2026-03-03,10:00,11:00,16.0,65.0,22,washer,기능성,2026-03-03,11:30,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+460,남편과 함께 족발 배달,2024-04-15,19:00,20:00,18.7,65.0,20,washer,기능성,2024-04-15,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+461,송파구 가족 저녁 외식,2026-04-10,18:30,20:00,15.0,55.0,20,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+462,중랑천 산책,2026-04-22,17:00,18:00,19.7,55.0,12,washer,기능성,2026-04-22,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+463,가족 주말 외식,2026-04-22,17:30,19:30,21.6,55.0,12,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+464,제주도 자연 탐방,2026-11-10,09:00,16:00,20.0,55.0,12,washer,기능성,2026-11-10,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+465,양산시 지역 문화 축제,2023-10-14,10:00,13:00,20.0,60.0,15,washer,기능성,2023-10-14,13:30,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+466,아내와 함께하는 고깃집 외식,2026-05-20,18:30,20:30,22.1,60.0,15,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+467,보성 녹차밭 드라이브,2024-05-05,09:00,15:00,25.0,40.0,15,washer,기능성,2024-05-05,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+468,친구들과 펜션 여행,2026-06-15,10:00,18:00,23.5,60.0,15,washer,기능성,2026-06-15,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+469,이마트 장보기,2026-04-10,10:00,11:00,18.3,60.0,22,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+470,가족과의 동물원 나들이,2026-08-14,10:00,15:00,30.2,65.0,8,washer,기능성,2026-08-14,15:00,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+471,남편과 저녁 고깃집,2024-04-15,21:30,22:30,18.2,60.0,15,washer,패딩케어,2024-04-15,22:30,23:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+472,기장 해안 산책,2024-04-10,10:00,12:00,18.3,50.0,20,washer,기능성,2024-04-10,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+473,동네 고깃집 저녁식사,2026-04-20,19:00,21:00,16.5,53.0,28,washer,표준,2026-04-20,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+474,대구 도매시장 거래처 방문,2024-02-15,09:00,11:00,5.2,60.0,15,washer,기능성,2024-02-15,11:00,11:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+475,광주호 생태원 숲길 산책,2024-04-15,10:00,12:00,20.3,60.0,15,washer,기능성,2024-04-15,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+476,부부와 한식당 외식,2026-10-15,18:30,20:00,17.5,60.0,12,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+477,속초 펜션 여행,2026-02-18,14:00,16:00,8.0,55.0,8,washer,표준,2026-02-18,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+478,소극장 연극 관람,2024-06-10,19:00,21:00,22.0,50.0,20,washer,기능성,2024-06-10,21:00,21:20,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+479,가족과 바다에서 피크닉,2026-06-20,12:00,14:00,26.0,40.0,10,washer,기능성,2026-06-20,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+480,부부 동반 볼링 경기,2025-03-15,18:30,20:00,12.0,40.0,20,washer,울,2025-03-15,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+481,남편과 함께 한옥 카페 방문,2026-03-22,13:30,16:00,18.7,50.0,10,washer,기능성,2026-03-22,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+482,농구 동호회 정기 모임,2026-11-20,19:00,21:00,10.0,70.0,30,washer,강력,2026-11-20,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+483,첫째 체육대회 관람,2026-05-20,09:00,12:00,22.3,50.0,10,washer,기능성,2026-05-20,12:30,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+484,정선 곤드레밥 맛집 탐방,2026-10-08,12:00,14:00,18.3,60.0,20,washer,기능성,2026-10-08,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+485,가평 숲길 산책,2026-03-15,09:30,11:00,15.5,55.0,15,air_conditioner,냉방,2026-03-15,11:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+486,안전 점검 회의,2026-04-07,09:00,11:00,22.5,50.0,15,robot_cleaner,자동,2026-04-07,11:00,11:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+487,가족 여행 계획,2026-07-01,08:00,20:00,28.0,50.0,5,washer,기능성,2026-07-01,20:30,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+488,초밥 세트 저녁,2026-05-27,19:00,20:30,24.5,50.0,10,dishwasher,강력,2026-05-27,20:30,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+489,전통 한정식 레스토랑 방문,2026-02-28,12:00,14:00,15.3,55.0,12,washer,기능성,2026-02-28,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+490,배우자와 함께 일본 소도시 여행,2026-04-15,09:00,17:00,18.3,60.0,15,washer,표준,2026-04-15,17:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+491,해안 도로 드라이브,2026-02-14,09:00,16:00,12.0,50.0,25,washer,기능성,2026-02-14,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+492,아내와 하천변 산책,2024-03-15,18:00,19:00,15.3,50.0,20,air_purifier,자동,2024-03-15,19:00,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+493,대전 맛집 탐방,2026-05-10,12:00,15:00,21.4,50.0,14,washer,기능성,2026-05-10,15:30,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+494,부대 응급처치 교육,2024-05-10,09:00,11:00,25.0,55.0,10,air_conditioner,제습,2024-05-10,11:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+495,배드민턴 경기,2026-09-10,18:00,20:00,20.5,50.0,30,washer,기능성,2026-09-10,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+496,일산 빵집 탐방,2026-03-05,10:00,12:00,13.2,55.0,10,robot_cleaner,자동,2026-03-05,10:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+497,아내와 고깃집,2026-03-12,18:30,20:30,10.5,65.0,20,washer,표준,2026-03-12,20:30,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+498,남편과 일식집 저녁,2024-04-21,18:00,20:00,19.2,55.0,10,washer,패딩케어,2024-04-21,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+499,주말 돼지국밥 외식,2026-10-02,13:00,15:00,21.4,70.0,14,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+500,강원도 평창 드라이브,2025-10-15,09:30,17:00,18.3,50.0,10,washer,기능성,2025-10-15,17:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+501,한남동 양식당 예약,2026-05-05,19:30,21:30,22.3,50.0,20,washer,표준,2026-05-05,21:30,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+502,구로구 부모님 방문,2026-05-21,11:00,13:30,22.0,50.0,20,robot_cleaner,자동,2026-05-21,10:00,11:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+503,경주 불국사 답사,2026-04-30,09:30,12:00,21.0,50.0,18,washer,표준,2026-04-30,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+504,친구들과 테마파크 방문,2026-06-10,10:00,18:00,25.3,70.0,5,washer,기능성,2026-06-10,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+505,서울 시내 팝업 스토어 투어,2024-04-15,10:00,12:00,18.3,55.0,20,washer,기능성,2024-04-15,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+506,강화도 갯벌 낚시,2026-11-11,09:00,15:00,17.0,60.0,25,washer,기능성,2026-11-11,15:30,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+507,KBO 리그 경기 관람,2024-07-20,18:00,21:00,28.0,40.0,15,washer,기능성,2024-07-20,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+508,성주산 숲길 산책,2026-04-15,10:00,12:00,18.3,60.0,15,washer,기능성,2026-04-15,12:30,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+509,육즙 가득 돼지갈비집,2026-05-07,18:30,20:00,24.5,40.0,15,dishwasher,강력,2026-05-07,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+510,의정부 돼지갈비 외식,2026-06-15,18:00,20:00,24.0,60.0,20,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+511,의정부 맛집 탐방,2026-08-02,12:00,15:00,29.0,55.0,20,washer,강력,2026-08-02,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+512,가족 등산,2026-04-05,08:00,12:00,19.0,30.0,18,washer,기능성,2026-04-05,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+513,소규모 가게 운영 미팅,2026-04-19,10:00,12:00,18.0,55.0,16,washer,표준,2026-04-19,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+514,남해 다랭이마을 드라이브,2026-04-15,09:00,15:00,18.2,60.0,15,robot_cleaner,자동,2026-04-15,15:00,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+515,고깃집 외식,2026-01-22,18:30,20:00,5.1,65.0,30,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+516,주말 식사 모임,2026-05-06,19:00,21:00,21.0,48.0,9,robot_cleaner,자동,2026-05-06,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+517,아파트 단지 산책,2026-03-12,17:00,18:00,15.8,45.0,18,washer,기능성,2026-03-12,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+518,제주도 숲속 펜션 휴양,2026-07-15,10:00,17:00,26.5,80.0,5,washer,기능성,2026-07-15,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+519,주말 저수지 낚시,2024-05-20,08:00,13:00,23.4,40.0,20,washer,기능성,2024-05-20,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+520,대형 쇼핑몰 쇼핑,2026-03-20,14:00,17:00,21.7,48.0,12,washer,기능성,2026-03-20,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+521,영등포 리조트 휴양,2026-08-10,11:00,15:00,28.0,40.0,25,air_conditioner,냉방,2026-08-10,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+522,배드민턴 클럽 활동,2026-04-08,19:00,21:00,18.2,50.0,20,washer,기능성,2026-04-08,21:00,21:20,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+523,부녀회 모임 준비,2024-09-10,10:00,12:00,22.0,55.0,20,robot_cleaner,자동,2024-09-10,09:00,10:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+524,가족과 꽃축제 방문,2026-10-02,14:00,17:00,19.0,65.0,15,robot_cleaner,자동,2026-10-02,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+525,부모님 방문,2026-05-10,11:00,15:00,22.7,48.0,26,robot_cleaner,자동,2026-08-19,16:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+526,배우자와 한식당 정식,2026-03-12,18:30,20:00,15.2,50.0,18,washer,표준,2026-03-12,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+527,아내와 세종 호수공원 산책,2026-05-07,10:00,12:00,22.3,50.0,15,washer,기능성,2026-04-10,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+528,상무지구 일식집 방문,2024-04-20,18:30,20:00,20.0,50.0,30,washer,기능성,2024-04-20,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+529,고현시장 벚꽃 축제,2026-04-02,10:00,14:00,18.5,60.0,20,air_conditioner,냉방,2026-04-02,14:00,14:15,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+530,울진 백암온천 친구들과 방문,2026-04-15,10:00,17:00,20.5,60.0,15,air_conditioner,냉방,2026-04-15,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+531,주말 미용실 예약,2026-04-25,14:00,16:00,20.7,50.0,18,washer,표준,2026-04-25,16:30,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+532,스타필드 가족 쇼핑,2024-05-10,14:00,17:00,22.0,40.0,12,washer,표준,2024-05-10,17:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+533,공원 줄넘기 운동,2024-04-15,07:00,08:00,18.3,60.0,15,washer,기능성,2024-04-15,08:00,09:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+534,광양 매화마을 산책,2026-03-20,11:00,14:00,17.5,55.0,18,washer,기능성,2026-03-20,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+535,삼겹살 친구 모임,2024-09-14,18:00,21:00,22.1,45.0,15,dishwasher,강력,2024-09-14,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+536,평창 숲길 탐방,2026-06-12,09:00,13:00,18.0,55.0,10,washer,기능성,2026-06-12,13:00,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+537,전주비빔밥 맛집 방문,2026-03-12,11:30,13:00,18.0,55.0,25,washer,표준,2026-03-12,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+538,전국 맛집 투어,2026-04-22,10:00,15:00,23.1,45.0,30,washer,기능성,2026-04-22,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+539,정갈한 초밥집 데이트,2026-04-15,19:00,21:00,18.5,50.0,20,washer,표준,2026-04-15,21:00,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+540,김해 시청 근처 법무 사무소 면접,2025-03-10,10:00,11:30,15.2,60.0,30,washer,기능성,2025-03-10,11:30,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+541,김해 가야테마파크 야경 소풍,2026-10-01,18:30,21:00,22.3,50.0,20,air_conditioner,냉방,2026-10-01,21:00,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+542,남해안 바닷가 드라이브,2026-05-22,10:00,16:00,23.4,55.0,12,washer,기능성,2026-05-22,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+543,아내와 나물 비빔밥 먹기,2026-07-15,19:00,20:30,28.5,40.0,10,washer,강력,2024-04-15,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+544,가족과 함께 한식 외식,2026-04-29,18:30,20:30,18.0,50.0,30,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+545,부여 역사 유적지 답사,2026-04-10,09:30,14:00,20.0,60.0,15,washer,기능성,2026-04-10,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+546,속초 펜션 예약,2026-06-10,15:00,18:00,26.5,60.0,12,robot_cleaner,자동,2026-04-15,11:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+547,자연 감상 여행,2026-04-30,08:00,18:00,23.5,55.0,10,washer,기능성,2026-04-30,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+548,정기 독서 모임,2026-11-14,14:00,17:00,15.0,70.0,10,air_purifier,자동,2026-11-14,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+549,부여 정림사지 탐방,2026-08-20,09:00,12:00,26.0,60.0,20,air_conditioner,냉방,2026-08-20,08:00,09:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+550,혼자 일본 음식점 탐방,2026-05-02,12:00,14:00,21.0,42.0,22,washer,기능성,2026-05-02,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+551,반려견 산책,2026-04-22,09:00,10:00,14.0,50.0,15,washer,기능성,2026-04-22,10:00,10:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+552,친척 경조사 참석,2026-07-05,11:00,13:00,27.3,70.0,25,washer,기능성,2026-07-05,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+553,고성의 바닷가 숙소,2026-09-12,14:00,16:00,22.0,60.0,10,air_conditioner,냉방,2026-09-12,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+554,금요일 외식 (교촌치킨),2026-04-21,19:00,21:00,18.5,55.0,30,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+555,아내와 한정식집 저녁,2026-03-10,18:30,20:00,12.4,70.0,10,air_conditioner,제습,2026-03-10,18:00,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+556,금오산 산책,2026-04-10,09:00,11:00,18.5,55.0,20,washer,기능성,2026-04-10,11:00,11:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+557,지역 배드민턴 클럽 활동,2025-06-20,18:00,20:00,27.0,40.0,20,washer,기능성,2025-06-20,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+558,남편과 동네 주점,2024-05-05,18:00,20:00,22.0,50.0,15,dishwasher,강력,2024-05-05,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+559,동네 공원 사진 촬영,2026-04-02,14:00,16:00,18.3,50.0,15,washer,기능성,2026-04-02,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+560,양념치킨 주문,2024-11-05,19:30,20:00,8.3,75.0,25,washer,기능성,2024-11-05,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+561,가족과 군산 맛집 탐방,2025-06-10,11:00,15:00,28.0,60.0,15,washer,강력,2025-06-10,15:00,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+562,압구정 일식집 사시미 정식,2026-04-05,18:30,20:00,22.0,40.0,15,dishwasher,강력,2026-04-05,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+563,소사구 볼링 클럽 경기,2026-10-03,15:00,17:00,19.0,55.0,10,washer,표준,2026-10-03,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+564,친구와 도자기 클래스,2026-04-05,10:00,12:00,18.4,60.0,15,washer,기능성,2026-04-05,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+565,갑천변 사진 촬영,2026-05-05,09:00,11:00,22.0,50.0,20,washer,기능성,2026-05-05,11:30,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+566,레포츠 친구들과 바다 낚시,2026-06-05,07:00,16:00,22.0,50.0,15,washer,강력,2026-06-05,16:30,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+567,경동시장 고기집 방문,2026-03-05,18:00,20:00,12.5,70.0,10,air_purifier,자동,2026-03-05,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+568,전주 비빔밥 맛집 투어,2026-04-10,11:00,14:00,20.3,50.0,15,dishwasher,강력,2026-04-10,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+569,가족과 대구 미술관,2026-04-22,11:00,15:00,20.3,55.0,25,robot_cleaner,자동,2026-04-22,09:00,11:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+570,상남동 고깃집 동료 모임,2024-10-12,18:30,21:00,19.0,60.0,35,robot_cleaner,자동,2024-10-12,17:30,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+571,강화도 숲길 걷기,2026-05-28,09:00,12:00,20.5,47.0,18,washer,기능성,2026-05-28,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+572,지역 박물관 방문,2026-10-08,13:00,16:00,20.5,53.0,20,washer,표준,2026-10-08,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+573,광화문 초밥집 점심,2026-04-12,12:30,13:30,18.2,50.0,20,washer,기능성,2026-04-12,13:30,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+574,제주도 가족 여행,2026-08-15,11:00,19:00,28.3,70.0,10,washer,기능성,2026-08-15,19:00,19:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+575,기장 해안도로 드라이브,2026-04-10,10:00,12:00,18.5,60.0,20,washer,기능성,2026-04-10,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+576,전주 노포 맛집 탐방,2026-08-14,12:00,15:00,27.0,55.0,5,washer,기능성,2026-08-14,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+577,남편과 나물 비빔밥 집 방문,2026-06-15,12:00,14:00,26.5,50.0,15,washer,기능성,2026-06-15,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+578,배우자와 북한산 산책,2026-04-15,10:00,12:00,20.3,60.0,15,washer,기능성,2026-04-15,12:30,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+579,넷플릭스 영화 정주행,2026-11-20,20:00,23:00,10.0,70.0,15,air_conditioner,냉방,2026-11-20,19:00,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+580,양평 맛집 탐방,2026-04-10,11:00,14:00,18.5,60.0,20,washer,기능성,2026-04-10,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+581,주말 가족 캠핑,2026-06-10,13:00,16:00,27.0,50.0,8,washer,표준,2026-04-05,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+582,K리그 대전 하나 시티즌 경기 관람,2025-10-03,16:00,18:00,21.5,50.0,20,washer,조용조용,2025-10-03,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+583,대구 금형 기술 세미나,2026-05-05,10:00,12:00,22.4,53.0,19,washer,표준,2026-05-05,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+584,맛집 탐방,2026-06-20,12:00,14:00,24.1,45.0,12,air_conditioner,제습,2026-06-20,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+585,아내와 용지호수 산책,2026-04-15,18:00,20:00,17.3,50.0,20,washer,기능성,2026-04-15,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+586,역사 유적지 산책,2026-05-14,09:00,11:00,22.0,48.0,11,washer,기능성,2026-05-14,11:30,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+587,가평 숲속 드라이브,2026-05-02,10:00,14:00,23.0,50.0,25,washer,기능성,2026-05-02,14:00,14:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+588,대청호반 산책,2026-04-15,10:00,12:00,21.3,50.0,15,washer,기능성,2026-04-15,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+589,북한강 카페 투어,2024-05-05,10:00,16:00,22.1,55.0,20,air_conditioner,제습,2024-05-05,09:00,10:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+590,배드민턴 클럽 경기,2026-06-07,10:00,12:00,28.5,60.0,20,washer,기능성,2026-06-07,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+591,제주도 리조트 휴양,2026-06-15,09:00,15:00,27.8,60.0,15,washer,강력,2026-06-15,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+592,제주도 펜션 예약,2026-09-12,16:00,19:00,25.5,55.0,12,washer,기능성,2026-09-12,19:30,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+593,남편과 저녁 외식(한정식),2024-04-15,19:00,20:30,15.0,60.0,15,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+594,아파트 인테리어 쇼핑,2026-03-20,10:00,13:00,15.2,55.0,30,washer,표준,2026-03-20,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+595,제주도 1박2일,2026-04-10,09:00,17:00,20.5,60.0,15,washer,기능성,2026-04-10,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+596,부모님 생신 만찬,2026-06-20,18:30,21:00,27.0,60.0,20,robot_cleaner,자동,2026-06-20,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+597,주말 가족 드라이브,2026-03-20,09:00,12:00,15.0,50.0,30,washer,기능성,2026-03-20,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+598,와이프와 저녁 외식,2024-04-14,18:30,20:00,16.0,50.0,15,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+599,제주도 전나무 숲길 여행,2026-10-10,09:00,17:00,23.2,55.0,30,washer,기능성,2026-10-10,17:30,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+600,아내 생신 파티 준비,2026-06-10,18:00,21:00,25.0,60.0,15,robot_cleaner,자동,2026-06-10,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+601,가평 펜션 휴식,2026-05-20,15:00,19:00,25.5,50.0,12,robot_cleaner,자동,2026-05-20,19:00,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+602,강남 일식당 데이트,2026-05-20,19:00,21:00,18.4,55.0,20,washer,기능성,2026-05-20,21:00,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+603,반려묘 병원 방문,2026-06-15,14:00,15:30,30.2,55.0,35,washer,기능성,2026-06-15,15:30,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+604,제주도 가족 골프,2026-08-10,07:30,12:00,28.3,60.0,20,washer,기능성,2026-08-10,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+605,부산 편의점 간식 쇼핑,2026-06-15,18:30,19:00,28.7,60.0,35,air_conditioner,냉방,2026-06-15,19:00,19:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+606,수락산 산책,2026-05-22,10:00,12:00,21.5,50.0,14,washer,기능성,2026-05-22,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+607,가족과 함께 강화도 해변 소풍,2026-06-15,11:00,14:00,25.5,60.0,10,washer,기능성,2026-06-15,14:00,14:20,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+608,아내와 나물 비빔밥 집 방문,2026-05-07,18:30,20:00,22.0,40.0,15,washer,기능성,2026-05-07,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+609,동네 나물 비빔밥집 데이트,2026-06-10,18:30,20:00,25.4,45.0,15,washer,기능성,2026-06-10,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+610,고향 친구들과 낚시 여행,2026-06-10,10:00,17:00,26.3,60.0,20,washer,기능성,2026-06-10,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+611,아내와 오마카세 외식,2026-09-10,19:00,21:00,25.0,55.0,30,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+612,가족과 소고기 전문점 외식,2026-06-30,18:00,20:00,27.0,55.0,16,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+613,아내와 아라뱃길 산책,2026-04-02,18:30,20:00,20.3,55.0,18,washer,기능성,2026-04-02,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+614,여수 미식 탐방,2026-05-22,10:00,15:00,24.0,60.0,30,robot_cleaner,자동,2026-05-22,10:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+615,다양한 평창 숲길 걷기,2026-03-20,10:00,15:00,15.5,58.0,30,washer,기능성,2026-03-20,15:00,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+616,아내와 외식 (일식),2026-03-19,19:00,21:00,20.0,48.0,22,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+617,남편과 나물 정식 외식,2026-03-15,18:00,20:00,19.0,52.0,6,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+618,주말 친구들과 BBQ,2024-07-20,17:00,20:00,29.5,40.0,22,washer,강력,2024-07-20,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+619,남해 바닷가 펜션,2026-06-10,15:00,19:00,25.6,60.0,12,washer,기능성,2026-06-10,19:00,19:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+620,주말 친구들과 간식 탐방,2026-03-28,14:00,16:00,18.5,55.0,20,washer,표준,2026-03-28,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+621,일식 맛집 탐방,2025-04-15,12:00,14:00,18.3,60.0,30,washer,셔츠,2025-04-15,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+622,테니스 동호회 활동,2024-04-14,15:00,17:00,19.5,55.0,15,washer,강력,2024-04-14,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+623,필라테스 수업,2026-04-30,09:00,10:30,19.5,52.0,22,washer,표준,2026-04-30,10:30,11:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+624,아내와 정선 여행,2026-04-10,09:00,17:00,18.3,55.0,15,washer,기능성,2026-06-05,20:00,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+625,강원도 숲길 트레킹,2026-04-20,09:00,16:00,15.4,49.0,18,washer,기능성,2026-04-20,16:00,16:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+626,죽도시장 제철 식재료 구입,2026-04-15,09:00,11:00,18.0,60.0,20,washer,기능성,2026-04-15,11:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+627,루미큐브 게임 밤,2025-11-05,19:00,21:00,15.2,70.0,30,dishwasher,강력,2025-11-05,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+628,결혼기념일 일식당 예약,2026-06-20,19:00,21:00,27.8,55.0,30,air_purifier,자동,2026-06-20,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+629,주말 가족 여행,2026-08-05,09:00,17:00,27.5,55.0,25,washer,기능성,2026-08-05,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+630,가평 스파 여행,2026-09-10,12:00,15:00,24.5,50.0,12,washer,표준,2026-09-10,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+631,가평 마을 행사 준비,2026-04-15,09:00,12:00,20.5,60.0,15,robot_cleaner,자동,2026-04-15,09:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+632,동창 아마추어 농구 경기,2026-04-02,10:00,12:00,18.3,40.0,30,washer,기능성,2026-04-02,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+633,금산 인삼 시장 방문,2025-04-10,10:00,12:00,15.2,50.0,30,washer,기능성,2025-04-10,12:30,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+634,남편과 필라테스 수업,2026-03-15,19:00,20:00,12.5,55.0,20,washer,기능성,2026-03-15,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+635,부평 헬스장 웨이트 트레이닝,2026-05-25,18:00,20:00,26.2,55.0,17,washer,기능성,2026-05-25,20:30,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+636,남양주 수목원 탐방,2026-03-12,09:00,12:00,16.0,40.0,10,robot_cleaner,자동,2026-03-12,09:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+637,부모님 댁 방문,2026-03-20,11:00,14:00,10.5,70.0,10,washer,기능성,2026-03-20,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+638,포천 아트밸리 드라이브,2026-04-15,10:00,14:00,20.3,50.0,15,washer,기능성,2026-04-15,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+639,사회복지사 자격증 준비,2026-05-02,09:00,11:00,19.0,70.0,10,air_conditioner,제습,2026-05-02,08:00,09:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+640,배우자 생일 기념일 저녁,2026-11-12,19:00,21:00,15.5,70.0,10,air_purifier,자동,2026-11-12,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+641,남한산성 둘레길 산책,2026-12-01,10:00,12:00,16.4,54.0,10,washer,기능성,2026-12-01,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+642,공주 공산성 산책,2026-03-12,11:00,13:00,17.5,52.0,22,washer,기능성,2026-03-12,13:00,14:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+643,국립현대미술관 방문,2026-06-25,14:00,17:00,24.0,65.0,12,air_conditioner,냉방,2026-06-25,12:30,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+644,레포츠 친구들과 여행,2026-04-05,08:00,18:00,25.0,40.0,22,washer,기능성,2026-04-05,18:30,19:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+645,밀양 국밥 거리 탐방,2026-03-20,11:00,14:00,16.0,45.0,25,washer,헹굼+탈수,2026-03-20,14:30,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+646,퇴근 후 고깃집,2026-04-15,18:30,20:00,15.8,60.0,20,dishwasher,강력,2026-04-15,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+647,아내와 성북천 산책,2026-04-15,18:00,20:00,18.2,55.0,20,air_conditioner,냉방,2026-04-15,17:30,20:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+648,계룡산 둘레길 등산,2024-04-15,09:00,12:00,18.3,60.0,15,washer,기능성,2024-04-15,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+649,대구 노포 탐방,2026-09-10,11:30,14:00,25.0,50.0,30,washer,기능성,2026-09-10,14:30,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+650,부산 식도락 여행,2026-04-12,09:00,18:00,22.7,42.0,11,air_conditioner,제습,2026-04-12,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+651,가족 일식 초밥 외식,2026-05-07,19:00,20:30,22.3,40.0,10,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+652,아내와 함께하는 칼국수 집 탐방,2026-02-19,12:00,14:00,15.3,50.0,8,washer,표준,2026-02-19,14:30,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+653,주말 삼겹살 저녁,2024-04-13,18:00,20:00,18.0,55.0,20,robot_cleaner,자동,2024-04-13,16:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+654,대전 아내와 영화 관람,2024-03-15,19:00,21:30,10.2,60.0,30,washer,기능성,2024-03-15,21:30,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+655,아내와 이탈리안 레스토랑,2026-04-30,19:00,21:00,24.3,55.0,15,washer,기능성,2026-04-30,21:30,22:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+656,아내와 분식 외식,2026-06-12,18:00,19:00,22.0,55.0,8,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+657,전라도 맛집 탐방,2026-08-10,12:00,17:00,29.5,70.0,30,dishwasher,강력,2026-08-10,17:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+658,강원도 평창 숲길 산책,2026-05-01,13:00,17:00,23.0,52.0,12,washer,기능성,2026-05-01,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+659,송파구 일식 맛집 탐방,2024-06-15,12:00,14:00,27.0,50.0,15,washer,표준,2024-06-15,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+660,주말 등산 및 숲길 산책,2026-05-07,07:30,11:00,22.3,60.0,10,washer,기능성,2026-05-07,11:30,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+661,전국 자전거 길 탐방,2026-05-14,09:00,17:00,22.3,50.0,15,washer,기능성,2026-05-14,17:30,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+662,주말 강원도 펜션 여행,2026-04-15,10:00,17:00,20.3,55.0,15,washer,표준,2026-04-15,17:30,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+663,충주호 민물 낚시,2026-06-10,07:00,12:00,25.0,60.0,30,washer,기능성,2026-06-10,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+664,치킨 배달,2026-04-27,19:00,20:30,19.0,56.0,28,washer,표준,2026-04-27,20:30,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+665,대청호 드라이브,2026-09-12,14:00,17:00,23.8,55.0,20,air_conditioner,제습,2026-09-12,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+666,주말 갤러리 카페 투어,2026-06-17,14:00,17:00,25.4,50.0,10,robot_cleaner,자동,2026-04-12,10:00,10:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+667,부산에서 일식 오마카세,2026-04-15,19:30,21:00,22.3,52.0,30,washer,표준,2026-04-15,21:00,22:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+668,오정동 고깃집 삼겹살,2026-04-15,18:30,20:00,20.3,50.0,15,dishwasher,강력,2024-03-15,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+669,부산 영도 노포 탐방,2026-04-15,11:00,15:00,18.0,60.0,20,air_conditioner,냉방,2026-04-15,10:30,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+670,배우자와 함께하는 크리스마스 준비,2026-12-24,14:00,19:00,2.0,30.0,20,air_purifier,자동,2026-12-24,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+671,부부와의 소풍,2024-04-15,15:00,18:00,18.3,60.0,20,washer,기능성,2024-04-15,18:00,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+672,배우자와 영화관 데이트,2026-06-10,20:00,22:30,22.3,50.0,20,washer,기능성,2026-06-10,22:30,00:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+673,전라도 음식 탐방,2026-12-12,09:00,14:00,5.0,75.0,15,washer,기능성,2026-12-12,14:00,15:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+674,전국 유명 빵집 여행,2026-05-05,11:00,18:00,22.0,55.0,25,washer,기능성,2026-05-05,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+675,강화도 풍경 드라이브,2026-10-15,10:00,16:00,18.4,65.0,10,washer,기능성,2026-10-15,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+676,양양 숙소 예약,2026-06-10,15:00,17:00,22.3,60.0,30,washer,강력,2026-06-10,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+677,바닷가 산책,2026-04-28,15:00,18:00,23.0,52.0,20,air_conditioner,제습,2026-04-28,18:00,19:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+678,남한산성 드라이브,2026-12-01,10:00,16:00,14.0,80.0,22,washer,강력,2026-12-01,16:30,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+679,김포 인근 산행,2026-04-15,08:00,12:00,18.0,55.0,20,washer,기능성,2026-04-15,12:30,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+680,전남 담양 떡갈비 맛집 탐방,2026-04-15,11:30,14:30,20.5,60.0,15,washer,강력,2026-04-15,14:30,15:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+681,가족과 레포츠 체험,2026-06-10,09:00,17:00,26.1,40.0,15,washer,기능성,2026-06-10,17:30,18:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+682,초밥 정식 집 외식,2026-01-30,18:00,19:30,6.5,62.0,15,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+683,대전 성심당 튀김소보로 구매,2026-04-09,10:00,11:00,15.0,55.0,30,washer,기능성,2026-04-09,11:30,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+684,부여 정림사지 방문,2026-05-30,10:00,12:00,24.1,55.0,20,washer,기능성,2026-05-30,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+685,가족과 함께하는 경주 여행,2026-04-05,08:00,20:00,18.0,40.0,10,washer,표준,2026-10-01,17:00,18:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+686,동네 맛집 갈비,2026-03-15,18:00,20:00,15.3,55.0,20,washer,기능성,2026-03-15,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+687,수유역 빵집 탐방,2026-03-15,14:00,16:00,12.5,60.0,20,washer,기능성,2026-03-15,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+688,아내와 청국장 집들이,2025-04-12,17:00,19:00,22.4,40.0,20,robot_cleaner,자동,2025-04-12,16:00,17:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+689,주말 계룡산 트레킹,2024-10-14,09:00,12:00,18.5,60.0,15,washer,기능성,2024-10-14,12:00,13:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+690,가족과 삼척 해변,2026-08-12,09:00,16:00,30.0,70.0,25,robot_cleaner,자동,2026-08-12,09:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+691,남편 생일 저녁,2026-06-20,18:30,20:30,25.0,60.0,19,washer,조용조용,2026-06-20,20:30,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+692,팔공산 숲길 산책,2025-04-22,09:30,12:00,18.5,60.0,20,washer,기능성,2025-04-22,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+693,명동 노포 탐방,2026-08-08,11:00,15:00,27.0,68.0,25,washer,표준,2026-08-08,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+694,아내와 갈빗집,2026-07-05,18:30,20:00,28.5,40.0,10,washer,셔츠,2026-07-05,20:00,21:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+695,가족과 독립기념관 산책,2024-04-22,10:30,12:30,18.0,40.0,20,washer,기능성,2024-04-22,12:30,13:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+696,고전 영화 감상,2024-05-05,19:00,21:00,18.7,60.0,20,air_conditioner,냉방,2024-05-05,21:00,21:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+697,일산 가로수길 맛집 탐방,2026-04-10,12:00,15:00,20.5,55.0,15,washer,강력,2026-04-10,15:00,16:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+698,단골 초밥집 외식,2026-04-15,18:30,20:00,15.2,55.0,20,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+699,아내와 외식 (단골 고깃집),2025-03-22,18:30,20:00,12.4,70.0,30,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+700,광명시장 장보기,2026-09-18,09:00,10:30,24.0,65.0,28,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+701,첫째 체육대회,2025-05-20,09:00,12:00,22.1,50.0,10,washer,기능성,2025-05-20,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+702,아내와 한식 외식,2026-07-02,18:30,20:00,25.0,50.0,11,none,none,none,none,none,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+703,삼겹살집 저녁식사,2026-05-01,18:30,20:00,22.7,40.0,20,dishwasher,강력,2026-05-01,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+704,부산 카페 투어,2026-08-22,13:00,17:00,26.5,55.0,12,robot_cleaner,자동,2026-08-22,11:00,12:00,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+705,남편과 남한산성 산책,2024-03-16,09:00,11:00,15.0,55.0,15,washer,기능성,2024-03-16,11:00,11:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+706,가로수길 소품샵 투어,2026-08-14,14:00,17:00,27.4,60.0,20,washer,기능성,2026-08-14,17:00,17:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+707,중랑천 산책,2024-04-15,18:00,19:00,20.5,60.0,30,washer,기능성,2024-04-15,19:00,19:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+708,석촌호수 야간 산책,2026-04-05,19:00,20:00,15.0,50.0,15,air_purifier,자동,2026-04-05,20:00,20:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
+709,주말 캠핑 장비 점검,2026-04-30,10:00,12:00,18.5,50.0,18,washer,기능성,2026-04-30,12:00,12:30,,,,,,,0,False,False,파인튜닝/평가 미실행,No model prediction was produced.
