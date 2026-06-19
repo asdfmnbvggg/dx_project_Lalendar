@@ -1476,7 +1476,7 @@ export default function App() {
               onNext={() => setOnboardingStep("scheduleInfo")}
               onInfoNext={() => setOnboardingStep("fixedSchedule")}
               onFixedNext={() => setOnboardingStep("googleConfirm")}
-              onPreview={() => setOnboardingStep("ready")}
+              onPreview={() => setOnboardingStep("appliance")}
               onApplianceNext={() => setOnboardingStep("ready")}
               onAssigneeNext={() => setOnboardingStep("ready")}
               onSkip={() => completeOnboarding({ skipGeneration: true })}
