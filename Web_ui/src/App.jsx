@@ -24,6 +24,7 @@ import MenuTab from "./components/MenuTab.jsx";
 import introLogo from "./assets/intro.png";
 import lgCharacter from "./assets/lg-character.png";
 import floatingStar from "./assets/floating-star.svg";
+import home3dView from "./assets/home-3d-view.png";
 import { CURRENT_USER_STORAGE_KEY, LEGACY_CURRENT_USER_STORAGE_KEY, USERS, findUserById, isMasterUser } from "./constants/users.js";
 import { fetchCalendarWeather } from "./services/weatherService.js";
 import { fetchAirQuality } from "./services/airQualityService.js";
@@ -3636,20 +3637,7 @@ function HomePage({ onOpenNotifications }) {
       </section>
 
       <section className="thinq-homeview-card">
-        <div className="thinq-homeview-model" aria-hidden="true">
-          <div className="model-floor" />
-          <div className="model-wall wall-a" />
-          <div className="model-wall wall-b" />
-          <div className="model-wall wall-c" />
-          <div className="model-sofa" />
-          <div className="model-tv" />
-          <div className="model-bed" />
-          <div className="model-fridge" />
-          <div className="model-washer" />
-          <div className="model-plant plant-a" />
-          <div className="model-plant plant-b" />
-        </div>
-        <p>3D 홈뷰를 만들고 있어요.</p>
+        <img className="thinq-homeview-image" src={home3dView} alt="우리 집 3D 홈뷰" />
       </section>
 
       <section className="thinq-favorites-section">

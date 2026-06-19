@@ -105,94 +105,18 @@
 }
 
 .thinq-homeview-card {
-  min-height: 380px;
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: 34px;
-  padding: 34px 18px 48px;
+  min-height: 300px;
+  padding: 0;
+  overflow: hidden;
 }
 
-.thinq-homeview-card p {
-  margin: 0;
-  color: #687586;
-  font-size: 22px;
-  font-weight: 850;
+.thinq-homeview-image {
+  display: block;
+  width: 100%;
+  height: clamp(300px, 76vw, 420px);
+  object-fit: cover;
+  object-position: center;
 }
-
-.thinq-homeview-model {
-  position: relative;
-  width: min(310px, 82vw);
-  height: 210px;
-  transform: rotateX(58deg) rotateZ(-43deg);
-  transform-style: preserve-3d;
-}
-
-.model-floor {
-  position: absolute;
-  inset: 34px 18px 18px;
-  border: 2px solid #c9c2b7;
-  background: linear-gradient(135deg, #eee7dc, #f9f3ea);
-  box-shadow: 18px 16px 16px rgba(78, 83, 91, 0.16);
-}
-
-.model-wall {
-  position: absolute;
-  z-index: 1;
-  border: 2px solid #d6d2ca;
-  background: #f8f7f3;
-  box-shadow: 0 8px 12px rgba(90, 90, 90, 0.08);
-}
-
-.wall-a { left: 70px; top: 48px; width: 96px; height: 90px; }
-.wall-b { right: 58px; top: 54px; width: 92px; height: 92px; }
-.wall-c { left: 143px; top: 86px; width: 90px; height: 72px; }
-
-.model-sofa,
-.model-tv,
-.model-bed,
-.model-fridge,
-.model-washer,
-.model-plant {
-  position: absolute;
-  z-index: 2;
-  border-radius: 5px;
-  box-shadow: 6px 8px 10px rgba(38, 43, 51, 0.14);
-}
-
-.model-sofa { left: 42px; bottom: 58px; width: 76px; height: 28px; background: #d9d0c3; }
-.model-tv { left: 128px; bottom: 44px; width: 48px; height: 28px; background: #252a31; }
-.model-bed { right: 96px; bottom: 26px; width: 76px; height: 44px; background: linear-gradient(90deg, #ddd2c2 0 72%, #f7f7f7 73%); }
-.model-fridge { right: 82px; top: 28px; width: 34px; height: 62px; background: #4b5054; }
-.model-washer {
-  right: 30px;
-  top: 84px;
-  width: 44px;
-  height: 68px;
-  background:
-    radial-gradient(circle at 50% 35%, #cdd3d7 0 18%, #303437 19% 31%, transparent 32%),
-    #f1f2f3;
-}
-
-.model-plant {
-  width: 16px;
-  height: 42px;
-  background: #c89d5b;
-}
-
-.model-plant::before {
-  content: "";
-  position: absolute;
-  left: -12px;
-  top: -18px;
-  width: 36px;
-  height: 28px;
-  border-radius: 50%;
-  background: #69b77b;
-}
-
-.model-plant.plant-a { left: 98px; bottom: 24px; }
-.model-plant.plant-b { right: 14px; bottom: 52px; }
 
 .thinq-favorites-section,
 .thinq-smart-routine {
