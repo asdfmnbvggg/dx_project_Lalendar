@@ -16,7 +16,11 @@ export function createDailyReportFallback() {
 }
 
 export async function fetchDailyReport(input, options = {}) {
-  if (import.meta.env.DEV) console.log("[daily-report] request input", input);
+  if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_DAILY_REPORT_API !== "true") {
+    const error = new Error("Daily Report API is disabled in local development");
+    error.code = "DAILY_REPORT_DEV_DISABLED";
+    throw error;
+  }
 
   const response = await fetch("/api/daily-report", {
     method: "POST",
@@ -38,6 +42,5 @@ export async function fetchDailyReport(input, options = {}) {
     throw new Error("Daily Report response is missing title or summary");
   }
 
-  if (import.meta.env.DEV) console.log("[daily-report] response", payload);
   return payload;
 }

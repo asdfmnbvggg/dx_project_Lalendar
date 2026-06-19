@@ -7,10 +7,9 @@ import {
 } from "../services/sensorRealtimeService";
 
 const DEVICE_ID = "living_room_01";
-const isDev = import.meta.env.DEV;
 
-function devLog(...args) {
-  if (isDev) console.log(...args);
+function devLog() {
+  // Keep sensor payloads out of the browser console.
 }
 
 function SensorTestPanel() {
