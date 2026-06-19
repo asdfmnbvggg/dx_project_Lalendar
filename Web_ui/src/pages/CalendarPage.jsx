@@ -80,6 +80,7 @@ export default function CalendarPage({
   postponeTask,
   onAddWeatherRecommendation,
   onAddTask,
+  onExecuteApplianceCommand,
   onUpdateApplianceColor,
   openComposer,
   onOpenPanel,
@@ -359,7 +360,7 @@ export default function CalendarPage({
     setActiveAddColumn("personal");
   }
 
-  function changeApplianceMode(task, mode) {
+  async function changeApplianceMode(task, mode) {
     if (!task || !mode) return;
 
     const nextTask = {
@@ -376,10 +377,12 @@ export default function CalendarPage({
         modeUpdatedAt: nextTask.modeUpdatedAt,
       });
       setApplianceModeTask(nextTask);
-      setApplianceModeMessage("ThinQ API 없이 mock 데이터로 모드가 저장됐어요.");
+      await onExecuteApplianceCommand?.(nextTask, mode);
+      setApplianceModeMessage(`${applianceTypeLabel[normalizeApplianceType(nextTask)] || nextTask.title || "가전"} 실행 명령을 전송했어요.`);
     } catch (error) {
       setApplianceModeTask(nextTask);
-      setApplianceModeMessage("API 연결에 실패해 화면에서만 mock 모드로 반영했어요.");
+      setApplianceModeMessage("명령 전송에 실패해 화면에서만 mock 모드로 반영했어요.");
+      throw error;
     }
   }
 
@@ -2069,10 +2072,14 @@ function ApplianceModePage({ task, selectedModeId, message, nearestRunText, onSe
     setOptions(getApplianceModeOptions(applianceType));
   }, [applianceType]);
 
-  function sendToAppliance() {
-    onApply(selectedMode);
-    setPowerOn(true);
-    setStatusText(`${applianceName}에 설정을 전송했어요.`);
+  async function sendToAppliance() {
+    try {
+      await onApply(selectedMode);
+      setPowerOn(true);
+      setStatusText(`${applianceName} 실행 명령을 전송했어요.`);
+    } catch (error) {
+      setStatusText(`${applianceName} 명령 전송에 실패했어요.`);
+    }
   }
 
   function reserveCourse() {

@@ -1117,22 +1117,90 @@ export default function App() {
     setSelectedDate(date);
   }
 
-  function executeNotification(item) {
+  async function executeNotification(item, source = "notification") {
+    logDryerDebug("clicked item", {
+      source,
+      item,
+      task: item?.task,
+    });
+
     if (item.type === "task") {
       const devicePayload = buildDeviceCommandPayloadFromTask(item.task, {
         requestedBy: currentUser?.id || "",
+        debugSource: source,
       });
-      if (devicePayload) {
-        sendDeviceCommandFromNotification(devicePayload).catch((error) => {
-          devWarn("[notification] device command failed", error);
+
+      if (!devicePayload) {
+        devWarn("[notification] executable task has no device command payload", item.task);
+        logDryerDebug("payload null", {
+          source,
+          reason: getDeviceCommandResolverFailureReason(item.task),
+          task: item.task,
         });
+        return;
       }
+
+      logDryerDebug("sendDeviceCommand before", {
+        deviceId: SENSOR_DEVICE_ID,
+        payload: devicePayload,
+      });
+      await sendDeviceCommandFromNotification(devicePayload);
+      logDryerDebug("sendDeviceCommand success", {
+        deviceId: SENSOR_DEVICE_ID,
+        payload: devicePayload,
+      });
       if (!item.task.done) toggleTask(item.task.id);
       return;
     }
 
+    logDryerDebug("non-task notification skipped for device command", {
+      source,
+      item,
+    });
     addAutomationTask(item, item.date);
     setDismissedAlerts((current) => [...current, item.id]);
+  }
+
+  async function executeApplianceCommandFromCalendar(task = {}, mode = null) {
+    const taskWithMode = {
+      ...task,
+      applianceMode: mode?.label || task.applianceMode || task.currentMode,
+      currentMode: mode?.label || task.currentMode || task.applianceMode,
+    };
+    logDryerDebug("clicked item", {
+      source: "calendar-appliance-page",
+      task: taskWithMode,
+      mode,
+    });
+
+    const payload = buildDeviceCommandPayloadFromTask(taskWithMode, {
+      requestedBy: currentUser?.id || "",
+      debugSource: "calendar-appliance-page",
+    });
+
+    if (!payload) {
+      logDryerDebug("payload null", {
+        source: "calendar-appliance-page",
+        reason: getDeviceCommandResolverFailureReason(taskWithMode),
+        task: taskWithMode,
+      });
+      throw new Error("No executable appliance command for this task");
+    }
+
+    if (import.meta.env.DEV) console.log("[calendar] appliance command payload", payload);
+    logAnalyticsEvent("device_execute_click", payload);
+    logDeviceExecuteEvent(taskWithMode, payload);
+    logDryerDebug("sendDeviceCommand before", {
+      deviceId: SENSOR_DEVICE_ID,
+      payload,
+    });
+    await sendDeviceCommand(SENSOR_DEVICE_ID, payload);
+    logDryerDebug("sendDeviceCommand success", {
+      deviceId: SENSOR_DEVICE_ID,
+      payload,
+    });
+    if (import.meta.env.DEV) console.log("[calendar] appliance command sent", { deviceId: SENSOR_DEVICE_ID, payload });
+    return payload;
   }
 
   function showNextSensorDemoPopup() {
@@ -1349,6 +1417,7 @@ export default function App() {
     postponeTask,
     onAddWeatherRecommendation: addWeatherRecommendationTask,
     onAddTask: addTask,
+    onExecuteApplianceCommand: executeApplianceCommandFromCalendar,
     openComposer: openTaskComposer,
     onOpenPanel: setPanel,
     onOpenNotifications: openNotificationPopover,
@@ -1572,7 +1641,19 @@ export default function App() {
                       <button type="button" onClick={() => postponeNotification(item)}>
                         미루기
                       </button>
-                      <button type="button" onClick={() => executeNotification(item)}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          executeNotification(item, "notification-popover").catch((error) => {
+                            devWarn("[notification] device command failed", error);
+                            logDryerDebug("sendDeviceCommand failed", {
+                              source: "notification-popover",
+                              item,
+                              error,
+                            });
+                          });
+                        }}
+                      >
                         실행
                       </button>
                     </div>
@@ -1609,7 +1690,16 @@ export default function App() {
         onDelete={deleteTask}
         onOwnerChange={changeTaskOwner}
         onPostpone={postponeTask}
-        onExecuteNotification={executeNotification}
+        onExecuteNotification={(item) =>
+          executeNotification(item, "detail-panel-notifications").catch((error) => {
+            devWarn("[notification] device command failed", error);
+            logDryerDebug("sendDeviceCommand failed", {
+              source: "detail-panel-notifications",
+              item,
+              error,
+            });
+          })
+        }
         onPostponeNotification={postponeNotification}
         onAddTask={(task) => addTask(task)}
         selectedDate={selectedDate}
@@ -1665,8 +1755,18 @@ export default function App() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  executeNotification(notificationPrompt);
+                onClick={async () => {
+                  try {
+                    await executeNotification(notificationPrompt, "notification-confirm-dialog");
+                  } catch (error) {
+                    devWarn("[notification] device command failed", error);
+                    logDryerDebug("sendDeviceCommand failed", {
+                      source: "notification-confirm-dialog",
+                      item: notificationPrompt,
+                      error,
+                    });
+                    return;
+                  }
                   setNotificationPrompt(null);
                 }}
               >
@@ -2050,23 +2150,39 @@ async function sendDeviceCommandFromNotification(payload = {}) {
 }
 
 function buildDeviceCommandPayloadFromTask(task = {}, context = {}) {
-  if (!isExecutableApplianceTask(task)) return null;
-
-  if (task.applianceType === "AIR_CONDITIONER" || /에어컨|냉방|제습/i.test(`${task.title || ""} ${task.place || ""} ${task.applianceName || ""}`)) {
-    return buildAirConditionerCommandPayload(task, context);
+  if (!isExecutableApplianceTask(task)) {
+    logDryerDebug("resolver blocked", {
+      source: context.debugSource || "unknown",
+      reason: getDeviceCommandResolverFailureReason(task),
+      task,
+    });
+    return null;
   }
 
-  if (task.applianceType === "AIR_PURIFIER" || /공기청정|미세먼지/i.test(`${task.title || ""} ${task.place || ""} ${task.applianceName || ""}`)) {
+  const applianceType = resolveExecutableApplianceType(task);
+  logDryerDebug("resolver result", {
+    source: context.debugSource || "unknown",
+    result: applianceType,
+    task,
+  });
+
+  if (applianceType === "AIR_CONDITIONER") {
+    return buildAirConditionerCommandPayload({ ...task, applianceType }, context);
+  }
+
+  if (applianceType === "AIR_PURIFIER") {
     return buildAirPurifierCommandPayload({
       ...task,
+      applianceType,
       reason: "캘린더 가전 실행 확인 알림에서 공기청정기 실행을 요청했습니다.",
       targetUserId: getTaskUserId(task),
     });
   }
 
-  if (isWasherScheduleTask(task)) {
+  if (applianceType === "WASHER") {
     return {
       applianceType: "WASHER",
+      applianceId: "washer",
       applianceName: "세탁기",
       command: "washer_start",
       mode: task.applianceMode || task.currentMode || "표준",
@@ -2075,7 +2191,25 @@ function buildDeviceCommandPayloadFromTask(task = {}, context = {}) {
     };
   }
 
-  if (task.applianceType === "ROBOT_CLEANER" || /로봇청소|로봇\s*청소|robot/i.test(`${task.title || ""} ${task.place || ""} ${task.applianceName || ""}`)) {
+  if (applianceType === "DRYER") {
+    const payload = {
+      applianceType: "DRYER",
+      applianceId: "dryer",
+      applianceName: "건조기",
+      command: "dryer_start",
+      mode: task.applianceMode || task.currentMode || "표준",
+      reason: "실행 버튼에서 건조기 실행을 요청했습니다.",
+      targetUserId: getTaskUserId(task),
+    };
+    logDryerDebug("payload created", {
+      source: context.debugSource || "unknown",
+      payload,
+      task,
+    });
+    return payload;
+  }
+
+  if (applianceType === "ROBOT_CLEANER") {
     return {
       applianceType: "ROBOT_CLEANER",
       applianceId: "robot_cleaner",
@@ -2087,7 +2221,7 @@ function buildDeviceCommandPayloadFromTask(task = {}, context = {}) {
     };
   }
 
-  if (task.applianceType === "DISHWASHER" || /식기세척|식기\s*세척|설거지|dishwasher/i.test(`${task.title || ""} ${task.place || ""} ${task.applianceName || ""}`)) {
+  if (applianceType === "DISHWASHER") {
     return {
       applianceType: "DISHWASHER",
       applianceId: "dishwasher",
@@ -2103,7 +2237,84 @@ function buildDeviceCommandPayloadFromTask(task = {}, context = {}) {
 }
 
 function isExecutableApplianceTask(task = {}) {
-  return task.displayType === "appliance" || Boolean(task.applianceType);
+  return Boolean(resolveExecutableApplianceType(task));
+}
+
+function resolveExecutableApplianceType(task = {}) {
+  const explicitType = String(task.applianceType || "").toUpperCase();
+  const typeAliases = {
+    AIRCON: "AIR_CONDITIONER",
+    AIR_CON: "AIR_CONDITIONER",
+    AIR_CONDITIONER: "AIR_CONDITIONER",
+    AIR_PURIFIER: "AIR_PURIFIER",
+    WASHER: "WASHER",
+    DRYER: "DRYER",
+    DISHWASHER: "DISHWASHER",
+    ROBOT_CLEANER: "ROBOT_CLEANER",
+  };
+  if (typeAliases[explicitType]) return typeAliases[explicitType];
+
+  const explicitId = String(task.applianceId || task.appliance || "").toLowerCase();
+  if (/dryer|dry-machine|건조/.test(explicitId)) return "DRYER";
+  if (/washer|세탁/.test(explicitId)) return "WASHER";
+  if (/dishwasher|dish|식기|세척/.test(explicitId)) return "DISHWASHER";
+  if (/robot|robot_cleaner|로봇/.test(explicitId)) return "ROBOT_CLEANER";
+  if (/air_purifier|air-purifier|purifier|공기/.test(explicitId)) return "AIR_PURIFIER";
+  if (/aircon|air-conditioner|air_conditioner|air-|에어컨/.test(explicitId)) return "AIR_CONDITIONER";
+
+  const text = `${task.title || ""} ${task.place || ""} ${task.applianceName || ""} ${task.displayType || ""}`.toLowerCase();
+  if (/건조기|dryer/.test(text)) return "DRYER";
+  if (/식기세척|식기\s*세척|설거지|dishwasher|dish/.test(text)) return "DISHWASHER";
+  if (/로봇청소|로봇\s*청소|robot/.test(text)) return "ROBOT_CLEANER";
+  if (/공기청정|미세먼지|air purifier|purifier/.test(text)) return "AIR_PURIFIER";
+  if (/에어컨|냉방|제습|aircon|air conditioner/.test(text)) return "AIR_CONDITIONER";
+  if (/세탁기|세탁|빨래|washer/.test(text)) return "WASHER";
+
+  return "";
+}
+
+function isDryerDebugCandidate(value = {}) {
+  const source = value.task || value.item?.task || value.payload || value;
+  const text = [
+    source?.title,
+    source?.place,
+    source?.applianceName,
+    source?.applianceType,
+    source?.applianceId,
+    source?.appliance,
+    source?.command,
+    value?.reason,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return /dryer|dry-machine|건조/.test(text);
+}
+
+function logDryerDebug(label, data = {}) {
+  if (!isDryerDebugCandidate(data)) return;
+  console.log(`[DRYER DEBUG] ${label}`, data);
+}
+
+function getDeviceCommandResolverFailureReason(task = {}) {
+  if (!task || typeof task !== "object") return "item.task is missing or not an object";
+
+  const fields = {
+    displayType: task.displayType || "",
+    applianceType: task.applianceType || "",
+    applianceId: task.applianceId || "",
+    applianceName: task.applianceName || "",
+    appliance: task.appliance || "",
+    title: task.title || "",
+    place: task.place || "",
+  };
+  const applianceType = resolveExecutableApplianceType(task);
+
+  if (applianceType) return `recognized as ${applianceType}`;
+  if (fields.displayType !== "appliance") return "displayType is not appliance and no appliance text/type matched";
+  if (!fields.applianceType) return "displayType is appliance but applianceType is missing and title/applianceName/applianceId did not match";
+  return "appliance fields did not match executable command resolver";
 }
 
 function normalizeDeviceCommandPayload(payload = {}) {
