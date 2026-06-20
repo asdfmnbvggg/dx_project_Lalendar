@@ -113,7 +113,7 @@ export default function App() {
   const initialVisibleMonth = visibleMonthFromDate(initialSelectedDate);
   const [currentUser, setCurrentUser] = useState(storedUser);
   const [activeCalendarUser, setActiveCalendarUser] = useState(() => getInitialCalendarUser(storedUser, storedSession?.activeCalendarUserId));
-  const [tasks, setTasks] = useState(() => []);
+  const [tasks, setTasks] = useState(() => buildDefaultCalendarTasks());
   const [memberColors, setMemberColors] = useState(() => ({
     ...Object.fromEntries(members.map((member) => [member.id, member.color])),
     ...USER_COLORS,
@@ -2678,7 +2678,80 @@ const defaultFixedScheduleUsers = [
 ];
 
 function buildDefaultCalendarTasks() {
-  return [];
+  return buildJuneJulyApplianceScheduleTasks();
+}
+
+function buildJuneJulyApplianceScheduleTasks() {
+  const startDate = new Date("2026-06-01T00:00:00");
+  const endDate = new Date("2026-07-31T00:00:00");
+  const tasks = [];
+  let id = 20000;
+
+  for (let currentDate = new Date(startDate), dayOffset = 0; currentDate <= endDate; currentDate.setDate(currentDate.getDate() + 1), dayOffset += 1) {
+    const date = dateKey(currentDate.getFullYear(), currentDate.getMonth() + 1, currentDate.getDate());
+
+    tasks.push(
+      createApplianceCalendarTask({
+        id: id++,
+        date,
+        title: "로봇청소기",
+        place: "거실",
+        owner: applianceCalendarAssignees.ROBOT_CLEANER,
+        repeat: "10:00-11:00",
+        applianceType: "ROBOT_CLEANER",
+        applianceId: "robot_cleaner",
+        applianceName: "로봇청소기",
+        applianceMode: "전체 청소",
+        sortOrder: 30,
+      }),
+      createApplianceCalendarTask({
+        id: id++,
+        date,
+        title: "식기세척기",
+        place: "주방",
+        owner: applianceCalendarAssignees.DISHWASHER,
+        repeat: "20:00-21:00",
+        applianceType: "DISHWASHER",
+        applianceId: "dishwasher",
+        applianceName: "식기세척기",
+        applianceMode: "표준",
+        sortOrder: 41,
+      }),
+    );
+
+    if (dayOffset % 3 === 0) {
+      tasks.push(
+        createApplianceCalendarTask({
+          id: id++,
+          date,
+          title: "세탁기",
+          place: "세탁실",
+          owner: applianceCalendarAssignees.WASHER,
+          repeat: "18:30-19:30",
+          applianceType: "WASHER",
+          applianceId: "washer",
+          applianceName: "세탁기",
+          applianceMode: "표준",
+          sortOrder: 50,
+        }),
+        createApplianceCalendarTask({
+          id: id++,
+          date,
+          title: "건조기",
+          place: "세탁실",
+          owner: applianceCalendarAssignees.DRYER,
+          repeat: "19:30-20:30",
+          applianceType: "DRYER",
+          applianceId: "dryer",
+          applianceName: "건조기",
+          applianceMode: "표준",
+          sortOrder: 51,
+        }),
+      );
+    }
+  }
+
+  return tasks;
 }
 
 function buildDefaultFixedCalendarTasks() {
