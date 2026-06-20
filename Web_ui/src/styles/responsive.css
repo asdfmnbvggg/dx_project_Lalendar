@@ -219,14 +219,18 @@
   flex: 0 0 76px;
 }
 
-.calendar-page-month .calendar-filter-block {
+.calendar-page-month .calendar-filter-block,
+.calendar-page-week .calendar-filter-block,
+.calendar-page-day .calendar-filter-block {
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: start;
   gap: 10px;
   padding: 0 5px;
 }
 
-.calendar-page-month .calendar-family-title {
+.calendar-page-month .calendar-family-title,
+.calendar-page-week .calendar-family-title,
+.calendar-page-day .calendar-family-title {
   grid-column: 1 / 2;
   padding: 7px 0 0;
   color: #2c2c2c;
@@ -234,13 +238,19 @@
   font-weight: 950;
 }
 
-.calendar-page-month .calendar-family-title span {
+.calendar-page-month .calendar-family-title span,
+.calendar-page-week .calendar-family-title span,
+.calendar-page-day .calendar-family-title span {
   color: #ff6d1f;
   font-size: 17px;
 }
 
 .calendar-page-month .calendar-notification-button,
-.calendar-page-month .calendar-settings-button {
+.calendar-page-month .calendar-settings-button,
+.calendar-page-week .calendar-notification-button,
+.calendar-page-week .calendar-settings-button,
+.calendar-page-day .calendar-notification-button,
+.calendar-page-day .calendar-settings-button {
   position: static;
   width: 31px;
   height: 31px;
@@ -250,15 +260,21 @@
   background: transparent;
 }
 
-.calendar-page-month .calendar-notification-button {
+.calendar-page-month .calendar-notification-button,
+.calendar-page-week .calendar-notification-button,
+.calendar-page-day .calendar-notification-button {
   grid-column: 2 / 3;
 }
 
-.calendar-page-month .calendar-settings-button {
+.calendar-page-month .calendar-settings-button,
+.calendar-page-week .calendar-settings-button,
+.calendar-page-day .calendar-settings-button {
   grid-column: 3 / 4;
 }
 
-.calendar-page-month .calendar-filter-row {
+.calendar-page-month .calendar-filter-row,
+.calendar-page-week .calendar-filter-row,
+.calendar-page-day .calendar-filter-row {
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
@@ -267,11 +283,15 @@
   margin-top: 5px;
 }
 
-.calendar-page-month .profile-strip {
+.calendar-page-month .profile-strip,
+.calendar-page-week .profile-strip,
+.calendar-page-day .profile-strip {
   gap: 14px;
 }
 
-.calendar-page-month .profile-strip button {
+.calendar-page-month .profile-strip button,
+.calendar-page-week .profile-strip button,
+.calendar-page-day .profile-strip button {
   width: 39px;
   height: 39px;
   min-width: 39px;
@@ -281,19 +301,25 @@
   box-shadow: 0 7px 15px rgba(15, 23, 42, 0.14);
 }
 
-.calendar-page-month .profile-strip button.active {
+.calendar-page-month .profile-strip button.active,
+.calendar-page-week .profile-strip button.active,
+.calendar-page-day .profile-strip button.active {
   border-color: #ff8a2a;
   background: #fff;
   box-shadow: 0 0 0 2px rgba(255, 138, 42, 0.18), 0 9px 18px rgba(255, 138, 42, 0.18);
 }
 
-.calendar-page-month .profile-strip span {
+.calendar-page-month .profile-strip span,
+.calendar-page-week .profile-strip span,
+.calendar-page-day .profile-strip span {
   width: 35px;
   height: 35px;
   border: 1px solid rgba(255, 255, 255, 0.86);
 }
 
-.calendar-page-month .house-calendar-toggle {
+.calendar-page-month .house-calendar-toggle,
+.calendar-page-week .house-calendar-toggle,
+.calendar-page-day .house-calendar-toggle {
   width: 39px;
   height: 39px;
   flex: 0 0 auto;
