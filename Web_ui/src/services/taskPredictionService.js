@@ -29,6 +29,15 @@ export async function predictHouseworkTask(input) {
 function validatePrediction(prediction) {
   const appliance = String(prediction?.task_appliance || "").trim().toLowerCase();
   const mode = String(prediction?.task_appliance_mode || "").trim();
+
+  if (appliance === "none") {
+    return {
+      ...prediction,
+      task_appliance: "none",
+      task_appliance_mode: mode || "none",
+    };
+  }
+
   const allowedModes = AI_APPLIANCE_MODES[appliance];
 
   if (!allowedModes) {

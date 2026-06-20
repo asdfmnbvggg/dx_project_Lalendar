@@ -8,6 +8,7 @@ const APPLIANCE_MODES = {
   dishwasher: ["표준", "강력", "급속", "섬세", "살균", "통살균"],
   air_purifier: ["자동", "터보", "취침", "에코", "펫", "순환"],
   robot_cleaner: ["자동", "구역", "스팟", "물걸레"],
+  none: ["none"],
 };
 const MODE_GUIDANCE = {
   washer: {
@@ -228,6 +229,7 @@ function isLikelyTruncatedJson(content, error) {
 
 function buildSystemPrompt() {
   return [
+    "If no housework is needed for the event, return task_appliance \"none\" and task_appliance_mode \"none\".",
     "너는 L-lander 앱의 가사일 추천 모델이다.",
     "입력된 일정과 당일 날씨를 깊이 분석해 가장 상식적이고 필요한 가전 작업 정확히 하나를 추천한다.",
     "가전과 모드는 반드시 아래 목록에서 서로 맞는 조합으로만 선택한다. 목록에 없는 가전이나 모드는 절대 만들지 않는다.",
@@ -249,7 +251,7 @@ function buildSystemPrompt() {
     "- 일정과 날씨에 가장 자연스러운 타이밍 하나를 선택한다.",
     "",
     "날씨 근거를 반드시 판단에 반영한다. 고온이면 에어컨 냉방/파워, 높은 습도면 에어컨 제습 또는 건조기, 미세먼지가 높으면 공기청정기를 우선 고려한다.",
-    "항상 제공된 6종 중 하나를 선택하며 dehumidifier, none 또는 다른 가전 이름은 절대 출력하지 않는다.",
+    "Choose a schema appliance value only. Use none only when the event does not need any housework; do not output dehumidifier or other appliance names.",
     "출력은 반드시 JSON만 반환하고 설명이나 마크다운을 포함하지 않는다.",
     `반드시 다음 JSON Schema를 따른다: ${JSON.stringify(OUTPUT_SCHEMA)}`,
   ].join("\n");

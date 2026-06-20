@@ -936,7 +936,10 @@ export default function App() {
 
     try {
       const prediction = await predictHouseworkTask(input);
-      if (prediction.task_appliance === "none") return;
+      if (prediction.task_appliance === "none") {
+        setAiRecommendationNotice("가사일이 필요없는 일정입니다.");
+        return;
+      }
 
       const applianceType = toCalendarApplianceType(prediction.task_appliance);
       const eventUserId = getTaskUserId(eventTask);
