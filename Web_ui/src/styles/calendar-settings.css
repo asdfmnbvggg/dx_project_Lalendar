@@ -516,6 +516,11 @@
   background: var(--app-primary-soft);
 }
 
+.app-shell:not(.mood-default) .thinq-main-tabbar button.active::before {
+  background: var(--app-primary-soft) !important;
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--app-bottom-nav-active) 30%, transparent) !important;
+}
+
 .app-shell:not(.mood-default) :where(.onboarding-speech-bubble, .onboarding-intro-panel, .onboarding-info-panel, .onboarding-google-confirm, .onboarding-ai-wait-card) {
   background: var(--app-speech-bubble-bg);
   border-color: var(--app-border);
@@ -533,6 +538,12 @@
 .app-shell:not(.mood-default) .calendar-page-month .calendar-ai-report h3,
 .app-shell:not(.mood-default) .calendar-page-month .calendar-ai-report h3::before,
 .app-shell:not(.mood-default) .calendar-page-month .calendar-ai-report-tags span,
+.app-shell:not(.mood-default) .calendar-page-week .calendar-ai-report h3,
+.app-shell:not(.mood-default) .calendar-page-week .calendar-ai-report h3::before,
+.app-shell:not(.mood-default) .calendar-page-week .calendar-ai-report-tags span,
+.app-shell:not(.mood-default) .calendar-page-day .calendar-ai-report h3,
+.app-shell:not(.mood-default) .calendar-page-day .calendar-ai-report h3::before,
+.app-shell:not(.mood-default) .calendar-page-day .calendar-ai-report-tags span,
 .app-shell:not(.mood-default) .calendar-page-month .calendar-notification-button,
 .app-shell:not(.mood-default) .calendar-page-month .calendar-settings-button,
 .app-shell:not(.mood-default) .calendar-page-week .calendar-notification-button,
@@ -583,12 +594,16 @@
   color: var(--app-accent);
 }
 
-.app-shell:not(.mood-default) .calendar-page-month .calendar-ai-report-tags span {
+.app-shell:not(.mood-default) .calendar-page-month .calendar-ai-report-tags span,
+.app-shell:not(.mood-default) .calendar-page-week .calendar-ai-report-tags span,
+.app-shell:not(.mood-default) .calendar-page-day .calendar-ai-report-tags span {
   border-color: var(--app-accent) !important;
   background: var(--app-card-bg) !important;
 }
 
-.app-shell:not(.mood-default) .calendar-page-month .calendar-ai-report h3::after {
+.app-shell:not(.mood-default) .calendar-page-month .calendar-ai-report h3::after,
+.app-shell:not(.mood-default) .calendar-page-week .calendar-ai-report h3::after,
+.app-shell:not(.mood-default) .calendar-page-day .calendar-ai-report h3::after {
   background: var(--app-accent) !important;
 }
 
@@ -599,17 +614,26 @@
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--app-primary) 24%, transparent) !important;
 }
 
-.app-shell:not(.mood-default) .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active::before {
+.app-shell:not(.mood-default) .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active::before,
+.app-shell:not(.mood-default) .app-frame:has(.calendar-page-week) > .thinq-main-tabbar button.active::before,
+.app-shell:not(.mood-default) .app-frame:has(.calendar-page-day) > .thinq-main-tabbar button.active::before {
   background: var(--app-primary-soft) !important;
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--app-bottom-nav-active) 30%, transparent) !important;
 }
 
 .app-shell:not(.mood-default) .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active svg,
-.app-shell:not(.mood-default) .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active span {
+.app-shell:not(.mood-default) .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active span,
+.app-shell:not(.mood-default) .app-frame:has(.calendar-page-week) > .thinq-main-tabbar button.active svg,
+.app-shell:not(.mood-default) .app-frame:has(.calendar-page-week) > .thinq-main-tabbar button.active span,
+.app-shell:not(.mood-default) .app-frame:has(.calendar-page-day) > .thinq-main-tabbar button.active svg,
+.app-shell:not(.mood-default) .app-frame:has(.calendar-page-day) > .thinq-main-tabbar button.active span {
   color: var(--app-bottom-nav-active) !important;
   stroke: currentColor !important;
 }
 
-.app-shell:not(.mood-default) .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active {
+.app-shell:not(.mood-default) .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active,
+.app-shell:not(.mood-default) .app-frame:has(.calendar-page-week) > .thinq-main-tabbar button.active,
+.app-shell:not(.mood-default) .app-frame:has(.calendar-page-day) > .thinq-main-tabbar button.active {
   color: var(--app-bottom-nav-active) !important;
 }
 
