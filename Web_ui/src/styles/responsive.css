@@ -208,7 +208,10 @@
   flex: 1 1 auto;
   min-height: 0;
   margin: 0;
-  padding: 0 16px 8px;
+  padding: 10px 12px 12px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
 }
 
 .calendar-page-week .calendar-ai-report,
@@ -831,7 +834,8 @@
 
   .calendar-page-week .calendar-board,
   .calendar-page-day .calendar-board {
-    padding: 0 10px 6px;
+    padding: 8px 10px 10px;
+    border-radius: 12px;
   }
 
   .calendar-page-month .calendar-filter-block {

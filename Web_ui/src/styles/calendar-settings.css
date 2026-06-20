@@ -561,6 +561,12 @@
   background: var(--app-card-bg);
 }
 
+.app-shell:not(.mood-default) :where(.calendar-page-week .calendar-board, .calendar-page-day .calendar-board) {
+  border-color: var(--app-border);
+  background: var(--app-card-bg);
+  box-shadow: 0 12px 28px var(--app-shadow);
+}
+
 .app-shell:not(.mood-default) .week-agenda-day.active {
   border-color: var(--app-primary);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--app-primary) 22%, transparent);
