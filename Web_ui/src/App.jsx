@@ -104,6 +104,13 @@ const DAY_OF_WEEK_INDEX = {
   thu: 4,
   fri: 5,
   sat: 6,
+  일: 0,
+  월: 1,
+  화: 2,
+  수: 3,
+  목: 4,
+  금: 5,
+  토: 6,
 };
 
 export default function App() {
@@ -2678,7 +2685,7 @@ const defaultFixedScheduleUsers = [
 ];
 
 function buildDefaultCalendarTasks() {
-  return buildJuneJulyApplianceScheduleTasks();
+  return [...buildDefaultFixedCalendarTasks(), ...buildJuneJulyApplianceScheduleTasks()];
 }
 
 function buildJuneJulyApplianceScheduleTasks() {
