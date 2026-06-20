@@ -186,8 +186,8 @@ export const applianceModeCatalog = {
   },
 };
 
-export const CALENDAR_CELL_TASK_LIMIT = 6;
-export const CALENDAR_CELL_COLLAPSED_TASK_LIMIT = 5;
+export const CALENDAR_CELL_TASK_LIMIT = 3;
+export const CALENDAR_CELL_COLLAPSED_TASK_LIMIT = 2;
 export const DAILY_TIMETABLE_START_HOUR = 6;
 export const DAILY_TIMETABLE_END_HOUR = 24;
 export const DAILY_TIMETABLE_HOUR_HEIGHT = 52;

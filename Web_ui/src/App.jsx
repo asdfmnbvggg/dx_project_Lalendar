@@ -21,6 +21,13 @@ import DetailPanel from "./components/DetailPanel.jsx";
 import DeviceTab from "./components/DeviceTabSynced.jsx";
 import CareReportTab from "./components/CareReportTab.jsx";
 import MenuTab from "./components/MenuTab.jsx";
+import {
+  CALENDAR_SETTINGS_STORAGE_KEY,
+  DEFAULT_CALENDAR_SETTINGS,
+  normalizeCalendarSettings,
+  readStoredCalendarSettings,
+} from "./components/CalendarSettings.jsx";
+import { AppSettingsProvider } from "./contexts/AppSettingsContext.jsx";
 import introLogo from "./assets/intro.png";
 import lgCharacter from "./assets/lg-character.png";
 import floatingStar from "./assets/floating-star.svg";
@@ -90,7 +97,6 @@ const OWNER_TO_USER = Object.fromEntries(Object.entries(USER_TO_OWNER).map(([use
 const APP_SESSION_STORAGE_KEY = "l-landerAppSession";
 const LEGACY_APP_SESSION_STORAGE_KEY = "lalendarAppSession";
 const DEFAULT_TAB = "schedule";
-const DEFAULT_CALENDAR_VIEW = "month";
 const DEFAULT_ONBOARDING_APPLIANCE_TYPES = [];
 const DEFAULT_ONBOARDING_APPLIANCE_ASSIGNEES = {};
 const DAILY_REPORT_LOADING_TEXT = "오늘의 일정을 정리하고 있어요...";
@@ -157,10 +163,9 @@ export default function App() {
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
   const [panel, setPanel] = useState(null);
   const [isMenuOpen, setMenuOpen] = useState(false);
-  const [isCalendarMenuOpen, setCalendarMenuOpen] = useState(false);
   const [isNotificationOpen, setNotificationOpen] = useState(false);
-  const [notificationPosition, setNotificationPosition] = useState({ x: 0, y: 0 });
-  const [calendarView, setCalendarView] = useState(storedSession?.calendarView || DEFAULT_CALENDAR_VIEW);
+  const [calendarSettings, setCalendarSettings] = useState(() => readStoredCalendarSettings());
+  const calendarView = calendarSettings.calendarViewMode;
   const [calendarWeatherByDate, setCalendarWeatherByDate] = useState({});
   const [weatherApiStatus, setWeatherApiStatus] = useState("loading");
   const [airQualityPm10, setAirQualityPm10] = useState(null);
@@ -472,12 +477,22 @@ export default function App() {
         visibleMonth,
         selectedMember,
         activeCalendarUserId: activeCalendarUser?.id || currentUser.id,
-        calendarView,
         isOnboardingComplete,
         onboardingSetup,
       }),
     );
-  }, [activeCalendarUser, activeTab, calendarView, currentUser, isOnboardingComplete, onboardingSetup, selectedDate, selectedDetailDate, selectedMember, visibleMonth]);
+  }, [activeCalendarUser, activeTab, currentUser, isOnboardingComplete, onboardingSetup, selectedDate, selectedDetailDate, selectedMember, visibleMonth]);
+
+  useEffect(() => {
+    if (typeof localStorage === "undefined") return;
+    localStorage.setItem(CALENDAR_SETTINGS_STORAGE_KEY, JSON.stringify(calendarSettings));
+  }, [calendarSettings]);
+
+  useEffect(() => {
+    document.body.dataset.moodTheme = calendarSettings.moodTheme;
+    document.body.dataset.fontSize = calendarSettings.fontSizeMode;
+    document.body.dataset.calendarView = calendarSettings.calendarViewMode;
+  }, [calendarSettings]);
 
   const sortedCalendarUsers = useMemo(() => {
     if (!currentUser) return USERS;
@@ -690,29 +705,6 @@ export default function App() {
     setVisibleMonth({ year, month });
     setSelectedDate(selectedDateKey);
     logAnalyticsEvent("calendar_date_click", { date: selectedDateKey, userId: activeCalendarUserId || currentUser?.id || "" });
-  }
-
-  function startNotificationDrag(event) {
-    const startX = event.clientX;
-    const startY = event.clientY;
-    const origin = notificationPosition;
-
-    event.currentTarget.setPointerCapture?.(event.pointerId);
-
-    const moveNotification = (moveEvent) => {
-      setNotificationPosition({
-        x: origin.x + moveEvent.clientX - startX,
-        y: origin.y + moveEvent.clientY - startY,
-      });
-    };
-
-    const stopNotificationDrag = () => {
-      window.removeEventListener("pointermove", moveNotification);
-      window.removeEventListener("pointerup", stopNotificationDrag);
-    };
-
-    window.addEventListener("pointermove", moveNotification);
-    window.addEventListener("pointerup", stopNotificationDrag);
   }
 
   function toggleTask(id) {
@@ -1053,7 +1045,7 @@ export default function App() {
     setNotificationTimeEdited(false);
     setSelectedDetailDate(isDateKey(savedSession?.selectedDetailDate) ? savedSession.selectedDetailDate : null);
     setVisibleMonth(nextVisibleMonth);
-    setCalendarView(savedSession?.calendarView || DEFAULT_CALENDAR_VIEW);
+    setCalendarSettings(readStoredCalendarSettings());
     setActiveTab(savedSession?.activeTab || DEFAULT_TAB);
     setOnboardingComplete(Boolean(savedSession?.isOnboardingComplete));
     setOnboardingSetup(savedSession?.isOnboardingComplete ? normalizeOnboardingSetup(savedSession?.onboardingSetup) : createDefaultOnboardingSetup());
@@ -1061,7 +1053,6 @@ export default function App() {
     setHasGeneratedOnboardingTasks(false);
     setPanel(null);
     setMenuOpen(false);
-    setCalendarMenuOpen(false);
     setNotificationOpen(false);
     setComposerOpen(false);
     setComposerOwnerLock(null);
@@ -1076,13 +1067,13 @@ export default function App() {
     setActiveCalendarUser(null);
     setSelectedMember("jea");
     setSelectedDetailDate(null);
+    setCalendarSettings(DEFAULT_CALENDAR_SETTINGS);
     setActiveTab(DEFAULT_TAB);
     setOnboardingComplete(false);
     setOnboardingSetup(createDefaultOnboardingSetup());
     setOnboardingStep("intro");
     setPanel(null);
     setMenuOpen(false);
-    setCalendarMenuOpen(false);
     setNotificationOpen(false);
     setComposerOpen(false);
     setComposerOwnerLock(null);
@@ -1097,7 +1088,6 @@ export default function App() {
 
   function openNotificationPopover() {
     setNotificationOpen(true);
-    setCalendarMenuOpen(false);
     setMenuOpen(false);
     setPanel(null);
   }
@@ -1202,6 +1192,21 @@ export default function App() {
     }).filter((popup) => popup.targetUserId === currentUser.id);
 
     enqueueSensorPopups(popups.slice(0, 1), "menu-demo", { bypassCooldown: true });
+  }
+
+  function updateCalendarSettings(nextSettings) {
+    setCalendarSettings(normalizeCalendarSettings(nextSettings));
+  }
+
+  function resetCalendarSettings() {
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem(CALENDAR_SETTINGS_STORAGE_KEY);
+    }
+    setCalendarSettings(DEFAULT_CALENDAR_SETTINGS);
+  }
+
+  function setCalendarView(viewMode) {
+    setCalendarSettings((current) => normalizeCalendarSettings({ ...current, calendarViewMode: viewMode }));
   }
 
   function enqueueSensorPopups(popups, source = "sensor", options = {}) {
@@ -1396,6 +1401,8 @@ export default function App() {
     isDailyAiReportLoading,
     calendarView,
     setCalendarView,
+    moodTheme: calendarSettings.moodTheme,
+    fontSizeMode: calendarSettings.fontSizeMode,
   };
   const onboardingBackdropPageProps = {
     ...pageProps,
@@ -1415,9 +1422,22 @@ export default function App() {
     return <LoginIntroSplash />;
   }
 
+  const appSettingsContextValue = {
+    settings: calendarSettings,
+    setSettings: updateCalendarSettings,
+    resetSettings: resetCalendarSettings,
+  };
+  const appThemeClassName = [
+    "app-shell",
+    "mood-" + calendarSettings.moodTheme,
+    "font-" + calendarSettings.fontSizeMode,
+    "view-" + calendarSettings.calendarViewMode,
+  ].join(" ");
+
   return (
-    <main className="app-shell">
-      <section className={`app-frame ${activeTab === "home" ? "thinq-home-frame" : ""} ${activeTab === "devices" ? "device-tab-frame" : ""} ${activeTab === "care" ? "care-tab-frame" : ""} ${activeTab === "menu" ? "menu-tab-frame" : ""} ${activeTab === "schedule" && !isOnboardingComplete ? "onboarding-frame" : ""}`}>
+    <AppSettingsProvider value={appSettingsContextValue}>
+    <main className={appThemeClassName}>
+      <section className={`app-frame mood-${calendarSettings.moodTheme} font-${calendarSettings.fontSizeMode} view-${calendarSettings.calendarViewMode} ${activeTab === "home" ? "thinq-home-frame" : ""} ${activeTab === "devices" ? "device-tab-frame" : ""} ${activeTab === "care" ? "care-tab-frame" : ""} ${activeTab === "menu" ? "menu-tab-frame" : ""} ${activeTab === "schedule" && !isOnboardingComplete ? "onboarding-frame" : ""}`}>
         {activeTab !== "home" && activeTab !== "devices" && activeTab !== "care" && activeTab !== "menu" && !(activeTab === "schedule" && !isOnboardingComplete) && (
         <header className="topbar">
           <div className="brand">
@@ -1433,7 +1453,6 @@ export default function App() {
               aria-label="알림"
               onClick={() => {
                 setNotificationOpen((current) => !current);
-                setCalendarMenuOpen(false);
                 setMenuOpen(false);
               }}
               aria-expanded={isNotificationOpen}
@@ -1443,37 +1462,14 @@ export default function App() {
             <div className="menu-popover-wrap">
               <button
                 className="icon-button"
-                aria-label="캘린더 보기"
+                aria-label="캘린더 설정"
                 onClick={() => {
-                  setCalendarMenuOpen((current) => !current);
+                  setPanel({ type: "settings" });
                   setMenuOpen(false);
                 }}
-                aria-expanded={isCalendarMenuOpen}
               >
                 <CalendarDays size={21} />
               </button>
-              {isCalendarMenuOpen && (
-                <div className="menu-popover calendar-view-popover" role="menu">
-                  {[
-                    ["day", "일간"],
-                    ["week", "주간"],
-                    ["month", "월간"],
-                  ].map(([view, label]) => (
-                    <button
-                      key={view}
-                      type="button"
-                      className={calendarView === view ? "active" : ""}
-                      onClick={() => {
-                        setCalendarView(view);
-                        setCalendarMenuOpen(false);
-                        setActiveTab("schedule");
-                      }}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
             <div className="menu-popover-wrap">
               <button
@@ -1481,7 +1477,6 @@ export default function App() {
                 aria-label="메뉴"
                 onClick={() => {
                   setMenuOpen((current) => !current);
-                  setCalendarMenuOpen(false);
                 }}
                 aria-expanded={isMenuOpen}
               >
@@ -1567,14 +1562,10 @@ export default function App() {
             <div className="notification-popover-backdrop" role="presentation" onClick={() => setNotificationOpen(false)} />
             <section
               className="notification-popover"
-              style={{
-                "--notification-x": `${notificationPosition.x}px`,
-                "--notification-y": `${notificationPosition.y}px`,
-              }}
               aria-label="알림"
               onClick={(event) => event.stopPropagation()}
             >
-            <div className="notification-popover-head" onPointerDown={startNotificationDrag}>
+            <div className="notification-popover-head">
               <div>
                 <strong>알림</strong>
                 <span>{currentUser?.displayName || currentUser?.name || "사용자"} · {notificationItems.length}개</span>
@@ -1691,6 +1682,9 @@ export default function App() {
         onOnboardingSetupChange={updateOnboardingSetup}
         onOpenComposer={() => openTaskComposer()}
         onLogout={handleLogout}
+        calendarSettings={calendarSettings}
+        onCalendarSettingsChange={updateCalendarSettings}
+        onCalendarSettingsReset={resetCalendarSettings}
       />
 
       {automationPrompt && (
@@ -1885,6 +1879,7 @@ export default function App() {
         </div>
       )}
     </main>
+    </AppSettingsProvider>
   );
 }
 

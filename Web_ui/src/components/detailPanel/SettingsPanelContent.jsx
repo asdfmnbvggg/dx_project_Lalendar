@@ -2,6 +2,7 @@
 import { members } from "../../data.js";
 import { memberImages } from "../../pages/calendarPage/calendarConstants.js";
 import { useState } from "react";
+import CalendarSettings from "../CalendarSettings.jsx";
 
 const settingsAutomationOptions = [
   ["세탁기", "washer"],
@@ -29,7 +30,18 @@ const defaultFixedScheduleDraft = {
   endTime: "18:00",
 };
 
-export default function SettingsPanelContent({ view, setView, onboardingSetup, setOnboardingSetup, onSaveSetup, currentUser, onLogout }) {
+export default function SettingsPanelContent({
+  view,
+  setView,
+  onboardingSetup,
+  setOnboardingSetup,
+  onSaveSetup,
+  currentUser,
+  onLogout,
+  calendarSettings,
+  onCalendarSettingsChange,
+  onCalendarSettingsReset,
+}) {
   const [fixedScheduleDraft, setFixedScheduleDraft] = useState(null);
   const currentUserName = currentUser?.displayName || currentUser?.name || "사용자";
   const currentUserRole = currentUser?.id ? "현재 로그인 중" : "일정 담당자";
@@ -271,6 +283,39 @@ export default function SettingsPanelContent({ view, setView, onboardingSetup, s
     );
   }
 
+  if (["calendarMood", "calendarFont", "calendarView"].includes(view)) {
+    const sectionByView = {
+      calendarMood: "mood",
+      calendarFont: "font",
+      calendarView: "view",
+    };
+    const titleByView = {
+      calendarMood: "오늘의 무드",
+      calendarFont: "글자 크기",
+      calendarView: "보기 방식",
+    };
+
+    return (
+      <section className="settings-popup-body">
+        <div className="settings-subhead">
+          <button type="button" aria-label="설정으로 돌아가기" onClick={() => setView("menu")}>
+            <ChevronLeft size={18} />
+          </button>
+          <div>
+            <strong>{titleByView[view]}</strong>
+            <span>변경한 값은 새로고침 후에도 유지돼요.</span>
+          </div>
+        </div>
+        <CalendarSettings
+          section={sectionByView[view]}
+          settings={calendarSettings}
+          onChange={onCalendarSettingsChange}
+          onReset={onCalendarSettingsReset}
+        />
+      </section>
+    );
+  }
+
   return (
     <section className="settings-popup-body">
       <article className="settings-user-card">
@@ -299,6 +344,27 @@ export default function SettingsPanelContent({ view, setView, onboardingSetup, s
           <span>
             <ClipboardList size={16} />
             고정 일정 변경
+          </span>
+          <ChevronRight size={17} />
+        </button>
+        <button type="button" onClick={() => setView("calendarMood")}>
+          <span>
+            <Settings size={16} />
+            오늘의 무드
+          </span>
+          <ChevronRight size={17} />
+        </button>
+        <button type="button" onClick={() => setView("calendarFont")}>
+          <span>
+            <Settings size={16} />
+            글자 크기
+          </span>
+          <ChevronRight size={17} />
+        </button>
+        <button type="button" onClick={() => setView("calendarView")}>
+          <span>
+            <Settings size={16} />
+            보기 방식
           </span>
           <ChevronRight size={17} />
         </button>

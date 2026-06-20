@@ -24,6 +24,9 @@ export default function DetailPanel({
   onOnboardingSetupChange,
   onOpenComposer,
   onLogout,
+  calendarSettings,
+  onCalendarSettingsChange,
+  onCalendarSettingsReset,
 }) {
   const [settingsView, setSettingsView] = useState("menu");
   const [draftOnboardingSetup, setDraftOnboardingSetup] = useState(() => normalizeSettingsOnboardingSetup(onboardingSetup));
@@ -72,6 +75,9 @@ export default function DetailPanel({
             onSaveSetup={(nextSetup) => onOnboardingSetupChange?.(normalizeSettingsOnboardingSetup(nextSetup))}
             currentUser={currentUser}
             onLogout={onLogout}
+            calendarSettings={calendarSettings}
+            onCalendarSettingsChange={onCalendarSettingsChange}
+            onCalendarSettingsReset={onCalendarSettingsReset}
           />
         )}
 

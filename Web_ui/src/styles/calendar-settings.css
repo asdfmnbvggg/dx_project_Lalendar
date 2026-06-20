@@ -1,0 +1,665 @@
+.calendar-settings-panel {
+  display: grid;
+  gap: 14px;
+  --settings-orange: #ff7a21;
+  --settings-orange-strong: #ff6d1f;
+  --settings-orange-soft: #fff1e6;
+  --settings-line: #ffd6a6;
+}
+
+.app-shell:not(.mood-default) .calendar-settings-panel {
+  --settings-orange: var(--app-primary);
+  --settings-orange-strong: var(--app-accent);
+  --settings-orange-soft: var(--app-primary-soft);
+  --settings-line: var(--app-border);
+}
+
+.calendar-settings-section {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--settings-line);
+  border-radius: 18px;
+  background: #fffaf5;
+  box-shadow: 0 8px 18px rgba(154, 86, 24, 0.06);
+}
+
+.app-shell:not(.mood-default) .calendar-settings-section {
+  background: var(--app-card-bg);
+  box-shadow: 0 8px 18px var(--app-shadow);
+}
+
+.calendar-settings-title strong,
+.calendar-settings-title span {
+  display: block;
+}
+
+.calendar-settings-title strong {
+  color: #3b2615;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.calendar-settings-title span {
+  margin-top: 3px;
+  color: #9a5a22;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.mood-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.mood-card {
+  min-width: 0;
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 10px;
+  padding: 12px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: #fff;
+  color: #3b2615;
+  text-align: left;
+  box-shadow: 0 8px 18px rgba(94, 56, 22, 0.06);
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.mood-card:hover {
+  transform: translateY(-1px);
+  background: #fffdf9;
+}
+
+.mood-card.active {
+  border-color: var(--settings-orange);
+  box-shadow: 0 0 0 3px rgba(255, 122, 33, 0.14), 0 10px 22px rgba(94, 56, 22, 0.08);
+}
+
+.app-shell:not(.mood-default) .mood-card.active {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-primary) 18%, transparent), 0 10px 22px var(--app-shadow);
+}
+
+.mood-chip-row {
+  display: inline-flex;
+  gap: 5px;
+  grid-row: span 2;
+}
+
+.mood-chip-row i {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 7px rgba(68, 42, 20, 0.16);
+}
+
+.mood-card strong {
+  overflow: hidden;
+  color: #33261e;
+  font-size: 14px;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mood-card small {
+  color: #8a6851;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+.calendar-segmented-control {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 5px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--settings-line);
+}
+
+.calendar-segmented-control button {
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 9px;
+  border-radius: 999px;
+  color: #8a5b34;
+  font-size: 12px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.app-shell:not(.mood-default) .calendar-segmented-control {
+  background: var(--app-card-bg);
+  box-shadow: inset 0 0 0 1px var(--app-border);
+}
+
+.app-shell:not(.mood-default) .calendar-segmented-control button {
+  color: var(--app-accent);
+}
+
+.calendar-segmented-control button.active {
+  color: #fff;
+  background: var(--settings-orange);
+  box-shadow: 0 7px 14px rgba(255, 122, 33, 0.22);
+}
+
+.app-shell:not(.mood-default) .calendar-segmented-control button.active {
+  background: var(--app-primary);
+  color: var(--app-button-text);
+  box-shadow: 0 7px 14px var(--app-shadow);
+}
+
+.calendar-view-mode-control {
+  border-radius: 15px;
+}
+
+.calendar-view-mode-control button {
+  border-radius: 12px;
+}
+
+.calendar-settings-reset {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 15px;
+  border: 1px solid #ffd4ac;
+  border-radius: 999px;
+  background: #fff;
+  color: #ad5b1f;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.app-shell:not(.mood-default) .calendar-settings-reset {
+  border-color: var(--app-border);
+  background: var(--app-primary-soft);
+  color: var(--app-accent);
+}
+
+.calendar-settings-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 1px solid var(--settings-line);
+  border-radius: 18px;
+  background: linear-gradient(135deg, #fff, #fff7ef);
+}
+
+.app-shell:not(.mood-default) .calendar-settings-summary {
+  background: linear-gradient(135deg, var(--app-card-bg), var(--app-surface-soft));
+}
+
+.calendar-settings-summary .mood-chip-row {
+  grid-row: auto;
+}
+
+.calendar-settings-summary strong,
+.calendar-settings-summary small {
+  display: block;
+}
+
+.calendar-settings-summary strong {
+  color: #3b2615;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.calendar-settings-summary small {
+  margin-top: 2px;
+  color: #9a5a22;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.calendar-settings-submenu button {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.calendar-settings-submenu button small {
+  color: #ff6d1f;
+  font-size: 11px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.app-shell {
+  --app-bg: #f4f5f7;
+  --app-surface: #fff;
+  --app-surface-soft: #fffaf5;
+  --app-card-bg: #fff;
+  --app-text: #2d2118;
+  --app-text-muted: #777;
+  --app-primary: #ff7a21;
+  --app-primary-soft: #fff1e6;
+  --app-secondary: #ffb063;
+  --app-accent: #ff6d1f;
+  --app-border: #f1d9bf;
+  --app-shadow: rgba(138, 78, 15, 0.18);
+  --app-icon: #6b7280;
+  --app-bottom-nav-bg: rgba(255, 255, 255, 0.94);
+  --app-bottom-nav-active: #ff7a21;
+  --app-button-bg: #ff7a21;
+  --app-button-text: #fff;
+  --app-calendar-bg: #fff;
+  --app-calendar-cell-bg: transparent;
+  --app-calendar-today-bg: #96cff5;
+  --app-event-bg: #fff1e6;
+  --app-event-text: #2d2118;
+  --app-speech-bubble-bg: #fff;
+}
+
+.app-shell.mood-fresh {
+  --app-bg: #F1FAFF;
+  --app-surface: #FFFFFF;
+  --app-surface-soft: #EAF7FF;
+  --app-card-bg: #FFFFFF;
+  --app-text: #1F2A33;
+  --app-text-muted: #607080;
+  --app-primary: #96CFF5;
+  --app-primary-soft: #DDF1FF;
+  --app-secondary: #CBF39E;
+  --app-accent: #5BB6E8;
+  --app-border: #CDEEFF;
+  --app-shadow: rgba(91, 182, 232, 0.18);
+  --app-icon: #4F88A9;
+  --app-bottom-nav-bg: rgba(255, 255, 255, 0.96);
+  --app-bottom-nav-active: #5BB6E8;
+  --app-button-bg: #5BB6E8;
+  --app-button-text: #fff;
+  --app-calendar-bg: #FFFFFF;
+  --app-calendar-cell-bg: transparent;
+  --app-calendar-today-bg: #96CFF5;
+  --app-event-bg: #EAF7FF;
+  --app-event-text: #1F2A33;
+  --app-speech-bubble-bg: #FFFFFF;
+}
+
+.app-shell.mood-cozy {
+  --app-bg: #FFF8EE;
+  --app-surface: #FFFFFF;
+  --app-surface-soft: #FFF1D6;
+  --app-card-bg: #FFFFFF;
+  --app-text: #2F261F;
+  --app-text-muted: #786555;
+  --app-primary: #FFC592;
+  --app-primary-soft: #FFF1D6;
+  --app-secondary: #FFE8A5;
+  --app-accent: #FFB063;
+  --app-border: #FFE1BB;
+  --app-shadow: rgba(255, 176, 99, 0.2);
+  --app-icon: #9B6A3F;
+  --app-bottom-nav-bg: rgba(255, 255, 255, 0.96);
+  --app-bottom-nav-active: #FFB063;
+  --app-button-bg: #FFB063;
+  --app-button-text: #fff;
+  --app-calendar-bg: #FFFFFF;
+  --app-calendar-cell-bg: transparent;
+  --app-calendar-today-bg: #FFC592;
+  --app-event-bg: #FFF1D6;
+  --app-event-text: #2F261F;
+  --app-speech-bubble-bg: #FFFFFF;
+}
+
+.app-shell.mood-active {
+  --app-bg: #FFF4EA;
+  --app-surface: #FFFFFF;
+  --app-surface-soft: #FFE2C2;
+  --app-card-bg: #FFFFFF;
+  --app-text: #2D2118;
+  --app-text-muted: #7D5B3E;
+  --app-primary: #FF8D27;
+  --app-primary-soft: #FFE2C2;
+  --app-secondary: #FFB063;
+  --app-accent: #FF7A00;
+  --app-border: #FFD6AD;
+  --app-shadow: rgba(255, 122, 0, 0.2);
+  --app-icon: #A05719;
+  --app-bottom-nav-bg: rgba(255, 255, 255, 0.96);
+  --app-bottom-nav-active: #FF7A00;
+  --app-button-bg: #FF8D27;
+  --app-button-text: #fff;
+  --app-calendar-bg: #FFFFFF;
+  --app-calendar-cell-bg: transparent;
+  --app-calendar-today-bg: #FFB063;
+  --app-event-bg: #FFE2C2;
+  --app-event-text: #2D2118;
+  --app-speech-bubble-bg: #FFFFFF;
+}
+
+.app-shell.mood-warm {
+  --app-bg: #FFF2F1;
+  --app-surface: #FFFFFF;
+  --app-surface-soft: #FFE1DF;
+  --app-card-bg: #FFFFFF;
+  --app-text: #332222;
+  --app-text-muted: #805757;
+  --app-primary: #FF7A77;
+  --app-primary-soft: #FFE1DF;
+  --app-secondary: #FFC592;
+  --app-accent: #FF6A66;
+  --app-border: #FFD1D0;
+  --app-shadow: rgba(255, 106, 102, 0.2);
+  --app-icon: #A94F4D;
+  --app-bottom-nav-bg: rgba(255, 255, 255, 0.96);
+  --app-bottom-nav-active: #FF6A66;
+  --app-button-bg: #FF7A77;
+  --app-button-text: #fff;
+  --app-calendar-bg: #FFFFFF;
+  --app-calendar-cell-bg: transparent;
+  --app-calendar-today-bg: #FF7A77;
+  --app-event-bg: #FFE1DF;
+  --app-event-text: #332222;
+  --app-speech-bubble-bg: #FFFFFF;
+}
+
+.app-shell.mood-dreamy {
+  --app-bg: #F8F3FF;
+  --app-surface: #FFFFFF;
+  --app-surface-soft: #EFE3FF;
+  --app-card-bg: #FFFFFF;
+  --app-text: #2B2333;
+  --app-text-muted: #70627F;
+  --app-primary: #D3B5F3;
+  --app-primary-soft: #EFE3FF;
+  --app-secondary: #96CFF5;
+  --app-accent: #B88CE8;
+  --app-border: #E5D4FA;
+  --app-shadow: rgba(184, 140, 232, 0.2);
+  --app-icon: #8060A5;
+  --app-bottom-nav-bg: rgba(255, 255, 255, 0.96);
+  --app-bottom-nav-active: #B88CE8;
+  --app-button-bg: #B88CE8;
+  --app-button-text: #fff;
+  --app-calendar-bg: #FFFFFF;
+  --app-calendar-cell-bg: transparent;
+  --app-calendar-today-bg: #D3B5F3;
+  --app-event-bg: #EFE3FF;
+  --app-event-text: #2B2333;
+  --app-speech-bubble-bg: #FFFFFF;
+}
+
+.app-shell:not(.mood-default),
+.app-shell:not(.mood-default) .app-frame,
+.app-shell:not(.mood-default) .page {
+  background: var(--app-bg);
+  color: var(--app-text);
+}
+
+.app-shell:not(.mood-default) .app-frame.thinq-home-frame,
+.app-shell:not(.mood-default) .app-frame.onboarding-frame {
+  background:
+    radial-gradient(circle at 72% 2%, color-mix(in srgb, var(--app-secondary) 34%, transparent), transparent 36%),
+    radial-gradient(circle at 4% 0%, color-mix(in srgb, var(--app-primary) 38%, transparent), transparent 45%),
+    linear-gradient(180deg, var(--app-bg) 0%, var(--app-surface-soft) 100%);
+}
+
+.app-shell:not(.mood-default) :where(.topbar, .detail-panel, .settings-panel, .notification-popover, .notification-execute-dialog, .confirm-dialog, .calendar-date-picker, .daily-report-todo-sheet, .device-tab-card, .care-report-card, .menu-tab-card, .calendar-board, .date-detail-card, .family-week-timetable, .calendar-ai-report, .daily-report-briefing-card, .daily-report-list-card, .daily-report-info-card, .daily-report-section, .settings-user-card, .settings-menu-list, .settings-fixed-editor, .settings-fixed-list article, .settings-assignee-list label, .settings-appliance-grid button, .calendar-settings-section, .calendar-settings-summary, .mood-card) {
+  border-color: var(--app-border);
+  background: var(--app-card-bg);
+  color: var(--app-text);
+  box-shadow: 0 12px 30px var(--app-shadow);
+}
+
+.app-shell:not(.mood-default) :where(h1, h2, h3, h4, strong, .brand strong, .calendar-family-title, .month-switcher h2, .date-detail-head h3, .daily-report-detail-header h1, .daily-report-section-head h2, .menu-tab-title, .care-report-title) {
+  color: var(--app-text);
+}
+
+.app-shell:not(.mood-default) :where(p, small, span, .brand small, .calendar-selected-profile small, .settings-subhead span, .settings-user-card span, .notification-popover-item p, .daily-report-briefing-note, .daily-report-detail-header p, .menu-tab-subtitle) {
+  color: var(--app-text-muted);
+}
+
+.app-shell:not(.mood-default) :where(svg, .icon-button, .calendar-settings-button, .calendar-notification-button, .month-switcher button, .date-detail-back-button, .day-timeline-head button, .week-timetable-head button) {
+  color: var(--app-icon);
+  stroke: currentColor;
+}
+
+.app-shell:not(.mood-default) :where(.day-agenda-head button, .week-agenda-head button, .week-agenda-day-head) {
+  color: var(--app-icon);
+  stroke: currentColor;
+}
+
+.app-shell:not(.mood-default) :where(button, input, select, textarea) {
+  border-color: var(--app-border);
+}
+
+.app-shell:not(.mood-default) :where(.composer-submit, .settings-save-button, .confirm-actions button:last-child, .notification-time-control button, .notification-popover-item button:last-child, .notification-execute-dialog div button:last-child, .calendar-add-button, .daily-add-save, .daily-report-todo-form-actions button:last-child) {
+  background: var(--app-button-bg);
+  color: var(--app-button-text);
+}
+
+.app-shell:not(.mood-default) :where(.settings-subhead > button, .settings-fixed-editor-actions button, .notice-actions button:first-child, .confirm-actions button:first-child, .notification-popover-head button, .notification-popover-item button, .notification-execute-dialog div button:first-child, .calendar-settings-reset, .calendar-mode-controls button, .date-detail-view-toggle button) {
+  background: var(--app-primary-soft);
+  color: var(--app-accent);
+}
+
+.app-shell:not(.mood-default) :where(.settings-panel .detail-head p, .settings-menu-list svg, .settings-assignee-list svg, .notification-schedule-time, .daily-report-detail-header span, .daily-report-section-head span, .calendar-ai-report h3, .settings-fixed-list article > span) {
+  color: var(--app-accent);
+  stroke: currentColor;
+}
+
+.app-shell:not(.mood-default) .calendar-page {
+  background: var(--app-bg);
+}
+
+.app-shell:not(.mood-default) .calendar-header,
+.app-shell:not(.mood-default) .calendar-ai-report,
+.app-shell:not(.mood-default) .detail-head,
+.app-shell:not(.mood-default) .notification-popover-head,
+.app-shell:not(.mood-default) .notification-time-control {
+  border-color: var(--app-border);
+}
+
+.app-shell:not(.mood-default) .calendar-month-view .date-cell.selected strong,
+.app-shell:not(.mood-default) .calendar-house-view .date-cell.selected strong,
+.app-shell:not(.mood-default) .week-day-head.active strong,
+.app-shell:not(.mood-default) .week-agenda-day.active .week-agenda-day-head strong,
+.app-shell:not(.mood-default) .calendar-mode-controls button.active,
+.app-shell:not(.mood-default) .date-detail-view-toggle button.active,
+.app-shell:not(.mood-default) .settings-fixed-day-picker button.active,
+.app-shell:not(.mood-default) .calendar-segmented-control button.active {
+  background: var(--app-primary);
+  color: var(--app-button-text);
+}
+
+.app-shell:not(.mood-default) .profile-strip button.active,
+.app-shell:not(.mood-default) .settings-user-avatar,
+.app-shell:not(.mood-default) .calendar-selected-avatar {
+  border-color: var(--app-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--app-primary) 24%, transparent);
+}
+
+.app-shell:not(.mood-default) .thinq-main-tabbar,
+.app-shell:not(.mood-default) .tabbar {
+  background: var(--app-bottom-nav-bg);
+  border-color: var(--app-border);
+}
+
+.app-shell:not(.mood-default) .thinq-main-tabbar button,
+.app-shell:not(.mood-default) .tabbar button {
+  color: var(--app-icon);
+}
+
+.app-shell:not(.mood-default) .thinq-main-tabbar button.active,
+.app-shell:not(.mood-default) .tabbar button.active {
+  color: var(--app-bottom-nav-active);
+}
+
+.app-shell:not(.mood-default) .thinq-main-tabbar button.active::before,
+.app-shell:not(.mood-default) .tabbar button.active {
+  background: var(--app-primary-soft);
+}
+
+.app-shell:not(.mood-default) :where(.onboarding-speech-bubble, .onboarding-intro-panel, .onboarding-info-panel, .onboarding-google-confirm, .onboarding-ai-wait-card) {
+  background: var(--app-speech-bubble-bg);
+  border-color: var(--app-border);
+  color: var(--app-text);
+}
+
+.app-shell:not(.mood-default) :where(.onboarding-next-button, .onboarding-info-next-button, .onboarding-google-actions button, .onboarding-fixed-continue, .onboarding-appliance-next-button) {
+  background: var(--app-button-bg);
+  color: var(--app-button-text);
+}
+
+.app-shell:not(.mood-default) .calendar-page-month .calendar-family-title span,
+.app-shell:not(.mood-default) .calendar-page-week .calendar-family-title span,
+.app-shell:not(.mood-default) .calendar-page-day .calendar-family-title span,
+.app-shell:not(.mood-default) .calendar-page-month .calendar-ai-report h3,
+.app-shell:not(.mood-default) .calendar-page-month .calendar-ai-report h3::before,
+.app-shell:not(.mood-default) .calendar-page-month .calendar-ai-report-tags span,
+.app-shell:not(.mood-default) .calendar-page-month .calendar-notification-button,
+.app-shell:not(.mood-default) .calendar-page-month .calendar-settings-button,
+.app-shell:not(.mood-default) .calendar-page-week .calendar-notification-button,
+.app-shell:not(.mood-default) .calendar-page-week .calendar-settings-button,
+.app-shell:not(.mood-default) .calendar-page-day .calendar-notification-button,
+.app-shell:not(.mood-default) .calendar-page-day .calendar-settings-button,
+.app-shell:not(.mood-default) .calendar-page-month .month-switcher button {
+  color: var(--app-accent) !important;
+  stroke: currentColor !important;
+}
+
+.app-shell:not(.mood-default) :where(.day-agenda-view, .week-agenda-view) {
+  color: var(--app-text);
+}
+
+.app-shell:not(.mood-default) :where(.day-agenda-head strong, .week-agenda-head strong, .agenda-task-card strong, .week-agenda-day-head strong) {
+  color: var(--app-text);
+}
+
+.app-shell:not(.mood-default) :where(.day-agenda-head span, .agenda-task-card span, .week-agenda-day-head span, .week-agenda-day-head small, .agenda-empty span, .week-agenda-task-list p) {
+  color: var(--app-text-muted);
+}
+
+.app-shell:not(.mood-default) :where(.agenda-empty, .week-agenda-day) {
+  border-color: var(--app-border);
+  background: var(--app-card-bg);
+}
+
+.app-shell:not(.mood-default) .week-agenda-day.active {
+  border-color: var(--app-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--app-primary) 22%, transparent);
+}
+
+.app-shell:not(.mood-default) .agenda-empty button {
+  background: var(--app-button-bg);
+  color: var(--app-button-text);
+}
+
+.app-shell:not(.mood-default) .calendar-page-month .calendar-ai-report-tags span {
+  border-color: var(--app-accent) !important;
+  background: var(--app-card-bg) !important;
+}
+
+.app-shell:not(.mood-default) .calendar-page-month .calendar-ai-report h3::after {
+  background: var(--app-accent) !important;
+}
+
+.app-shell:not(.mood-default) .calendar-page-month .profile-strip button.active,
+.app-shell:not(.mood-default) .calendar-page-month .house-calendar-toggle.active {
+  border-color: var(--app-primary) !important;
+  background: var(--app-card-bg) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--app-primary) 24%, transparent) !important;
+}
+
+.app-shell:not(.mood-default) .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active::before {
+  background: var(--app-primary-soft) !important;
+}
+
+.app-shell:not(.mood-default) .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active svg,
+.app-shell:not(.mood-default) .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active span {
+  color: var(--app-bottom-nav-active) !important;
+  stroke: currentColor !important;
+}
+
+.app-shell:not(.mood-default) .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active {
+  color: var(--app-bottom-nav-active) !important;
+}
+
+.app-shell:not(.mood-default) :where(.daily-report-detail-header span, .daily-report-briefing-head span, .daily-report-list-title, .daily-report-info-card > svg, .daily-report-info-card strong, .daily-report-briefing-title, .daily-report-briefing-section time, .daily-report-list-card time, .daily-report-todo-head span, .settings-panel .detail-head p, .settings-panel .detail-head button, .settings-subhead > button, .settings-subhead svg, .settings-appliance-grid button span, .settings-appliance-grid button span svg, .settings-menu-list svg, .settings-assignee-list svg, .notification-time-picker-wrap .postpone-time-display, .notification-time-picker-wrap .postpone-time-scrolls select, .notification-execute-dialog p, .confirm-dialog p, .sensor-popup-head > p) {
+  color: var(--app-accent) !important;
+  stroke: currentColor !important;
+}
+
+.app-shell:not(.mood-default) :where(.daily-report-detail-header h1 em, .daily-report-hero-copy > span, .daily-report-hero-copy em) {
+  color: var(--app-accent) !important;
+}
+
+.app-shell:not(.mood-default) :where(.daily-report-todo-check, .settings-appliance-check, .settings-fixed-list article > span, .settings-save-button, .settings-fixed-day-picker button.active) {
+  border-color: var(--app-primary) !important;
+  background: var(--app-primary) !important;
+  color: var(--app-button-text) !important;
+}
+
+.app-shell:not(.mood-default) :where(.daily-report-gpt-note, .daily-report-saved-note, .daily-report-todo-form-actions button, .settings-menu-list button:hover, .settings-appliance-grid button.active, .settings-fixed-editor, .notification-time-control, .notification-schedule-time) {
+  background: var(--app-primary-soft) !important;
+  border-color: var(--app-border) !important;
+  color: var(--app-accent) !important;
+}
+
+.calendar-page.font-small {
+  --calendar-report-text-size: 10px;
+  --calendar-detail-text-size: 12px;
+}
+
+.calendar-page.font-large {
+  --calendar-report-text-size: 13px;
+  --calendar-detail-text-size: 15px;
+}
+
+.calendar-page.font-small .calendar-ai-report p,
+.calendar-page.font-large .calendar-ai-report p {
+  font-size: var(--calendar-report-text-size) !important;
+  line-height: 1.35;
+}
+
+.calendar-page.font-small .daily-list-task-card strong,
+.calendar-page.font-small .daily-time-block strong,
+.calendar-page.font-large .daily-list-task-card strong,
+.calendar-page.font-large .daily-time-block strong {
+  font-size: var(--calendar-detail-text-size) !important;
+  line-height: 1.35;
+}
+
+.calendar-page.view-week .calendar-ai-report,
+.calendar-page.view-day .calendar-ai-report {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .mood-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mood-card {
+    min-height: 76px;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 10px;
+  }
+
+  .mood-chip-row {
+    grid-row: span 2;
+  }
+
+  .calendar-segmented-control {
+    border-radius: 15px;
+  }
+
+  .calendar-segmented-control button {
+    min-height: 36px;
+    border-radius: 11px;
+    font-size: 11px;
+  }
+}

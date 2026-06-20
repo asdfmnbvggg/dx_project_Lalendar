@@ -92,6 +92,8 @@ export default function CalendarPage({
   isDailyAiReportLoading = false,
   calendarView = "month",
   setCalendarView,
+  moodTheme = "default",
+  fontSizeMode = "default",
 }) {
   const [calendarScale, setCalendarScale] = useState(2);
   const [calendarTaskMode, setCalendarTaskMode] = useState("personal");
@@ -114,6 +116,14 @@ export default function CalendarPage({
   const reportDate = isDateKeyValue(dailyReportRouteId) ? dailyReportRouteId : selectedDate;
   const selectedDay = Number(selectedDate.slice(-2));
   const isHouseCalendar = calendarTaskMode === "house";
+  const calendarPageClassName = [
+    "page",
+    "calendar-page",
+    "calendar-page-" + calendarView,
+    "mood-" + moodTheme,
+    "font-" + fontSizeMode,
+    "view-" + calendarView,
+  ].join(" ");
   const weatherDetailInteractionProps = isHouseCalendar
     ? {
         role: "button",
@@ -519,7 +529,7 @@ export default function CalendarPage({
 
   if (selectedDetailDate && (isHouseCalendar || canEditPersonalCalendar)) {
     return (
-      <section className="page calendar-page daily-detail-page">
+      <section className={[calendarPageClassName, "daily-detail-page"].join(" ")}>
         <section
           className="date-detail-card"
           aria-label="Daily schedule"
@@ -531,7 +541,18 @@ export default function CalendarPage({
           }}
         >
           <div className="date-detail-head">
-            <button type="button" className="date-detail-back-button" aria-label="Back to calendar" onClick={closeDateDetail}>
+            <button
+              type="button"
+              className="date-detail-back-button"
+              aria-label="Back to calendar"
+              onClick={() => {
+                if (!isHouseCalendar && calendarView === "day") {
+                  setCalendarView?.("month");
+                  return;
+                }
+                closeDateDetail();
+              }}
+            >
               <ChevronLeft size={22} />
             </button>
             <div>
@@ -717,7 +738,7 @@ export default function CalendarPage({
     );
   }
   return (
-    <section className={["page", "calendar-page", "calendar-page-" + calendarView].join(" ")}>
+    <section className={calendarPageClassName}>
       <div className="calendar-filter-block">
         <h1 className="calendar-family-title">
           {isHouseCalendar ? (
@@ -834,7 +855,7 @@ export default function CalendarPage({
         )}
 
         {!isHouseCalendar && calendarView === "week" ? (
-          <WeekTimetable
+          <WeekAgendaView
             dates={displayDates}
             tasksByDate={mainCalendarTasksByDate}
             memberColors={memberColors}
@@ -842,11 +863,18 @@ export default function CalendarPage({
             onPrevWeek={() => moveCalendar(-1)}
             onNextWeek={() => moveCalendar(1)}
             onSelectDate={(date) => {
-              if (!canEditPersonalCalendar) return;
               notifyCalendarDateClick(onSelectCalendarDate, date);
               setSelectedDate(date);
-              setSelectedDetailDate(date);
             }}
+          />
+        ) : !isHouseCalendar && calendarView === "day" ? (
+          <DayAgendaView
+            selectedDate={selectedDate}
+            tasks={mainCalendarTasksByDate[selectedDate] || []}
+            memberColors={memberColors}
+            onPrevDay={() => moveCalendar(-1)}
+            onNextDay={() => moveCalendar(1)}
+            onAddTask={canUseCalendarAdd ? openCalendarComposer : null}
           />
         ) : (
           <>
@@ -3272,6 +3300,109 @@ function DayTimelineHead({ selectedDate, onPrevDay, onNextDay }) {
       </button>
     </div>
   );
+}
+
+function DayAgendaView({ selectedDate, tasks, memberColors, onPrevDay, onNextDay, onAddTask }) {
+  const agendaTasks = getAgendaTasks(tasks);
+
+  return (
+    <section className="day-agenda-view" aria-label="일간 보기">
+      <div className="day-agenda-head">
+        <button type="button" aria-label="이전 날" onClick={onPrevDay}>
+          ‹
+        </button>
+        <div>
+          <strong>{formatDayTitle(selectedDate)}</strong>
+          <span>{agendaTasks.length}개의 일정</span>
+        </div>
+        <button type="button" aria-label="다음 날" onClick={onNextDay}>
+          ›
+        </button>
+      </div>
+
+      <div className="day-agenda-list">
+        {agendaTasks.map(({ task, range }, index) => (
+          <AgendaTaskCard key={getDailyTaskKey(task) || index} task={task} range={range} memberColors={memberColors} index={index} />
+        ))}
+        {agendaTasks.length === 0 && (
+          <div className="agenda-empty">
+            <strong>등록된 일정이 없어요</strong>
+            <span>오늘의 일정이나 가사일을 추가해 보세요.</span>
+            {onAddTask && (
+              <button type="button" onClick={onAddTask}>
+                일정 추가
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function WeekAgendaView({ dates, tasksByDate, memberColors, selectedDate, onPrevWeek, onNextWeek, onSelectDate }) {
+  const dayLabels = ["일", "월", "화", "수", "목", "금", "토"];
+
+  return (
+    <section className="week-agenda-view" aria-label="주간 보기">
+      <div className="week-agenda-head">
+        <button type="button" aria-label="이전 주" onClick={onPrevWeek}>
+          ‹
+        </button>
+        <strong>{formatWeekTitle(dates)}</strong>
+        <button type="button" aria-label="다음 주" onClick={onNextWeek}>
+          ›
+        </button>
+      </div>
+      <div className="week-agenda-days">
+        {dates.map((date, index) => {
+          const parsed = new Date(date + "T00:00:00");
+          const agendaTasks = getAgendaTasks(tasksByDate[date] || []);
+          return (
+            <article className={["week-agenda-day", date === selectedDate ? "active" : ""].filter(Boolean).join(" ")} key={date}>
+              <button type="button" className="week-agenda-day-head" onClick={() => onSelectDate(date)}>
+                <span>{dayLabels[index]}</span>
+                <strong>{parsed.getDate()}</strong>
+                <small>{agendaTasks.length}</small>
+              </button>
+              <div className="week-agenda-task-list">
+                {agendaTasks.slice(0, 3).map(({ task, range }, taskIndex) => (
+                  <AgendaTaskCard compact key={getDailyTaskKey(task) || taskIndex} task={task} range={range} memberColors={memberColors} index={taskIndex} />
+                ))}
+                {agendaTasks.length > 3 && <em>+{agendaTasks.length - 3}</em>}
+                {agendaTasks.length === 0 && <p>일정 없음</p>}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function AgendaTaskCard({ task, range, memberColors, index, compact = false }) {
+  const isHousework = getDailyTaskGroup(task) === "housework";
+  const taskColor = getTaskDisplayColor(task, memberColors, isHousework ? "housework" : "personal");
+  const title = isHousework ? getHouseworkDisplayTitle(task) : task.title;
+
+  return (
+    <article
+      className={["agenda-task-card", compact ? "compact" : "", isHousework ? "housework" : ""].filter(Boolean).join(" ")}
+      style={{ "--task-bg": taskColor, "--task-fg": getReadableTextColor(taskColor) }}
+    >
+      <time>{formatTaskRange(range)}</time>
+      <div>
+        <strong>{title}</strong>
+        <span>{[task.place, isHousework ? getHouseworkModeLabel(task) : task.repeat].filter(Boolean).join(" · ")}</span>
+      </div>
+    </article>
+  );
+}
+
+function getAgendaTasks(tasks = []) {
+  return tasks
+    .map((task, index) => ({ task, range: getDailyTaskRange(task, index), index }))
+    .sort((a, b) => a.range.startMinutes - b.range.startMinutes || a.range.endMinutes - b.range.endMinutes || a.index - b.index);
 }
 
 function formatDayTitle(date) {

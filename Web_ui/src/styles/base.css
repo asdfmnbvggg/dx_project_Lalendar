@@ -415,6 +415,18 @@ body {
   }
 }
 
+@keyframes centered-soft-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 14px)) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
 @keyframes schedule-loading-progress {
   0% {
     transform: translateX(-110%);
@@ -577,16 +589,20 @@ button {
   position: fixed;
   inset: 0;
   z-index: 980;
-  background: transparent;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(28, 28, 32, 0.24);
+  backdrop-filter: blur(5px);
 }
 
 .notification-popover {
   position: fixed;
-  top: 88px;
-  right: max(18px, calc((100vw - 430px) / 2 + 18px));
+  top: 50%;
+  left: 50%;
   z-index: 990;
   width: min(312px, calc(100vw - 36px));
-  max-height: min(460px, calc(100svh - 150px));
+  max-height: min(460px, calc(100svh - 48px));
   display: grid;
   grid-template-rows: auto auto 1fr;
   overflow: hidden;
@@ -596,9 +612,9 @@ button {
     linear-gradient(#ffffff, #ffffff) padding-box,
     linear-gradient(135deg, rgba(255, 170, 64, 0.8), rgba(255, 109, 31, 0.42)) border-box;
   box-shadow: 0 24px 70px rgba(138, 78, 15, 0.2);
-  transform: translate(var(--notification-x, 0), var(--notification-y, 0));
+  transform: translate(-50%, -50%);
   backdrop-filter: blur(18px);
-  animation: soft-enter 180ms ease both;
+  animation: centered-soft-enter 180ms ease both;
 }
 
 .notification-popover::before,
@@ -697,13 +713,6 @@ button {
   gap: 12px;
   padding: 18px 14px 10px;
   border-bottom: 1px solid #f6d49f;
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-}
-
-.notification-popover-head:active {
-  cursor: grabbing;
 }
 
 .notification-popover-head div {
@@ -828,8 +837,8 @@ button {
   inset: 0;
   z-index: 1200;
   display: grid;
-  place-items: start center;
-  padding: 64px 24px;
+  place-items: center;
+  padding: 24px;
   background: rgba(28, 28, 32, 0.36);
   backdrop-filter: blur(7px);
 }
