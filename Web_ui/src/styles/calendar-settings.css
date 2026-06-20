@@ -661,17 +661,121 @@
 .calendar-page.font-small {
   --calendar-report-text-size: 10px;
   --calendar-detail-text-size: 12px;
+  --calendar-date-number-size: 10px;
+  --calendar-month-task-size: 7px;
+  --calendar-agenda-title-size: 11px;
+  --calendar-agenda-meta-size: 9px;
 }
 
 .calendar-page.font-large {
   --calendar-report-text-size: 13px;
   --calendar-detail-text-size: 15px;
+  --calendar-date-number-size: 13px;
+  --calendar-month-task-size: 10px;
+  --calendar-agenda-title-size: 15px;
+  --calendar-agenda-meta-size: 12px;
 }
 
 .calendar-page.font-small .calendar-ai-report p,
 .calendar-page.font-large .calendar-ai-report p {
   font-size: var(--calendar-report-text-size) !important;
   line-height: 1.35;
+}
+
+.calendar-page.font-small .calendar-month-view .date-cell strong,
+.calendar-page.font-large .calendar-month-view .date-cell strong,
+.calendar-page.font-small .week-agenda-day-head strong,
+.calendar-page.font-large .week-agenda-day-head strong {
+  font-size: var(--calendar-date-number-size) !important;
+}
+
+.calendar-page.font-small .calendar-month-view .date-cell i,
+.calendar-page.font-small .calendar-month-view .date-cell i.housework-task,
+.calendar-page.font-small .calendar-month-view .date-cell i span,
+.calendar-page.font-small .calendar-month-view .date-cell i.housework-task span {
+  font-size: var(--calendar-month-task-size) !important;
+}
+
+.calendar-page.font-large .calendar-month-view .date-cell i,
+.calendar-page.font-large .calendar-month-view .date-cell i.housework-task {
+  min-height: 24px !important;
+  height: auto !important;
+  max-height: 30px !important;
+  align-items: flex-start !important;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  line-height: 1.15 !important;
+}
+
+.calendar-page.font-large .calendar-month-view .date-tasks,
+.calendar-page.font-large .calendar-month-view .date-tasks:has(.fixed-event-task) {
+  grid-auto-rows: minmax(24px, auto) !important;
+  gap: 2px !important;
+}
+
+.calendar-page.font-large .calendar-month-view .date-cell i span,
+.calendar-page.font-large .calendar-month-view .date-cell i.housework-task span {
+  display: -webkit-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  color: inherit !important;
+  font-size: var(--calendar-month-task-size) !important;
+  line-height: 1.15 !important;
+  text-align: left !important;
+  text-overflow: unset !important;
+  white-space: normal !important;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.calendar-page.font-small .agenda-task-card strong,
+.calendar-page.font-large .agenda-task-card strong {
+  font-size: var(--calendar-agenda-title-size) !important;
+}
+
+.calendar-page.font-small .agenda-task-card span,
+.calendar-page.font-large .agenda-task-card span,
+.calendar-page.font-small .agenda-task-card time,
+.calendar-page.font-large .agenda-task-card time {
+  font-size: var(--calendar-agenda-meta-size) !important;
+}
+
+.calendar-page.font-large .day-agenda-list .agenda-task-card,
+.calendar-page.font-large .week-agenda-task-list .agenda-task-card.compact {
+  min-height: 48px;
+  align-items: start;
+}
+
+.calendar-page.font-large .agenda-task-card strong {
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.calendar-page.font-large .day-agenda-list .agenda-task-card span {
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+.calendar-page.font-large .week-agenda-task-list .agenda-task-card.compact {
+  flex-basis: 138px;
+  width: 138px;
+  grid-template-columns: 48px minmax(0, 1fr);
+}
+
+.calendar-page.font-large .week-agenda-task-list .agenda-task-card.compact strong {
+  display: -webkit-box;
+  overflow: hidden;
+  line-height: 1.2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .calendar-page.font-small .daily-list-task-card strong,
