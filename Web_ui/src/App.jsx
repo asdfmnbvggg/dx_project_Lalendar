@@ -137,7 +137,7 @@ export default function App() {
   const [notificationDemoTime, setNotificationDemoTime] = useState(() => getCurrentTimeValue());
   const [isNotificationTimeEdited, setNotificationTimeEdited] = useState(false);
   const [selectedDetailDate, setSelectedDetailDate] = useState(isDateKey(storedSession?.selectedDetailDate) ? storedSession.selectedDetailDate : null);
-  const [selectedMember, setSelectedMember] = useState(() => storedSession?.selectedMember || storedUser?.id || "jea");
+  const [selectedMember, setSelectedMember] = useState(() => getInitialSelectedMember(storedUser, storedSession?.selectedMember));
   const [query, setQuery] = useState("");
   const [isComposerOpen, setComposerOpen] = useState(false);
   const [composerOwnerLock, setComposerOwnerLock] = useState(null);
@@ -1036,7 +1036,7 @@ export default function App() {
     setLoginIntroOpen(true);
     setCurrentUser(user);
     setActiveCalendarUser(nextCalendarUser);
-    setSelectedMember(savedSession?.selectedMember || nextCalendarUser.id);
+    setSelectedMember(getInitialSelectedMember(user, savedSession?.selectedMember));
     setSelectedDate(nextSelectedDate);
     setNotificationDemoDate(nextSelectedDate);
     setNotificationDemoTime(getCurrentTimeValue());
@@ -4778,6 +4778,12 @@ function getInitialCalendarUser(user, savedCalendarUserId) {
   const savedCalendarUser = USERS.find((candidate) => candidate.id === savedCalendarUserId);
   if (isMasterUser(user)) return savedCalendarUser || USERS[0];
   return USERS.find((candidate) => candidate.id === user?.id) || USERS[0];
+}
+
+function getInitialSelectedMember(user, savedSelectedMemberId) {
+  const savedSelectedMember = USERS.find((candidate) => candidate.id === savedSelectedMemberId);
+  if (isMasterUser(user)) return savedSelectedMember?.id || USERS[0].id;
+  return USERS.find((candidate) => candidate.id === user?.id)?.id || USERS[0].id;
 }
 
 function isDateKey(value) {
