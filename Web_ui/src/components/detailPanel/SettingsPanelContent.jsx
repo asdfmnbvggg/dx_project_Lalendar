@@ -303,7 +303,6 @@ export default function SettingsPanelContent({
           </button>
           <div>
             <strong>{titleByView[view]}</strong>
-            <span>변경한 값은 새로고침 후에도 유지돼요.</span>
           </div>
         </div>
         <CalendarSettings

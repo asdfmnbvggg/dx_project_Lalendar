@@ -12,37 +12,31 @@ const moodOptions = [
   {
     value: "default",
     label: "기본 모드",
-    description: "현재 화면 그대로",
     colors: ["#f3f4f6", "#d1d5db"],
   },
   {
     value: "fresh",
     label: "산뜻한 하루",
-    description: "맑고 가벼운 일정 시작",
     colors: ["#96CFF5", "#CBF39E"],
   },
   {
     value: "cozy",
     label: "포근한 하루",
-    description: "따뜻하고 안정적인 일정 관리",
     colors: ["#FFC592", "#FFE8A5"],
   },
   {
     value: "active",
     label: "활기찬 하루",
-    description: "바쁘지만 에너지 있는 하루",
     colors: ["#FF8D27", "#FFB063"],
   },
   {
     value: "warm",
     label: "다정한 하루",
-    description: "돌봄 일정에 어울리는 분위기",
     colors: ["#FF7A77", "#FFC592"],
   },
   {
     value: "dreamy",
     label: "몽글한 하루",
-    description: "감성적이고 차분한 하루 기록",
     colors: ["#D3B5F3", "#96CFF5"],
   },
 ];
@@ -102,9 +96,7 @@ export default function CalendarSettings({ settings, onChange, onReset, onNaviga
       <section className="calendar-settings-panel calendar-settings-menu" aria-label="캘린더 설정">
         <article className="calendar-settings-summary">
           <span className="mood-chip-row" aria-hidden="true">
-            {activeMood.colors.map((color) => (
-              <i key={color} style={{ background: color }} />
-            ))}
+            <i style={{ background: activeMood.colors[0] }} />
           </span>
           <div>
             <strong>{activeMood.label}</strong>
@@ -149,7 +141,6 @@ export default function CalendarSettings({ settings, onChange, onReset, onNaviga
       {showMood && <div className="calendar-settings-section">
         <div className="calendar-settings-title">
           <strong>오늘의 무드</strong>
-          <span>오늘의 내 기분에 맞게 캘린더 분위기를 바꿔보세요.</span>
         </div>
         <div className="mood-card-grid" aria-label="오늘의 무드 선택">
           {moodOptions.map((option) => {
@@ -164,12 +155,9 @@ export default function CalendarSettings({ settings, onChange, onReset, onNaviga
                 onClick={() => updateSetting("moodTheme", option.value)}
               >
                 <span className="mood-chip-row" aria-hidden="true">
-                  {option.colors.map((color) => (
-                    <i key={color} style={{ background: color }} />
-                  ))}
+                  <i style={{ background: option.colors[0] }} />
                 </span>
                 <strong>{option.label}</strong>
-                <small>{option.description}</small>
               </button>
             );
           })}
@@ -179,7 +167,6 @@ export default function CalendarSettings({ settings, onChange, onReset, onNaviga
       {showFont && <div className="calendar-settings-section">
         <div className="calendar-settings-title">
           <strong>글자 크기</strong>
-          <span>캘린더 날짜, 일정, 가사일, 데일리 리포트 텍스트에 적용돼요.</span>
         </div>
         <div className="calendar-segmented-control" aria-label="글자 크기 변경">
           {fontSizeOptions.map(([value, label]) => (
@@ -199,7 +186,6 @@ export default function CalendarSettings({ settings, onChange, onReset, onNaviga
       {showView && <div className="calendar-settings-section">
         <div className="calendar-settings-title">
           <strong>보기 방식</strong>
-          <span>일간, 주간, 월간 화면을 선택해 주세요.</span>
         </div>
         <div className="calendar-segmented-control calendar-view-mode-control" aria-label="캘린더 뷰어 변경">
           {viewModeOptions.map(([value, label]) => (

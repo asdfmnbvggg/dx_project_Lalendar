@@ -866,6 +866,11 @@ export default function CalendarPage({
               notifyCalendarDateClick(onSelectCalendarDate, date);
               setSelectedDate(date);
             }}
+            onOpenDate={(date) => {
+              notifyCalendarDateClick(onSelectCalendarDate, date);
+              setSelectedDate(date);
+              setCalendarView?.("day");
+            }}
           />
         ) : !isHouseCalendar && calendarView === "day" ? (
           <DayAgendaView
@@ -994,9 +999,7 @@ export default function CalendarPage({
         )}
       </section>
 
-      {(isHouseCalendar || calendarView === "month") && (
-        <DailyReportCard report={todayDailyReport} loading={isDailyAiReportLoading} onOpen={openDailyReport} />
-      )}
+      <DailyReportCard report={todayDailyReport} loading={isDailyAiReportLoading} onOpen={openDailyReport} />
 
       {isDatePickerOpen && (
         <div className="calendar-date-picker-backdrop" role="presentation" onClick={() => setDatePickerOpen(false)}>
@@ -3340,7 +3343,7 @@ function DayAgendaView({ selectedDate, tasks, memberColors, onPrevDay, onNextDay
   );
 }
 
-function WeekAgendaView({ dates, tasksByDate, memberColors, selectedDate, onPrevWeek, onNextWeek, onSelectDate }) {
+function WeekAgendaView({ dates, tasksByDate, memberColors, selectedDate, onPrevWeek, onNextWeek, onSelectDate, onOpenDate }) {
   const dayLabels = ["일", "월", "화", "수", "목", "금", "토"];
 
   return (
@@ -3363,13 +3366,11 @@ function WeekAgendaView({ dates, tasksByDate, memberColors, selectedDate, onPrev
               <button type="button" className="week-agenda-day-head" onClick={() => onSelectDate(date)}>
                 <span>{dayLabels[index]}</span>
                 <strong>{parsed.getDate()}</strong>
-                <small>{agendaTasks.length}</small>
               </button>
               <div className="week-agenda-task-list">
-                {agendaTasks.slice(0, 3).map(({ task, range }, taskIndex) => (
+                {agendaTasks.map(({ task, range }, taskIndex) => (
                   <AgendaTaskCard compact key={getDailyTaskKey(task) || taskIndex} task={task} range={range} memberColors={memberColors} index={taskIndex} />
                 ))}
-                {agendaTasks.length > 3 && <em>+{agendaTasks.length - 3}</em>}
                 {agendaTasks.length === 0 && <p>일정 없음</p>}
               </div>
             </article>
@@ -3384,6 +3385,7 @@ function AgendaTaskCard({ task, range, memberColors, index, compact = false }) {
   const isHousework = getDailyTaskGroup(task) === "housework";
   const taskColor = getTaskDisplayColor(task, memberColors, isHousework ? "housework" : "personal");
   const title = isHousework ? getHouseworkDisplayTitle(task) : task.title;
+  const meta = getAgendaTaskMeta(task, range, isHousework);
 
   return (
     <article
@@ -3393,10 +3395,18 @@ function AgendaTaskCard({ task, range, memberColors, index, compact = false }) {
       <time>{formatTaskRange(range)}</time>
       <div>
         <strong>{title}</strong>
-        <span>{[task.place, isHousework ? getHouseworkModeLabel(task) : task.repeat].filter(Boolean).join(" · ")}</span>
+        <span>{meta}</span>
       </div>
     </article>
   );
+}
+
+function getAgendaTaskMeta(task, range, isHousework) {
+  if (isHousework) {
+    return [task.place || "가사 일정", getHouseworkModeLabel(task)].filter(Boolean).join(" · ");
+  }
+
+  return ["개인 일정", formatTaskRange(range)].filter(Boolean).join(" · ");
 }
 
 function getAgendaTasks(tasks = []) {

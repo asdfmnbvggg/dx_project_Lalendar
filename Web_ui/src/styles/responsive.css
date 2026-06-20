@@ -90,11 +90,15 @@
   }
 }
 
-.app-frame:has(.calendar-page-month) {
+.app-frame:has(.calendar-page-month),
+.app-frame:has(.calendar-page-week),
+.app-frame:has(.calendar-page-day) {
   background: linear-gradient(180deg, #f9f9f9 0%, #f2f3f5 100%);
 }
 
-.app-frame:has(.calendar-page-month) > .thinq-main-tabbar {
+.app-frame:has(.calendar-page-month) > .thinq-main-tabbar,
+.app-frame:has(.calendar-page-week) > .thinq-main-tabbar,
+.app-frame:has(.calendar-page-day) > .thinq-main-tabbar {
   height: 74px !important;
   min-height: 74px !important;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -105,7 +109,9 @@
   box-shadow: 0 -10px 22px rgba(15, 23, 42, 0.05);
 }
 
-.app-frame:has(.calendar-page-month) > .thinq-main-tabbar button {
+.app-frame:has(.calendar-page-month) > .thinq-main-tabbar button,
+.app-frame:has(.calendar-page-week) > .thinq-main-tabbar button,
+.app-frame:has(.calendar-page-day) > .thinq-main-tabbar button {
   min-height: 56px;
   height: 58px;
   gap: 3px;
@@ -115,12 +121,16 @@
   font-weight: 800;
 }
 
-.app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active {
+.app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active,
+.app-frame:has(.calendar-page-week) > .thinq-main-tabbar button.active,
+.app-frame:has(.calendar-page-day) > .thinq-main-tabbar button.active {
   position: relative;
   color: #ff6d1f;
 }
 
-.app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active::before {
+.app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active::before,
+.app-frame:has(.calendar-page-week) > .thinq-main-tabbar button.active::before,
+.app-frame:has(.calendar-page-day) > .thinq-main-tabbar button.active::before {
   content: "";
   position: absolute;
   inset: 50% auto auto 50%;
@@ -133,17 +143,25 @@
 }
 
 .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active svg,
-.app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active span {
+.app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active span,
+.app-frame:has(.calendar-page-week) > .thinq-main-tabbar button.active svg,
+.app-frame:has(.calendar-page-week) > .thinq-main-tabbar button.active span,
+.app-frame:has(.calendar-page-day) > .thinq-main-tabbar button.active svg,
+.app-frame:has(.calendar-page-day) > .thinq-main-tabbar button.active span {
   position: relative;
   z-index: 1;
 }
 
-.app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active svg {
+.app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active svg,
+.app-frame:has(.calendar-page-week) > .thinq-main-tabbar button.active svg,
+.app-frame:has(.calendar-page-day) > .thinq-main-tabbar button.active svg {
   transform: scale(1.1) translateY(4px);
   color: #fff;
 }
 
-.app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active span {
+.app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active span,
+.app-frame:has(.calendar-page-week) > .thinq-main-tabbar button.active span,
+.app-frame:has(.calendar-page-day) > .thinq-main-tabbar button.active span {
   opacity: 0;
   color: #fff;
   transform: translateY(8px);
@@ -165,6 +183,37 @@
 
 .calendar-page-month::-webkit-scrollbar {
   display: none;
+}
+
+.calendar-page-week,
+.calendar-page-day {
+  min-height: calc(100svh - 74px);
+  height: calc(100svh - 74px);
+  gap: 10px;
+  overflow: hidden;
+  padding: 22px 16px 92px;
+  background:
+    radial-gradient(circle at 14% 0%, rgba(255, 255, 255, 0.92), transparent 30%),
+    linear-gradient(180deg, #f8f8f9 0%, #f0f1f4 100%);
+}
+
+.calendar-page-week .calendar-filter-block,
+.calendar-page-day .calendar-filter-block {
+  flex: 0 0 auto;
+  gap: 10px;
+}
+
+.calendar-page-week .calendar-board,
+.calendar-page-day .calendar-board {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0 16px 8px;
+}
+
+.calendar-page-week .calendar-ai-report,
+.calendar-page-day .calendar-ai-report {
+  flex: 0 0 76px;
 }
 
 .calendar-page-month .calendar-filter-block {
@@ -519,7 +568,9 @@
   font-size: 7px !important;
 }
 
-.calendar-page-month .calendar-ai-report {
+.calendar-page-month .calendar-ai-report,
+.calendar-page-week .calendar-ai-report,
+.calendar-page-day .calendar-ai-report {
   position: relative;
   flex: 0 0 auto;
   display: block;
@@ -531,7 +582,9 @@
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
 }
 
-.calendar-page-month .calendar-ai-report::before {
+.calendar-page-month .calendar-ai-report::before,
+.calendar-page-week .calendar-ai-report::before,
+.calendar-page-day .calendar-ai-report::before {
   content: "";
   position: absolute;
   left: 12px;
@@ -543,14 +596,18 @@
     linear-gradient(90deg, transparent 7px, #a9a9a9 7px 9px, transparent 9px 22px) 0 7px / 22px 12px repeat-x;
 }
 
-.calendar-page-month .calendar-ai-report h3 {
+.calendar-page-month .calendar-ai-report h3,
+.calendar-page-week .calendar-ai-report h3,
+.calendar-page-day .calendar-ai-report h3 {
   padding-left: 28px;
   color: #ff6d1f;
   font-size: 13px;
   font-weight: 950;
 }
 
-.calendar-page-month .calendar-ai-report h3::before {
+.calendar-page-month .calendar-ai-report h3::before,
+.calendar-page-week .calendar-ai-report h3::before,
+.calendar-page-day .calendar-ai-report h3::before {
   left: 2px;
   width: 17px;
   height: 17px;
@@ -562,11 +619,15 @@
   transform: translateY(-50%);
 }
 
-.calendar-page-month .calendar-ai-report h3::after {
+.calendar-page-month .calendar-ai-report h3::after,
+.calendar-page-week .calendar-ai-report h3::after,
+.calendar-page-day .calendar-ai-report h3::after {
   content: none;
 }
 
-.calendar-page-month .calendar-ai-report > div {
+.calendar-page-month .calendar-ai-report > div,
+.calendar-page-week .calendar-ai-report > div,
+.calendar-page-day .calendar-ai-report > div {
   min-height: 96px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 118px;
@@ -578,7 +639,9 @@
   background: transparent;
 }
 
-.calendar-page-month .calendar-ai-report p {
+.calendar-page-month .calendar-ai-report p,
+.calendar-page-week .calendar-ai-report p,
+.calendar-page-day .calendar-ai-report p {
   max-width: none;
   color: #333;
   font-size: 10px;
@@ -586,7 +649,9 @@
   line-height: 1.35;
 }
 
-.calendar-page-month .calendar-ai-report img {
+.calendar-page-month .calendar-ai-report img,
+.calendar-page-week .calendar-ai-report img,
+.calendar-page-day .calendar-ai-report img {
   grid-row: 1 / 3;
   grid-column: 2;
   width: 118px;
@@ -595,7 +660,9 @@
   border-radius: 11px;
 }
 
-.calendar-page-month .calendar-ai-report-tags {
+.calendar-page-month .calendar-ai-report-tags,
+.calendar-page-week .calendar-ai-report-tags,
+.calendar-page-day .calendar-ai-report-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
@@ -607,7 +674,9 @@
   box-shadow: none;
 }
 
-.calendar-page-month .calendar-ai-report-tags span {
+.calendar-page-month .calendar-ai-report-tags span,
+.calendar-page-week .calendar-ai-report-tags span,
+.calendar-page-day .calendar-ai-report-tags span {
   padding: 4px 9px;
   border: 1px solid #ff8a4a;
   border-radius: 999px;
@@ -691,12 +760,78 @@
     overflow: hidden;
   }
 
+  .app-frame:has(.calendar-page-week),
+  .app-frame:has(.calendar-page-day) {
+    min-height: 100svh;
+    max-height: 100svh;
+    padding: 0 0 72px;
+    overflow: hidden;
+  }
+
   .calendar-page-month {
     min-height: 0;
     height: calc(100svh - 72px);
     gap: 9px;
     padding: 16px 10px 14px;
     overflow-y: auto;
+  }
+
+  .calendar-page-week,
+  .calendar-page-day {
+    min-height: 0;
+    height: calc(100svh - 72px);
+    gap: 8px;
+    padding: 16px 10px 14px;
+    overflow: hidden;
+  }
+
+  .calendar-page-week .calendar-filter-block,
+  .calendar-page-day .calendar-filter-block {
+    gap: 10px;
+    padding: 0 3px;
+  }
+
+  .calendar-page-week .calendar-family-title,
+  .calendar-page-day .calendar-family-title {
+    padding-top: 0;
+    font-size: 17px;
+  }
+
+  .calendar-page-week .calendar-family-title span,
+  .calendar-page-day .calendar-family-title span {
+    font-size: 19px;
+  }
+
+  .calendar-page-week .calendar-filter-row,
+  .calendar-page-day .calendar-filter-row {
+    gap: 10px;
+    margin-top: 3px;
+  }
+
+  .calendar-page-week .profile-strip,
+  .calendar-page-day .profile-strip {
+    gap: 9px;
+  }
+
+  .calendar-page-week .profile-strip button,
+  .calendar-page-week .house-calendar-toggle,
+  .calendar-page-day .profile-strip button,
+  .calendar-page-day .house-calendar-toggle {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+  }
+
+  .calendar-page-week .profile-strip span,
+  .calendar-page-day .profile-strip span {
+    width: 30px;
+    height: 30px;
+  }
+
+  .calendar-page-week .calendar-board,
+  .calendar-page-day .calendar-board {
+    padding: 0 10px 6px;
   }
 
   .calendar-page-month .calendar-filter-block {
@@ -801,13 +936,17 @@
     line-height: 14px !important;
   }
 
-  .calendar-page-month .calendar-ai-report {
+  .calendar-page-month .calendar-ai-report,
+  .calendar-page-week .calendar-ai-report,
+  .calendar-page-day .calendar-ai-report {
     margin-top: -1px;
     padding: 16px 10px 9px;
     border-radius: 12px;
   }
 
-  .calendar-page-month .calendar-ai-report::before {
+  .calendar-page-month .calendar-ai-report::before,
+  .calendar-page-week .calendar-ai-report::before,
+  .calendar-page-day .calendar-ai-report::before {
     left: 10px;
     right: 10px;
     top: -9px;
@@ -817,48 +956,66 @@
       linear-gradient(90deg, transparent 6px, #a9a9a9 6px 8px, transparent 8px 18px) 0 6px / 18px 10px repeat-x;
   }
 
-  .calendar-page-month .calendar-ai-report h3 {
+  .calendar-page-month .calendar-ai-report h3,
+  .calendar-page-week .calendar-ai-report h3,
+  .calendar-page-day .calendar-ai-report h3 {
     font-size: 12px;
   }
 
-  .calendar-page-month .calendar-ai-report > div {
+  .calendar-page-month .calendar-ai-report > div,
+  .calendar-page-week .calendar-ai-report > div,
+  .calendar-page-day .calendar-ai-report > div {
     min-height: 70px;
     grid-template-columns: minmax(0, 1fr) 88px;
     gap: 6px 9px;
   }
 
-  .calendar-page-month .calendar-ai-report p {
+  .calendar-page-month .calendar-ai-report p,
+  .calendar-page-week .calendar-ai-report p,
+  .calendar-page-day .calendar-ai-report p {
     font-size: 9px;
     line-height: 1.28;
   }
 
-  .calendar-page-month .calendar-ai-report img {
+  .calendar-page-month .calendar-ai-report img,
+  .calendar-page-week .calendar-ai-report img,
+  .calendar-page-day .calendar-ai-report img {
     width: 88px;
     height: 62px;
   }
 
-  .calendar-page-month .calendar-ai-report-tags {
+  .calendar-page-month .calendar-ai-report-tags,
+  .calendar-page-week .calendar-ai-report-tags,
+  .calendar-page-day .calendar-ai-report-tags {
     gap: 4px;
   }
 
-  .calendar-page-month .calendar-ai-report-tags span {
+  .calendar-page-month .calendar-ai-report-tags span,
+  .calendar-page-week .calendar-ai-report-tags span,
+  .calendar-page-day .calendar-ai-report-tags span {
     padding: 3px 7px;
     font-size: 8px;
   }
 
-  .app-frame:has(.calendar-page-month) > .thinq-main-tabbar {
+  .app-frame:has(.calendar-page-month) > .thinq-main-tabbar,
+  .app-frame:has(.calendar-page-week) > .thinq-main-tabbar,
+  .app-frame:has(.calendar-page-day) > .thinq-main-tabbar {
     height: 72px !important;
     min-height: 72px !important;
     padding: 4px 8px 6px !important;
   }
 
-  .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button {
+  .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button,
+  .app-frame:has(.calendar-page-week) > .thinq-main-tabbar button,
+  .app-frame:has(.calendar-page-day) > .thinq-main-tabbar button {
     min-height: 54px;
     height: 56px;
     font-size: 10px;
   }
 
-  .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active::before {
+  .app-frame:has(.calendar-page-month) > .thinq-main-tabbar button.active::before,
+  .app-frame:has(.calendar-page-week) > .thinq-main-tabbar button.active::before,
+  .app-frame:has(.calendar-page-day) > .thinq-main-tabbar button.active::before {
     width: 54px;
     height: 54px;
     inset: 50% auto auto 50%;
@@ -879,16 +1036,22 @@
     min-height: clamp(408px, 126vw, 500px);
   }
 
-  .calendar-page-month .calendar-ai-report {
+  .calendar-page-month .calendar-ai-report,
+  .calendar-page-week .calendar-ai-report,
+  .calendar-page-day .calendar-ai-report {
     padding-bottom: 10px;
   }
 
-  .calendar-page-month .calendar-ai-report img {
+  .calendar-page-month .calendar-ai-report img,
+  .calendar-page-week .calendar-ai-report img,
+  .calendar-page-day .calendar-ai-report img {
     width: 104px;
     height: 74px;
   }
 
-  .calendar-page-month .calendar-ai-report > div {
+  .calendar-page-month .calendar-ai-report > div,
+  .calendar-page-week .calendar-ai-report > div,
+  .calendar-page-day .calendar-ai-report > div {
     grid-template-columns: minmax(0, 1fr) 104px;
     min-height: 86px;
   }

@@ -56,12 +56,12 @@
 
 .mood-card {
   min-width: 0;
-  min-height: 76px;
+  min-height: 58px;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   column-gap: 10px;
-  padding: 12px;
+  padding: 10px 12px;
   border: 2px solid transparent;
   border-radius: 16px;
   background: #fff;
@@ -88,12 +88,11 @@
 .mood-chip-row {
   display: inline-flex;
   gap: 5px;
-  grid-row: span 2;
 }
 
 .mood-chip-row i {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border: 2px solid #fff;
   border-radius: 50%;
   box-shadow: 0 2px 7px rgba(68, 42, 20, 0.16);
@@ -114,6 +113,10 @@
   font-weight: 800;
   line-height: 1.35;
   word-break: keep-all;
+}
+
+.mood-card small {
+  display: none;
 }
 
 .calendar-segmented-control {
@@ -450,6 +453,17 @@
   stroke: currentColor;
 }
 
+.app-shell:not(.mood-default) .settings-panel .detail-head button {
+  border-color: var(--app-border) !important;
+  background: var(--app-primary-soft) !important;
+  color: var(--app-accent) !important;
+}
+
+.app-shell:not(.mood-default) .settings-panel .detail-head button svg {
+  color: var(--app-accent) !important;
+  stroke: currentColor !important;
+}
+
 .app-shell:not(.mood-default) .calendar-page {
   background: var(--app-bg);
 }
@@ -557,6 +571,12 @@
   color: var(--app-button-text);
 }
 
+.app-shell:not(.mood-default) .week-agenda-more-button {
+  border-color: var(--app-border);
+  background: var(--app-primary-soft);
+  color: var(--app-accent);
+}
+
 .app-shell:not(.mood-default) .calendar-page-month .calendar-ai-report-tags span {
   border-color: var(--app-accent) !important;
   background: var(--app-card-bg) !important;
@@ -632,25 +652,20 @@
   line-height: 1.35;
 }
 
-.calendar-page.view-week .calendar-ai-report,
-.calendar-page.view-day .calendar-ai-report {
-  display: none;
-}
-
 @media (max-width: 640px) {
   .mood-card-grid {
     grid-template-columns: 1fr;
   }
 
   .mood-card {
-    min-height: 76px;
+    min-height: 58px;
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
     column-gap: 10px;
   }
 
   .mood-chip-row {
-    grid-row: span 2;
+    grid-row: auto;
   }
 
   .calendar-segmented-control {
