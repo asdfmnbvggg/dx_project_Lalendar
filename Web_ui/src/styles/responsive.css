@@ -1516,9 +1516,9 @@
 
 .onboarding-ai-character-wrap {
   left: 50% !important;
-  bottom: -314px !important;
-  width: clamp(220px, 64vw, 270px) !important;
-  height: clamp(220px, 64vw, 270px) !important;
+  bottom: -270px !important;
+  width: 220px !important;
+  height: 220px !important;
   min-width: 220px !important;
   min-height: 220px !important;
   transform: translateX(-50%) !important;
@@ -1556,7 +1556,7 @@
   }
 
   .onboarding-ai-character-wrap {
-    bottom: -286px !important;
+    bottom: -250px !important;
     width: 220px !important;
     height: 220px !important;
   }
