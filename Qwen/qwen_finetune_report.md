@@ -8,8 +8,8 @@
 
 | 항목 | 값 |
 | - | - |
-| 학습 데이터 파일 | server/train.jsonl -> server/train_clean.jsonl |
-| 검증 데이터 파일 | server/valid.jsonl -> server/valid_clean.jsonl |
+| 학습 데이터 파일 | Qwen/train.jsonl -> Qwen/train_clean.jsonl |
+| 검증 데이터 파일 | Qwen/valid.jsonl -> Qwen/valid_clean.jsonl |
 | 학습 데이터 수 | 6,379 |
 | 검증 데이터 수 | 709 |
 | 입력값 X | event_title, event_date, event_start_time, event_end_time, day_temp, day_humidity, day_dust |
@@ -84,5 +84,5 @@
 
 ```powershell
 $env:TOGETHER_API_KEY="YOUR_TOGETHER_API_KEY"
-python server/qwen_finetune_pipeline.py --prepare --finetune --evaluate --base-model Qwen/Qwen2.5-7B-Instruct --epochs 3 --learning-rate 1e-05 --batch-size 4
+python Qwen/qwen_finetune_pipeline.py --prepare --finetune --evaluate --base-model Qwen/Qwen2.5-7B-Instruct --epochs 3 --learning-rate 1e-05 --batch-size 4
 ```

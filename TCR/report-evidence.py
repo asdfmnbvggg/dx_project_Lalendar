@@ -22,8 +22,8 @@ BEST_PATH = HPARAM_DIR / "best_hyperparameters.json"
 BEST_BY_APPLIANCE_PATH = HPARAM_DIR / "best_hyperparameters_by_appliance.json"
 HPARAM_RESULTS_PATH = HPARAM_DIR / "hyperparameter_search_results.csv"
 HPARAM_BY_APPLIANCE_PATH = HPARAM_DIR / "hyperparameter_search_results_by_appliance.csv"
-METRICS_PATH = ROOT_DIR / "tta-ins" / "results" / "metrics.json"
-TEST_PREDICTIONS_PATH = ROOT_DIR / "tta-ins" / "results" / "test_predictions.csv"
+METRICS_PATH = ROOT_DIR / "TCR" / "results" / "metrics.json"
+TEST_PREDICTIONS_PATH = ROOT_DIR / "TCR" / "results" / "test_predictions.csv"
 
 APPLIANCE_LABELS = {
     "robot_cleaner": "Robot cleaner",
@@ -266,7 +266,7 @@ def build_model_tables(best):
             ["Frequency Estimator", "Estimate baseline daily frequency", "daily usage counts", "base_daily_frequency", "Web_ui/src/utils/routineCyclePrediction.ts"],
             ["Drift Detector", "Detect interval/frequency changes", "recent logs", "cycle_changed, frequency_changed", "Web_ui/src/utils/routineCyclePrediction.ts"],
             ["Adaptive Recalibrator", "Blend base and recent patterns", "base + recent statistics", "adapted_cycle_days, adapted_daily_frequency", "Web_ui/src/utils/routineCyclePrediction.ts"],
-            ["Hyperparameter Search", "Find robust thresholds", "grid search", "best_hyperparameters.json", "tta-ins/hparam-search.py"],
+            ["Hyperparameter Search", "Find robust thresholds", "grid search", "best_hyperparameters.json", "TCR/hparam-search.py"],
         ],
         columns=["model_or_module", "role", "input", "output", "evidence_file"],
     )
@@ -555,7 +555,7 @@ Real LG ThinQ logs are difficult to collect because of privacy and access constr
 {markdown_table(generation_settings)}
 
 Evidence files:
-- tta-ins/data-make-multifamily.py
+- TCR/data-make-multifamily.py
 - outputs/report_evidence/report_tables/data_generation_settings.csv
 - outputs/dummy_appliance_dataset/appliance_usage_generation_report.md
 
@@ -662,7 +662,7 @@ Important interpretation:
     capture_rows = [
         ["C01", "outputs/dummy_appliance_dataset/appliance_usage_generation_report.md", "Overview and split row counts", "1-1 Dataset Definition", "Shows train/validation/test periods and row counts"],
         ["C02", "outputs/report_evidence/report_tables/designed_pattern_table.csv", "Whole table", "1-1 Dataset Definition", "Shows expected appliance routine changes"],
-        ["C03", "tta-ins/data-make-multifamily.py", "Constants and NOISE section", "1-2 Data Generation Method", "Shows family count, appliance list, split periods, jitter and missing log settings"],
+        ["C03", "TCR/data-make-multifamily.py", "Constants and NOISE section", "1-2 Data Generation Method", "Shows family count, appliance list, split periods, jitter and missing log settings"],
         ["C04", "outputs/report_evidence/report_tables/appliance_row_count_table.csv", "Whole table", "1-3 Collected Data", "Shows generated row counts by appliance and split"],
         ["C05", "outputs/report_evidence/report_tables/column_description_table.csv", "Whole table", "1-3 Collected Data", "Explains modeling columns"],
         ["C06", "outputs/report_evidence/figures/mean_interval_train_test_by_appliance.png", "Full image", "2-4 Analysis Results", "Shows interval cycle changes"],
@@ -803,7 +803,7 @@ def maybe_run_validation(skip_commands):
     commands = [
         "npm run build",
         "npm run routine:hparam",
-        "python tta-ins/train-evaluate.py",
+        "python TCR/train-evaluate.py",
     ]
     write_execution_log([run_command(command) for command in commands])
 

@@ -27,11 +27,11 @@ const result = ttaInspiredAdaptiveCycleRecalibration({
 Run the example:
 
 ```bash
-node tta-ins/example.js
+node TCR/example.js
 ```
 
 Run tests:
 
 ```bash
-node --test tta-ins/adaptive-cycle-recalibration.test.js
+node --test TCR/adaptive-cycle-recalibration.test.js
 ```

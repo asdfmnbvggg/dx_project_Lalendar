@@ -621,8 +621,8 @@ def generate_report(
     data_overview = md_table(
         ["항목", "값"],
         [
-            ["학습 데이터 파일", "server/train.jsonl -> server/train_clean.jsonl"],
-            ["검증 데이터 파일", "server/valid.jsonl -> server/valid_clean.jsonl"],
+            ["학습 데이터 파일", "Qwen/train.jsonl -> Qwen/train_clean.jsonl"],
+            ["검증 데이터 파일", "Qwen/valid.jsonl -> Qwen/valid_clean.jsonl"],
             ["학습 데이터 수", train_stats["line_count"]],
             ["검증 데이터 수", valid_stats["line_count"]],
             ["입력값 X", ", ".join(INPUT_FIELDS)],
@@ -687,7 +687,7 @@ def generate_report(
     ]
     prepared_list = "\n".join(f"- `{p.relative_to(ROOT.parent)}`" for p in prepared_files if p)
     command = (
-        "python server/qwen_finetune_pipeline.py --prepare --finetune --evaluate "
+        "python Qwen/qwen_finetune_pipeline.py --prepare --finetune --evaluate "
         f"--base-model {args.base_model} --epochs {args.epochs} "
         f"--learning-rate {args.learning_rate} --batch-size {args.batch_size}"
     )
