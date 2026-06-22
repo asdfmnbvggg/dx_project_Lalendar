@@ -2652,8 +2652,8 @@
 
   .onboarding-character-scene.appliance .onboarding-character-wrap .onboarding-character-image,
   .onboarding-character-scene.assignee .onboarding-character-wrap .onboarding-character-image {
-    width: 96px;
-    max-width: 28vw;
+    width: 180px;
+    max-width: none;
   }
 }
 
@@ -2732,7 +2732,7 @@
 .onboarding-character-scene.assignee .onboarding-character-wrap.onboarding-character {
   left: auto;
   right: -4px;
-  bottom: -94px;
+  bottom: -20px;
   z-index: 1;
   width: auto;
   height: auto;
@@ -2742,6 +2742,12 @@
   box-shadow: none;
   opacity: 0.86;
   transform: none;
+}
+
+.onboarding-character-scene.appliance .onboarding-character-wrap .onboarding-character-image,
+.onboarding-character-scene.assignee .onboarding-character-wrap .onboarding-character-image {
+  width: 180px;
+  max-width: none;
 }
 
 .onboarding-character-scene.appliance .onboarding-character-wrap.onboarding-character::before,
