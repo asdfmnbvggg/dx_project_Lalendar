@@ -1,259 +1,299 @@
-# L-lander 앱 유스케이스 명세서
+﻿# L-lander Use Case Specification
 
-- 작성 기준: 현재 frontend 코드 분석 기준
-- 분석 대상: 실제 프로젝트 내 화면, 컴포넌트, API 호출, 사용자 인터랙션
-- 주의사항: 코드에서 명확히 확인되지 않은 기능은 “추정”이라고 표시
+- 작성 기준: 현재 저장소의 `Web_ui/src`, `api`, `Sensor`, `tta-ins`, `outputs/report_evidence`를 다시 확인해 정리
+- 범위: 프론트엔드 앱 기능, Firebase/Firestore/Realtime Database 연동, AI/날씨/센서 기반 추천, 기기/케어 탭, PWA, 루틴 예측 모델 및 보고서 산출물
+- 주의: 일부 UI 문구와 파일명은 현재 저장소에서 인코딩이 깨져 보이지만, 구현 흐름과 컴포넌트/서비스 이름을 기준으로 기능을 판별했다.
 
-## UC-001 로그인하여 개인/가족 캘린더 세션 시작
-
-| 항목 | 내용 |
-| --- | --- |
-| 유스케이스 이름 | 로그인하여 L-lander 앱을 시작한다 |
-| 유스케이스 ID | UC-001 |
-| 사용자 | 가족 구성원, 관리자 |
-| 선행 조건 | 사용자가 `constants/users.js`에 정의된 로그인 사용자 ID와 비밀번호를 알고 있다. |
-| 기본 흐름 | 1. 사용자가 로그인 화면에서 아이디를 입력한다.<br>2. 사용자가 비밀번호를 입력한다.<br>3. 사용자가 로그인 버튼을 누른다.<br>4. 시스템이 `findLoginUser(id, password)`로 사용자 정보를 확인한다.<br>5. 인증에 성공하면 `handleLogin(user)`가 현재 사용자와 세션 정보를 `localStorage`에 저장한다.<br>6. 시스템이 사용자의 캘린더/온보딩 상태에 맞는 화면을 표시한다. |
-| 예외 | 아이디 또는 비밀번호가 일치하지 않으면 `LoginPage`가 오류 문구를 표시하고 로그인 처리를 중단한다. `localStorage` 파싱에 실패하면 저장된 사용자/세션 정보를 제거하고 로그인 전 상태로 처리한다. |
-| 우선 순위 | 상 |
-| 관련 화면/컴포넌트 | `Web_ui/src/pages/LoginPage.jsx`의 `LoginPage`, `Web_ui/src/App.jsx`의 `handleLogin`, `readStoredCurrentUser`, `readStoredAppSession` |
-| 근거 | `LoginPage`의 `submit` 함수가 `findLoginUser`를 호출하고 실패 시 `error` 상태를 설정한다. `App.jsx`는 `CURRENT_USER_STORAGE_KEY`, `APP_SESSION_STORAGE_KEY`를 사용해 로그인 사용자와 세션을 유지한다. |
-
-## UC-002 온보딩으로 고정 일정과 자동화 가전을 설정
+## UC-001 로그인 및 사용자 세션 시작
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스 이름 | 초기 온보딩을 진행해 일정/가전 자동화 기본값을 만든다 |
-| 유스케이스 ID | UC-002 |
-| 사용자 | 가족 구성원 |
-| 선행 조건 | 사용자가 로그인했으며 `isOnboardingComplete`가 false이다. |
-| 기본 흐름 | 1. 사용자가 하단 일정 탭에 진입한다.<br>2. 시스템이 `OnboardingPage`를 표시하고 배경에 `CalendarPage` 미리보기를 렌더링한다.<br>3. 사용자가 안내 화면을 넘긴다.<br>4. 사용자가 고정 일정 입력 단계에서 일정명, 요일, 시작/종료 시간을 등록하거나 자동 템플릿 버튼을 누른다.<br>5. 사용자가 구글 캘린더 연동 확인 단계에서 건너뛰기 또는 선택 버튼을 누른다.<br>6. 사용자가 자동화할 가전과 가전별 담당자를 선택하거나 자동 배정한다.<br>7. 사용자가 완료하면 `completeOnboarding`이 온보딩 설정을 저장하고, 선택한 가전/고정 일정 기반 작업을 생성한다. |
-| 예외 | 사용자가 온보딩을 건너뛰면 `skipGeneration`으로 기본 설정만 저장하고 자동 작업 생성을 생략한다. 고정 일정 입력 폼에서 필수 값이 부족하면 등록 버튼이 비활성 상태로 남는다. 자동화 가전이 없으면 가전별 담당자 지정 목록이 비어 있을 수 있다. |
-| 우선 순위 | 상 |
-| 관련 화면/컴포넌트 | `Web_ui/src/App.jsx`의 `OnboardingPage`, `completeOnboarding`, `buildOnboardingTasks`, `OnboardingAssigneeSelect`, `TimeSelect` |
-| 근거 | `App.jsx`의 `activeTab === "schedule" && !isOnboardingComplete` 분기가 온보딩을 표시한다. `OnboardingPage`에는 `registerFixedSchedule`, `addFixedScheduleTemplate`, `toggleApplianceType`, `changeApplianceAssignee`, `autoFillApplianceAssignees` 함수가 존재한다. |
+| 유스케이스명 | 등록된 가족 계정으로 앱에 로그인한다 |
+| 주요 사용자 | 가족 구성원, 관리자 |
+| 선행 조건 | `constants/users.js`에 사용자 ID, 비밀번호, 권한 정보가 정의되어 있다. |
+| 기본 흐름 | 1. 사용자가 로그인 화면에서 ID와 비밀번호를 입력한다.<br>2. `LoginPage`가 `findLoginUser`로 사용자를 검증한다.<br>3. 인증에 성공하면 `App.jsx`의 `handleLogin`이 현재 사용자와 앱 세션을 `localStorage`에 저장한다.<br>4. 앱은 사용자 권한과 저장된 세션에 맞춰 기본 탭, 선택 날짜, 선택 캘린더 사용자를 복원한다. |
+| 예외 흐름 | 인증 실패 시 오류 문구를 표시하고 로그인 처리를 중단한다. 저장된 세션 파싱 실패 시 세션을 제거하고 로그인 전 상태로 되돌린다. |
+| 관련 코드 | `Web_ui/src/pages/LoginPage.jsx`, `Web_ui/src/App.jsx`, `Web_ui/src/constants/users.js` |
 
-## UC-003 개인 캘린더를 조회하고 월/주/일 보기로 전환
+## UC-002 온보딩으로 자동화 기본값 설정
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스 이름 | 가족 구성원별 개인 캘린더와 일정을 조회한다 |
-| 유스케이스 ID | UC-003 |
-| 사용자 | 가족 구성원, 관리자 |
-| 선행 조건 | 사용자가 로그인했고 온보딩이 완료되었다. Firestore 일정 조회는 대상 사용자가 `dada`, `sumin`, `jea` 중 하나여야 한다. |
-| 기본 흐름 | 1. 사용자가 일정 탭에 접속한다.<br>2. 시스템이 `getUserSchedules(userId)`로 Firestore 사용자별 일정을 조회한다.<br>3. 시스템이 기본 생성 일정과 Firestore 일정을 병합해 `CalendarPage`에 전달한다.<br>4. 사용자가 프로필 버튼을 눌러 특정 가족 구성원의 캘린더를 선택한다.<br>5. 사용자가 월간/주간/일간 버튼 또는 상단 캘린더 보기 메뉴를 선택한다.<br>6. 시스템이 선택한 보기 방식에 따라 월 그리드, `WeekTimetable`, 일간 화면을 표시한다.<br>7. 사용자가 날짜를 누르면 해당 날짜의 상세 일정 화면 또는 선택 날짜 작업 목록을 표시한다. |
-| 예외 | Firestore 조회 실패 시 해당 사용자의 원격 일정은 빈 목록으로 처리하고 개발 환경에서는 경고를 기록한다. 일반 사용자가 다른 사용자의 개인 캘린더를 편집하려 하면 날짜 상세 진입/추가가 차단된다. 날씨 데이터가 없으면 날짜 셀에 대체 UI가 표시된다. |
-| 우선 순위 | 상 |
-| 관련 화면/컴포넌트 | `Web_ui/src/App.jsx`의 `getUserSchedules` 로딩 effect와 `pageProps`, `Web_ui/src/pages/CalendarPage.jsx`의 `CalendarPage`, `WeekTimetable`, `DayTimelineHead` |
-| 근거 | `App.jsx`가 로그인 후 `getFirestoreScheduleUserIds(currentUser)` 대상에 `getUserSchedules`를 호출한다. `CalendarPage`는 `calendarView` 상태로 `month`, `week`, `day` 렌더링을 분기하고 프로필 필터 버튼을 제공한다. |
+| 유스케이스명 | 초기 설정에서 고정 일정, 자동화 가전, 담당자를 구성한다 |
+| 주요 사용자 | 가족 구성원 |
+| 선행 조건 | 사용자가 로그인했고 `isOnboardingComplete`가 false이다. |
+| 기본 흐름 | 1. 사용자가 일정 탭에 진입한다.<br>2. 앱은 `OnboardingPage`를 표시한다.<br>3. 사용자는 고정 일정 템플릿 또는 직접 입력으로 일정명, 요일, 시간을 등록한다.<br>4. 사용자는 자동화할 가전 유형과 가전별 담당자를 선택하거나 자동 배정을 실행한다.<br>5. 완료 시 `completeOnboarding`이 `onboardingSetup`을 저장하고 기본 작업 생성을 준비한다. |
+| 예외 흐름 | 필수 입력이 부족하면 저장을 막는다. 사용자가 건너뛰면 기본 설정만 저장하고 자동 작업 생성은 생략한다. |
+| 관련 코드 | `Web_ui/src/App.jsx`, `SettingsPanelContent.jsx`, `CalendarPage.jsx` |
 
-## UC-004 개인 일정 또는 가사 일정을 추가한다
+## UC-003 개인/가족 캘린더 조회 및 보기 전환
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스 이름 | 선택한 날짜에 개인 일정 또는 가전 기반 가사 일정을 추가한다 |
-| 유스케이스 ID | UC-004 |
-| 사용자 | 가족 구성원, 관리자 |
-| 선행 조건 | 사용자가 편집 권한이 있는 캘린더를 보고 있다. 가사 일정 추가 시 온보딩/설정에서 담당 가전이 지정되어 있어야 한다. |
-| 기본 흐름 | 1. 사용자가 캘린더에서 날짜를 선택한다.<br>2. 사용자가 일정 추가 버튼을 누른다.<br>3. 시스템이 개인 캘린더에서는 `DailyScheduleAddPage`의 제목 입력 폼을 표시한다.<br>4. 시스템이 가사 캘린더에서는 담당 가전 선택 드롭다운, 색상 선택, 기간/시간 선택 폼을 표시한다.<br>5. 사용자가 제목 또는 가전, 날짜, 시간, 색상을 입력한다.<br>6. 사용자가 저장 버튼을 누른다.<br>7. 시스템이 `onAddTask`를 통해 `addTask`를 호출하고, Firestore 대상 사용자이면 `createUserSchedule`로 저장한다.<br>8. 시스템이 새 일정이 포함된 날짜 상세 또는 캘린더를 다시 표시한다. |
-| 예외 | 개인 일정 제목이 비어 있으면 “제목을 입력해 주세요.” 오류를 표시한다. 가사 일정에서 담당 가전이 없으면 “담당 가전이 없어요...” 오류를 표시한다. 종료 시간이 시작 시간보다 빠르거나 같으면 저장하지 않고 시간 오류를 표시한다. Firestore 저장에 실패하면 화면 상태는 추가되지만 개발 경고가 기록되고 원격 저장은 보장되지 않는다. |
-| 우선 순위 | 상 |
-| 관련 화면/컴포넌트 | `Web_ui/src/pages/CalendarPage.jsx`의 `DailyScheduleAddPage`, `openCalendarComposer`, `Web_ui/src/App.jsx`의 `addTask`, `Web_ui/src/services/taskService.js`의 `createUserSchedule` |
-| 근거 | `DailyScheduleAddPage.saveSchedule`이 필수값과 시간 유효성을 검사하고 `onSave`로 일정 객체를 전달한다. `App.jsx.addTask`는 `createUserSchedule` 호출 후 `schedule_create` analytics 이벤트를 기록한다. |
+| 유스케이스명 | 월간, 주간, 일간 캘린더에서 개인 및 가족 일정을 조회한다 |
+| 주요 사용자 | 가족 구성원, 관리자 |
+| 선행 조건 | 사용자가 로그인했고 캘린더 탭에 접근할 수 있다. |
+| 기본 흐름 | 1. 앱은 기본 일정과 Firestore 사용자 일정을 병합한다.<br>2. 사용자는 프로필/구성원 선택으로 볼 캘린더를 전환한다.<br>3. 사용자는 설정 또는 보기 버튼으로 월간, 주간, 일간 보기를 선택한다.<br>4. 앱은 선택 날짜, 선택 구성원, 검색어, 완료 상태를 반영해 일정 목록과 시간표를 표시한다.<br>5. 날짜를 선택하면 상세 패널 또는 일별 일정 화면이 열린다. |
+| 예외 흐름 | Firestore 조회 실패 시 해당 사용자 일정은 빈 목록으로 처리하고 개발 환경에서 경고를 남긴다. 편집 권한이 없는 사용자 일정은 상세 진입 또는 수정이 제한된다. |
+| 관련 코드 | `Web_ui/src/App.jsx`, `Web_ui/src/pages/CalendarPage.jsx`, `Web_ui/src/services/taskService.js` |
 
-## UC-005 일정 완료, 수정, 삭제, 담당자 변경을 처리한다
+## UC-004 개인 일정 및 가전 일정 추가
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스 이름 | 등록된 일정을 관리한다 |
-| 유스케이스 ID | UC-005 |
-| 사용자 | 가족 구성원, 관리자 |
-| 선행 조건 | 일정이 하나 이상 존재하고 사용자가 해당 일정에 대한 편집 권한을 가진다. |
-| 기본 흐름 | 1. 사용자가 날짜 상세 화면 또는 작업 목록에서 일정을 확인한다.<br>2. 사용자가 체크 버튼을 누르면 시스템이 완료 상태를 토글한다.<br>3. 사용자가 일정 블록의 컨텍스트 메뉴에서 수정 또는 삭제를 선택한다.<br>4. 수정 선택 시 시스템이 `DailyScheduleEditPage`를 표시한다.<br>5. 사용자가 제목, 날짜, 시간, 색상을 변경하고 저장한다.<br>6. 시스템이 `updateTask`를 호출하고 Firestore 일정이면 `updateUserSchedule`에 반영한다.<br>7. 삭제 선택 시 시스템이 `deleteTask`를 호출하고 Firestore 일정이면 `deleteUserSchedule`에 반영한다.<br>8. 담당자 선택 UI에서 사용자가 담당자를 바꾸면 시스템이 작업 소유자 상태를 변경한다. |
-| 예외 | 제목이 비어 있거나 종료 시간이 시작 시간보다 빠르면 수정 저장을 중단한다. 비 오는 날 세탁 일정을 잡거나 같은 시간대 일정이 충돌하면 `getTaskDateRestriction`이 안내 문구를 반환하고 저장하지 않는다. Firestore 업데이트/삭제 실패 시 개발 경고를 남긴다. 표시할 작업이 없으면 빈 상태 UI를 표시한다. |
-| 우선 순위 | 상 |
-| 관련 화면/컴포넌트 | `Web_ui/src/pages/CalendarPage.jsx`의 `DailyScheduleEditPage`, `TaskItem`, `Web_ui/src/components/DetailPanel.jsx`, `Web_ui/src/App.jsx`의 `toggleTask`, `updateTask`, `deleteTask`, `changeTaskOwner` |
-| 근거 | `TaskItem`에는 완료, 담당자 select, 삭제, 미루기, 더보기 버튼이 있다. `DailyScheduleEditPage.saveSchedule`과 `App.jsx`의 CRUD 함수들이 Firestore 업데이트/삭제를 호출한다. |
+| 유스케이스명 | 선택한 날짜에 개인 일정 또는 가전 작업을 등록한다 |
+| 주요 사용자 | 가족 구성원, 관리자 |
+| 선행 조건 | 사용자가 편집 가능한 캘린더를 보고 있다. |
+| 기본 흐름 | 1. 사용자가 날짜 또는 추가 버튼을 누른다.<br>2. 개인 일정이면 제목, 날짜, 시간, 색상, 담당자를 입력한다.<br>3. 가전 일정이면 가전 유형, 기기/모드, 시간, 담당자를 입력한다.<br>4. `addTask`가 로컬 상태를 갱신하고 Firestore 대상 사용자 일정이면 `createUserSchedule`로 저장한다.<br>5. 앱은 변경된 일정을 캘린더와 상세 목록에 반영한다. |
+| 예외 흐름 | 제목 누락, 가전 유형 누락, 잘못된 시간 범위, 같은 사람의 일정 충돌은 저장을 막는다. Firestore 저장 실패 시 원격 저장 보장은 하지 않고 개발 경고를 남긴다. |
+| 관련 코드 | `CalendarPage.jsx`, `TaskComposer.jsx`, `App.jsx`, `taskService.js` |
 
-## UC-006 일정 미루기와 알림 미루기를 수행한다
+## UC-005 일정 완료, 수정, 삭제, 담당자 변경
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스 이름 | 일정 또는 실행 알림을 사람/시간/날짜 기준으로 미룬다 |
-| 유스케이스 ID | UC-006 |
-| 사용자 | 가족 구성원, 관리자 |
+| 유스케이스명 | 등록된 일정을 완료, 수정, 삭제, 재배정한다 |
+| 주요 사용자 | 가족 구성원, 관리자 |
+| 선행 조건 | 하나 이상의 일정이 존재하고 사용자가 해당 일정에 접근할 수 있다. |
+| 기본 흐름 | 1. 사용자가 일정 목록 또는 상세 패널에서 일정을 확인한다.<br>2. 체크 버튼으로 완료 상태를 토글한다.<br>3. 편집 화면에서 제목, 날짜, 시간, 색상, 모드 등을 수정한다.<br>4. 삭제 버튼으로 일정을 제거한다.<br>5. 담당자 선택으로 작업 소유자를 변경한다.<br>6. Firestore 일정이면 `updateUserSchedule` 또는 `deleteUserSchedule`이 호출된다. |
+| 예외 흐름 | 입력값 검증 실패, 일정 충돌, 원격 업데이트 실패 시 변경을 제한하거나 개발 경고를 남긴다. |
+| 관련 코드 | `TaskItem.jsx`, `DetailPanel.jsx`, `CalendarPage.jsx`, `App.jsx`, `taskService.js` |
+
+## UC-006 일정 미루기
+
+| 항목 | 내용 |
+| --- | --- |
+| 유스케이스명 | 일정을 다른 사람, 다른 시간, 다른 날짜로 미룬다 |
+| 주요 사용자 | 가족 구성원, 관리자 |
 | 선행 조건 | 미룰 수 있는 일정 또는 알림이 존재한다. |
-| 기본 흐름 | 1. 사용자가 작업 목록, 상세 패널, 알림 팝오버에서 미루기 버튼을 누른다.<br>2. 시스템이 `postponePicker` 다이얼로그를 표시한다.<br>3. 사용자가 다른 사람에게 미루기, 시간 미루기, 날짜 미루기 중 하나를 선택한다.<br>4. 사용자가 담당자, 새 시간 또는 새 날짜/시간을 선택한다.<br>5. 시스템이 선택한 방식에 따라 `moveTaskToPerson`, `moveTaskTime`, `moveTaskDate` 흐름으로 일정을 갱신한다.<br>6. Firestore 일정이면 `updateUserSchedule`을 호출한다.<br>7. 시스템이 캘린더와 알림 목록에 변경된 일정을 반영한다. |
-| 예외 | 비 오는 날 세탁 일정으로 변경하려 하거나 같은 사용자의 시간대가 충돌하면 “날짜 변경 불가” 다이얼로그를 표시하고 변경하지 않는다. 알림 미루기에서 일반 자동화 알림은 다음 날 자동화 작업으로 추가하고 기존 알림은 dismissed 처리한다. Firestore 갱신 실패 시 개발 경고를 기록한다. |
-| 우선 순위 | 중 |
-| 관련 화면/컴포넌트 | `Web_ui/src/App.jsx`의 `postponeTask`, `moveTaskDate`, `moveTaskTime`, `moveTaskToPerson`, `postponeNotification`, `PostponeDatePicker`, `PostponeTimePicker` |
-| 근거 | `App.jsx` 하단 렌더링에 `postponePicker` 모달과 사람/시간/날짜 선택 UI가 있으며, `getTaskDateRestriction`으로 날씨/시간 충돌을 검사한다. |
+| 기본 흐름 | 1. 사용자가 일정 또는 알림에서 미루기를 선택한다.<br>2. 앱은 사람에게 미루기, 시간 미루기, 날짜 미루기 선택지를 표시한다.<br>3. 사용자가 대상 담당자, 시간, 날짜를 선택한다.<br>4. `moveTaskToPerson`, `moveTaskTime`, `moveTaskDate`가 일정 정보를 갱신한다.<br>5. Firestore 일정이면 변경 사항을 원격 저장한다. |
+| 예외 흐름 | 빈 날짜, 잘못된 시간, 같은 사용자 일정 충돌이 있으면 변경을 막는다. 조건 기반 자동화 알림은 다음 실행 일정으로 새 작업을 만들고 기존 알림을 dismissed 처리할 수 있다. |
+| 관련 코드 | `App.jsx`, `TaskItem.jsx`, `DetailPanel.jsx` |
 
-## UC-007 날씨/루틴 기반 추천 일정을 확인하고 추가한다
+## UC-007 날씨 및 루틴 기반 추천 일정 추가
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스 이름 | 날씨와 ThinQ 패턴 기반 추천 가사일을 일정에 추가한다 |
-| 유스케이스 ID | UC-007 |
-| 사용자 | 가족 구성원, 관리자 |
-| 선행 조건 | 날씨 API 또는 내장 날씨 데이터, ThinQ 사용 로그/상태 기반 추천 입력이 존재한다. |
-| 기본 흐름 | 1. 사용자가 일정 화면에서 날짜를 선택한다.<br>2. 시스템이 `fetchCalendarWeather` 결과를 `buildWeatherRecommendationsByDate`로 변환한다.<br>3. 시스템이 `buildRoutineRecommendations` 결과와 날짜별 날씨 추천을 합쳐 추천 목록을 만든다.<br>4. `CalendarPage`가 선택 날짜의 “추천 일정” 카드 목록을 표시한다.<br>5. 사용자가 추천 카드의 일정 추가 버튼을 누른다.<br>6. 시스템이 `addWeatherRecommendationTask`로 가전 유형, 추천 시간, 추천 출처, 신뢰도 등이 포함된 가사 일정을 추가한다. |
-| 예외 | 날씨 API 호출에 실패하면 `weatherApiStatus`가 `error`가 되고 추천은 빈 목록 또는 로컬 날씨 데이터 기반으로 제한된다. 추천 목록이 없으면 추천 일정 섹션을 표시하지 않는다. Firestore 저장 실패 시 일정 원격 저장이 누락될 수 있다. |
-| 우선 순위 | 중 |
-| 관련 화면/컴포넌트 | `Web_ui/src/pages/CalendarPage.jsx`의 추천 일정 패널, `Web_ui/src/App.jsx`의 `addWeatherRecommendationTask`, `Web_ui/src/services/weatherService.js`, `weatherRecommendationService.js`, `routinePredictionService.js` |
-| 근거 | `CalendarPage`는 `selectedRecommendations`를 렌더링하고 각 카드의 `onAddWeatherRecommendation(selectedDate, recommendation)` 버튼을 제공한다. |
+| 유스케이스명 | 날씨와 ThinQ 유사 사용 패턴으로 추천된 가전 일정을 추가한다 |
+| 주요 사용자 | 가족 구성원 |
+| 선행 조건 | 날씨 데이터 또는 내장 날씨 데이터, 루틴 예측 입력이 존재한다. |
+| 기본 흐름 | 1. 앱이 `fetchCalendarWeather`로 날짜별 날씨를 불러온다.<br>2. `buildWeatherRecommendationsByDate`가 비, 눈, 더위, 미세먼지 등 조건에 따른 가전 추천을 만든다.<br>3. `buildRoutineRecommendations`가 사용 패턴 기반 루틴 추천을 만든다.<br>4. 사용자는 선택 날짜의 추천 카드에서 일정 추가를 누른다.<br>5. `addWeatherRecommendationTask`가 가전 일정으로 등록한다. |
+| 예외 흐름 | 날씨 API 실패 시 상태를 error로 두고 로컬 데이터 또는 빈 추천 목록으로 처리한다. 추천이 없으면 추천 영역을 숨기거나 빈 상태를 표시한다. |
+| 관련 코드 | `weatherService.js`, `weatherRecommendationService.js`, `routinePredictionService.js`, `CalendarPage.jsx`, `App.jsx` |
 
-## UC-008 AI Daily Report를 생성하고 상세 리포트를 확인한다
+## UC-008 AI 가전 작업 예측 및 담당자 추천
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스 이름 | 3일치 일정/가사일/날씨 기반 AI Daily Report를 확인한다 |
-| 유스케이스 ID | UC-008 |
-| 사용자 | 가족 구성원 |
-| 선행 조건 | 사용자가 일정 화면에 있고 날씨/미세먼지 로딩이 완료되었거나 실패 처리되었다. |
-| 기본 흐름 | 1. 시스템이 선택 날짜부터 3일간의 개인 일정, 가사 일정, To-do 진행률을 `collectDailyReportTasks`로 수집한다.<br>2. 시스템이 선택 날짜부터 3일간의 날씨와 당일 미세먼지를 `collectDailyReportWeather`로 수집한다.<br>3. 시스템이 `fetchDailyReport(input)`으로 `/api/daily-report`에 POST 요청을 보낸다.<br>4. 응답이 성공하면 제목, 요약, 상세, 날씨 팁, 가사 팁, 이미지 테마를 상태와 sessionStorage 캐시에 저장한다.<br>5. 사용자가 캘린더의 `DailyReportCard`를 누른다.<br>6. 시스템이 `/daily-report/:date` 경로를 history에 push하고 `DailyReportDetail`을 표시한다.<br>7. 사용자가 상세 리포트에서 일정/가사/날씨 브리핑과 이미지 기록을 확인한다. |
-| 예외 | `/api/daily-report` 요청 실패, 응답 누락, Abort 발생 시 `createDailyReportFallback`으로 대체 리포트를 표시한다. 날씨 API가 아직 loading이면 리포트 생성을 지연한다. 같은 요청 키는 sessionStorage 캐시를 재사용한다. |
-| 우선 순위 | 상 |
-| 관련 화면/컴포넌트 | `Web_ui/src/App.jsx`의 `collectDailyReportTasks`, `collectDailyReportWeather`, daily report effect, `Web_ui/src/services/dailyReportService.js`, `Web_ui/src/features/dailyReport/DailyReportCard.jsx`, `DailyReportDetail.jsx`, `dailyReportData.js` |
-| 근거 | `App.jsx`는 `fetchDailyReport`를 호출하고 실패 시 fallback을 설정한다. `CalendarPage.openDailyReport`는 `/daily-report/${todayDailyReport.id}`로 라우팅한다. |
+| 유스케이스명 | AI가 가전 작업의 기기, 모드, 담당자를 예측해 일정 생성을 돕는다 |
+| 주요 사용자 | 가족 구성원 |
+| 선행 조건 | `/api/predict-task` API가 사용 가능하거나 예측 실패를 처리할 수 있다. |
+| 기본 흐름 | 1. 사용자가 작업 입력 또는 추천 흐름을 시작한다.<br>2. 앱이 `predictHouseworkTask`로 작업 텍스트와 맥락을 전송한다.<br>3. API 응답에서 가전 유형과 모드가 검증된다.<br>4. 예측 결과를 기반으로 일정 초안, 담당자 배정 팝업, 자동화 알림을 제공한다. |
+| 예외 흐름 | API 실패 또는 응답 스키마 불일치 시 예측 결과를 폐기하고 수동 입력 흐름을 유지한다. |
+| 관련 코드 | `Web_ui/src/services/taskPredictionService.js`, `api/predict-task.js`, `App.jsx` |
 
-## UC-009 Daily Report에서 To-do를 추가/수정/완료한다
+## UC-009 AI Daily Report 생성 및 상세 조회
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스 이름 | Daily Report 상세에서 오늘의 To-do를 관리한다 |
-| 유스케이스 ID | UC-009 |
-| 사용자 | 가족 구성원 |
+| 유스케이스명 | 일정, 가사일, 날씨를 요약한 AI 데일리 리포트를 확인한다 |
+| 주요 사용자 | 가족 구성원 |
+| 선행 조건 | 캘린더 일정과 날씨/미세먼지 데이터가 수집되었거나 실패 처리되었다. |
+| 기본 흐름 | 1. 앱이 선택 날짜부터 3일간의 개인 일정, 가전 일정, To-do 진행률을 수집한다.<br>2. 앱이 같은 기간의 날씨와 미세먼지 정보를 수집한다.<br>3. `fetchDailyReport`가 `/api/daily-report`에 리포트 입력을 POST한다.<br>4. 응답 제목, 요약, 상세, 날씨 팁, 작업 팁, 이미지 테마를 상태와 `sessionStorage` 캐시에 저장한다.<br>5. 사용자가 `DailyReportCard`를 누르면 `/daily-report/:date` 상세 화면으로 이동한다.<br>6. 상세 화면에서 일정 브리핑, 가전 브리핑, 이미지 기록을 확인한다. |
+| 예외 흐름 | API 실패, 응답 누락, Abort 발생 시 `createDailyReportFallback`으로 대체 리포트를 표시한다. 동일 요청은 캐시를 재사용한다. |
+| 관련 코드 | `dailyReportService.js`, `DailyReportCard.jsx`, `DailyReportDetail.jsx`, `dailyReportData.js`, `App.jsx` |
+
+## UC-010 Daily Report에서 To-do 관리
+
+| 항목 | 내용 |
+| --- | --- |
+| 유스케이스명 | 데일리 리포트 상세 화면에서 오늘의 To-do를 추가, 수정, 완료 처리한다 |
+| 주요 사용자 | 가족 구성원 |
 | 선행 조건 | Daily Report 상세 화면이 열려 있다. |
-| 기본 흐름 | 1. 사용자가 Daily Report 상세 화면에서 To-do 진행 현황 카드를 누른다.<br>2. 시스템이 To-do 관리 시트를 연다.<br>3. 사용자가 기존 To-do의 체크 버튼을 누른다.<br>4. 시스템이 `onUpdateTodo(id, { done })`를 호출해 완료 상태를 갱신한다.<br>5. 사용자가 기존 To-do 항목을 눌러 제목/시간을 수정한다.<br>6. 사용자가 새 To-do 제목과 시간을 입력하고 추가 버튼을 누른다.<br>7. 시스템이 `onAddTodo`를 통해 해당 리포트 날짜의 개인 일정으로 To-do를 추가한다. |
-| 예외 | 제목이 비어 있으면 저장하지 않는다. 기존 To-do가 없으면 빈 상태 문구를 표시한다. `onUpdateTodo` 또는 `onAddTodo`가 연결되지 않은 경우 UI 입력은 가능하지만 실제 일정 반영은 되지 않는다. |
-| 우선 순위 | 중 |
-| 관련 화면/컴포넌트 | `Web_ui/src/features/dailyReport/DailyReportDetail.jsx`, `Web_ui/src/pages/CalendarPage.jsx`의 `DailyReportDetail` props 연결 |
-| 근거 | `DailyReportDetail.saveTodo`는 제목 trim 후 `onAddTodo` 또는 `onUpdateTodo`를 호출한다. `CalendarPage`는 이 콜백을 `onAddTask`, `updateTask`로 연결한다. |
+| 기본 흐름 | 1. 사용자가 To-do 진행 현황 카드를 연다.<br>2. 기존 To-do의 완료 체크를 변경한다.<br>3. 기존 To-do의 제목 또는 시간을 수정한다.<br>4. 새 To-do 제목과 시간을 입력해 추가한다.<br>5. 변경은 캘린더 작업의 추가 또는 업데이트 콜백으로 반영된다. |
+| 예외 흐름 | 제목이 비어 있으면 저장하지 않는다. 콜백이 연결되지 않은 경우 UI 입력은 가능하지만 실제 일정 반영은 제한된다. |
+| 관련 코드 | `DailyReportDetail.jsx`, `CalendarPage.jsx`, `App.jsx` |
 
-## UC-010 ThinQ 홈에서 날씨/미세먼지 환경 데이터를 조회한다
+## UC-011 ThinQ/홈 화면에서 날씨 및 대기질 조회
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스 이름 | ThinQ 홈 화면에서 오늘의 환경 정보를 확인하고 새로고침한다 |
-| 유스케이스 ID | UC-010 |
-| 사용자 | 가족 구성원 |
-| 선행 조건 | 사용자가 홈 탭에 진입했다. 날씨/미세먼지 API 키가 환경 변수에 설정되어 있으면 실제 API 호출이 가능하다. |
-| 기본 흐름 | 1. 사용자가 홈 탭을 연다.<br>2. 시스템이 `fetchShortWeather`, `fetchMidWeather`, `fetchAirQuality`를 병렬로 호출한다.<br>3. 시스템이 단기예보, 중기예보, 미세먼지 카드를 표시한다.<br>4. 사용자가 새로고침 버튼을 누른다.<br>5. 시스템이 세 API를 다시 호출하고 로딩 상태를 표시한다.<br>6. 응답이 완료되면 최신 환경 데이터를 카드에 반영한다. |
-| 예외 | API 키가 없거나 API 요청이 실패하면 해당 카드의 상태가 error가 되고, 다른 성공한 카드만 데이터가 표시된다. 데이터가 빈 배열이면 “데이터가 없습니다” 유형의 빈 상태를 표시한다. |
-| 우선 순위 | 중 |
-| 관련 화면/컴포넌트 | `Web_ui/src/App.jsx`의 `HomePage`, `EnvironmentDataPanel`, `ForecastSummaryCard`, `AirQualityCard`, `Web_ui/src/services/weatherService.js`, `midWeatherService.js`, `airQualityService.js` |
-| 근거 | `HomePage.loadEnvironmentData`와 `refreshEnvironmentData`가 세 서비스를 `Promise.allSettled`로 호출하고 `resultToApiState`로 카드 상태를 만든다. |
+| 유스케이스명 | 홈 화면에서 단기예보, 중기예보, 미세먼지 상태를 확인하고 새로고침한다 |
+| 주요 사용자 | 가족 구성원 |
+| 선행 조건 | 공공데이터 API 키가 환경 변수에 있거나 API 실패 상태를 처리할 수 있다. |
+| 기본 흐름 | 1. 사용자가 홈/ThinQ 화면에 진입한다.<br>2. 앱이 `fetchShortWeather`, `fetchMidWeather`, `fetchAirQuality`를 병렬 호출한다.<br>3. 카드별 loading, success, error 상태를 표시한다.<br>4. 사용자가 새로고침을 누르면 같은 데이터를 다시 요청한다.<br>5. 성공한 데이터는 카드와 추천 일정 생성에 활용된다. |
+| 예외 흐름 | 일부 API가 실패해도 나머지 성공 데이터는 표시한다. 빈 응답은 빈 상태 메시지로 처리한다. |
+| 관련 코드 | `App.jsx`, `weatherService.js`, `midWeatherService.js`, `airQualityService.js` |
 
-## UC-011 센서 기반 가전 실행 추천 팝업을 확인하고 실행한다
+## UC-012 센서 기반 실시간 가전 팝업 실행
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스 이름 | 실시간 센서 상태에 따라 에어컨/공기청정기/세탁기 실행을 확인한다 |
-| 유스케이스 ID | UC-011 |
-| 사용자 | 가족 구성원, 관리자 |
-| 선행 조건 | 사용자가 로그인했고 온보딩이 완료되었다. Firebase Realtime Database의 `sensor_latest/living_room_01` 데이터가 수신된다. |
-| 기본 흐름 | 1. 시스템이 `subscribeSensorLatest("living_room_01")`로 최신 센서 값을 구독한다.<br>2. 센서 값이 변경되면 `buildRealtimeAppliancePopups`가 온도, 습도, PM10, PM2.5 기준을 검사한다.<br>3. 시스템이 담당자와 일정 필터를 적용해 사용자에게 보여줄 팝업을 큐에 넣는다.<br>4. 사용자가 팝업 내용을 확인한다.<br>5. 사용자가 실행 버튼을 누른다.<br>6. 시스템이 `buildDeviceCommandPayloadFromRealtimePopup`으로 명령 payload를 만들고 `sendDeviceCommand("living_room_01", payload)`를 호출한다.<br>7. 시스템이 Firebase Realtime Database의 `device_commands/living_room_01`에 pending 명령을 저장하고 팝업을 닫는다. |
-| 예외 | 팝업이 blocked 상태이면 실행하지 않고 닫는다. 세탁기 일정에서 문이 열렸거나 무게가 기준 이하이면 실행 차단 팝업을 표시한다. 같은 팝업은 10분 cooldown 또는 이미 표시된 세탁기 팝업 키로 중복 표시를 방지한다. Firebase 명령 전송 실패 시 개발 경고를 기록하고 팝업을 닫는다. |
-| 우선 순위 | 상 |
-| 관련 화면/컴포넌트 | `Web_ui/src/App.jsx`의 `subscribeSensorLatest` effect, `enqueueSensorPopups`, `executeSensorPopup`, `SensorPopupDialog`, `Web_ui/src/services/sensorRealtimeService.js`, `appliancePopupRuleService.js` |
-| 근거 | `sensorRealtimeService.sendDeviceCommand`가 `device_commands/{deviceId}`에 pending 명령을 저장한다. `appliancePopupRuleService`는 온도/습도/미세먼지/세탁기 무게 기준으로 팝업을 생성한다. |
+| 유스케이스명 | 실시간 센서 값이 조건을 넘으면 가전 실행 팝업을 표시하고 명령을 전송한다 |
+| 주요 사용자 | 가족 구성원, 관리자 |
+| 선행 조건 | Firebase Realtime Database의 `sensor_latest/living_room_01` 값이 갱신된다. |
+| 기본 흐름 | 1. 앱이 `subscribeSensorLatest`로 최신 센서 값을 구독한다.<br>2. `buildRealtimeAppliancePopups`가 온도, 습도, PM10, PM2.5, 빨래 무게 조건을 검사한다.<br>3. 조건을 만족하면 에어컨, 공기청정기, 의류관리 등 실행 팝업을 큐에 넣는다.<br>4. 사용자가 실행을 누르면 명령 payload를 만든다.<br>5. `sendDeviceCommand`가 `device_commands/living_room_01`에 pending 명령을 저장한다. |
+| 예외 흐름 | 차단 조건 또는 쿨다운에 걸리면 팝업을 표시하지 않는다. 명령 전송 실패 시 개발 경고를 남기고 팝업을 닫는다. |
+| 관련 코드 | `sensorRealtimeService.js`, `appliancePopupRuleService.js`, `App.jsx`, `Sensor/python_bridge/*` |
 
-## UC-012 알림 목록에서 가전 실행 또는 자동화 일정을 처리한다
+## UC-013 알림 목록에서 실행 또는 미루기 처리
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스 이름 | 일정 기반 알림을 확인하고 실행 또는 미루기한다 |
-| 유스케이스 ID | UC-012 |
-| 사용자 | 가족 구성원, 관리자 |
-| 선행 조건 | 선택 날짜와 시간 기준으로 실행 예정 또는 진행 중인 가사/가전 일정이 존재한다. |
-| 기본 흐름 | 1. 사용자가 상단 알림 버튼 또는 홈 화면 알림 버튼을 누른다.<br>2. 시스템이 알림 팝오버를 열고 기준 날짜/시간과 알림 목록을 표시한다.<br>3. 사용자가 시간 선택기를 조정하거나 “지금” 버튼으로 현재 시간을 반영한다.<br>4. 시스템이 `tasksForNotification`, `buildTaskNotificationTitle`, `buildConditionalNotifications`로 알림 목록을 계산한다.<br>5. 사용자가 실행 버튼을 누른다.<br>6. 알림이 작업 기반이면 시스템이 가전 명령 payload를 만들고 `sendDeviceCommand`를 호출한 뒤 작업을 완료 처리한다.<br>7. 알림이 조건 기반 자동화이면 시스템이 자동화 작업을 추가하고 알림을 dismissed 처리한다.<br>8. 사용자가 미루기를 누르면 작업 미루기 또는 다음 날 자동화 추가 흐름으로 처리한다. |
-| 예외 | 알림 목록이 없으면 “표시할 알림이 없습니다” UI를 표시한다. 가전 명령 payload를 만들 수 없는 작업이면 명령 전송 없이 완료 상태만 변경될 수 있다. 장치 명령 전송 실패 시 개발 경고를 기록한다. |
-| 우선 순위 | 중 |
-| 관련 화면/컴포넌트 | `Web_ui/src/App.jsx`의 알림 팝오버 렌더링, `notificationItems`, `executeNotification`, `postponeNotification`, `buildConditionalNotifications`, `DetailPanel`의 `panel.type === "notifications"` |
-| 근거 | `App.jsx`는 알림 팝오버에 미루기/실행 버튼을 렌더링한다. `executeNotification`은 task 타입에서 `sendDeviceCommandFromNotification`과 `toggleTask`를 호출한다. |
+| 유스케이스명 | 일정 기반 알림을 확인하고 가전 실행 또는 자동화 일정 처리를 수행한다 |
+| 주요 사용자 | 가족 구성원, 관리자 |
+| 선행 조건 | 기준 날짜와 시간이 설정되어 있고 실행 예정/진행 중인 가전 일정이 존재한다. |
+| 기본 흐름 | 1. 사용자가 상단 알림 버튼 또는 메뉴의 알림 진입점을 누른다.<br>2. 앱은 작업 알림과 조건 기반 자동화 알림을 계산해 표시한다.<br>3. 사용자는 데모 날짜/시간을 조정할 수 있다.<br>4. 실행 버튼을 누르면 가전 명령 전송 후 작업을 완료 처리한다.<br>5. 미루기를 누르면 사람/시간/날짜 변경 또는 다음 자동화 작업 추가 흐름으로 이어진다. |
+| 예외 흐름 | 표시할 알림이 없으면 빈 상태를 표시한다. 명령 payload를 만들 수 없는 작업은 완료 상태만 변경될 수 있다. |
+| 관련 코드 | `App.jsx`, `DetailPanel.jsx`, `sensorRealtimeService.js` |
 
-## UC-013 가족 주간 일정표를 조회하고 로컬 일정을 등록한다
+## UC-014 가족 주간 일정 관리
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스 이름 | 가족 구성원별 주간 시간표를 조회하고 반복 일정을 등록한다 |
-| 유스케이스 ID | UC-013 |
-| 사용자 | 가족 구성원 |
-| 선행 조건 | 사용자가 하단 메뉴/크루 탭에 진입했다. 브라우저 `localStorage` 사용이 가능하다. |
-| 기본 흐름 | 1. 사용자가 메뉴 탭을 연다.<br>2. 시스템이 `CrewPage`와 `FamilySchedulePage`를 표시한다.<br>3. 시스템이 `loadSchedules`로 로컬 저장된 가족 일정을 읽고, 현재 앱 작업을 주간 시간표용 일정으로 변환한다.<br>4. 사용자가 구성원 필터를 선택한다.<br>5. 사용자가 이전/다음 주 버튼 또는 날짜 input으로 기준 주를 변경한다.<br>6. 사용자가 빈 시간 슬롯 또는 일정 추가 버튼을 누른다.<br>7. 시스템이 `ScheduleModal`을 열고 제목, 날짜, 반복, 시간, 담당자, 요일, 장소, 카테고리, 알림, 메모, 색상 입력을 받는다.<br>8. 사용자가 저장하면 `saveSchedules`로 로컬 저장소에 반영하고 주간 시간표를 갱신한다. |
-| 예외 | 제목, 날짜/요일, 시작/종료 시간, 담당자가 누락되면 `ScheduleModal`이 구체적인 오류 문구를 표시한다. 종료 시간이 시작 시간보다 빠르면 저장하지 않는다. `source === "task"`로 변환된 앱 작업은 삭제할 수 없고, 클릭하면 새 로컬 일정 초안으로 복사된다. |
-| 우선 순위 | 중 |
-| 관련 화면/컴포넌트 | `Web_ui/src/pages/CrewPage.jsx`, `Web_ui/src/components/familySchedule/FamilySchedulePage.jsx`, `ScheduleModal.jsx`, `WeeklyTimetable.jsx`, `MemberFilter.jsx`, `Web_ui/src/services/scheduleStorage.js` |
-| 근거 | `FamilySchedulePage`는 `loadSchedules`, `saveSchedules`, `openNewSchedule`, `saveSchedule`, `deleteSchedule`, `applyTemplate`을 사용한다. `ScheduleModal.submit`은 필수 입력값 검증 후 `onSave`를 호출한다. |
+| 유스케이스명 | 가족 구성원별 주간 시간표를 조회하고 로컬 가족 일정을 등록한다 |
+| 주요 사용자 | 가족 구성원 |
+| 선행 조건 | 하단 메뉴/크루 탭에 접근할 수 있고 브라우저 `localStorage`를 사용할 수 있다. |
+| 기본 흐름 | 1. 사용자가 크루 또는 가족 일정 화면에 진입한다.<br>2. `FamilySchedulePage`가 저장된 가족 일정을 불러온다.<br>3. 사용자는 구성원 필터, 주 이동, 주말 표시 여부를 조정한다.<br>4. 빈 시간대 또는 추가 버튼을 눌러 `ScheduleModal`을 연다.<br>5. 제목, 날짜/요일, 반복, 시간, 담당자, 장소, 카테고리, 알림, 메모, 색상을 입력한다.<br>6. `saveSchedules`가 로컬 저장소에 반영하고 주간 시간표를 갱신한다. |
+| 예외 흐름 | 필수 입력 누락 또는 종료 시간이 시작 시간보다 빠르면 저장하지 않는다. 캘린더 작업에서 변환된 일정은 직접 삭제하지 않고 복사 초안으로 열 수 있다. |
+| 관련 코드 | `CrewPage.jsx`, `FamilySchedulePage.jsx`, `WeeklyTimetable.jsx`, `ScheduleModal.jsx`, `scheduleStorage.js` |
 
-## UC-014 앱 설정에서 자동화 가전/담당자/고정 일정을 변경한다
+## UC-015 Google Calendar 일정 가져오기
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스 이름 | 온보딩 이후 자동화 설정을 수정한다 |
-| 유스케이스 ID | UC-014 |
-| 사용자 | 가족 구성원, 관리자 |
-| 선행 조건 | 사용자가 로그인했고 설정 패널을 열 수 있다. |
-| 기본 흐름 | 1. 사용자가 캘린더 설정 버튼 또는 메뉴의 테마 설정 버튼을 누른다.<br>2. 시스템이 `DetailPanel`의 settings 패널을 표시한다.<br>3. 사용자가 자동화 가전 변경 메뉴를 선택한다.<br>4. 시스템이 세탁기, 건조기, 식기세척기, 로봇청소기, 공기청정기, 에어컨 목록을 표시하고 선택 상태를 토글한다.<br>5. 사용자가 가전별 담당자 변경 메뉴에서 각 가전의 담당자를 select로 지정한다.<br>6. 사용자가 고정 일정 변경 메뉴에서 고정 일정을 추가, 수정, 삭제한다.<br>7. 사용자가 저장 버튼을 누르면 `onOnboardingSetupChange`가 앱의 `onboardingSetup` 상태를 갱신한다. |
-| 예외 | 자동화 가전을 하나도 선택하지 않으면 담당자 변경 화면에 선택된 자동화 가전이 없다는 안내를 표시한다. 고정 일정 저장 시 제목/요일/시간이 부족하면 저장하지 않는다. 설정은 앱 세션 저장 effect를 통해 localStorage에 저장되므로 저장소 접근이 실패하면 다음 세션 복원이 제한될 수 있다. |
-| 우선 순위 | 중 |
-| 관련 화면/컴포넌트 | `Web_ui/src/components/DetailPanel.jsx`, `Web_ui/src/components/detailPanel/SettingsPanelContent.jsx`, `Web_ui/src/App.jsx`의 `updateOnboardingSetup` |
-| 근거 | `SettingsPanelContent`는 `automation`, `assignee`, `fixed` view로 분기하며 각 화면에 저장 버튼과 입력 컨트롤이 있다. |
+| 유스케이스명 | Google Calendar OAuth 권한을 받아 외부 일정을 가져온다 |
+| 주요 사용자 | 가족 구성원 |
+| 선행 조건 | `VITE_GOOGLE_CLIENT_ID`가 설정되어 있고 브라우저에서 Google Identity script를 로드할 수 있다. |
+| 기본 흐름 | 1. 사용자가 Google Calendar 가져오기를 실행한다.<br>2. 앱이 Google Identity script를 로드한다.<br>3. OAuth 토큰 클라이언트가 calendar readonly scope 권한을 요청한다.<br>4. 액세스 토큰을 받으면 Google Calendar events API를 호출한다.<br>5. 가져온 이벤트를 앱 일정 형식으로 변환해 캘린더에 반영한다. |
+| 예외 흐름 | Client ID 누락, script 로드 실패, OAuth 거절, events API 실패 시 코드와 메시지를 가진 오류를 반환한다. |
+| 관련 코드 | `googleCalendarService.js`, `App.jsx` |
 
-## UC-015 PWA로 앱을 설치 가능한 형태로 제공한다
+## UC-016 기기 탭에서 캘린더 연동 가전 상태 확인
 
 | 항목 | 내용 |
 | --- | --- |
-| 유스케이스 이름 | 모바일/데스크톱에서 설치 가능한 PWA 앱으로 접근한다 |
-| 유스케이스 ID | UC-015 |
-| 사용자 | 가족 구성원 |
-| 선행 조건 | 브라우저가 PWA 설치를 지원하고 빌드된 앱이 HTTPS 또는 localhost에서 제공된다. |
-| 기본 흐름 | 1. 사용자가 브라우저에서 L-lander 웹 앱에 접속한다.<br>2. 시스템이 `index.html`의 모바일 웹앱 메타 태그와 아이콘을 제공한다.<br>3. 빌드 시 `vite-plugin-pwa`가 manifest와 service worker 등록 자산을 생성한다.<br>4. 브라우저가 설치 가능 조건을 만족하면 설치 UI를 제공한다.<br>5. 사용자가 브라우저의 설치 버튼을 누르면 standalone 표시 모드로 앱을 실행할 수 있다. |
-| 예외 | 코드에 앱 내부 설치 버튼이나 `beforeinstallprompt` 처리 흐름은 명확히 확인되지 않았다. 따라서 설치 프롬프트 표시와 설치 버튼은 브라우저 기본 동작에 의존하는 것으로 추정한다. 서비스 워커/manifest 생성은 빌드 환경에 따라 달라질 수 있다. |
-| 우선 순위 | 하 |
-| 관련 화면/컴포넌트 | `Web_ui/vite.config.js`의 `VitePWA`, `Web_ui/index.html`, `Web_ui/public/icons/icon-192.png`, `icon-512.png` |
-| 근거 | `vite.config.js`에서 `VitePWA({ registerType: "autoUpdate", manifest: { name: "L-lander", display: "standalone", icons: ... }})`를 설정한다. `index.html`에는 `apple-mobile-web-app-capable`, `theme-color`, icon 링크가 있다. |
+| 유스케이스명 | 선택 날짜의 가전 일정과 연결된 기기 상태를 확인하고 실행/예약/미루기를 수행한다 |
+| 주요 사용자 | 가족 구성원 |
+| 선행 조건 | 기기 탭에 접근할 수 있고 캘린더 작업 목록이 전달된다. |
+| 기본 흐름 | 1. `DeviceTabSynced`가 선택 날짜와 이후 2일의 가전 일정을 수집한다.<br>2. 세탁기, 로봇청소기, 식기세척기, 공기청정기, 에어컨 기기 카드에 가장 가까운 일정을 연결한다.<br>3. 사용자는 기기별 상태, 담당자, 추천 문구, 최근 작업 로그를 확인한다.<br>4. 실행 버튼을 누르면 로컬 상태를 running으로 바꾸고 작업 로그를 추가한다.<br>5. 예약 또는 미루기 버튼을 누르면 reserved 상태와 로그를 반영한다.<br>6. 자동화 설정 토글로 AI 추천, 실행 전 확인, 야간 청소 제한 값을 켜고 끈다. |
+| 예외 흐름 | 연결된 가전 일정이 없으면 기기 연결 상태와 빈 일정 안내를 표시한다. 현재 구현의 실행/예약은 기기 탭 내부 로컬 상태와 로그 중심이다. |
+| 관련 코드 | `DeviceTabSynced.jsx`, `DeviceTab.css`, `CalendarPage.jsx`, `App.jsx` |
 
-## 코드상 추정 또는 제한 사항
+## UC-017 케어 리포트 조회
 
-- 구글 캘린더 연동은 온보딩 단계 UI와 `importGoogleCalendar` 함수명은 있으나 실제 OAuth/API 호출은 확인되지 않아 “추정/제한”으로 본다.
-- 홈 화면의 제품 추가, 더보기, 이벤트 알아보기, 즐겨찾기 편집, ThinQ PLAY 배너는 버튼 UI는 있으나 실제 동작 핸들러가 구현되지 않은 정적 UI로 확인된다.
-- 디바이스 탭과 케어 탭은 `SimpleTabPage` 안내 화면만 있고 실제 기기 목록/케어 리포트 기능은 아직 준비 중으로 표시된다.
-- PWA 설치는 manifest/service worker 설정은 있으나 앱 내부 설치 유도 버튼은 확인되지 않아 브라우저 기본 설치 흐름으로 추정한다.
+| 항목 | 내용 |
+| --- | --- |
+| 유스케이스명 | 제품 케어, 에너지 사용량, 제품별 사용 리포트를 확인한다 |
+| 주요 사용자 | 가족 구성원 |
+| 선행 조건 | 케어 리포트 탭에 접근할 수 있다. |
+| 기본 흐름 | 1. 사용자가 케어 리포트 탭에 진입한다.<br>2. 사용자는 월 선택기를 통해 이전/다음 월로 이동한다.<br>3. 제품 케어 요약에서 스마트 진단 수와 케어 알림 수를 확인한다.<br>4. 에너지 사용량 카드에서 비용, kWh, 전월 대비 변화율을 확인하고 상세 모달을 연다.<br>5. 제품 필터로 정수기, 세탁기, 건조기, 에어컨 리포트를 필터링한다.<br>6. 제품별 사용 횟수, 사용량, 추천 케어, 추세 차트를 확인한다. |
+| 예외 흐름 | 현재 리포트 데이터는 정적 샘플 중심이며 외부 API 저장/동기화 흐름은 확인되지 않는다. |
+| 관련 코드 | `CareReportTab.jsx`, `CareReportTab.css` |
 
-## 분석한 주요 파일 목록
+## UC-018 캘린더 테마 변경
 
-- `Web_ui/src/App.jsx`: 전체 화면 탭 분기, 로그인/세션, 온보딩, Firestore 일정 로딩, 알림, 미루기, 센서 팝업, AI Daily Report 생성 흐름 확인
-- `Web_ui/src/main.jsx`: React 앱 진입점 확인
-- `Web_ui/src/pages/LoginPage.jsx`: 로그인 입력 폼과 인증 실패 처리 확인
-- `Web_ui/src/pages/CalendarPage.jsx`: 캘린더 월/주/일 보기, 날짜 선택, 개인/가사 캘린더 전환, 일정 추가/수정/삭제, Daily Report 상세 라우트 확인
-- `Web_ui/src/pages/CrewPage.jsx`: 가족/크루 탭과 `FamilySchedulePage` 연결 확인
-- `Web_ui/src/components/TaskComposer.jsx`: 전역 작업 추가 모달의 입력 폼과 수동 일정 생성 흐름 확인
-- `Web_ui/src/components/TaskItem.jsx`: 일정 완료, 삭제, 담당자 변경, 미루기, 상세 열기 버튼 확인
-- `Web_ui/src/components/DetailPanel.jsx`: 알림/설정/추천/작업 상세 패널과 작업 추가 버튼 확인
-- `Web_ui/src/components/detailPanel/SettingsPanelContent.jsx`: 자동화 가전, 가전별 담당자, 고정 일정 설정 변경 흐름 확인
-- `Web_ui/src/components/familySchedule/FamilySchedulePage.jsx`: 가족 주간 시간표, 로컬 일정 저장, 템플릿 적용 흐름 확인
-- `Web_ui/src/components/familySchedule/ScheduleModal.jsx`: 가족 일정 등록/수정 폼과 필수값 검증 확인
-- `Web_ui/src/components/familySchedule/WeeklyTimetable.jsx`: 주간 시간표 슬롯 클릭 및 일정 블록 클릭 UI 확인
-- `Web_ui/src/components/familySchedule/MemberFilter.jsx`: 가족 일정 구성원 필터 확인
-- `Web_ui/src/features/dailyReport/DailyReportCard.jsx`: AI 데일리 리포트 카드 진입 버튼 확인
-- `Web_ui/src/features/dailyReport/DailyReportDetail.jsx`: 상세 리포트, To-do 추가/수정/완료, 이미지 기록 확인
-- `Web_ui/src/features/dailyReport/dailyReportData.js`: 리포트 이미지 선택, 브리핑 데이터, 이미지 기록 생성 로직 확인
-- `Web_ui/src/services/taskService.js`: Firestore 사용자별 일정 CRUD API 흐름 확인
-- `Web_ui/src/services/dailyReportService.js`: `/api/daily-report` 호출과 fallback 처리 확인
-- `Web_ui/src/services/taskPredictionService.js`: `/api/predict-task` 호출과 가전/모드 응답 검증 확인
-- `Web_ui/src/services/weatherService.js`: 단기예보 API 호출, 날짜별 날씨 데이터 변환, sessionStorage 캐시 확인
-- `Web_ui/src/services/midWeatherService.js`: 중기예보 API 호출과 캐시 확인
-- `Web_ui/src/services/airQualityService.js`: 미세먼지 API 호출과 캐시 확인
-- `Web_ui/src/services/weatherRecommendationService.js`: 날씨 기반 가전 추천 일정 생성 로직 확인
-- `Web_ui/src/services/routinePredictionService.js`: ThinQ 사용 로그 기반 루틴 추천 로직 확인
-- `Web_ui/src/services/sensorRealtimeService.js`: Firebase Realtime Database 센서 구독과 기기 명령 저장 확인
-- `Web_ui/src/services/appliancePopupRuleService.js`: 센서 임계값 기반 에어컨/공기청정기/세탁기 팝업 생성 확인
-- `Web_ui/src/services/scheduleStorage.js`: 가족 주간 일정 localStorage 저장/조회/삭제 확인
-- `Web_ui/src/constants/users.js`: 사용자, 관리자, 로그인 사용자 목록과 권한 판단 확인
-- `Web_ui/src/data.js`: 기본 일정/멤버/가전/날씨 샘플 데이터 확인
-- `Web_ui/src/firebase.js`: Firestore, Realtime Database, Analytics 초기화 확인
-- `Web_ui/vite.config.js`: Vite PWA 설정과 로컬 serverless API 라우팅 확인
-- `Web_ui/index.html`: PWA/모바일 웹앱 메타 태그와 아이콘 리소스 확인
-- `Web_ui/src/styles.css`, `Web_ui/src/styles/*.css`: 화면/탭/캘린더/데일리 리포트/온보딩/반응형 UI 구조 이해에 필요한 스타일 확인
-- `Web_ui/public/icons/icon-192.png`, `Web_ui/public/icons/icon-512.png`: PWA 아이콘 리소스 확인
+| 항목 | 내용 |
+| --- | --- |
+| 유스케이스명 | 캘린더의 무드 테마를 변경한다 |
+| 주요 사용자 | 가족 구성원 |
+| 선행 조건 | 캘린더 설정 패널 또는 메뉴 설정에 접근할 수 있다. |
+| 기본 흐름 | 1. 사용자가 캘린더 설정 메뉴를 연다.<br>2. 사용자가 오늘의 무드/테마 변경 메뉴로 진입한다.<br>3. 앱은 기본, 산뜻한 하루, 포근한 하루, 활기찬 하루, 다정한 하루, 몽글한 하루 등 테마 선택지를 표시한다.<br>4. 사용자가 원하는 테마를 선택한다.<br>5. `normalizeCalendarSettings`가 선택값을 검증하고 앱이 `moodTheme`을 상태와 `localStorage`에 저장한다.<br>6. 캘린더 화면은 선택한 테마 색상과 분위기를 반영해 다시 표시된다. |
+| 예외 흐름 | 저장된 설정 파싱 실패 또는 허용되지 않은 테마 값은 기본 테마로 복원한다. |
+| 관련 코드 | `CalendarSettings.jsx`, `AppSettingsContext.jsx`, `App.jsx` |
+
+## UC-019 캘린더 글자 크기 변경
+
+| 항목 | 내용 |
+| --- | --- |
+| 유스케이스명 | 캘린더의 글자 크기를 작게, 기본, 크게 중 선택한다 |
+| 주요 사용자 | 가족 구성원 |
+| 선행 조건 | 캘린더 설정 패널 또는 메뉴 설정에 접근할 수 있다. |
+| 기본 흐름 | 1. 사용자가 캘린더 설정 메뉴를 연다.<br>2. 사용자가 글자 크기 변경 메뉴로 진입한다.<br>3. 앱은 작게, 기본, 크게 선택지를 표시한다.<br>4. 사용자가 원하는 글자 크기를 선택한다.<br>5. `normalizeCalendarSettings`가 선택값을 검증하고 앱이 `fontSizeMode`를 상태와 `localStorage`에 저장한다.<br>6. 캘린더의 일정 텍스트와 주요 표시 요소가 선택한 글자 크기 모드에 맞춰 표시된다. |
+| 예외 흐름 | 저장된 설정 파싱 실패 또는 허용되지 않은 글자 크기 값은 기본 글자 크기로 복원한다. |
+| 관련 코드 | `CalendarSettings.jsx`, `AppSettingsContext.jsx`, `App.jsx` |
+
+## UC-020 일간/주간/월간 캘린더 보기 전환
+
+| 항목 | 내용 |
+| --- | --- |
+| 유스케이스명 | 캘린더 보기 방식을 일간, 주간, 월간으로 전환한다 |
+| 주요 사용자 | 가족 구성원 |
+| 선행 조건 | 캘린더 화면 또는 캘린더 설정 패널에 접근할 수 있다. |
+| 기본 흐름 | 1. 사용자가 캘린더 보기 방식 메뉴를 연다.<br>2. 앱은 일간 보기, 주간 보기, 월간 보기 선택지를 표시한다.<br>3. 사용자가 원하는 보기 방식을 선택한다.<br>4. `normalizeCalendarSettings`가 선택값을 검증하고 앱이 `calendarViewMode`를 상태와 `localStorage`에 저장한다.<br>5. `CalendarPage`는 선택값에 따라 일간 타임라인, 주간 시간표, 월간 달력 중 하나를 렌더링한다.<br>6. 사용자가 앱을 다시 열어도 저장된 보기 방식이 복원된다. |
+| 예외 흐름 | 저장된 설정 파싱 실패 또는 허용되지 않은 보기 값은 월간 보기로 복원한다. |
+| 관련 코드 | `CalendarSettings.jsx`, `CalendarPage.jsx`, `App.jsx` |
+
+## UC-021 센서 테스트 및 Firebase 명령 검증
+
+| 항목 | 내용 |
+| --- | --- |
+| 유스케이스명 | 테스트 패널과 브리지 코드로 센서 데이터 저장 및 기기 명령 송신을 검증한다 |
+| 주요 사용자 | 개발자, 관리자 |
+| 선행 조건 | Firebase Realtime Database 설정과 센서/브리지 실행 환경이 준비되어 있다. |
+| 기본 흐름 | 1. 개발자가 `SensorTestPanel`에서 테스트 센서 값 저장을 누른다.<br>2. `writeSensorLatest`와 `addSensorLog`가 최신 값과 로그를 저장한다.<br>3. 개발자가 명령 전송 버튼을 누른다.<br>4. `sendDeviceCommand`가 기기 명령 경로에 명령을 저장한다.<br>5. Python 브리지 또는 ESP32 테스트 코드가 DB 명령을 읽어 실제 장치 제어로 연결할 수 있다. |
+| 예외 흐름 | Firebase 접근 실패 또는 브리지 미실행 시 앱 저장/명령 전송 이후 실제 하드웨어 동작은 보장되지 않는다. |
+| 관련 코드 | `SensorTestPanel.jsx`, `sensorRealtimeService.js`, `Sensor/python_bridge/firebase_sensor_command_bridge.py`, `Sensor/esp32_command_test/esp32_command_test.ino` |
+
+## UC-022 루틴 변화 예측 모델 및 평가 산출물 생성
+
+| 항목 | 내용 |
+| --- | --- |
+| 유스케이스명 | ThinQ 유사 사용 로그로 루틴 변화 탐지 및 TTA-inspired 재보정을 평가한다 |
+| 주요 사용자 | 개발자, 연구자, 보고서 작성자 |
+| 선행 조건 | 합성 가전 사용 로그와 `tta-ins` 스크립트가 준비되어 있다. |
+| 기본 흐름 | 1. `data-make-multifamily.py`가 110가구, 4개 가전 유형의 합성 사용 로그를 생성한다.<br>2. train/validation/test를 시간 기준으로 분리한다.<br>3. `routineCyclePrediction.ts` 또는 `adaptive-cycle-recalibration` 로직이 기준 주기, 일일 빈도, 최근 패턴을 계산한다.<br>4. grid search가 `minRecentCount`, `diffThresholdDays`, `maxRecentStd`, `alpha`, `frequencyDiffThreshold`, `frequencyRecentWindowDays`를 탐색한다.<br>5. 최고 조합과 성능 지표를 `outputs/routine_hparam_search`와 `outputs/report_evidence`에 저장한다.<br>6. 보고서에서는 F1, change type accuracy, cycle MAE, daily frequency MAE를 제시한다. |
+| 예외 흐름 | 현재 구현은 딥러닝 TTA, BatchNorm 업데이트, entropy minimization이 아니라 최근 무라벨 로그 기반의 주기/빈도 재보정이다. |
+| 관련 코드/산출물 | `Web_ui/src/utils/routineCyclePrediction.ts`, `tta-ins/*.py`, `outputs/report_evidence/report_content_guide.md`, `outputs/routine_hparam_search/*` |
+
+## UC-023 PWA로 앱 설치 및 실행
+
+| 항목 | 내용 |
+| --- | --- |
+| 유스케이스명 | 모바일/데스크톱에서 설치 가능한 PWA 앱으로 접근한다 |
+| 주요 사용자 | 가족 구성원 |
+| 선행 조건 | 앱이 HTTPS 또는 localhost에서 제공되고 브라우저가 PWA 설치를 지원한다. |
+| 기본 흐름 | 1. 사용자가 브라우저에서 L-lander에 접속한다.<br>2. `index.html`이 모바일 web app 메타 태그와 아이콘을 제공한다.<br>3. `vite-plugin-pwa`가 manifest와 service worker를 생성한다.<br>4. 브라우저가 설치 가능 조건을 만족하면 설치 UI를 제공한다.<br>5. 사용자는 standalone 모드로 앱을 실행할 수 있다. |
+| 예외 흐름 | 앱 내부의 별도 설치 버튼 흐름은 확인되지 않으며, 설치 프롬프트 표시는 브라우저 기본 동작에 의존한다. |
+| 관련 코드 | `Web_ui/vite.config.js`, `Web_ui/index.html`, `Web_ui/public/icons/*`, `Web_ui/dist/manifest.webmanifest` |
+
+## 기능 범위와 제한 사항
+
+- Google Calendar 연동은 OAuth token client와 events API 호출 코드가 있으며, 실제 동작은 `VITE_GOOGLE_CLIENT_ID`와 사용자의 권한 승인에 의존한다.
+- 기기 탭의 실행/예약/미루기는 현재 `DeviceTabSynced` 내부 로컬 상태와 로그가 중심이며, 센서 팝업/알림 실행 경로의 `sendDeviceCommand`와는 별도 흐름이다.
+- 케어 리포트는 현재 정적 샘플 데이터 기반 UI로 확인된다.
+- 센서 기반 팝업과 명령 전송은 Firebase Realtime Database 경로를 사용하며, 실제 하드웨어 제어는 별도 Python/ESP32 브리지 실행 여부에 의존한다.
+- 루틴 예측 모델은 TTA-inspired adaptive recalibration으로 정의하며, 완전한 딥러닝 재학습 또는 실사용 ThinQ 원본 데이터 학습으로 표현하지 않는다.
+
+## 확인한 주요 파일
+
+- `Web_ui/src/App.jsx`
+- `Web_ui/src/pages/LoginPage.jsx`
+- `Web_ui/src/pages/CalendarPage.jsx`
+- `Web_ui/src/pages/CrewPage.jsx`
+- `Web_ui/src/components/TaskComposer.jsx`
+- `Web_ui/src/components/TaskItem.jsx`
+- `Web_ui/src/components/DetailPanel.jsx`
+- `Web_ui/src/components/detailPanel/SettingsPanelContent.jsx`
+- `Web_ui/src/components/DeviceTabSynced.jsx`
+- `Web_ui/src/components/CareReportTab.jsx`
+- `Web_ui/src/components/CalendarSettings.jsx`
+- `Web_ui/src/components/SensorTestPanel.jsx`
+- `Web_ui/src/components/familySchedule/*`
+- `Web_ui/src/features/dailyReport/*`
+- `Web_ui/src/services/taskService.js`
+- `Web_ui/src/services/weatherService.js`
+- `Web_ui/src/services/midWeatherService.js`
+- `Web_ui/src/services/airQualityService.js`
+- `Web_ui/src/services/weatherRecommendationService.js`
+- `Web_ui/src/services/routinePredictionService.js`
+- `Web_ui/src/services/dailyReportService.js`
+- `Web_ui/src/services/taskPredictionService.js`
+- `Web_ui/src/services/googleCalendarService.js`
+- `Web_ui/src/services/sensorRealtimeService.js`
+- `Web_ui/src/services/appliancePopupRuleService.js`
+- `Web_ui/src/utils/routineCyclePrediction.ts`
+- `api/predict-task.js`, `api/daily-report.js`, `api/weather.js`
+- `Sensor/python_bridge/*`, `Sensor/esp32_command_test/*`
+- `tta-ins/*`
+- `outputs/report_evidence/*`
