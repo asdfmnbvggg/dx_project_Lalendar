@@ -65,4 +65,25 @@
     min-height: 100%;
     transform: none;
   }
+
+  .onboarding-character-scene.appliance,
+  .onboarding-character-scene.assignee {
+    top: 12px !important;
+    bottom: 0;
+    height: calc(100% - 12px);
+  }
+
+  .onboarding-character-scene.appliance .onboarding-combined-appliance-card,
+  .onboarding-character-scene.assignee .onboarding-assignee-card {
+    margin-top: 0;
+  }
+
+  .onboarding-character-scene.appliance .onboarding-character-wrap.onboarding-character,
+  .onboarding-character-scene.assignee .onboarding-character-wrap.onboarding-character {
+    bottom: 12px !important;
+  }
+
+  .onboarding-ai-character-wrap {
+    bottom: -136px !important;
+  }
 }
