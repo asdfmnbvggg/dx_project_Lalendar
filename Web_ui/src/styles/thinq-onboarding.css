@@ -2757,11 +2757,6 @@
   display: none;
 }
 
-.onboarding-character-scene.appliance .onboarding-character-wrap .onboarding-floating-star,
-.onboarding-character-scene.assignee .onboarding-character-wrap .onboarding-floating-star {
-  display: none;
-}
-
 .onboarding-intro-panel,
 .onboarding-ai-wait-card {
   width: clamp(280px, 48vw, 360px);
