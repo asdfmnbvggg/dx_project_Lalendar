@@ -777,6 +777,135 @@
   stroke: currentColor !important;
 }
 
+.app-shell:not(.mood-default) .daily-add-page {
+  background:
+    radial-gradient(circle at 86% 2%, color-mix(in srgb, var(--app-secondary) 28%, transparent), transparent 30%),
+    linear-gradient(180deg, var(--app-bg) 0%, var(--app-surface-soft) 100%) !important;
+}
+
+.app-shell:not(.mood-default) .daily-add-card {
+  border-color: color-mix(in srgb, var(--app-primary) 30%, var(--app-border)) !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--app-card-bg) 76%, var(--app-primary-soft)) 0 58px, transparent 58px),
+    repeating-linear-gradient(180deg, transparent 0 37px, color-mix(in srgb, var(--app-primary) 12%, transparent) 37px 38px),
+    var(--app-card-bg) !important;
+  box-shadow: 0 18px 44px color-mix(in srgb, var(--app-primary) 12%, var(--app-shadow));
+}
+
+.app-shell:not(.mood-default) .daily-add-card::before {
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--app-primary) 42%, #cfd6df) 0 2px, transparent 2.5px) 0 0 / 22px 22px repeat-x,
+    linear-gradient(90deg, transparent 7px, color-mix(in srgb, var(--app-accent) 42%, #a9a9a9) 7px 9px, transparent 9px 22px) 0 7px / 22px 12px repeat-x !important;
+}
+
+.app-shell:not(.mood-default) .daily-add-head h2,
+.app-shell:not(.mood-default) .daily-add-title-input input,
+.app-shell:not(.mood-default) .daily-add-title-input select,
+.app-shell:not(.mood-default) .daily-appliance-select > button,
+.app-shell:not(.mood-default) .daily-calendar-date-head strong,
+.app-shell:not(.mood-default) .daily-calendar-date-grid button,
+.app-shell:not(.mood-default) .daily-calendar-date-grid span {
+  color: var(--app-text) !important;
+}
+
+.app-shell:not(.mood-default) .daily-add-title-section > label,
+.app-shell:not(.mood-default) .daily-all-day-row,
+.app-shell:not(.mood-default) .daily-date-row strong,
+.app-shell:not(.mood-default) .daily-time-row strong,
+.app-shell:not(.mood-default) .daily-date-row > span,
+.app-shell:not(.mood-default) .daily-time-row span,
+.app-shell:not(.mood-default) .daily-calendar-date-weekdays span,
+.app-shell:not(.mood-default) .daily-appliance-empty {
+  color: var(--app-accent) !important;
+}
+
+.app-shell:not(.mood-default) .daily-add-title-input input::placeholder {
+  color: color-mix(in srgb, var(--app-text-muted) 76%, transparent) !important;
+}
+
+.app-shell:not(.mood-default) .daily-add-head button:first-child,
+.app-shell:not(.mood-default) .daily-add-title-input,
+.app-shell:not(.mood-default) .daily-add-time-card,
+.app-shell:not(.mood-default) .daily-calendar-date-display,
+.app-shell:not(.mood-default) .daily-calendar-date-panel,
+.app-shell:not(.mood-default) .daily-scroll-time-display,
+.app-shell:not(.mood-default) .daily-scroll-time-panel,
+.app-shell:not(.mood-default) .daily-scroll-time-column,
+.app-shell:not(.mood-default) .daily-appliance-options,
+.app-shell:not(.mood-default) .daily-color-popover,
+.app-shell:not(.mood-default) .daily-date-row select,
+.app-shell:not(.mood-default) .daily-time-row input {
+  border-color: color-mix(in srgb, var(--app-primary) 28%, var(--app-border)) !important;
+  background: color-mix(in srgb, var(--app-card-bg) 82%, var(--app-primary-soft)) !important;
+}
+
+.app-shell:not(.mood-default) .daily-add-time-card {
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--app-primary) 10%, transparent);
+}
+
+.app-shell:not(.mood-default) .daily-add-head button:first-child,
+.app-shell:not(.mood-default) .daily-calendar-date-display svg,
+.app-shell:not(.mood-default) .daily-scroll-time-display svg,
+.app-shell:not(.mood-default) .daily-appliance-select > button svg,
+.app-shell:not(.mood-default) .daily-calendar-date-head button,
+.app-shell:not(.mood-default) .daily-calendar-date-head button svg,
+.app-shell:not(.mood-default) .daily-scroll-time-column button {
+  color: var(--app-accent) !important;
+  stroke: currentColor !important;
+}
+
+.app-shell:not(.mood-default) .daily-add-head button:first-child:hover,
+.app-shell:not(.mood-default) .daily-calendar-date-head button,
+.app-shell:not(.mood-default) .daily-calendar-date-grid button,
+.app-shell:not(.mood-default) .daily-scroll-time-column button:hover,
+.app-shell:not(.mood-default) .daily-calendar-date-grid button:hover {
+  background: var(--app-primary-soft) !important;
+  color: var(--app-accent) !important;
+}
+
+.app-shell:not(.mood-default) .daily-add-head button:last-child,
+.app-shell:not(.mood-default) .daily-appliance-options button.active,
+.app-shell:not(.mood-default) .daily-appliance-options button:hover,
+.app-shell:not(.mood-default) .daily-calendar-date-grid button.active,
+.app-shell:not(.mood-default) .daily-scroll-time-column button.active {
+  border-color: var(--app-button-bg) !important;
+  background: var(--app-button-bg) !important;
+  color: var(--app-button-text) !important;
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--app-button-bg) 22%, transparent);
+}
+
+.app-shell:not(.mood-default) .daily-add-title-input.invalid,
+.app-shell:not(.mood-default) .daily-calendar-date-display:focus,
+.app-shell:not(.mood-default) .daily-scroll-time-display:focus,
+.app-shell:not(.mood-default) .daily-date-row select:focus,
+.app-shell:not(.mood-default) .daily-time-row input:focus {
+  border-color: var(--app-primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-primary) 16%, transparent) !important;
+}
+
+.app-shell:not(.mood-default) .daily-all-day-row i {
+  border-color: color-mix(in srgb, var(--app-primary) 36%, var(--app-border)) !important;
+  background: var(--app-primary-soft) !important;
+}
+
+.app-shell:not(.mood-default) .daily-all-day-row i::before {
+  background: color-mix(in srgb, var(--app-primary) 34%, var(--app-text-muted)) !important;
+}
+
+.app-shell:not(.mood-default) .daily-all-day-row input:checked + i::before,
+.app-shell:not(.mood-default) .appliance-color-button::after {
+  background: var(--app-button-bg) !important;
+}
+
+.app-shell:not(.mood-default) .daily-color-button {
+  border-color: var(--app-card-bg) !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--app-primary) 28%, var(--app-border)), 0 8px 14px color-mix(in srgb, var(--app-primary) 12%, transparent);
+}
+
+.app-shell:not(.mood-default) .daily-color-popover button.active {
+  box-shadow: 0 0 0 2px var(--app-primary), 0 8px 14px color-mix(in srgb, var(--app-primary) 14%, transparent) !important;
+}
+
 .app-shell:not(.mood-default) .notification-time-picker-wrap {
   border-color: var(--app-border);
   background: var(--app-card-bg);
