@@ -492,6 +492,42 @@
   color: var(--app-button-text) !important;
 }
 
+.app-shell:not(.mood-default) .notification-time-picker-wrap {
+  border-color: var(--app-border);
+  background: var(--app-card-bg);
+}
+
+.app-shell:not(.mood-default) .notification-time-picker-wrap .postpone-time-picker > span,
+.app-shell:not(.mood-default) .notification-time-picker-wrap small {
+  color: var(--app-text-muted);
+}
+
+.app-shell:not(.mood-default) .notification-time-picker-wrap .postpone-time-display {
+  background: transparent !important;
+  color: var(--app-accent) !important;
+}
+
+.app-shell:not(.mood-default) .notification-time-picker-wrap .postpone-time-column {
+  border-color: var(--app-border);
+  background: var(--app-card-bg);
+  scrollbar-color: var(--app-primary) transparent;
+}
+
+.app-shell:not(.mood-default) .notification-time-picker-wrap .postpone-time-column button {
+  background: transparent;
+  color: var(--app-accent);
+}
+
+.app-shell:not(.mood-default) .notification-time-picker-wrap .postpone-time-column button:hover {
+  background: var(--app-primary-soft);
+}
+
+.app-shell:not(.mood-default) .notification-time-picker-wrap .postpone-time-column button.active,
+.app-shell:not(.mood-default) .notification-time-picker-wrap .postpone-time-column button.active:hover {
+  background: var(--app-button-bg);
+  color: var(--app-button-text);
+}
+
 .app-shell:not(.mood-default) .calendar-month-view .date-cell.selected strong,
 .app-shell:not(.mood-default) .calendar-house-view .date-cell.selected strong,
 .app-shell:not(.mood-default) .week-day-head.active strong,
