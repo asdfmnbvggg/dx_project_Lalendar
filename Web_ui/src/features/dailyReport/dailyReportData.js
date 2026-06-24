@@ -11,7 +11,45 @@ const reportImages = Object.entries(imageModules).map(([path, src]) => ({
   src,
 }));
 
-const fallbackImage = reportImages.find((image) => image.name === "기본")?.src || "";
+const imageName = {
+  default: "\uAE30\uBCF8",
+  noSchedule: "\uAC1C\uC778\uC77C\uC815\uC5C6\uB294\uB0A0",
+  washer: "\uC138\uD0C1\uAE30",
+  dryer: "\uAC74\uC870\uAE30",
+  dishwasher: "\uC2DD\uAE30\uC138\uCC99\uAE30",
+  robotCleaner: "\uB85C\uBD07\uCCAD\uC18C\uAE30",
+  airPurifier: "\uACF5\uAE30\uCCAD\uC815\uAE30",
+  airConditioner: "\uC5D0\uC5B4\uCEE8",
+};
+
+const findReportImage = (name) => reportImages.find((image) => image.name === name)?.src || "";
+const applianceFallbackImages = [
+  imageName.dishwasher,
+  imageName.robotCleaner,
+  imageName.washer,
+  imageName.dryer,
+  imageName.airPurifier,
+  imageName.airConditioner,
+]
+  .map(findReportImage)
+  .filter(Boolean);
+const fallbackImage = findReportImage(imageName.default) || applianceFallbackImages[0] || "";
+
+const taskImageRules = [
+  { name: imageName.dishwasher, keywords: ["식기세척기", "식기", "설거지", "dishwasher", "DISHWASHER"] },
+  { name: imageName.robotCleaner, keywords: ["로봇청소기", "로봇청소", "청소", "robot", "vacuum", "ROBOT_CLEANER"] },
+  { name: imageName.washer, keywords: ["세탁기", "세탁", "빨래", "washer", "washing", "WASHER"] },
+  { name: imageName.dryer, keywords: ["건조기", "건조", "빨래건조", "dryer", "DRYER"] },
+  { name: imageName.airPurifier, keywords: ["공기청정기", "공기청정", "미세먼지", "airpurifier", "purifier", "AIR_PURIFIER"] },
+  { name: imageName.airConditioner, keywords: ["에어컨", "냉방", "제습", "송풍", "airconditioner", "aircon", "AIR_CONDITIONER"] },
+  { name: "회사", keywords: ["회사", "출근", "근무", "회의", "office", "work"] },
+  { name: "회식", keywords: ["회식", "저녁약속", "식사", "dinner"] },
+  { name: "필라테스", keywords: ["필라테스", "운동", "요가", "pilates", "exercise"] },
+  { name: "데이트", keywords: ["데이트", "약속", "date"] },
+  { name: "생일", keywords: ["생일", "생신", "기념일", "birthday"] },
+  { name: "소풍", keywords: ["소풍", "공원", "나들이", "야외", "picnic"] },
+  { name: "운동회", keywords: ["운동회", "체육", "경기", "sports"] },
+];
 const imageKeywords = {
   개인일정많은날: ["일정이 많", "일정 여러", "바쁜", "바쁘", "연속 일정"],
   개인일정없는날: ["일정이 없", "일정 없", "여유", "한가"],
@@ -37,13 +75,25 @@ const imageKeywords = {
   흐린날: ["흐린", "흐림", "구름 많음", "구름이 많", "날씨가 흐"],
 };
 
-export function getDailyReportImage(reportText = "") {
+export function getDailyReportImage(reportText = "", options = {}) {
   const normalizedText = normalizeText(reportText);
   let bestImage = null;
   let bestScore = 0;
 
+  taskImageRules.forEach((rule) => {
+    const score = rule.keywords.reduce((total, keyword) => {
+      const normalizedKeyword = normalizeText(keyword);
+      return normalizedKeyword && normalizedText.includes(normalizedKeyword) ? total + normalizedKeyword.length + 50 : total;
+    }, 0);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestImage = findReportImage(rule.name);
+    }
+  });
+
   reportImages.forEach((image) => {
-    if (image.name === "기본") return;
+    if (image.name === imageName.default || image.name === imageName.noSchedule) return;
     const compactName = image.name.replace(/많은날$|없는날$|오는날$|높은날$|운날$|날$/g, "");
     const keywords = [...new Set([image.name, compactName, ...(imageKeywords[image.name] || [])])].filter(Boolean);
     const score = keywords.reduce((total, keyword) => {
@@ -57,7 +107,7 @@ export function getDailyReportImage(reportText = "") {
     }
   });
 
-  return bestImage || fallbackImage;
+  return bestImage || options.fallbackImage || fallbackImage;
 }
 
 export function createTodayDailyReport({
@@ -82,8 +132,11 @@ export function createTodayDailyReport({
   const applianceItems = tasks.filter(isApplianceTask).map(toReportItem);
   const todoItems = tasks.map(toReportItem);
   const completedCount = todoItems.filter((item) => item.done).length;
-  const imageText = [normalizedText, getImageThemeKeywords(imageTheme), weatherNotice, choreNotice, tasks.map((task) => task.title).join(" ")].join(" ");
-  const heroImageUrl = getDailyReportImage(imageText) || fallbackImage;
+  const applianceFallbackImage = getApplianceFallbackImage(date);
+  const imageText = tasks.length
+    ? [buildTaskImageText(tasks), normalizedText, getImageThemeKeywords(imageTheme), weatherNotice, choreNotice].join(" ")
+    : "";
+  const heroImageUrl = getDailyReportImage(imageText, { fallbackImage: applianceFallbackImage }) || applianceFallbackImage || fallbackImage;
   const resolvedWeatherNotice = weatherNotice || buildWeatherNote(weather);
   const resolvedChoreNotice = choreNotice || buildChoreNote(applianceItems);
   const detailNotices = [weatherNotice, choreNotice].filter(Boolean);
@@ -122,6 +175,37 @@ export function createTodayDailyReport({
     totalTodoCount: todoItems.length,
     imageRecords: buildImageRecords(date, heroImageUrl, tasks),
   };
+}
+
+function buildTaskImageText(tasks = []) {
+  return tasks
+    .map((task) =>
+      [
+        task.title,
+        task.place,
+        task.repeat,
+        task.description,
+        task.applianceType,
+        task.appliance,
+        task.applianceId,
+        task.deviceId,
+        task.mode,
+        task.operationMode,
+        task.tag,
+        task.type,
+        task.displayType,
+        task.source,
+      ]
+        .filter(Boolean)
+        .join(" "),
+    )
+    .join(" ");
+}
+
+function getApplianceFallbackImage(seed = "") {
+  if (applianceFallbackImages.length === 0) return fallbackImage;
+  const hash = String(seed || "daily-report").split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return applianceFallbackImages[hash % applianceFallbackImages.length];
 }
 
 function getImageThemeKeywords(imageTheme) {
