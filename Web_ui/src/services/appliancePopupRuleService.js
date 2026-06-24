@@ -6,7 +6,7 @@ export const THRESHOLDS = {
   pm10Strong: 81,
   pm25On: 16,
   pm25Strong: 36,
-  washerEmptyWeight: 0.3,
+  washerEmptyWeight: 150,
 };
 
 export function buildRealtimeAppliancePopup(sensor = {}, context = {}) {
@@ -64,8 +64,8 @@ export function buildScheduledWasherPopup(sensor = {}, context = {}) {
       scheduleKey,
       source: "washer-schedule",
       metricLabel: "현재 무게",
-      metricValue: `${formatNumber(weight)}kg`,
-      thresholdLabel: `${THRESHOLDS.washerEmptyWeight}kg 이하`,
+      metricValue: `${formatNumber(weight)}g`,
+      thresholdLabel: `${THRESHOLDS.washerEmptyWeight}g 이하`,
       updatedAt: sensor.last_updated || "",
     };
   }
@@ -85,8 +85,8 @@ export function buildScheduledWasherPopup(sensor = {}, context = {}) {
       scheduleKey,
       reason: "세탁 일정 시간이 되어 표준 모드 실행을 요청했습니다.",
       metricLabel: "현재 무게",
-      metricValue: `${formatNumber(weight)}kg`,
-      thresholdLabel: `${THRESHOLDS.washerEmptyWeight}kg 초과`,
+      metricValue: `${formatNumber(weight)}g`,
+      thresholdLabel: `${THRESHOLDS.washerEmptyWeight}g 초과`,
       updatedAt: sensor.last_updated || "",
     };
   }
