@@ -158,13 +158,42 @@ function buildShortReportDetail({ detail, scheduleItems, applianceItems, weather
 }
 
 function buildOneLineTaskDetail(scheduleItems, applianceItems) {
-  const scheduleText = summarizeItems(scheduleItems, "개인 일정");
-  const applianceText = summarizeItems(applianceItems, "가사일");
+  const hasSchedule = scheduleItems.length > 0;
+  const hasAppliance = applianceItems.length > 0;
 
-  if (scheduleText && applianceText) return `${scheduleText}과 ${applianceText}을 한 줄로 확인해요.`;
-  if (scheduleText) return `${scheduleText}을 한 줄로 확인해요.`;
-  if (applianceText) return `${applianceText}을 한 줄로 확인해요.`;
-  return "";
+  if (hasSchedule && hasAppliance) {
+    return "바쁜 하루에도 집안일까지 챙기느라 고생 많아요. 오늘은 조금 더 편안한 하루가 되길 바라요.";
+  }
+  if (hasSchedule) return buildScheduleSummary(scheduleItems);
+  if (hasAppliance) return buildApplianceSummary(applianceItems);
+  return "오늘은 잠시 숨을 고르기 좋은 하루예요. 가볍게 쉬어가도 괜찮아요.";
+}
+
+function buildScheduleSummary(items) {
+  const titles = [...new Set(items.map((item) => normalizeOneLine(item.title)).filter(Boolean))];
+  if (titles.length === 1) return `${titles[0]} 일정이 예정되어 있어요.`;
+  if (titles.length > 1) return `${titles[0]} 외 ${titles.length - 1}개의 일정이 예정되어 있어요.`;
+  return "오늘 예정된 일정을 확인해 주세요.";
+}
+
+function buildApplianceSummary(items) {
+  const applianceTitles = items.map((item) => normalizeOneLine(item.title)).filter(Boolean);
+  const applianceSummaries = [
+    ["로봇청소기", "예약된 청소 시간과 실행 모드를 확인해 주세요."],
+    ["세탁기", "세탁 시간과 완료 예상 시간을 확인해 주세요."],
+    ["건조기", "건조 시작 시간과 완료 알림을 확인해 주세요."],
+    ["식기세척기", "식기세척기 실행 시간과 모드를 확인해 주세요."],
+    ["에어컨", "실내 온도에 맞춘 실행 모드를 확인해 주세요."],
+    ["공기청정기", "공기질 상태와 청정 모드를 확인해 주세요."],
+  ];
+
+  for (const title of applianceTitles) {
+    const matchedSummary = applianceSummaries.find(([applianceName]) => title.includes(applianceName));
+    if (matchedSummary) return matchedSummary[1];
+  }
+
+  if (applianceTitles[0]) return `${applianceTitles[0]} 작업 일정이 예정되어 있어요.`;
+  return "가전 작업 일정이 예정되어 있어요.";
 }
 
 function summarizeItems(items, fallbackLabel) {
