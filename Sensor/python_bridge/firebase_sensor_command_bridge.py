@@ -14,7 +14,7 @@ import requests
 
 # =========================
  
-PORT = "COM4"
+PORT = "COM6"
 
 BAUDRATE = 115200
  
