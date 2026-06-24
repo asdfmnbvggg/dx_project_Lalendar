@@ -1123,7 +1123,7 @@ export default function CalendarPage({
         )}
       </section>
 
-      {isEnvironmentOpen && <WeatherEnvironmentModal onClose={() => setEnvironmentOpen(false)} />}
+      {isEnvironmentOpen && <WeatherEnvironmentModal moodTheme={moodTheme} onClose={() => setEnvironmentOpen(false)} />}
     </section>
   );
 }
@@ -1158,7 +1158,7 @@ function SchedulePlanningLoadingPage() {
   );
 }
 
-function WeatherEnvironmentModal({ onClose }) {
+function WeatherEnvironmentModal({ moodTheme = "default", onClose }) {
   const [environmentData, setEnvironmentData] = useState(() => ({
     short: { status: "idle", data: null, error: "" },
     mid: { status: "idle", data: null, error: "" },
@@ -1214,7 +1214,7 @@ function WeatherEnvironmentModal({ onClose }) {
   }
 
   return createPortal(
-    <div className="weather-environment-backdrop" role="presentation" onClick={onClose}>
+    <div className={`app-shell mood-${moodTheme} weather-environment-backdrop`} role="presentation" onClick={onClose}>
       <section className="weather-environment-dialog" role="dialog" aria-modal="true" aria-labelledby="weather-environment-title" onClick={(event) => event.stopPropagation()}>
         <button type="button" className="weather-environment-close" aria-label="닫기" onClick={onClose}>
           <X size={20} />

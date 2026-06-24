@@ -492,6 +492,291 @@
   color: var(--app-button-text) !important;
 }
 
+.app-shell:not(.mood-default) .notification-popover-backdrop,
+.app-shell:not(.mood-default) .notification-execute-backdrop {
+  background: color-mix(in srgb, var(--app-text) 22%, transparent);
+}
+
+.app-shell:not(.mood-default) .confirm-backdrop {
+  background: color-mix(in srgb, var(--app-text) 24%, transparent);
+}
+
+.app-shell:not(.mood-default).weather-environment-backdrop,
+.app-shell:not(.mood-default) .weather-environment-backdrop {
+  background: color-mix(in srgb, var(--app-text) 24%, transparent);
+}
+
+.app-shell:not(.mood-default) .notification-popover,
+.app-shell:not(.mood-default) .notification-execute-dialog {
+  border-color: color-mix(in srgb, var(--app-primary) 44%, var(--app-border));
+  background:
+    linear-gradient(var(--app-card-bg), var(--app-card-bg)) padding-box,
+    linear-gradient(135deg, color-mix(in srgb, var(--app-primary) 76%, #ffffff), color-mix(in srgb, var(--app-accent) 46%, transparent)) border-box;
+  box-shadow: 0 26px 80px color-mix(in srgb, var(--app-primary) 18%, var(--app-shadow));
+}
+
+.app-shell:not(.mood-default) .notification-popover::before,
+.app-shell:not(.mood-default) .notification-execute-dialog::before {
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--app-primary) 42%, #cfd6df) 0 1.8px, transparent 2.2px) 0 0 / 18px 18px repeat-x,
+    linear-gradient(90deg, transparent 6px, color-mix(in srgb, var(--app-accent) 42%, #9ca3af) 6px 8px, transparent 8px 18px) 0 6px / 18px 10px repeat-x;
+}
+
+.app-shell:not(.mood-default) .notification-execute-dialog > button {
+  background: var(--app-primary-soft) !important;
+  color: var(--app-accent) !important;
+}
+
+.app-shell:not(.mood-default) .notification-execute-dialog h2,
+.app-shell:not(.mood-default) .notification-popover-head strong,
+.app-shell:not(.mood-default) .notification-popover-item strong {
+  color: var(--app-text) !important;
+}
+
+.app-shell:not(.mood-default) .notification-execute-dialog span,
+.app-shell:not(.mood-default) .notification-execute-dialog small,
+.app-shell:not(.mood-default) .notification-popover-head span,
+.app-shell:not(.mood-default) .notification-popover-empty {
+  color: var(--app-text-muted) !important;
+}
+
+.app-shell:not(.mood-default) .notification-execute-dialog div button:first-child,
+.app-shell:not(.mood-default) .notification-popover-item button:not(:last-child) {
+  border-color: color-mix(in srgb, var(--app-primary) 28%, var(--app-border)) !important;
+  background: var(--app-primary-soft) !important;
+  color: var(--app-accent) !important;
+}
+
+.app-shell:not(.mood-default) .notification-execute-dialog div button:last-child,
+.app-shell:not(.mood-default) .notification-popover-item button:last-child {
+  border-color: var(--app-button-bg) !important;
+  background: var(--app-button-bg) !important;
+  color: var(--app-button-text) !important;
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--app-button-bg) 26%, transparent);
+}
+
+.app-shell:not(.mood-default) .confirm-dialog {
+  border-color: color-mix(in srgb, var(--app-primary) 44%, var(--app-border));
+  background:
+    linear-gradient(var(--app-card-bg), var(--app-card-bg)) padding-box,
+    linear-gradient(135deg, color-mix(in srgb, var(--app-primary) 72%, #ffffff), color-mix(in srgb, var(--app-accent) 42%, transparent)) border-box;
+  box-shadow: 0 30px 90px color-mix(in srgb, var(--app-primary) 18%, var(--app-shadow));
+}
+
+.app-shell:not(.mood-default) .confirm-dialog::before {
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--app-primary) 42%, #cfd6df) 0 1.8px, transparent 2.2px) 0 0 / 18px 18px repeat-x,
+    linear-gradient(90deg, transparent 6px, color-mix(in srgb, var(--app-accent) 42%, #9ca3af) 6px 8px, transparent 8px 18px) 0 6px / 18px 10px repeat-x;
+}
+
+.app-shell:not(.mood-default) .confirm-dialog h2,
+.app-shell:not(.mood-default) .confirm-dialog h3,
+.app-shell:not(.mood-default) .postpone-date-display strong,
+.app-shell:not(.mood-default) .postpone-calendar-head strong,
+.app-shell:not(.mood-default) .postpone-calendar-grid button,
+.app-shell:not(.mood-default) .postpone-calendar-grid span {
+  color: var(--app-text) !important;
+}
+
+.app-shell:not(.mood-default) .confirm-dialog span {
+  color: var(--app-text-muted) !important;
+}
+
+.app-shell:not(.mood-default) .confirm-dialog .postpone-option-grid button,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-date-field input,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-date-field select,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-date-display,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-calendar-panel,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-time-picker,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-time-column {
+  border-color: color-mix(in srgb, var(--app-primary) 34%, var(--app-border)) !important;
+  background: color-mix(in srgb, var(--app-card-bg) 78%, var(--app-primary-soft)) !important;
+}
+
+.app-shell:not(.mood-default) .confirm-dialog .postpone-date-field,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-date-picker,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-time-picker,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-time-display,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-time-column button,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-calendar-head button,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-calendar-weekdays span {
+  color: var(--app-accent) !important;
+}
+
+.app-shell:not(.mood-default) .confirm-dialog .postpone-option-grid button.active,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-calendar-grid button.active,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-time-column button.active,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-time-column button.active:hover,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-date-display small {
+  border-color: var(--app-button-bg) !important;
+  background: var(--app-button-bg) !important;
+  color: var(--app-button-text) !important;
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--app-button-bg) 24%, transparent);
+}
+
+.app-shell:not(.mood-default) .confirm-dialog .postpone-option-grid button:not(.active),
+.app-shell:not(.mood-default) .confirm-dialog .postpone-calendar-head button,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-calendar-grid button:hover,
+.app-shell:not(.mood-default) .confirm-dialog .postpone-time-column button:hover {
+  background: var(--app-primary-soft) !important;
+  color: var(--app-accent) !important;
+}
+
+.app-shell:not(.mood-default) .confirm-dialog .postpone-date-display small svg {
+  color: var(--app-button-text) !important;
+  stroke: currentColor !important;
+}
+
+.app-shell:not(.mood-default) .confirm-dialog .postpone-calendar-panel {
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--app-primary) 16%, var(--app-shadow));
+}
+
+.app-shell:not(.mood-default) .weather-environment-dialog {
+  scrollbar-color: color-mix(in srgb, var(--app-primary) 52%, var(--app-border)) transparent;
+}
+
+.app-shell:not(.mood-default) .weather-environment-close {
+  border-color: color-mix(in srgb, var(--app-primary) 28%, var(--app-border)) !important;
+  background: var(--app-primary-soft) !important;
+  color: var(--app-accent) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-primary) 20%, transparent);
+}
+
+.app-shell:not(.mood-default) .weather-environment-close:hover {
+  background: color-mix(in srgb, var(--app-primary-soft) 72%, var(--app-primary)) !important;
+  color: var(--app-accent) !important;
+}
+
+.app-shell:not(.mood-default) .environment-panel {
+  border-color: color-mix(in srgb, var(--app-primary) 34%, var(--app-border)) !important;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--app-card-bg) 92%, var(--app-primary-soft)), var(--app-card-bg) 50%, color-mix(in srgb, var(--app-card-bg) 76%, var(--app-primary-soft))),
+    var(--app-card-bg) !important;
+  box-shadow: 0 22px 52px color-mix(in srgb, var(--app-primary) 16%, var(--app-shadow));
+}
+
+.app-shell:not(.mood-default) .environment-panel-head h2,
+.app-shell:not(.mood-default) .environment-forecast-row strong,
+.app-shell:not(.mood-default) .environment-forecast-row > span,
+.app-shell:not(.mood-default) .environment-forecast-row p,
+.app-shell:not(.mood-default) .environment-air-body strong {
+  color: var(--app-text) !important;
+}
+
+.app-shell:not(.mood-default) .environment-panel-head p,
+.app-shell:not(.mood-default) .environment-message,
+.app-shell:not(.mood-default) .environment-forecast-row small,
+.app-shell:not(.mood-default) .environment-air-body p,
+.app-shell:not(.mood-default) .environment-air-body small {
+  color: var(--app-text-muted) !important;
+}
+
+.app-shell:not(.mood-default) .environment-panel-head button {
+  background: var(--app-button-bg) !important;
+  color: var(--app-button-text) !important;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--app-button-bg) 24%, transparent);
+}
+
+.app-shell:not(.mood-default) .environment-card,
+.app-shell:not(.mood-default) .environment-card.air {
+  border-color: color-mix(in srgb, var(--app-primary) 24%, var(--app-border)) !important;
+  background: color-mix(in srgb, var(--app-card-bg) 82%, var(--app-primary-soft)) !important;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 56%, transparent);
+}
+
+.app-shell:not(.mood-default) .environment-card > span {
+  background: var(--app-primary-soft) !important;
+  color: var(--app-accent) !important;
+}
+
+.app-shell:not(.mood-default) .environment-forecast-row {
+  background: color-mix(in srgb, var(--app-card-bg) 88%, #ffffff) !important;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--app-primary) 10%, transparent);
+}
+
+.app-shell:not(.mood-default) .environment-error {
+  color: #dc2626 !important;
+}
+
+.app-shell:not(.mood-default) .daily-detail-page .date-detail-card {
+  border-color: color-mix(in srgb, var(--app-primary) 30%, var(--app-border)) !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--app-card-bg) 90%, var(--app-primary-soft)) 0%, var(--app-card-bg) 54%, color-mix(in srgb, var(--app-card-bg) 82%, var(--app-primary-soft)) 100%),
+    var(--app-card-bg) !important;
+  box-shadow: 0 18px 46px color-mix(in srgb, var(--app-primary) 12%, var(--app-shadow));
+}
+
+.app-shell:not(.mood-default) .daily-timetable-shell {
+  scrollbar-color: color-mix(in srgb, var(--app-primary) 52%, var(--app-border)) transparent;
+}
+
+.app-shell:not(.mood-default) .daily-time-rail,
+.app-shell:not(.mood-default) .daily-timetable-column,
+.app-shell:not(.mood-default) .daily-list-column {
+  border-color: color-mix(in srgb, var(--app-primary) 26%, var(--app-border)) !important;
+  background: color-mix(in srgb, var(--app-card-bg) 84%, var(--app-primary-soft)) !important;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--app-primary) 8%, transparent);
+}
+
+.app-shell:not(.mood-default) .daily-time-rail > strong,
+.app-shell:not(.mood-default) .daily-timetable-column > strong,
+.app-shell:not(.mood-default) .daily-list-column > strong {
+  border-bottom-color: color-mix(in srgb, var(--app-primary) 24%, var(--app-border)) !important;
+  background: color-mix(in srgb, var(--app-card-bg) 70%, var(--app-primary-soft)) !important;
+  color: var(--app-text) !important;
+}
+
+.app-shell:not(.mood-default) .daily-timetable-track,
+.app-shell:not(.mood-default) .daily-time-scale {
+  background: color-mix(in srgb, var(--app-card-bg) 88%, #ffffff) !important;
+}
+
+.app-shell:not(.mood-default) .daily-timetable-line {
+  background: color-mix(in srgb, var(--app-primary) 16%, var(--app-border)) !important;
+}
+
+.app-shell:not(.mood-default) .daily-time-scale span,
+.app-shell:not(.mood-default) .daily-list-task > time,
+.app-shell:not(.mood-default) .daily-list-column p {
+  color: var(--app-text-muted) !important;
+}
+
+.app-shell:not(.mood-default) .daily-timetable-column::before,
+.app-shell:not(.mood-default) .daily-list-column::before {
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--app-primary) 42%, #cfd6df) 0 2px, transparent 2.5px) 0 0 / 22px 22px repeat-x,
+    linear-gradient(90deg, transparent 7px, color-mix(in srgb, var(--app-accent) 42%, #a9a9a9) 7px 9px, transparent 9px 22px) 0 7px / 22px 12px repeat-x !important;
+}
+
+.app-shell:not(.mood-default) .daily-detail-page .date-detail-add {
+  border-color: color-mix(in srgb, var(--app-primary) 32%, var(--app-border)) !important;
+  background: color-mix(in srgb, var(--app-card-bg) 72%, var(--app-primary-soft)) !important;
+  color: var(--app-accent) !important;
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--app-primary) 14%, transparent);
+}
+
+.app-shell:not(.mood-default) .daily-detail-page .date-detail-add:hover {
+  border-color: color-mix(in srgb, var(--app-primary) 58%, var(--app-border)) !important;
+  background: var(--app-primary-soft) !important;
+  color: var(--app-accent) !important;
+  box-shadow: 0 18px 32px color-mix(in srgb, var(--app-primary) 18%, transparent);
+}
+
+.app-shell:not(.mood-default) .daily-detail-page .date-detail-add.active,
+.app-shell:not(.mood-default) .daily-detail-page .date-detail-add:active,
+.app-shell:not(.mood-default) .daily-detail-page .date-detail-add.housework.active,
+.app-shell:not(.mood-default) .daily-detail-page .date-detail-add.housework:active {
+  border-color: var(--app-button-bg) !important;
+  background: var(--app-button-bg) !important;
+  color: var(--app-button-text) !important;
+  box-shadow: 0 16px 30px color-mix(in srgb, var(--app-button-bg) 24%, transparent);
+}
+
+.app-shell:not(.mood-default) .daily-detail-page .date-detail-add svg {
+  color: currentColor !important;
+  stroke: currentColor !important;
+}
+
 .app-shell:not(.mood-default) .notification-time-picker-wrap {
   border-color: var(--app-border);
   background: var(--app-card-bg);
@@ -698,10 +983,27 @@
   color: var(--app-accent) !important;
 }
 
-.app-shell:not(.mood-default) :where(.daily-report-todo-check, .settings-appliance-check, .settings-fixed-list article > span, .settings-save-button, .settings-fixed-day-picker button.active) {
+.app-shell:not(.mood-default) :where(.settings-appliance-check, .settings-fixed-list article > span, .settings-save-button, .settings-fixed-day-picker button.active) {
   border-color: var(--app-primary) !important;
   background: var(--app-primary) !important;
   color: var(--app-button-text) !important;
+}
+
+.app-shell:not(.mood-default) .daily-report-todo-check {
+  border-color: color-mix(in srgb, var(--app-primary) 36%, #ffffff) !important;
+  background: color-mix(in srgb, var(--app-primary-soft) 72%, #ffffff) !important;
+  color: var(--app-button-text) !important;
+  box-shadow:
+    inset 0 0 0 5px color-mix(in srgb, var(--app-card-bg) 48%, transparent),
+    0 4px 10px var(--app-shadow);
+}
+
+.app-shell:not(.mood-default) .daily-report-todo-list article.done .daily-report-todo-check {
+  border-color: var(--app-primary) !important;
+  background: var(--app-primary) !important;
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, var(--app-card-bg) 26%, transparent),
+    0 6px 14px var(--app-shadow);
 }
 
 .app-shell:not(.mood-default) :where(.daily-report-gpt-note, .daily-report-saved-note, .daily-report-todo-form-actions button, .settings-menu-list button:hover, .settings-appliance-grid button.active, .settings-fixed-editor, .notification-time-control, .notification-schedule-time) {

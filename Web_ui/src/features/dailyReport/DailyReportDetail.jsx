@@ -1,4 +1,4 @@
-import { ArrowLeft, CalendarDays, CheckCircle2, CloudSun, Plus, Sparkles, WashingMachine, X } from "lucide-react";
+import { ArrowLeft, CalendarDays, Check, CheckCircle2, CloudSun, Plus, Sparkles, WashingMachine, X } from "lucide-react";
 import { useState } from "react";
 import ReportImageRecord from "./ReportImageRecord.jsx";
 
@@ -105,7 +105,7 @@ export default function DailyReportDetail({ report, onBack, onAddTodo, onUpdateT
                     aria-label={todo.done ? "미완료로 변경" : "완료로 변경"}
                     onClick={() => onUpdateTodo?.(todo.id, { done: !todo.done })}
                   >
-                    {todo.done && <CheckCircle2 size={18} />}
+                    {todo.done && <Check size={17} strokeWidth={3} />}
                   </button>
                   <button type="button" className="daily-report-todo-copy" onClick={() => startEditTodo(todo)}>
                     <strong>{todo.title}</strong>
