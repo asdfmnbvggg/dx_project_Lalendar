@@ -438,7 +438,7 @@
   border-color: var(--app-border);
 }
 
-.app-shell:not(.mood-default) :where(.composer-submit, .settings-save-button, .confirm-actions button:last-child, .notification-time-control button, .notification-popover-item button:last-child, .notification-execute-dialog div button:last-child, .calendar-add-button, .daily-add-save, .daily-report-todo-form-actions button:last-child) {
+.app-shell:not(.mood-default) :where(.composer-submit, .settings-save-button, .confirm-actions button:last-child, .notification-time-control > button, .notification-popover-item button:last-child, .notification-execute-dialog div button:last-child, .calendar-add-button, .daily-add-save, .daily-report-todo-form-actions button:last-child) {
   background: var(--app-button-bg);
   color: var(--app-button-text);
 }
@@ -474,6 +474,22 @@
 .app-shell:not(.mood-default) .notification-popover-head,
 .app-shell:not(.mood-default) .notification-time-control {
   border-color: var(--app-border);
+}
+
+.app-shell:not(.mood-default) .notification-popover-item {
+  border-color: var(--app-border);
+  background: color-mix(in srgb, var(--app-card-bg) 76%, var(--app-primary-soft));
+}
+
+.app-shell:not(.mood-default) .notification-popover-item.completed {
+  border-color: var(--app-border);
+  background: var(--app-surface-soft);
+}
+
+.app-shell:not(.mood-default) .notification-popover-item button:last-child {
+  border-color: var(--app-button-bg) !important;
+  background: var(--app-button-bg) !important;
+  color: var(--app-button-text) !important;
 }
 
 .app-shell:not(.mood-default) .calendar-month-view .date-cell.selected strong,
