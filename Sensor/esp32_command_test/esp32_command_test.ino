@@ -56,7 +56,7 @@ HX711 scale;
 
 // 무게 보정값
 // 실제 로드셀에 따라 조정 필요
-float calibration_factor = -7050.0;
+float calibration_factor = -6.20;
 
 // 공기청정기 실행 확인용 LED
 #define AIR_PURIFIER_LED 2
