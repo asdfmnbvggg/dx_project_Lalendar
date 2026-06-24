@@ -3,7 +3,7 @@ import { defineConfig, loadEnv } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import dailyReportHandler from "../api/daily-report.js";
 import predictTaskHandler from "../api/predict-task.js";
-import weatherHandler from "../server/weatherHandler.js";
+import weatherHandler from "../Qwen/weatherHandler.js";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");

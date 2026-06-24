@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "C:\Users\1423\OneDrive - 랩포디엑스\바탕 화면\dx_project\dx_project_Lalendar\server\qwen_finetune_pipeline.py", line 780, in main
-    run_state = run_finetune(args)
-  File "C:\Users\1423\OneDrive - 랩포디엑스\바탕 화면\dx_project\dx_project_Lalendar\server\qwen_finetune_pipeline.py", line 311, in run_finetune
-    raise RuntimeError("TOGETHER_API_KEY environment variable is not set")
-RuntimeError: TOGETHER_API_KEY environment variable is not set
