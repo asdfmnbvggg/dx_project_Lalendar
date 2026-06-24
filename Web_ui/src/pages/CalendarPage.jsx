@@ -1653,6 +1653,7 @@ function DailyScheduleAddPage({ selectedDate, selectedMember, scheduleType = "pe
               disabled={isAllDay}
               onChange={(value) => {
                 setStartTime(value);
+                setEndTime(addMinutesToTime(value, 60));
                 setError("");
               }}
             />
@@ -1842,6 +1843,7 @@ function DailyScheduleEditPage({ task, selectedDate, onClose, onSave, onApplianc
               disabled={isAllDay}
               onChange={(value) => {
                 setStartTime(value);
+                setEndTime(addMinutesToTime(value, 60));
                 setError("");
               }}
             />
