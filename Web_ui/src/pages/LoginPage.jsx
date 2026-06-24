@@ -21,7 +21,7 @@ export default function LoginPage({ onLogin }) {
 
   return (
     <main className="login-page">
-      <form className="login-card" onSubmit={submit}>
+      <form className="login-card" onSubmit={submit} autoComplete="off">
         <div className="login-brand">
           <span><img src="/icons/icon-192.png" alt="" aria-hidden="true" /></span>
           <div>
@@ -37,12 +37,23 @@ export default function LoginPage({ onLogin }) {
 
         <label>
           아이디
-          <input value={id} onChange={(event) => setId(event.target.value)} autoComplete="username" placeholder="아이디를 입력해 주세요" autoFocus />
+          <input value={id} onChange={(event) => setId(event.target.value)} autoComplete="off" placeholder="아이디를 입력해 주세요" autoFocus />
         </label>
 
         <label>
           비밀번호
-          <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" placeholder="비밀번호를 입력해 주세요" />
+          <input
+            className="login-code-input"
+            type="text"
+            name="access-code"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck="false"
+            placeholder="비밀번호를 입력해 주세요"
+          />
         </label>
 
         {error && <p className="login-error">{error}</p>}

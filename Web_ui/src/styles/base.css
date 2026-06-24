@@ -132,6 +132,10 @@ body,
   outline: none;
 }
 
+.login-card .login-code-input {
+  -webkit-text-security: disc;
+}
+
 .login-card input::placeholder {
   color: #b79a78;
 }
