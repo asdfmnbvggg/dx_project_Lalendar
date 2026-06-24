@@ -56,7 +56,7 @@ HX711 scale;
 
 // 무게 보정값
 // 실제 로드셀에 따라 조정 필요
-float calibration_factor = -6.20;
+float calibration_factor = -0.143;  // 예시 값, 실제 로드셀에 맞게 조정 필요
 
 // 공기청정기 실행 확인용 LED
 #define AIR_PURIFIER_LED 2
@@ -255,18 +255,23 @@ void printSensorData() {
   float weight = 0.0;
 
   if (scale.is_ready()) {
-    weight = scale.get_units(5);
+    weight = scale.get_units(20);
+
+    // 아주 작은 음수 흔들림 방지
+    if (weight < 0 && weight > -5) {
+      weight = 0;
+    }
 
     // 3번 LCD: 무게
     String weightLine1 = "Weight";
     String weightLine2 = String(weight, 1) + " g";
 
     displayLCD(lcdWeight, weightLine1, weightLine2);
-  } else {
+   } else {
     Serial.println("HX711 not ready");
 
     displayLCD(lcdWeight, "HX711 Error", "Not Ready");
-  }
+   }
 
   // Python 통합 코드가 아래 형식을 파싱함
   Serial.print("Weight: ");
