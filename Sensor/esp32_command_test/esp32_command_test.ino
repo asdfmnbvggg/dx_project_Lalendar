@@ -68,6 +68,7 @@ const int JEA_AIRCON_LED_PIN = 32;
 const int ROBOT_CLEANER_LED_PIN = 4;
 const int DISHWASHER_LED_PIN = 5;
 const int DRYER_LED_PIN = 14;
+const bool LED_ACTIVE_LOW = false;
 
 #define AIR_PURIFIER_LED AIR_PURIFIER_LED_PIN
 #define SHARED_AIRCON_LED SHARED_AIRCON_LED_PIN
@@ -94,6 +95,7 @@ const int APPLIANCE_LED_COUNT = sizeof(APPLIANCE_LED_PINS) / sizeof(APPLIANCE_LE
  
 // 가전 LED는 실행 확인용으로 3초만 켜둠
 const unsigned long APPLIANCE_LED_ON_DURATION = 3000;
+const unsigned long GPIO_TEST_ON_DURATION = 5000;
 unsigned long applianceLedTurnedOnAt = 0;
 bool applianceLedActive = false;
  
@@ -312,13 +314,54 @@ void printSensorData() {
 void initApplianceLedPins() {
   for (int i = 0; i < APPLIANCE_LED_COUNT; i++) {
     pinMode(APPLIANCE_LED_PINS[i], OUTPUT);
-    digitalWrite(APPLIANCE_LED_PINS[i], LOW);
   }
+}
+
+void logLedPinMap() {
+  Serial.println("[LED pin map]");
+  Serial.print("AIR_PURIFIER_LED_PIN=");
+  Serial.println(AIR_PURIFIER_LED_PIN);
+  Serial.print("SHARED_AIRCON_LED_PIN=");
+  Serial.println(SHARED_AIRCON_LED_PIN);
+  Serial.print("SUMIN_AIRCON_LED_PIN=");
+  Serial.println(SUMIN_AIRCON_LED_PIN);
+  Serial.print("DADA_AIRCON_LED_PIN=");
+  Serial.println(DADA_AIRCON_LED_PIN);
+  Serial.print("JEA_AIRCON_LED_PIN=");
+  Serial.println(JEA_AIRCON_LED_PIN);
+  Serial.print("WASHER_LED_PIN=");
+  Serial.println(WASHER_LED_PIN);
+  Serial.print("ROBOT_CLEANER_LED_PIN=");
+  Serial.println(ROBOT_CLEANER_LED_PIN);
+  Serial.print("DISHWASHER_LED_PIN=");
+  Serial.println(DISHWASHER_LED_PIN);
+  Serial.print("DRYER_LED_PIN=");
+  Serial.println(DRYER_LED_PIN);
+  Serial.print("LED_ACTIVE_LOW=");
+  Serial.println(LED_ACTIVE_LOW ? "true" : "false");
+}
+
+void ledOn(int pin) {
+  int outputLevel = LED_ACTIVE_LOW ? LOW : HIGH;
+  digitalWrite(pin, outputLevel);
+  Serial.print("[GPIO output] pin=");
+  Serial.print(pin);
+  Serial.print(" state=ON level=");
+  Serial.println(outputLevel == HIGH ? "HIGH" : "LOW");
+}
+
+void ledOff(int pin) {
+  int outputLevel = LED_ACTIVE_LOW ? HIGH : LOW;
+  digitalWrite(pin, outputLevel);
+  Serial.print("[GPIO output] pin=");
+  Serial.print(pin);
+  Serial.print(" state=OFF level=");
+  Serial.println(outputLevel == HIGH ? "HIGH" : "LOW");
 }
  
 void turnOffAllApplianceLeds() {
   for (int i = 0; i < APPLIANCE_LED_COUNT; i++) {
-    digitalWrite(APPLIANCE_LED_PINS[i], LOW);
+    ledOff(APPLIANCE_LED_PINS[i]);
   }
  
   applianceLedActive = false;
@@ -327,7 +370,7 @@ void turnOffAllApplianceLeds() {
  
 void turnOnOnlyApplianceLed(int ledPin, const char* applianceLabel) {
   turnOffAllApplianceLeds();
-  digitalWrite(ledPin, HIGH);
+  ledOn(ledPin);
   applianceLedActive = true;
   applianceLedTurnedOnAt = millis();
   Serial.print("LED ON GPIO");
@@ -342,6 +385,24 @@ void updateApplianceLedAutoOff() {
     Serial.println("LED OFF: auto timeout");
   }
 }
+
+void testGpioPin(int pin, const char* label) {
+  Serial.print("[GPIO test start] pin=");
+  Serial.print(pin);
+  Serial.print(" label=");
+  Serial.print(label);
+  Serial.print(" durationMs=");
+  Serial.println(GPIO_TEST_ON_DURATION);
+
+  ledOn(pin);
+  delay(GPIO_TEST_ON_DURATION);
+  ledOff(pin);
+
+  Serial.print("[GPIO test done] pin=");
+  Serial.print(pin);
+  Serial.print(" label=");
+  Serial.println(label);
+}
  
  
 // =========================
@@ -353,6 +414,11 @@ void handleCommand(String command) {
  
   Serial.print("[ESP32 command received] ");
   Serial.println(command);
+
+  if (command == "test_gpio23") {
+    testGpioPin(SUMIN_AIRCON_LED_PIN, "sumin aircon gpio23");
+    return;
+  }
  
   // =========================
   // 공기청정기
@@ -492,6 +558,7 @@ void setup() {
  
   initApplianceLedPins();
   turnOffAllApplianceLeds();
+  logLedPinMap();
  
   // LCD 3개 초기화
   initLCDs();
