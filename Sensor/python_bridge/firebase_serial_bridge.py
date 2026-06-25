@@ -50,14 +50,91 @@ def update_command_status(status, extra_data=None):
         print(f"Firebase status 업데이트 실패: {e}")
 
 
+def get_legacy_command_aliases(command):
+    aliases = {
+        "shared_aircon_dry": ["dry"],
+        "sumin_aircon_dry": ["dry"],
+        "dada_aircon_dry": ["dry"],
+        "jea_aircon_dry": ["dry"],
+        "shared_aircon_power_cooling": ["power_cooling"],
+        "sumin_aircon_power_cooling": ["power_cooling"],
+        "dada_aircon_power_cooling": ["power_cooling"],
+        "jea_aircon_power_cooling": ["power_cooling"],
+        "shared_aircon_cooling": ["cooling"],
+        "sumin_aircon_cooling": ["cooling"],
+        "dada_aircon_cooling": ["cooling"],
+        "jea_aircon_cooling": ["cooling"],
+    }
+
+    return aliases.get(command, [])
+
+
+def read_esp32_command_responses(serial_conn, wait_seconds=0.8):
+    responses = []
+    deadline = time.time() + wait_seconds
+
+    while time.time() < deadline:
+        if serial_conn.in_waiting > 0:
+            line = serial_conn.readline().decode("utf-8", errors="ignore").strip()
+            if line:
+                responses.append(line)
+                print(f"ESP32 응답: {line}")
+        else:
+            time.sleep(0.05)
+
+    return responses
+
+
+def has_unknown_command_response(responses):
+    return any(
+        "Unknown command" in response or "알 수 없는 명령" in response
+        for response in responses
+    )
+
+
+def has_command_ack_response(responses):
+    return any(
+        "Received command" in response
+        or "실행 완료" in response
+        or "Dry Mode" in response
+        or "Cooling" in response
+        for response in responses
+    )
+
+
+def write_command_to_esp32(serial_conn, command):
+    message = command + "\n"
+    serial_conn.write(message.encode("utf-8"))
+    serial_conn.flush()
+    print(f"ESP32로 명령 전송 완료: {command}")
+
+
 def send_command_to_esp32(serial_conn, command):
     """USB 시리얼로 ESP32에 명령을 보낸다."""
     try:
-        message = command + "\n"
-        serial_conn.write(message.encode("utf-8"))
-        serial_conn.flush()
-        print(f"ESP32로 명령 전송 완료: {command}")
-        return True
+        write_command_to_esp32(serial_conn, command)
+
+        responses = read_esp32_command_responses(serial_conn)
+        aliases = get_legacy_command_aliases(command)
+
+        if has_unknown_command_response(responses) or (aliases and not has_command_ack_response(responses)):
+            if has_unknown_command_response(responses):
+                print(f"ESP32가 명령을 인식하지 못했습니다. 이전 명령으로 재시도합니다: {command}")
+            else:
+                print(f"ESP32 명령 확인 응답이 없어 이전 명령으로 재시도합니다: {command}")
+
+            for alias in aliases:
+                write_command_to_esp32(serial_conn, alias)
+                alias_responses = read_esp32_command_responses(serial_conn)
+
+                if not has_unknown_command_response(alias_responses):
+                    print(f"ESP32 이전 명령 호환 전송 완료: {command} -> {alias}")
+                    return True
+
+            print(f"ESP32 이전 명령 호환 전송 실패: {command}")
+            return False
+
+        return not has_unknown_command_response(responses)
     except Exception as e:
         print(f"ESP32 명령 전송 실패: {e}")
         return False
