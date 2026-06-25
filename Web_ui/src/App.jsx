@@ -1248,6 +1248,26 @@ export default function App() {
     enqueueSensorPopups(popups.slice(0, 1), "menu-demo", { bypassCooldown: true });
   }
 
+  function showAllAirconHumidityPopups() {
+    if (!currentUser || !isOnboardingComplete) return;
+
+    const forcedSensor = {
+      ...(latestSensorData || {}),
+      humidity: Math.max(Number(latestSensorData?.humidity) || 0, THRESHOLDS.humidityDry),
+      last_updated: "케어 탭 수동 실행",
+    };
+    const airConditionerTargets = getRealtimeAirConditionerTargets();
+    const popups = buildRealtimeAppliancePopups(forcedSensor, {
+      airConditionerTargets,
+      now: new Date(),
+    })
+      .filter(isAirconHumidityPopup)
+      .filter((popup) => isMasterUser(currentUser) || popup.targetUserId === currentUser.id);
+
+    traceForcedAirconHumidityPopups(popups, currentUser);
+    enqueueSensorPopups(popups, "care-force-aircon", { bypassCooldown: true });
+  }
+
   function updateCalendarSettings(nextSettings) {
     setCalendarSettings(normalizeCalendarSettings(nextSettings));
   }
@@ -1601,7 +1621,7 @@ export default function App() {
             activeCalendarUser={activeCalendarUser}
           />
         )}
-        {activeTab === "care" && <CareReportTab onOpenNotifications={openNotificationPopover} />}
+        {activeTab === "care" && <CareReportTab onOpenNotifications={openNotificationPopover} onShowAllAirconPopups={showAllAirconHumidityPopups} />}
         {activeTab === "menu" && <MenuTab onOpenNotifications={openNotificationPopover} />}
 
         <nav className="tabbar thinq-main-tabbar" aria-label="하단 탭">

@@ -12,6 +12,7 @@ import {
   Smile,
   WashingMachine,
   Wind,
+  Snowflake,
   Zap,
 } from "lucide-react";
 import washerImage from "../assets/appliances/세탁기.png";
@@ -105,7 +106,7 @@ const productReports = [
   },
 ];
 
-export default function CareReportTab({ onOpenNotifications }) {
+export default function CareReportTab({ onOpenNotifications, onShowAllAirconPopups }) {
   const [monthOffset, setMonthOffset] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState("all");
   const [activeModal, setActiveModal] = useState(null);
@@ -152,6 +153,9 @@ export default function CareReportTab({ onOpenNotifications }) {
           <p>우리 집과 가족을 더 편안하게 관리해요</p>
         </div>
         <div className="care-report-header-actions">
+          <button type="button" aria-label="전체 에어컨 팝업 띄우기" title="전체 에어컨 팝업 띄우기" onClick={onShowAllAirconPopups}>
+            <Snowflake size={23} />
+          </button>
           <button type="button" aria-label="알림" onClick={onOpenNotifications}>
             <Bell size={24} />
             <i aria-hidden="true" />
