@@ -80,27 +80,12 @@ export function subscribeRecentSensorLogs(deviceId, callback, count = 20) {
 // 앱에서 아두이노/가전으로 명령 전송
 export async function sendDeviceCommand(deviceId, commandData) {
   const commandRef = ref(realtimeDb, `device_commands/${deviceId}`);
-  const createdAt = Date.now();
-  const commandId = `${createdAt}-${Math.random().toString(36).slice(2, 8)}`;
-  const payload = {
+
+  return set(commandRef, {
     ...commandData,
-    commandId,
     status: "pending",
-    createdAt,
-  };
-
-  if (typeof console !== "undefined" && typeof console.info === "function") {
-    console.info("[DEVICE_COMMAND_TRACE]", {
-      deviceId,
-      commandId,
-      command: payload.command,
-      applianceId: payload.applianceId,
-      applianceType: payload.applianceType,
-      targetUserId: payload.targetUserId,
-    });
-  }
-
-  return set(commandRef, payload);
+    createdAt: Date.now(),
+  });
 }
 
 // subscribeSensorLatest

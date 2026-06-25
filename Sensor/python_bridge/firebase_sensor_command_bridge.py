@@ -294,13 +294,12 @@ try:
                 command = command_data.get("command")
 
                 created_at = command_data.get("createdAt")
-                command_identity = command_data.get("commandId") or created_at
  
                 if status == "pending" and command:
 
                     # 같은 명령 중복 실행 방지
 
-                    if command_identity != last_command_created_at:
+                    if created_at != last_command_created_at:
 
                         print("\n새 실행 명령 감지")
 
@@ -332,7 +331,7 @@ try:
 
                             )
 
-                            last_command_created_at = command_identity
+                            last_command_created_at = created_at
 
                         else:
 
