@@ -51,7 +51,7 @@ const ownerNameMap = {
   all: "공용",
 };
 
-export default function DeviceTabSynced({ onOpenNotifications, tasksByDate = {}, selectedDate = "", currentUser, activeCalendarUser }) {
+export default function DeviceTabSynced({ onOpenNotifications, onExecuteApplianceCommand, tasksByDate = {}, selectedDate = "", currentUser, activeCalendarUser }) {
   const [localStatuses, setLocalStatuses] = useState({});
   const [settings, setSettings] = useState(automationSettings);
   const [manualLogs, setManualLogs] = useState([]);
@@ -118,10 +118,18 @@ export default function DeviceTabSynced({ onOpenNotifications, tasksByDate = {},
     setLocalStatuses((current) => ({ ...current, [deviceId]: statusType }));
   }
 
-  function handleRunDevice(device) {
+  async function handleRunDevice(device) {
     updateLocalStatus(device.id, "running");
     addOperationLog(device.name, device.logAction, "실행 요청");
-    showToast(`${device.name} 실행 요청이 완료됐어요.`);
+
+    try {
+      await onExecuteApplianceCommand?.(deviceToCommandTask(device));
+      showToast(`${device.name} 실행 요청이 완료됐어요.`);
+    } catch {
+      updateLocalStatus(device.id, "needsCheck");
+      addOperationLog(device.name, device.logAction, "전송 실패");
+      showToast(`${device.name} 실행 명령을 보내지 못했어요.`);
+    }
   }
 
   function handleReserveDevice(device) {
@@ -389,6 +397,21 @@ function createDevice(appliance, name, status, statusType, recommendation, owner
     primaryAction,
     secondaryAction,
     logAction,
+  };
+}
+
+function deviceToCommandTask(device = {}) {
+  return {
+    id: `device-tab-${device.id}`,
+    title: device.name,
+    place: device.name,
+    applianceType: device.type,
+    applianceId: device.id,
+    applianceName: device.name,
+    applianceMode: device.logAction,
+    currentMode: device.logAction,
+    userId: device.targetUserId || "",
+    owner: device.targetUserId || "",
   };
 }
 

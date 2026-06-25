@@ -1615,6 +1615,7 @@ export default function App() {
         {activeTab === "devices" && (
           <DeviceTab
             onOpenNotifications={openNotificationPopover}
+            onExecuteApplianceCommand={executeApplianceCommandFromCalendar}
             tasksByDate={tasksByDate}
             selectedDate={selectedDate}
             currentUser={currentUser}
