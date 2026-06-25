@@ -58,18 +58,26 @@ HX711 scale;
 // 실제 로드셀에 따라 조정 필요
 float calibration_factor = -243.0;  // 예시 값, 실제 로드셀에 맞게 조정 필요
  
-// 공기청정기 실행 확인용 LED
-#define AIR_PURIFIER_LED 2
- 
 // 가전 실행 확인용 GPIO
-#define SHARED_AIRCON_LED 18
-#define WASHER_LED 19
-#define SUMIN_AIRCON_LED 23
-#define DADA_AIRCON_LED 27
-#define JEA_AIRCON_LED 32
-#define ROBOT_CLEANER_LED 4
-#define DISHWASHER_LED 5
-#define DRYER_LED 14
+const int AIR_PURIFIER_LED_PIN = 2;
+const int SHARED_AIRCON_LED_PIN = 18;
+const int WASHER_LED_PIN = 19;
+const int SUMIN_AIRCON_LED_PIN = 23;
+const int DADA_AIRCON_LED_PIN = 27;
+const int JEA_AIRCON_LED_PIN = 32;
+const int ROBOT_CLEANER_LED_PIN = 4;
+const int DISHWASHER_LED_PIN = 5;
+const int DRYER_LED_PIN = 14;
+
+#define AIR_PURIFIER_LED AIR_PURIFIER_LED_PIN
+#define SHARED_AIRCON_LED SHARED_AIRCON_LED_PIN
+#define WASHER_LED WASHER_LED_PIN
+#define SUMIN_AIRCON_LED SUMIN_AIRCON_LED_PIN
+#define DADA_AIRCON_LED DADA_AIRCON_LED_PIN
+#define JEA_AIRCON_LED JEA_AIRCON_LED_PIN
+#define ROBOT_CLEANER_LED ROBOT_CLEANER_LED_PIN
+#define DISHWASHER_LED DISHWASHER_LED_PIN
+#define DRYER_LED DRYER_LED_PIN
  
 const int APPLIANCE_LED_PINS[] = {
   AIR_PURIFIER_LED,
@@ -343,7 +351,7 @@ void updateApplianceLedAutoOff() {
 void handleCommand(String command) {
   command.trim();
  
-  Serial.print("Received command: ");
+  Serial.print("[ESP32 command received] ");
   Serial.println(command);
  
   // =========================

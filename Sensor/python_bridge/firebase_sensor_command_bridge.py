@@ -7,6 +7,14 @@ import re
 import time
 
 import requests
+
+try:
+
+    import msvcrt
+
+except ImportError:
+
+    msvcrt = None
  
 # =========================
 
@@ -205,7 +213,9 @@ def has_command_ack_response(responses):
 
     return any(
 
-        "Received command" in response
+        "[ESP32 command received]" in response
+
+        or "Received command" in response
 
         or "실행 완료" in response
 
@@ -221,6 +231,8 @@ def has_command_ack_response(responses):
 def write_command_to_esp32(ser, command):
 
     message = command + "\n"
+
+    print(f"[Serial write] {command}")
 
     ser.write(message.encode("utf-8"))
 
@@ -272,6 +284,21 @@ def send_command_to_esp32(ser, command):
         print(f"ESP32 명령 전송 실패: {e}")
 
         return False
+
+
+def read_manual_test_command():
+
+    if msvcrt is None:
+
+        return None
+
+    if not msvcrt.kbhit():
+
+        return None
+
+    command = input().strip()
+
+    return command or None
  
  
 # =========================
@@ -290,6 +317,8 @@ try:
 
     print("✅ Firebase 센서 전송 + 가전 명령 Bridge를 시작합니다.")
 
+    print("수동 테스트: 터미널에 예) sumin_aircon_power_cooling 입력 후 Enter")
+
     print("-" * 60)
  
     temp = humid = pm25 = pm10 = weight = None
@@ -301,6 +330,20 @@ try:
     while True:
 
         now = time.time()
+
+        manual_command = read_manual_test_command()
+
+        if manual_command:
+
+            print(f"\n수동 테스트 명령 감지: {manual_command}")
+
+            if send_command_to_esp32(ser, manual_command):
+
+                print(f"[Command done] {manual_command}")
+
+            else:
+
+                print(f"[Command error] {manual_command}")
  
         # =========================
 
@@ -318,7 +361,7 @@ try:
  
                 # 명령 응답 로그는 센서 파싱에서 제외
 
-                if "Received command" in line:
+                if "[ESP32 command received]" in line or "Received command" in line:
 
                     continue
  
@@ -438,6 +481,8 @@ try:
  
                         if success:
 
+                            print(f"[Command done] {command}")
+
                             update_command_status(
 
                                 "done",
@@ -458,13 +503,13 @@ try:
 
                             update_command_status(
 
-                                "failed",
+                                "error",
 
                                 {
 
                                     "failedAt": int(time.time() * 1000),
 
-                                    "errorMessage": "ESP32 serial command send failed",
+                                    "errorMessage": f"ESP32 serial command send failed: {command}",
 
                                 },
 

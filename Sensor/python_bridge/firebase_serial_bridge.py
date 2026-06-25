@@ -2,6 +2,11 @@ import serial
 import time
 import requests
 
+try:
+    import msvcrt
+except ImportError:
+    msvcrt = None
+
 # =========================
 # 설정값
 # =========================
@@ -94,7 +99,8 @@ def has_unknown_command_response(responses):
 
 def has_command_ack_response(responses):
     return any(
-        "Received command" in response
+        "[ESP32 command received]" in response
+        or "Received command" in response
         or "실행 완료" in response
         or "Dry Mode" in response
         or "Cooling" in response
@@ -104,6 +110,7 @@ def has_command_ack_response(responses):
 
 def write_command_to_esp32(serial_conn, command):
     message = command + "\n"
+    print(f"[Serial write] {command}")
     serial_conn.write(message.encode("utf-8"))
     serial_conn.flush()
     print(f"ESP32로 명령 전송 완료: {command}")
@@ -140,6 +147,17 @@ def send_command_to_esp32(serial_conn, command):
         return False
 
 
+def read_manual_test_command():
+    if msvcrt is None:
+        return None
+
+    if not msvcrt.kbhit():
+        return None
+
+    command = input().strip()
+    return command or None
+
+
 def main():
     print("Firebase ↔ ESP32 USB Bridge 시작")
 
@@ -151,6 +169,7 @@ def main():
         )
         time.sleep(2)
         print(f"ESP32 연결 성공: {SERIAL_PORT}, {BAUD_RATE}")
+        print("수동 테스트: 터미널에 예) sumin_aircon_power_cooling 입력 후 Enter")
 
     except Exception as e:
         print(f"ESP32 연결 실패: {e}")
@@ -161,6 +180,16 @@ def main():
 
     while True:
         try:
+            manual_command = read_manual_test_command()
+
+            if manual_command:
+                print(f"\n수동 테스트 명령 감지: {manual_command}")
+
+                if send_command_to_esp32(esp32, manual_command):
+                    print(f"[Command done] {manual_command}")
+                else:
+                    print(f"[Command error] {manual_command}")
+
             command_data = read_firebase_command()
 
             if not command_data:
@@ -187,6 +216,7 @@ def main():
                 success = send_command_to_esp32(esp32, command)
 
                 if success:
+                    print(f"[Command done] {command}")
                     update_command_status(
                         "done",
                         {
@@ -197,10 +227,10 @@ def main():
                     last_created_at = created_at
                 else:
                     update_command_status(
-                        "failed",
+                        "error",
                         {
                             "failedAt": int(time.time() * 1000),
-                            "errorMessage": "ESP32 serial command send failed"
+                            "errorMessage": f"ESP32 serial command send failed: {command}"
                         }
                     )
 
