@@ -403,6 +403,20 @@ void testGpioPin(int pin, const char* label) {
   Serial.print(" label=");
   Serial.println(label);
 }
+
+void testAllApplianceLeds() {
+  Serial.println("[GPIO test all start]");
+  testGpioPin(AIR_PURIFIER_LED_PIN, "air purifier gpio2");
+  testGpioPin(SHARED_AIRCON_LED_PIN, "shared aircon gpio18");
+  testGpioPin(WASHER_LED_PIN, "washer gpio19");
+  testGpioPin(SUMIN_AIRCON_LED_PIN, "sumin aircon gpio23");
+  testGpioPin(DADA_AIRCON_LED_PIN, "dada aircon gpio27");
+  testGpioPin(JEA_AIRCON_LED_PIN, "jea aircon gpio32");
+  testGpioPin(ROBOT_CLEANER_LED_PIN, "robot cleaner gpio4");
+  testGpioPin(DISHWASHER_LED_PIN, "dishwasher gpio5");
+  testGpioPin(DRYER_LED_PIN, "dryer gpio14");
+  Serial.println("[GPIO test all done]");
+}
  
  
 // =========================
@@ -417,6 +431,31 @@ void handleCommand(String command) {
 
   if (command == "test_gpio23") {
     testGpioPin(SUMIN_AIRCON_LED_PIN, "sumin aircon gpio23");
+    return;
+  }
+
+  if (command == "test_gpio2" || command == "test_air_purifier") {
+    testGpioPin(AIR_PURIFIER_LED_PIN, "air purifier gpio2");
+    return;
+  }
+
+  if (command == "test_gpio19" || command == "test_washer") {
+    testGpioPin(WASHER_LED_PIN, "washer gpio19");
+    return;
+  }
+
+  if (command == "test_gpio5" || command == "test_dishwasher") {
+    testGpioPin(DISHWASHER_LED_PIN, "dishwasher gpio5");
+    return;
+  }
+
+  if (command == "test_gpio14" || command == "test_dryer") {
+    testGpioPin(DRYER_LED_PIN, "dryer gpio14");
+    return;
+  }
+
+  if (command == "test_all_leds") {
+    testAllApplianceLeds();
     return;
   }
  
