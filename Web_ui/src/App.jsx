@@ -391,27 +391,31 @@ export default function App() {
       setLatestSensorData(sensorData);
 
       const targetUserIds = getRealtimeApplianceTargetUserIds(onboardingSetup.applianceAssignees, activeCalendarUser, currentUser);
+      const airConditionerTargets = getRealtimeAirConditionerTargets();
       const targetApplianceIds = getRealtimeApplianceTargetApplianceIds(targetUserIds);
-      resetHumidityAlertStateIfNormal({
-        sensorData,
-        targetUserId: targetUserIds.AIR_CONDITIONER,
-        applianceId: targetApplianceIds.AIR_CONDITIONER,
-        cooldownMap: sensorPopupCooldownRef.current,
-        currentPopup: sensorPopupRef.current,
-        queuedPopups: sensorPopupQueueRef.current,
-        setSensorPopup,
-        setSensorPopupQueue,
-        syncCurrentPopup: (popup) => {
-          sensorPopupRef.current = popup;
-        },
-        syncQueue: (queue) => {
-          sensorPopupQueueRef.current = queue;
-        },
+      airConditionerTargets.forEach((target) => {
+        resetHumidityAlertStateIfNormal({
+          sensorData,
+          targetUserId: target.targetUserId,
+          applianceId: target.applianceId,
+          cooldownMap: sensorPopupCooldownRef.current,
+          currentPopup: sensorPopupRef.current,
+          queuedPopups: sensorPopupQueueRef.current,
+          setSensorPopup,
+          setSensorPopupQueue,
+          syncCurrentPopup: (popup) => {
+            sensorPopupRef.current = popup;
+          },
+          syncQueue: (queue) => {
+            sensorPopupQueueRef.current = queue;
+          },
+        });
       });
 
       const popups = buildRealtimeAppliancePopups(sensorData, {
         targetUserIds,
         targetApplianceIds,
+        airConditionerTargets,
         now: new Date(),
       });
       const scheduleFilteredPopups = filterRealtimePopupsBySchedule(popups, tasks, new Date());
@@ -2069,6 +2073,14 @@ function getRealtimeApplianceTargetUserIds(applianceAssignees = {}, activeCalend
   };
 }
 
+function getRealtimeAirConditionerTargets() {
+  return [
+    { targetUserId: "sumin", applianceId: "aircon_sumin", applianceName: "수민 에어컨" },
+    { targetUserId: "jea", applianceId: "aircon_jea", applianceName: "재혁 에어컨" },
+    { targetUserId: "dada", applianceId: "aircon_dada", applianceName: "다빈 에어컨" },
+  ];
+}
+
 function getRealtimeApplianceTargetApplianceIds(targetUserIds = {}) {
   return {
     AIR_CONDITIONER: resolveAirConditionerTarget({ targetUserId: targetUserIds.AIR_CONDITIONER }).applianceId,
@@ -2088,9 +2100,9 @@ function traceAirconHumidityNotification({
   queuedPopups = [],
 }) {
   const humidity = Number(sensorData?.humidity);
-  const humidityPopup = popups.find((popup) => isAirconHumidityPopup(popup));
-  const scheduledHumidityPopup = scheduleFilteredPopups.find((popup) => isAirconHumidityPopup(popup));
-  const visibleHumidityPopup = visiblePopups.find((popup) => isAirconHumidityPopup(popup));
+  const humidityPopup = findTraceHumidityPopup(popups, currentUser);
+  const scheduledHumidityPopup = findTraceHumidityPopup(scheduleFilteredPopups, currentUser);
+  const visibleHumidityPopup = findTraceHumidityPopup(visiblePopups, currentUser);
   const temperature = Number(sensorData?.temperature);
   const notificationKey = humidityPopup ? getPopupKey(humidityPopup) : "";
   const eligibleBySchedule = Boolean(scheduledHumidityPopup);
@@ -2102,8 +2114,8 @@ function traceAirconHumidityNotification({
   logAirconHumidityTrace(`sensorHumidity=${Number.isFinite(humidity) ? humidity : "NaN"}`);
   logAirconHumidityTrace(`threshold=${THRESHOLDS.humidityDry}`);
   logAirconHumidityTrace(`resetThreshold=${THRESHOLDS.humidityDryReset}`);
-  logAirconHumidityTrace(`targetUserId=${targetUserId || ""}`);
-  logAirconHumidityTrace(`applianceId=${applianceId || ""}`);
+  logAirconHumidityTrace(`targetUserId=${humidityPopup?.targetUserId || targetUserId || ""}`);
+  logAirconHumidityTrace(`applianceId=${humidityPopup?.applianceId || applianceId || ""}`);
   logAirconHumidityTrace(`eligibleBySchedule=${eligibleBySchedule}`);
   logAirconHumidityTrace(`notificationKey=${notificationKey}`);
   logAirconHumidityTrace(`cooldownActive=${cooldownActive}`);
@@ -2151,6 +2163,11 @@ function traceAirconHumidityNotification({
   }
 
   logAirconHumidityTrace("result=SHOW_ALERT");
+}
+
+function findTraceHumidityPopup(popups = [], currentUser) {
+  const humidityPopups = popups.filter((popup) => isAirconHumidityPopup(popup));
+  return humidityPopups.find((popup) => popup.targetUserId === currentUser?.id) || humidityPopups[0] || null;
 }
 
 function traceSensorPopupSkip(popup = {}, reason) {

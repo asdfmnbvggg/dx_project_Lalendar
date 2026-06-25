@@ -111,75 +111,77 @@ function buildAirConditionerPopup(sensor, context) {
 function buildAirConditionerPopups(sensor, context) {
   const temperature = toNumber(sensor.temperature);
   const humidity = toNumber(sensor.humidity);
-  const targetUserId = getTargetUserId(context, "AIR_CONDITIONER");
-  const applianceId = getAirConditionerApplianceId(context, targetUserId);
   const notificationBucket = getNotificationBucket(context.now || sensor.updatedAt || sensor.createdAt || Date.now());
-  const popups = [];
+  const targets = getAirConditionerTargets(context);
 
-  if (Number.isFinite(temperature) && temperature >= THRESHOLDS.temperaturePowerCooling) {
-    popups.push({
-      conditionType: "temperature",
-      applianceType: "AIR_CONDITIONER",
-      applianceId,
-      applianceName: "에어컨",
-      mode: "파워냉방",
-      command: "power_cooling",
-      title: "에어컨 작동을 추천해요",
-      message: "여름철 권장 실내 온도를 넘었습니다. 에어컨을 가동해서 쾌적한 실내 환경을 유지해볼까요?",
-      blocked: false,
-      targetUserId,
-      metricLabel: "실내 온도",
-      metricValue: `${formatNumber(temperature)}C`,
-      metricParts: [{ value: `${formatNumber(temperature)}C`, isExceeded: true }],
-      thresholdLabel: `${THRESHOLDS.temperaturePowerCooling}C 이상`,
-      updatedAt: sensor.last_updated || "",
-      notificationKey: buildNotificationKey("temperature", "AIRCON", targetUserId, applianceId, notificationBucket),
-    });
-  }
+  return targets.flatMap(({ targetUserId, applianceId, applianceName }) => {
+    const popups = [];
 
-  if (popups.length === 0 && Number.isFinite(temperature) && temperature >= THRESHOLDS.temperatureCooling) {
-    popups.push({
-      conditionType: "temperature",
-      applianceType: "AIR_CONDITIONER",
-      applianceId,
-      applianceName: "에어컨",
-      mode: "냉방",
-      command: "cooling",
-      title: "에어컨 작동을 추천해요",
-      message: "여름철 권장 실내 온도를 넘었습니다. 에어컨을 가동해서 쾌적한 실내 환경을 유지해볼까요?",
-      blocked: false,
-      targetUserId,
-      metricLabel: "실내 온도",
-      metricValue: `${formatNumber(temperature)}C`,
-      metricParts: [{ value: `${formatNumber(temperature)}C`, isExceeded: true }],
-      thresholdLabel: `${THRESHOLDS.temperatureCooling}C 이상`,
-      updatedAt: sensor.last_updated || "",
-      notificationKey: buildNotificationKey("temperature", "AIRCON", targetUserId, applianceId, notificationBucket),
-    });
-  }
+    if (Number.isFinite(temperature) && temperature >= THRESHOLDS.temperaturePowerCooling) {
+      popups.push({
+        conditionType: "temperature",
+        applianceType: "AIR_CONDITIONER",
+        applianceId,
+        applianceName,
+        mode: "파워냉방",
+        command: "power_cooling",
+        title: "에어컨 작동을 추천해요",
+        message: "여름철 권장 실내 온도를 넘었습니다. 에어컨을 가동해서 쾌적한 실내 환경을 유지해볼까요?",
+        blocked: false,
+        targetUserId,
+        metricLabel: "실내 온도",
+        metricValue: `${formatNumber(temperature)}C`,
+        metricParts: [{ value: `${formatNumber(temperature)}C`, isExceeded: true }],
+        thresholdLabel: `${THRESHOLDS.temperaturePowerCooling}C 이상`,
+        updatedAt: sensor.last_updated || "",
+        notificationKey: buildNotificationKey("temperature", "AIRCON", targetUserId, applianceId, notificationBucket),
+      });
+    }
 
-  if (Number.isFinite(humidity) && humidity >= THRESHOLDS.humidityDry) {
-    popups.push({
-      conditionType: "humidity",
-      applianceType: "AIR_CONDITIONER",
-      applianceId,
-      applianceName: "에어컨",
-      mode: "제습",
-      command: "dry",
-      title: "에어컨 작동을 추천해요",
-      message: "여름철 권장 실내 습도를 넘었습니다. 에어컨을 가동해서 쾌적한 실내 환경을 유지해볼까요?",
-      blocked: false,
-      targetUserId,
-      metricLabel: "실내 습도",
-      metricValue: `${formatNumber(humidity)}%`,
-      metricParts: [{ value: `${formatNumber(humidity)}%`, isExceeded: true }],
-      thresholdLabel: `${THRESHOLDS.humidityDry}% 이상`,
-      updatedAt: sensor.last_updated || "",
-      notificationKey: buildNotificationKey("humidity", "AIRCON", targetUserId, applianceId, notificationBucket),
-    });
-  }
+    if (popups.length === 0 && Number.isFinite(temperature) && temperature >= THRESHOLDS.temperatureCooling) {
+      popups.push({
+        conditionType: "temperature",
+        applianceType: "AIR_CONDITIONER",
+        applianceId,
+        applianceName,
+        mode: "냉방",
+        command: "cooling",
+        title: "에어컨 작동을 추천해요",
+        message: "여름철 권장 실내 온도를 넘었습니다. 에어컨을 가동해서 쾌적한 실내 환경을 유지해볼까요?",
+        blocked: false,
+        targetUserId,
+        metricLabel: "실내 온도",
+        metricValue: `${formatNumber(temperature)}C`,
+        metricParts: [{ value: `${formatNumber(temperature)}C`, isExceeded: true }],
+        thresholdLabel: `${THRESHOLDS.temperatureCooling}C 이상`,
+        updatedAt: sensor.last_updated || "",
+        notificationKey: buildNotificationKey("temperature", "AIRCON", targetUserId, applianceId, notificationBucket),
+      });
+    }
 
-  return popups;
+    if (Number.isFinite(humidity) && humidity >= THRESHOLDS.humidityDry) {
+      popups.push({
+        conditionType: "humidity",
+        applianceType: "AIR_CONDITIONER",
+        applianceId,
+        applianceName,
+        mode: "제습",
+        command: "dry",
+        title: "에어컨 작동을 추천해요",
+        message: "여름철 권장 실내 습도를 넘었습니다. 에어컨을 가동해서 쾌적한 실내 환경을 유지해볼까요?",
+        blocked: false,
+        targetUserId,
+        metricLabel: "실내 습도",
+        metricValue: `${formatNumber(humidity)}%`,
+        metricParts: [{ value: `${formatNumber(humidity)}%`, isExceeded: true }],
+        thresholdLabel: `${THRESHOLDS.humidityDry}% 이상`,
+        updatedAt: sensor.last_updated || "",
+        notificationKey: buildNotificationKey("humidity", "AIRCON", targetUserId, applianceId, notificationBucket),
+      });
+    }
+
+    return popups;
+  });
 }
 
 function buildAirQualityPopup(sensor, context) {
@@ -243,6 +245,22 @@ function getTargetUserId(context, applianceType) {
   return context.targetUserIds?.[applianceType] || context.targetUserId || "";
 }
 
+function getAirConditionerTargets(context = {}) {
+  if (Array.isArray(context.airConditionerTargets) && context.airConditionerTargets.length > 0) {
+    return context.airConditionerTargets
+      .map((target) => ({
+        targetUserId: target.targetUserId || "",
+        applianceId: target.applianceId || getAirConditionerApplianceId(context, target.targetUserId),
+        applianceName: target.applianceName || getAirConditionerApplianceName(target.targetUserId),
+      }))
+      .filter((target) => target.targetUserId && target.applianceId);
+  }
+
+  const targetUserId = getTargetUserId(context, "AIR_CONDITIONER");
+  const applianceId = getAirConditionerApplianceId(context, targetUserId);
+  return [{ targetUserId, applianceId, applianceName: getAirConditionerApplianceName(targetUserId) }];
+}
+
 function getAirConditionerApplianceId(context = {}, targetUserId = "") {
   if (context.targetApplianceIds?.AIR_CONDITIONER) return context.targetApplianceIds.AIR_CONDITIONER;
   const normalizedUserId = String(targetUserId || "").toLowerCase();
@@ -253,6 +271,16 @@ function getAirConditionerApplianceId(context = {}, targetUserId = "") {
     jea: "aircon_jea",
   };
   return applianceIds[normalizedUserId] || "aircon_shared";
+}
+
+function getAirConditionerApplianceName(targetUserId = "") {
+  const normalizedUserId = String(targetUserId || "").toLowerCase();
+  return {
+    shared: "공동 에어컨",
+    sumin: "수민 에어컨",
+    dada: "다빈 에어컨",
+    jea: "재혁 에어컨",
+  }[normalizedUserId] || "에어컨";
 }
 
 function getNotificationBucket(value) {
