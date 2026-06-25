@@ -2272,6 +2272,22 @@ function logAirconHumidityTrace(message) {
   }
 }
 
+function traceForcedAirconHumidityPopups(popups = [], currentUser) {
+  logAirconHumidityTrace(`manualTrigger=care_all_aircon currentUser=${currentUser?.id || ""}`);
+  logAirconHumidityTrace(`manualTriggerPopupCount=${popups.length}`);
+  if (popups.length === 0) {
+    logAirconHumidityTrace("result=SKIP reason=NO_TARGET_POPUP_FOR_CURRENT_USER");
+    return;
+  }
+
+  popups.forEach((popup) => {
+    logAirconHumidityTrace(`manualNotificationKey=${getPopupKey(popup)}`);
+    logAirconHumidityTrace(`manualTargetUserId=${popup.targetUserId}`);
+    logAirconHumidityTrace(`manualApplianceId=${popup.applianceId}`);
+  });
+  logAirconHumidityTrace("result=SHOW_ALERT reason=CARE_FORCE_AIRCON");
+}
+
 function checkWasherWeightForFixedSchedule({
   tasks = [],
   currentUser,
