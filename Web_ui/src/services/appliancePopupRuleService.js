@@ -10,6 +10,13 @@ export const THRESHOLDS = {
   washerEmptyWeight: 150,
 };
 
+export const WASHER_WEIGHT_THRESHOLD = THRESHOLDS.washerEmptyWeight;
+
+export function isWasherWeightDetected(weight) {
+  const numericWeight = toNumber(weight);
+  return Number.isFinite(numericWeight) && numericWeight > WASHER_WEIGHT_THRESHOLD;
+}
+
 export function buildRealtimeAppliancePopup(sensor = {}, context = {}) {
   return buildRealtimeAppliancePopups(sensor, context)[0] || null;
 }
@@ -30,51 +37,36 @@ export function buildScheduledWasherPopup(sensor = {}, context = {}) {
   const weight = toNumber(sensor.weight);
   const scheduleTitle = context.washerTask.title || "세탁 일정";
   const scheduleKey = getWasherScheduleKey(context.washerTask);
+  const weightDetected = isWasherWeightDetected(sensor.weight);
 
-  if (sensor.washerDoorOpen === true) {
+  if (!weightDetected) {
     return {
       type: "washer-schedule",
+      conditionType: "washer_weight_missing",
       applianceType: "WASHER",
+      applianceId: "washer",
       applianceName: "세탁기",
       mode: "작동 차단",
       command: null,
-      title: "세탁기 문이 열려 있어요",
-      message: `오늘 ${scheduleTitle}이 있지만 세탁기 문이 열려 있습니다. 문을 닫은 뒤 세탁을 시작해 주세요.`,
-      blocked: true,
-      targetUserId,
-      scheduleKey,
-      source: "washer-schedule",
-      metricLabel: "문 상태",
-      metricValue: "열림",
-      thresholdLabel: "닫힘 필요",
-      updatedAt: sensor.last_updated || "",
-    };
-  }
-
-  if (Number.isFinite(weight) && weight <= THRESHOLDS.washerEmptyWeight) {
-    return {
-      type: "washer-schedule",
-      applianceType: "WASHER",
-      applianceName: "세탁기",
-      mode: "작동 차단",
-      command: null,
-      title: "세탁물이 감지되지 않아요",
-      message: `오늘 ${scheduleTitle}이 있지만 세탁기 안에 세탁물이 감지되지 않습니다. 세탁물을 넣은 뒤 세탁을 시작해 주세요.`,
+      title: "세탁물 감지가 필요해요",
+      message: "세탁기 무게가 감지되지 않았어요. 세탁물을 넣은 뒤 세탁을 시작해 주세요.",
       blocked: true,
       targetUserId,
       scheduleKey,
       source: "washer-schedule",
       metricLabel: "현재 무게",
-      metricValue: `${formatNumber(weight)}g`,
-      thresholdLabel: `${THRESHOLDS.washerEmptyWeight}g 이하`,
+      metricValue: Number.isFinite(weight) ? `${formatNumber(weight)}g` : "감지 안 됨",
+      thresholdLabel: `${WASHER_WEIGHT_THRESHOLD}g 초과 필요`,
       updatedAt: sensor.last_updated || "",
     };
   }
 
-  if (Number.isFinite(weight) && weight > THRESHOLDS.washerEmptyWeight) {
+  if (weightDetected) {
     return {
       type: "washer-schedule",
+      conditionType: "washer_weight_detected",
       applianceType: "WASHER",
+      applianceId: "washer",
       applianceName: "세탁기",
       title: "세탁기 작동을 시작할까요?",
       message: "세탁 일정 시간이 되었어요. 표준 모드로 세탁을 시작할 수 있어요.",
@@ -87,7 +79,7 @@ export function buildScheduledWasherPopup(sensor = {}, context = {}) {
       reason: "세탁 일정 시간이 되어 표준 모드 실행을 요청했습니다.",
       metricLabel: "현재 무게",
       metricValue: `${formatNumber(weight)}g`,
-      thresholdLabel: `${THRESHOLDS.washerEmptyWeight}g 초과`,
+      thresholdLabel: `${WASHER_WEIGHT_THRESHOLD}g 초과`,
       updatedAt: sensor.last_updated || "",
     };
   }

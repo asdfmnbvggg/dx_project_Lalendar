@@ -42,7 +42,14 @@ import { buildRoutineRecommendations } from "./services/routinePredictionService
 import { DAILY_REPORT_FALLBACK_TEXT, createDailyReportFallback, fetchDailyReport } from "./services/dailyReportService.js";
 import { predictHouseworkTask } from "./services/taskPredictionService.js";
 import { sendDeviceCommand, subscribeSensorLatest } from "./services/sensorRealtimeService.js";
-import { THRESHOLDS, buildRealtimeAppliancePopups, buildScheduledWasherPopup, getPopupKey } from "./services/appliancePopupRuleService.js";
+import {
+  THRESHOLDS,
+  WASHER_WEIGHT_THRESHOLD,
+  buildRealtimeAppliancePopups,
+  buildScheduledWasherPopup,
+  getPopupKey,
+  isWasherWeightDetected,
+} from "./services/appliancePopupRuleService.js";
 import { createUserSchedule, deleteUserSchedule, getUserSchedules, isFirestoreScheduleUser, updateUserSchedule } from "./services/taskService.js";
 
 const ENABLE_ONBOARDING_TASK_GENERATION = false;
@@ -193,6 +200,7 @@ export default function App() {
   const sensorPopupRef = useRef(null);
   const sensorPopupQueueRef = useRef([]);
   const washerPopupShownRef = useRef({});
+  const washerFixedScheduleShownRef = useRef({});
   const sensorDemoPopupIndexRef = useRef(0);
   const dailyReportGeneratedKeyRef = useRef("");
   const dailyReportKnownTaskIdsRef = useRef(null);
@@ -436,22 +444,6 @@ export default function App() {
       const popups = washerCandidates
         .map(({ washerTask, targetUserId, alertMinutes }) => {
           if (!isMasterUser(currentUser) && targetUserId !== currentUser.id) return null;
-
-          const washerWeight = Number(latestSensorData?.weight);
-          const washerStatus = {
-            targetUserId,
-            alertMinutes,
-            scheduleId: washerTask?.id,
-            scheduleTitle: washerTask?.title,
-            weight: Number.isFinite(washerWeight) ? washerWeight : null,
-            weightThreshold: THRESHOLDS.washerEmptyWeight,
-            hasLaundry: Number.isFinite(washerWeight) && washerWeight > THRESHOLDS.washerEmptyWeight,
-            washerDoorOpen: latestSensorData?.washerDoorOpen === true,
-            runnable:
-              Number.isFinite(washerWeight) &&
-              washerWeight > THRESHOLDS.washerEmptyWeight &&
-              latestSensorData?.washerDoorOpen !== true,
-          };
           const popup = buildScheduledWasherPopup(latestSensorData, {
             washerTask,
             targetUserId,
@@ -475,6 +467,20 @@ export default function App() {
     const intervalId = window.setInterval(checkScheduledWasherAlerts, 60 * 1000);
     return () => window.clearInterval(intervalId);
   }, [activeCalendarUser, currentUser, isOnboardingComplete, latestSensorData, tasks]);
+
+  useEffect(() => {
+    if (!currentUser || !isOnboardingComplete || !latestSensorData) return;
+
+    checkWasherWeightForFixedSchedule({
+      tasks,
+      currentUser,
+      currentDate: notificationDemoDate,
+      currentTime: notificationDemoTime,
+      sensorData: latestSensorData,
+      shownMap: washerFixedScheduleShownRef.current,
+      enqueuePopup: (popup) => enqueueSensorPopups([popup], "fixed-schedule-washer-weight", { bypassCooldown: true }),
+    });
+  }, [currentUser, isOnboardingComplete, latestSensorData, notificationDemoDate, notificationDemoTime, tasks]);
 
   useEffect(() => {
     if (isOnboardingComplete) return;
@@ -2226,6 +2232,118 @@ function isAirconHumidityPopup(popup = {}) {
 function logAirconHumidityTrace(message) {
   if (typeof console !== "undefined" && typeof console.info === "function") {
     console.info(`[AIRCON_HUMIDITY_TRACE] ${message}`);
+  }
+}
+
+function checkWasherWeightForFixedSchedule({
+  tasks = [],
+  currentUser,
+  currentDate,
+  currentTime,
+  sensorData,
+  shownMap = {},
+  enqueuePopup,
+}) {
+  const currentMinutes = timeValueToMinutes(currentTime);
+  const fixedSchedules = tasks
+    .filter((task) => isTaskVisibleOnDate(task, currentDate))
+    .filter(isFixedScheduleTask)
+    .filter((task) => {
+      const range = getTaskNotificationRange(task);
+      return range && range.startMinutes === currentMinutes;
+    });
+
+  if (fixedSchedules.length === 0) {
+    logWasherWeightTrace("result=SKIP reason=NO_FIXED_SCHEDULE_EXECUTION");
+    return;
+  }
+
+  fixedSchedules.forEach((fixedSchedule) => {
+    const targetUserId = getTaskUserId(fixedSchedule) || currentUser?.id || "";
+    const fixedScheduleId = fixedSchedule.scheduleId || fixedSchedule.id || `${fixedSchedule.title}-${currentTime}`;
+    const executionDate = currentDate;
+    const executionTime = currentTime;
+    const washerTask = resolveWasherTaskForFixedSchedule(tasks, fixedSchedule, currentDate, targetUserId);
+    const notificationKey = buildWasherWeightNotificationKey(fixedScheduleId, targetUserId, executionDate, executionTime);
+    const weightDetected = isWasherWeightDetected(sensorData?.weight);
+
+    logWasherWeightTrace(`fixedScheduleId=${fixedScheduleId}`);
+    logWasherWeightTrace(`targetUserId=${targetUserId}`);
+    logWasherWeightTrace(`sensorWeight=${sensorData?.weight ?? "null"}`);
+    logWasherWeightTrace(`threshold=${WASHER_WEIGHT_THRESHOLD}`);
+    logWasherWeightTrace(`weightDetected=${weightDetected}`);
+    logWasherWeightTrace("doorSensorIgnored=true");
+    logWasherWeightTrace(`notificationKey=${notificationKey}`);
+
+    if (!isMasterUser(currentUser) && targetUserId !== currentUser?.id) {
+      logWasherWeightTrace("result=SKIP reason=NOT_TARGET_USER");
+      return;
+    }
+
+    if (!washerTask) {
+      logWasherWeightTrace("result=SKIP reason=NOT_WASHER_SCHEDULE");
+      return;
+    }
+
+    if (weightDetected) {
+      logWasherWeightTrace("result=SKIP reason=WEIGHT_DETECTED");
+      return;
+    }
+
+    if (shownMap[notificationKey]) {
+      logWasherWeightTrace("result=SKIP reason=DUPLICATE_NOTIFICATION");
+      return;
+    }
+
+    const popup = buildScheduledWasherPopup(sensorData, {
+      washerTask,
+      targetUserId,
+    });
+
+    if (!popup) {
+      logWasherWeightTrace("result=SKIP reason=NO_WASHER_POPUP_CREATED");
+      return;
+    }
+
+    shownMap[notificationKey] = true;
+    enqueuePopup?.({
+      ...popup,
+      type: "fixed-schedule-washer-weight",
+      conditionType: "washer_weight_missing",
+      source: "fixed-schedule-washer-weight",
+      fixedScheduleId,
+      scheduleKey: notificationKey,
+      notificationKey,
+      title: "세탁물 감지가 필요해요",
+      message: "세탁기 무게가 감지되지 않았어요. 세탁물을 넣은 뒤 세탁을 시작해 주세요.",
+    });
+    logWasherWeightTrace("result=SHOW_ALERT");
+  });
+}
+
+function resolveWasherTaskForFixedSchedule(tasks = [], fixedSchedule = {}, currentDate, targetUserId) {
+  if (isWasherScheduleTask(fixedSchedule)) return fixedSchedule;
+
+  return tasks.find((task) => {
+    if (!isTaskVisibleOnDate(task, currentDate)) return false;
+    if (getTaskUserId(task) !== targetUserId) return false;
+    return isWasherScheduleTask(task);
+  });
+}
+
+function buildWasherWeightNotificationKey(fixedScheduleId, targetUserId, executionDate, executionTime) {
+  return [
+    "washer_weight_missing",
+    fixedScheduleId || "unknown",
+    targetUserId || "unknown",
+    executionDate || "unknown-date",
+    String(executionTime || "unknown-time").replace(":", ""),
+  ].join("_");
+}
+
+function logWasherWeightTrace(message) {
+  if (typeof console !== "undefined" && typeof console.info === "function") {
+    console.info(`[WASHER_WEIGHT_TRACE] ${message}`);
   }
 }
 
