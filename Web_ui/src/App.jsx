@@ -190,6 +190,8 @@ export default function App() {
   const [sensorPopupQueue, setSensorPopupQueue] = useState([]);
   const [latestSensorData, setLatestSensorData] = useState(null);
   const sensorPopupCooldownRef = useRef({});
+  const sensorPopupRef = useRef(null);
+  const sensorPopupQueueRef = useRef([]);
   const washerPopupShownRef = useRef({});
   const sensorDemoPopupIndexRef = useRef(0);
   const dailyReportGeneratedKeyRef = useRef("");
@@ -197,6 +199,14 @@ export default function App() {
   const dailyReportKnownUserIdRef = useRef("");
   const dailyReportTaskChangePendingRef = useRef(false);
   const weatherAdjustedTaskIdsRef = useRef(new Set());
+
+  useEffect(() => {
+    sensorPopupRef.current = sensorPopup;
+  }, [sensorPopup]);
+
+  useEffect(() => {
+    sensorPopupQueueRef.current = sensorPopupQueue;
+  }, [sensorPopupQueue]);
 
   useEffect(() => {
     setTasks((current) => {
@@ -372,11 +382,45 @@ export default function App() {
     return subscribeSensorLatest(SENSOR_DEVICE_ID, (sensorData) => {
       setLatestSensorData(sensorData);
 
+      const targetUserIds = getRealtimeApplianceTargetUserIds(onboardingSetup.applianceAssignees, activeCalendarUser, currentUser);
+      const targetApplianceIds = getRealtimeApplianceTargetApplianceIds(targetUserIds);
+      resetHumidityAlertStateIfNormal({
+        sensorData,
+        targetUserId: targetUserIds.AIR_CONDITIONER,
+        applianceId: targetApplianceIds.AIR_CONDITIONER,
+        cooldownMap: sensorPopupCooldownRef.current,
+        currentPopup: sensorPopupRef.current,
+        queuedPopups: sensorPopupQueueRef.current,
+        setSensorPopup,
+        setSensorPopupQueue,
+        syncCurrentPopup: (popup) => {
+          sensorPopupRef.current = popup;
+        },
+        syncQueue: (queue) => {
+          sensorPopupQueueRef.current = queue;
+        },
+      });
+
       const popups = buildRealtimeAppliancePopups(sensorData, {
-        targetUserIds: getRealtimeApplianceTargetUserIds(onboardingSetup.applianceAssignees, activeCalendarUser, currentUser),
+        targetUserIds,
+        targetApplianceIds,
+        now: new Date(),
       });
       const scheduleFilteredPopups = filterRealtimePopupsBySchedule(popups, tasks, new Date());
-      enqueueSensorPopups(scheduleFilteredPopups.filter((popup) => isMasterUser(currentUser) || popup.targetUserId === currentUser.id), "realtime");
+      const userFilteredPopups = scheduleFilteredPopups.filter((popup) => isMasterUser(currentUser) || popup.targetUserId === currentUser.id);
+      traceAirconHumidityNotification({
+        sensorData,
+        popups,
+        scheduleFilteredPopups,
+        visiblePopups: userFilteredPopups,
+        currentUser,
+        targetUserId: targetUserIds.AIR_CONDITIONER,
+        applianceId: targetApplianceIds.AIR_CONDITIONER,
+        cooldownMap: sensorPopupCooldownRef.current,
+        currentPopup: sensorPopupRef.current,
+        queuedPopups: sensorPopupQueueRef.current,
+      });
+      enqueueSensorPopups(userFilteredPopups, "realtime");
     });
   }, [activeCalendarUser, currentUser, isOnboardingComplete, onboardingSetup.applianceAssignees, tasks]);
 
@@ -1220,6 +1264,7 @@ export default function App() {
       const lastClosedAt = sensorPopupCooldownRef.current[popupKey] || 0;
 
       if (!options.bypassCooldown && now - lastClosedAt < POPUP_COOLDOWN_MS) {
+        traceSensorPopupSkip(popup, "COOLDOWN_ACTIVE");
         return false;
       }
 
@@ -1233,6 +1278,7 @@ export default function App() {
       const nextPopups = availablePopups.filter((popup) => getPopupKey(popup) !== currentPopupKey);
 
       if (nextPopups.length === 0) {
+        availablePopups.forEach((popup) => traceSensorPopupSkip(popup, "ACTIVE_DUPLICATE"));
         return currentPopup;
       }
 
@@ -2015,6 +2061,172 @@ function getRealtimeApplianceTargetUserIds(applianceAssignees = {}, activeCalend
     AIR_PURIFIER:
       resolveOwnerOrUserIdToUserId(applianceAssignees["air-purifier"] || applianceAssignees.AIR_PURIFIER) || fallbackUserId,
   };
+}
+
+function getRealtimeApplianceTargetApplianceIds(targetUserIds = {}) {
+  return {
+    AIR_CONDITIONER: resolveAirConditionerTarget({ targetUserId: targetUserIds.AIR_CONDITIONER }).applianceId,
+  };
+}
+
+function traceAirconHumidityNotification({
+  sensorData,
+  popups = [],
+  scheduleFilteredPopups = [],
+  visiblePopups = [],
+  currentUser,
+  targetUserId,
+  applianceId,
+  cooldownMap = {},
+  currentPopup = null,
+  queuedPopups = [],
+}) {
+  const humidity = Number(sensorData?.humidity);
+  const humidityPopup = popups.find((popup) => isAirconHumidityPopup(popup));
+  const scheduledHumidityPopup = scheduleFilteredPopups.find((popup) => isAirconHumidityPopup(popup));
+  const visibleHumidityPopup = visiblePopups.find((popup) => isAirconHumidityPopup(popup));
+  const temperature = Number(sensorData?.temperature);
+  const notificationKey = humidityPopup ? getPopupKey(humidityPopup) : "";
+  const eligibleBySchedule = Boolean(scheduledHumidityPopup);
+  const targetMatches = Boolean(humidityPopup && (isMasterUser(currentUser) || humidityPopup.targetUserId === currentUser?.id));
+  const cooldownActive = Boolean(humidityPopup && isSensorPopupCooldownActive(humidityPopup, cooldownMap));
+  const activeDuplicate = Boolean(humidityPopup && isSensorPopupActiveOrQueued(humidityPopup, currentPopup, queuedPopups));
+  const dismissed = false;
+
+  logAirconHumidityTrace(`sensorHumidity=${Number.isFinite(humidity) ? humidity : "NaN"}`);
+  logAirconHumidityTrace(`threshold=${THRESHOLDS.humidityDry}`);
+  logAirconHumidityTrace(`resetThreshold=${THRESHOLDS.humidityDryReset}`);
+  logAirconHumidityTrace(`targetUserId=${targetUserId || ""}`);
+  logAirconHumidityTrace(`applianceId=${applianceId || ""}`);
+  logAirconHumidityTrace(`eligibleBySchedule=${eligibleBySchedule}`);
+  logAirconHumidityTrace(`notificationKey=${notificationKey}`);
+  logAirconHumidityTrace(`cooldownActive=${cooldownActive}`);
+  logAirconHumidityTrace(`dismissed=${dismissed}`);
+  logAirconHumidityTrace(`activeDuplicate=${activeDuplicate}`);
+
+  if (!Number.isFinite(humidity) || humidity < THRESHOLDS.humidityDry) {
+    logAirconHumidityTrace("result=SKIP reason=BELOW_THRESHOLD");
+    return;
+  }
+
+  if (!humidityPopup && Number.isFinite(temperature) && temperature >= THRESHOLDS.temperatureCooling) {
+    logAirconHumidityTrace("result=SKIP reason=TEMPERATURE_PRIORITY_OVERRIDES_HUMIDITY");
+    return;
+  }
+
+  if (!humidityPopup) {
+    logAirconHumidityTrace("result=SKIP reason=NO_HUMIDITY_POPUP_CREATED");
+    return;
+  }
+
+  if (!eligibleBySchedule) {
+    logAirconHumidityTrace("result=SKIP reason=SCHEDULE_NOT_ELIGIBLE");
+    return;
+  }
+
+  if (!targetMatches) {
+    logAirconHumidityTrace("result=SKIP reason=NOT_TARGET_USER");
+    return;
+  }
+
+  if (cooldownActive) {
+    logAirconHumidityTrace("result=SKIP reason=COOLDOWN_ACTIVE");
+    return;
+  }
+
+  if (activeDuplicate) {
+    logAirconHumidityTrace("result=SKIP reason=ACTIVE_DUPLICATE");
+    return;
+  }
+
+  if (!visibleHumidityPopup) {
+    logAirconHumidityTrace("result=SKIP reason=NOT_TARGET_USER");
+    return;
+  }
+
+  logAirconHumidityTrace("result=SHOW_ALERT");
+}
+
+function traceSensorPopupSkip(popup = {}, reason) {
+  if (!isAirconHumidityPopup(popup)) return;
+  logAirconHumidityTrace(`result=SKIP reason=${reason}`);
+}
+
+function isSensorPopupCooldownActive(popup = {}, cooldownMap = {}, now = Date.now()) {
+  const lastClosedAt = cooldownMap[getPopupKey(popup)] || 0;
+  return now - lastClosedAt < POPUP_COOLDOWN_MS;
+}
+
+function isSensorPopupActiveOrQueued(popup = {}, currentPopup = null, queuedPopups = []) {
+  const popupKey = getPopupKey(popup);
+  const currentPopupKey = currentPopup ? getPopupKey(currentPopup) : "";
+  return popupKey === currentPopupKey || queuedPopups.some((queuedPopup) => getPopupKey(queuedPopup) === popupKey);
+}
+
+function resetHumidityAlertStateIfNormal({
+  sensorData,
+  targetUserId,
+  applianceId,
+  cooldownMap = {},
+  currentPopup = null,
+  queuedPopups = [],
+  setSensorPopup,
+  setSensorPopupQueue,
+  syncCurrentPopup,
+  syncQueue,
+}) {
+  const humidity = Number(sensorData?.humidity);
+  if (!Number.isFinite(humidity) || humidity > THRESHOLDS.humidityDryReset) return;
+
+  const keyPrefix = ["humidity", "AIRCON", targetUserId || "unknown", applianceId || "unknown"].join("_");
+  const cooldownKeys = Object.keys(cooldownMap).filter((popupKey) => popupKey.startsWith(keyPrefix));
+  const shouldClearCurrent = isMatchingHumidityPopup(currentPopup, targetUserId, applianceId);
+  const hasQueuedHumidityPopup = queuedPopups.some((popup) => isMatchingHumidityPopup(popup, targetUserId, applianceId));
+
+  if (cooldownKeys.length === 0 && !shouldClearCurrent && !hasQueuedHumidityPopup) return;
+
+  cooldownKeys.forEach((popupKey) => {
+    if (popupKey.startsWith(keyPrefix)) {
+      delete cooldownMap[popupKey];
+    }
+  });
+
+  setSensorPopupQueue((queue) => {
+    const filteredQueue = queue.filter((popup) => !isMatchingHumidityPopup(popup, targetUserId, applianceId));
+
+    if (shouldClearCurrent) {
+      const [nextPopup, ...restQueue] = filteredQueue;
+      syncCurrentPopup?.(nextPopup || null);
+      syncQueue?.(restQueue);
+      setSensorPopup(nextPopup || null);
+      return restQueue;
+    }
+
+    syncQueue?.(filteredQueue);
+    return filteredQueue;
+  });
+
+  if (shouldClearCurrent) {
+    logAirconHumidityTrace(`result=RESET reason=HUMIDITY_NORMALIZED sensorHumidity=${humidity}`);
+  }
+}
+
+function isMatchingHumidityPopup(popup, targetUserId, applianceId) {
+  return (
+    isAirconHumidityPopup(popup) &&
+    popup.targetUserId === targetUserId &&
+    (popup.applianceId || "") === (applianceId || "")
+  );
+}
+
+function isAirconHumidityPopup(popup = {}) {
+  return popup?.applianceType === "AIR_CONDITIONER" && popup.conditionType === "humidity";
+}
+
+function logAirconHumidityTrace(message) {
+  if (typeof console !== "undefined" && typeof console.info === "function") {
+    console.info(`[AIRCON_HUMIDITY_TRACE] ${message}`);
+  }
 }
 
 function filterRealtimePopupsBySchedule(popups = [], tasks = [], now = new Date()) {

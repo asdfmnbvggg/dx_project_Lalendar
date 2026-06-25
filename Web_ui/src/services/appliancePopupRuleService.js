@@ -2,6 +2,7 @@ export const THRESHOLDS = {
   temperatureCooling: 27,
   temperaturePowerCooling: 30,
   humidityDry: 60,
+  humidityDryReset: 55,
   pm10On: 31,
   pm10Strong: 81,
   pm25On: 16,
@@ -17,7 +18,7 @@ export function buildRealtimeAppliancePopups(sensor = {}, context = {}) {
   if (!sensor || typeof sensor !== "object") return [];
 
   return [
-    buildAirConditionerPopup(sensor, context),
+    ...buildAirConditionerPopups(sensor, context),
     buildAirQualityPopup(sensor, context),
   ].filter(Boolean);
 }
@@ -95,7 +96,16 @@ export function buildScheduledWasherPopup(sensor = {}, context = {}) {
 }
 
 export function getPopupKey(popup = {}) {
-  return [popup.targetUserId || "unknown", popup.applianceType, popup.command || "blocked", popup.title, popup.scheduleKey || ""].join("|");
+  if (popup.notificationKey) return popup.notificationKey;
+  return [
+    popup.conditionType || "general",
+    popup.targetUserId || "unknown",
+    popup.applianceType,
+    popup.applianceId || "",
+    popup.command || "blocked",
+    popup.title,
+    popup.scheduleKey || "",
+  ].join("|");
 }
 
 export const buildAppliancePopup = buildRealtimeAppliancePopup;
@@ -103,13 +113,22 @@ export const buildAppliancePopups = buildRealtimeAppliancePopups;
 export const getAppliancePopupKey = getPopupKey;
 
 function buildAirConditionerPopup(sensor, context) {
+  return buildAirConditionerPopups(sensor, context)[0] || null;
+}
+
+function buildAirConditionerPopups(sensor, context) {
   const temperature = toNumber(sensor.temperature);
   const humidity = toNumber(sensor.humidity);
   const targetUserId = getTargetUserId(context, "AIR_CONDITIONER");
+  const applianceId = getAirConditionerApplianceId(context, targetUserId);
+  const notificationBucket = getNotificationBucket(context.now || sensor.updatedAt || sensor.createdAt || Date.now());
+  const popups = [];
 
   if (Number.isFinite(temperature) && temperature >= THRESHOLDS.temperaturePowerCooling) {
-    return {
+    popups.push({
+      conditionType: "temperature",
       applianceType: "AIR_CONDITIONER",
+      applianceId,
       applianceName: "에어컨",
       mode: "파워냉방",
       command: "power_cooling",
@@ -122,12 +141,15 @@ function buildAirConditionerPopup(sensor, context) {
       metricParts: [{ value: `${formatNumber(temperature)}C`, isExceeded: true }],
       thresholdLabel: `${THRESHOLDS.temperaturePowerCooling}C 이상`,
       updatedAt: sensor.last_updated || "",
-    };
+      notificationKey: buildNotificationKey("temperature", "AIRCON", targetUserId, applianceId, notificationBucket),
+    });
   }
 
-  if (Number.isFinite(temperature) && temperature >= THRESHOLDS.temperatureCooling) {
-    return {
+  if (popups.length === 0 && Number.isFinite(temperature) && temperature >= THRESHOLDS.temperatureCooling) {
+    popups.push({
+      conditionType: "temperature",
       applianceType: "AIR_CONDITIONER",
+      applianceId,
       applianceName: "에어컨",
       mode: "냉방",
       command: "cooling",
@@ -140,12 +162,15 @@ function buildAirConditionerPopup(sensor, context) {
       metricParts: [{ value: `${formatNumber(temperature)}C`, isExceeded: true }],
       thresholdLabel: `${THRESHOLDS.temperatureCooling}C 이상`,
       updatedAt: sensor.last_updated || "",
-    };
+      notificationKey: buildNotificationKey("temperature", "AIRCON", targetUserId, applianceId, notificationBucket),
+    });
   }
 
   if (Number.isFinite(humidity) && humidity >= THRESHOLDS.humidityDry) {
-    return {
+    popups.push({
+      conditionType: "humidity",
       applianceType: "AIR_CONDITIONER",
+      applianceId,
       applianceName: "에어컨",
       mode: "제습",
       command: "dry",
@@ -158,10 +183,11 @@ function buildAirConditionerPopup(sensor, context) {
       metricParts: [{ value: `${formatNumber(humidity)}%`, isExceeded: true }],
       thresholdLabel: `${THRESHOLDS.humidityDry}% 이상`,
       updatedAt: sensor.last_updated || "",
-    };
+      notificationKey: buildNotificationKey("humidity", "AIRCON", targetUserId, applianceId, notificationBucket),
+    });
   }
 
-  return null;
+  return popups;
 }
 
 function buildAirQualityPopup(sensor, context) {
@@ -225,6 +251,37 @@ function getTargetUserId(context, applianceType) {
   return context.targetUserIds?.[applianceType] || context.targetUserId || "";
 }
 
+function getAirConditionerApplianceId(context = {}, targetUserId = "") {
+  if (context.targetApplianceIds?.AIR_CONDITIONER) return context.targetApplianceIds.AIR_CONDITIONER;
+  const normalizedUserId = String(targetUserId || "").toLowerCase();
+  const applianceIds = {
+    shared: "aircon_shared",
+    sumin: "aircon_sumin",
+    dada: "aircon_dada",
+    jea: "aircon_jea",
+  };
+  return applianceIds[normalizedUserId] || "aircon_shared";
+}
+
+function getNotificationBucket(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  const safeDate = Number.isNaN(date.getTime()) ? new Date() : date;
+  const bucketMinutes = Math.floor(safeDate.getMinutes() / 15) * 15;
+  safeDate.setMinutes(bucketMinutes, 0, 0);
+  return [
+    safeDate.getFullYear(),
+    pad2(safeDate.getMonth() + 1),
+    pad2(safeDate.getDate()),
+    "_",
+    pad2(safeDate.getHours()),
+    pad2(safeDate.getMinutes()),
+  ].join("");
+}
+
+function buildNotificationKey(conditionType, applianceType, targetUserId, applianceId, bucket) {
+  return [conditionType, applianceType, targetUserId || "unknown", applianceId || "unknown", bucket].join("_");
+}
+
 function getWasherScheduleKey(task = {}) {
   return [task.id, task.date, task.repeat, task.userId, task.owner].filter(Boolean).join(":");
 }
@@ -240,4 +297,8 @@ function formatNumber(value) {
 
 function formatSensorValue(value) {
   return Number.isFinite(value) ? formatNumber(value) : "-";
+}
+
+function pad2(value) {
+  return String(value).padStart(2, "0");
 }
